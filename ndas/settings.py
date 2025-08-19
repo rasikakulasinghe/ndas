@@ -28,6 +28,12 @@ DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 
+# ==============================================================================
+# SECURITY CONFIGURATION
+# ==============================================================================
+# Security headers and related configurations have been added at the end of this file
+# Search for "Security Headers Configuration" for HTTPS and security settings
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -54,7 +60,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_user_agents.middleware.UserAgentMiddleware',
-
 ]
 
 ROOT_URLCONF = 'ndas.urls'
@@ -186,3 +191,24 @@ LOGGING = {
         },
     },
 }
+
+# Security Headers Configuration
+# These settings enhance security by adding HTTP headers
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
+# SSL/HTTPS Settings (enable in production with HTTPS)
+# SECURE_SSL_REDIRECT = True  # Uncomment when using HTTPS in production
+# SESSION_COOKIE_SECURE = True  # Uncomment when using HTTPS in production
+# CSRF_COOKIE_SECURE = True  # Uncomment when using HTTPS in production
+
+# Additional Security Settings
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+SESSION_COOKIE_AGE = 3600  # 1 hour session timeout
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
