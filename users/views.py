@@ -7,7 +7,7 @@ from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 from .forms import CustomUserRegistrationForm, UserPasswordChange
 from .models import DevoloperContacts
-from pathlib import os
+import os
 
 # Create your views here.
 def loginPage(request):

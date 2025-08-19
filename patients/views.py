@@ -15,7 +15,7 @@ from django.http import JsonResponse
 from django.utils.timezone import localtime, now
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
-from moviepy.editor import VideoFileClip
+# from moviepy.editor import VideoFileClip  # Temporarily commented out
 from django.core.files import File
 from django.core.files.storage import FileSystemStorage
 from ndas.custom_codes.ndas_enums import PtStatus
