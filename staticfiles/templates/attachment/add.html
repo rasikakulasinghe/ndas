@@ -1,0 +1,142 @@
+{% extends 'src/base.html' %}
+{% block title %}Attachments - Add{% endblock %}
+
+{% block main_content %}
+
+</br>
+{% include 'src/form_error.html' %}
+
+<div class="container-sm">
+  <div class="card">
+  <div class="card-header bg-info"><h3 class="card-title">Add New Attachment</h3></div>
+
+  <form id="file-upload-form" enctype="multipart/form-data" onsubmit="onFormSubmit(event)">
+    {% csrf_token %}
+
+    <div class="card-body">
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Title : </label>
+        <div class="col-sm">{{attachment_form.title}}</div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Attachment : </label>
+        <div class="col-sm">{{attachment_form.attachment}}</div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Description : </label>
+        <div class="col-sm">{{attachment_form.description}}</div>
+      </div>
+
+      <div class="row justify-content-end">
+        <div class="col-auto"><button style="display:none;" id="btn_view"type="button" class="btn btn-primary" onclick="location.href=''">View</button></div>
+        <div class="col-auto"><button style="display:none;" id="btn_edit"type="button" class="btn btn-primary" onclick="location.href=''">Edit</button></div>
+        <div class="col-auto"><button style="display:none;" id="btn_add_another"type="button" class="btn btn-primary" onclick="location.href='{% url 'file-add' patient.id %}'">Add New</button></div>
+        <div class="col-auto"><button id="btn_add" type="submit" class="btn btn-primary">Upload</button></div>
+      </div>
+
+      </br>
+
+      <div class="form-group row" style="display:none;" id="progress_div">
+        <div class="progress"><div class="progress-bar" id="progress_bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div></div>
+      </div>
+
+      <div class="form-group row"><p id="progress_text"></p></div>
+
+  </form>
+
+    </div>
+    <!-- /.card-body -->
+  </div>
+  <!-- /.card -->
+</div>
+
+
+<script>
+
+  function onFormSubmit(event) {
+      event.preventDefault();
+
+      var formData = new FormData();
+      formData.append("title", document.getElementById("title_id").value);
+      formData.append("attachment",document.getElementById("attachment_file_id").files[0]);
+      formData.append("descreption",document.getElementById("discription_id").value);
+      
+      var btn_view = document.getElementById("btn_view")
+      var btn_edit = document.getElementById("btn_edit")
+      var btn_add = document.getElementById("btn_add")
+      var btn_add_another = document.getElementById("btn_add_another")
+
+      var xhr=new XMLHttpRequest();
+      xhr.open("POST",'{% url 'attachment-add' patient.id %}',true);
+
+      xhr.upload.addEventListener("progress",function (ev) {
+         if(ev.lengthComputable){
+            var percentage=(ev.loaded/ev.total*100|0);
+            document.getElementById("progress_bar").style["width"]=""+percentage+"%";
+            document.getElementById("progress_bar").innerHTML=""+percentage+"%";
+            document.getElementById("progress_text").innerHTML="Uploading... : "+parseInt(ev.loaded/1000000)+"/"+parseInt(ev.total/1000000)+" MB";
+         }
+      });
+
+      xhr.addEventListener("loadstart", function(e) {
+        document.getElementById("progress_div").style["display"]="block";
+        btn_add.disabled = true;
+          }, false);
+
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState == XMLHttpRequest.DONE) {
+            var response = JSON.parse(xhr.responseText);
+            var success = response.success;
+
+            if (this.readyState == 4 && this.status == 200 && success == true) {
+
+              document.getElementById("progress_div").style["display"]="none";
+              document.getElementById("progress_text").innerHTML="File uploaded successfully... (100%)";
+
+              btn_add_another.style.display = "block";
+              btn_view.style.display = "block";
+              btn_edit.style.display = "block";
+              btn_add.style.display = "none";
+
+              var url_view = "/attachment/view/"+ response.f_id;
+              btn_view.addEventListener('click', () => {
+                window.location.href = url_view;
+              });
+
+              var url_edit = "/attachment/edit/"+ response.f_id;
+              btn_edit.addEventListener('click', () => {
+                window.location.href = url_edit;
+              });
+
+              } else {
+                document.getElementById("progress_div").style["display"]="none";
+                document.getElementById("progress_text").innerHTML=response.msg;
+
+              }
+        }
+      }
+
+      xhr.addEventListener("loadend", function(e) {
+ 
+      }, false);
+
+      xhr.addEventListener("error", function(e) {
+        document.getElementById("progress_div").style["display"]="none";
+        document.getElementById("progress_text").innerHTML=e;
+        btn_add_another.style.display = "block";
+        btn_add.style.display = "none";
+        btn_view.style.display = "none";
+        btn_edit.style.display = "none";
+        btn_add.style.display = "none";
+        }, false);
+
+      xhr.send(formData);
+  }
+
+</script>
+
+
+{% endblock main_content %}

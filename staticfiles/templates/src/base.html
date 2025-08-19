@@ -1,0 +1,48 @@
+{% extends './basic_plane.html' %}
+{% load static %}
+{% block mainbody %}
+
+{% if user.is_authenticated  %} <!-- to show Sidebar if loged users only -->
+
+<div class="wrapper">
+        <!-- Navbar -->
+        {% include './navbar.html' %}
+        <!-- /.navbar -->
+
+        <!-- Main Sidebar Container -->
+        {% include './main_sidebar_menu.html' %}
+        <!-- /.sidebar -->
+
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    {% comment %} {% include './content_headder.html' %} {% endcomment %}
+    <!-- /.content-header -->
+
+    {% endif %}
+
+    <!-- Main content -->
+    <div class="content">
+
+      <!-- Message display -->
+      {% if user.is_authenticated  %}{% include 'src/messages.html' %}{% endif %}
+      {% comment %} {% include './main_content.html' %} {% endcomment %} 
+
+      {% block main_content %}
+      <!-- Main content goes here-->
+
+      {% endblock main_content %}
+      
+    </div>
+    <!-- /.content -->
+  </div>
+  <!-- /.content-wrapper -->
+
+  <!-- Control Sidebar -->
+  {% comment %} {% include './content_headder.html' %} {% endcomment %}
+  <!-- /.control-sidebar -->
+
+<!-- Main Footer -->
+{% if user.is_authenticated  %}{% include './main_footer.html' %}{% endif %}
+
+{% endblock mainbody %}

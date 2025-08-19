@@ -1,0 +1,353 @@
+{% extends 'src/base.html' %}
+{% load static %}
+{% block title %}Home{% endblock title%}
+{% block main_content %}
+
+<section class="content">
+
+    <div class="container-fluid">
+{{getCorrectedAge}}
+    <div class="card bg-info"><div class="card-header"><h3 class="card-title">Neurodevelopmental Assessment System (NHK)</h3></div></div>
+
+    <div class="row">
+        <div class="col-lg-3 col-6">
+          <div class="small-box bg-info">
+          <div class="inner">
+          <div class="row">
+            <div class="col"><b>New</b></div>
+            <div class="col"><b>Discharged</b></div>
+            <div class="col"><b>Total</b></div>
+            <div class="w-100"></div>
+            <div class="col">{{patients_new_count}}</div>
+            <div class="col">{{patients_discharged_count}}</div>
+            <div class="col">{{patients_total_count}}</div>
+          </div>
+          <hr>
+          <p>Patients</p>
+          </div>
+          <div class="icon">
+          <i class="ion ion-bag"></i>
+          </div>
+          <a href="{% url 'print' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+          </div>
+        </div>
+        
+        <div class="col-lg-3 col-6">
+          <div class="small-box bg-success">
+          <div class="inner">
+          
+            <div class="container">
+              <div class="row">
+                <div class="col"><b>GMA</b></div>
+                <div class="col"><b>HINE</b></div>
+                <div class="col"><b>DA</b></div>
+                <div class="col"><b>CDIC</b></div>
+                <div class="w-100"></div>
+                <div class="col">{{all_gm_assessments_count}}</div>
+                <div class="col">{{all_hine_assessments_count}}</div>
+                <div class="col">{{all_da_assessments_count}}</div>
+                <div class="col">{{all_cdic_records_count}}</div>
+              </div>
+            </div>
+          <hr>
+            <p>Assessments</p>
+
+          </div>
+          <div class="icon">
+          <i class="ion ion-stats-bars"></i>
+          </div>
+          <a href="{% url 'manage-patients' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+          </div>
+        </div>
+
+        <div class="col-lg-3 col-6">
+          <div class="small-box bg-danger">
+          <div class="inner">
+
+            <div class="container">
+              <div class="row">
+                <div class="col"><b>GMA</b></div>
+                <div class="col"><b>HINE</b></div>
+                <div class="col"><b>DA</b></div>
+                <div class="w-100"></div>
+                <div class="col">{{dx_gm_assessments_count}}</div>
+                <div class="col">{{dx_hine_assessments_count}}</div>
+                <div class="col">{{dx_da_assessments_count}}</div>
+              </div>
+            </div>
+          <hr>
+            <p>Diagnosed Patients</p>
+
+          </div>
+          <div class="icon">
+          <i class="ion ion-pie-graph"></i>
+          </div>
+          <a href="{% url 'manage-patients-diagnosed-any' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+          </div>
+        </div>
+    
+        <div class="col-lg-3 col-6">
+          <div class="small-box bg-secondary">
+          <div class="inner">
+            <div class="row">
+              <div class="col"><a href="{% url 'file-manager-common' %}" style="color:white;"><i data-toggle="tooltip" data-placement="top" title="Videos" class="fas fa-play-circle" style="color: #ffffff;"></i></a></div>
+              <div class="col"><a href="{% url 'bookmark-manager' %}" style="color:white;"><i data-toggle="tooltip" data-placement="top" title="Bookmarks" class="far fa-bookmark" style="color: #ffffff;"></i></a></div>
+              <div class="col"><a href="{% url 'attachment-manager' %}" style="color:white;"><i data-toggle="tooltip" data-placement="top" title="Attachments" class="fas fa-paperclip" style="color: #ffffff;"></i></a></div>
+              <div class="col"><a href="{% url 'user-view' user.id %}" style="color:white;"><i data-toggle="tooltip" data-placement="top" title="Users" class="fas fa-users" style="color: #ffffff;"></i></a></div>
+              <div class="w-100"></div>
+              <div class="col"><a href="{% url 'file-manager-common' %}" style="color:white;">{{videos_total_count}}</a></div>
+              <div class="col"><a href="{% url 'bookmark-manager' %}" style="color:white;">{{bookmark.count}}</a></div>
+              <div class="col"><a href="{% url 'attachment-manager' %}" style="color:white;">{{attachments_count}}</a></div>
+              <div class="col"><a href="{% url 'user-view' user.id %}" style="color:white;">{{users_total_count}}</a></div>
+            </div>
+            <hr>
+          <p>Miscellaneous</p>
+          </div>
+          <div class="icon">
+          <i class="ion ion-person-add"></i>
+          </div>
+          <a href="{% url 'manage-patients' %}" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+          </div>
+        </div>
+
+        
+    </div>
+
+    <div class="row">
+    
+    <section class="col-lg-7">
+      
+      <div class="card">
+        <div class="card-header">
+        <h3 class="card-title">Admissions</h3>
+        <div class="card-tools">
+            
+        {% comment %} <ul class="nav nav-pills ml-auto">
+        <li class="nav-item"><a class="nav-link active" href="#admissions-chart" data-toggle="tab">Admissions</a></li>
+        <li class="nav-item"><a class="nav-link" href="#discharge-chart" data-toggle="tab">Discharges</a></li>
+        </ul> {% endcomment %}
+
+        </div>
+        </div>
+        <div class="card-body">
+        <div class="tab-content p-0">
+        
+        <div class="chart tab-pane active" id="admissions-chart" style="position: relative; height: 300px;"><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
+        <canvas id="new-admissions-month" height="375" style="height: 300px; display: block; width: 750px;" width="937" class="chartjs-render-monitor"></canvas>
+        </div>
+
+        {% comment %} <div class="chart tab-pane" id="discharge-chart" style="position: relative; height: 300px;">
+        <canvas id="discharge-month" height="0" style="height: 0px; display: block; width: 0px;" width="0" class="chartjs-render-monitor"></canvas>
+        </div> {% endcomment %}
+
+        </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title"></i>All Diagnosis</h3></div>
+        <div class="card-body">
+        <div class="chart" style="position: relative;">
+        <canvas id="diagnosis_all" height="0" style="height: 0px; display: block; width: 0px;" width="0" class="chartjs-render-monitor"></canvas>
+        </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="card-title"></i>GMA - Diagnosis</h3></div>
+        <div class="card-body">
+        <div class="chart" style="position: relative;">
+        <canvas id="diagnosis_gma" height="0" style="height: 0px; display: block; width: 0px;" width="0" class="chartjs-render-monitor"></canvas>
+        </div>
+        </div>
+      </div>
+
+    </section>
+    
+    <section class="col-lg-5">
+
+        <div class="card">
+            <div class="card-header"><h3 class="card-title"> New Records </h3></div>
+                <div class="card-body">
+                    <ul class="nav flex-column">
+                        {% if new_videos %}
+                        <li class="nav-item">
+                        <a href="{% url 'file-manager-common-new' %}" class="nav-link">Videos &nbsp; <small class="badge badge-danger">New</small><span class="float-right badge bg-primary">{{new_videos_count}}</span></a>
+                        </li>{% endif %}
+
+                        {% if Patients_new_list_10 %}
+                        <li class="nav-item">
+                        <a href="{% url 'manage-patients-new' %}" class="nav-link">Patients &nbsp; <small class="badge badge-danger">New</small><span class="float-right badge bg-primary">{{patients_new_count}}</span></a>
+                        </li>{% endif %}
+                    </ul>
+            </div>
+        </div>
+
+
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">Videos</h3></div>
+              <div class="card-body">
+                {% if new_videos %}
+                  <ul class="nav flex-column">
+                      {% for Videos in new_videos %}
+                      <li class="nav-item">
+                      <a href="{% url 'file-view' Videos.id %}" target="_blank" class="nav-link">{{Videos.caption}} &nbsp; <small class="badge badge-danger">New</small><span class="float-right"><i class="far fa-clock"></i>&nbsp;&nbsp; {{Videos.uploaded_on|timesince}} ago</span></a>
+                      </li>
+                      {% endfor %}
+                  </ul>
+                {% if new_videos_count > 5 %}<div class="clearfix"><hr><a href="{% url 'file-manager-common-new' %}" target="_blank" class="float-right">View All</a></div>{% endif %}
+                {% else %}No new videos{% endif %}
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">Patients</h3></div>
+              <div class="card-body">
+                {% if Patients_new_list_10 %}
+                  <ul class="nav flex-column">
+                      {% for Patient in Patients_new_list_10 %}
+                      <li class="nav-item">
+                      <a href="{% url 'view-patient' Patient.id %}" target="_blank" class="nav-link">{{Patient.baby_name}} &nbsp; <small class="badge badge-danger">New</small><span class="float-right"><i class="far fa-clock"></i>&nbsp;&nbsp; {{Patient.added_on|timesince}} ago</span></a>
+                      </li>
+                      {% endfor %}
+                  </ul>
+                  {% if Patients_new_list_10 > 10 %}<div class="clearfix"><hr><a href="{% url 'manage-patients-new' %}" target="_blank" class="float-right">View All</a></div>{% endif %}
+                  {% else %}No new patients{% endif %}
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3 class="card-title">User Statistics</h3></div>
+              <div class="card-body">
+
+              <ul class="list-group">
+                {% for username, stats in user_stat.items %}
+                <div class="list-group-item align-items-center"><a href="{% url 'user-view-by-username' username %}" >{{ username }} : </a></div>
+                
+                  <li class="list-group-item align-items-center">
+                    {% if stats.Patient > 0 %} Patient : <span class="badge badge-primary badge-pill">{{ stats.Patient }}</span> &nbsp; | &nbsp;{% endif %}
+                    {% if stats.Video > 0 %} Video : <span class="badge badge-primary badge-pill">{{ stats.Video }}</span> &nbsp; | &nbsp;{% endif %}
+                    {% if stats.GMA > 0 %} GMA : <span class="badge badge-primary badge-pill">{{ stats.GMA }}</span> &nbsp; | &nbsp;{% endif %}
+                    {% if stats.HINE > 0 %} HINE : <span class="badge badge-primary badge-pill">{{ stats.HINE }}</span> &nbsp; | &nbsp;{% endif %}
+                    {% if stats.DA > 0 %} DA : <span class="badge badge-primary badge-pill">{{ stats.DA }}</span> &nbsp; | &nbsp;{% endif %}
+                    {% if stats.CDIC > 0 %} CDIC : <span class="badge badge-primary badge-pill">{{ stats.CDIC }}</span> &nbsp; | &nbsp;{% endif %}
+                    {% if stats.Attachment > 0 %} Attachment : <span class="badge badge-primary badge-pill">{{ stats.Attachment }}</span> &nbsp; | &nbsp;{% endif %}
+                    {% if stats.Bookmark > 0 %} Bookmark : <span class="badge badge-primary badge-pill">{{ stats.Bookmark }}</span> &nbsp;{% endif %}
+                  </li>
+
+                </br>
+
+                {% endfor %}
+
+              </ul>
+
+          </div>
+        </div>
+
+    </section>
+    
+    </div>
+    
+    </div>
+
+    </section>
+
+
+<!-- ChartJS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        const ctx = document.getElementById('new-admissions-month');
+        const diagnosis_gma = document.getElementById('diagnosis_gma');
+        const diagnosis_all = document.getElementById('diagnosis_all');
+ 
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: {{ bar_chart_monthly_admissions.labels|safe }},
+            datasets: [{
+              label: 'Admissions',
+              data: {{ bar_chart_monthly_admissions.data|safe }},
+              borderWidth: 1
+            }]
+
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true
+              },
+            },
+            plugins: {
+              legend: {
+                  display: false,
+              }
+          },
+          }
+        });
+        
+       new Chart(diagnosis_gma, {
+          type: 'pie',
+          
+          data: {
+            labels: [{% for key in diagnosis_data_gma %}"{{ key|safe }}", {% endfor %}],
+            datasets: [{
+              label: 'Diagnosis',
+              data: [{% for value in diagnosis_data_gma.values %}{{ value|safe }}, {% endfor %}],
+              borderWidth: 1
+            }]
+
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                  display: true,
+                  position: "right",
+                  align: "middle"
+              }
+          },
+          layout: {
+            padding: 0
+        },
+        
+          }
+        });
+
+
+      new Chart(diagnosis_all, {
+        type: 'pie',
+        
+        data: {
+          labels: [{% for key in diagnosis_data_all %}"{{ key|safe }}", {% endfor %}],
+          datasets: [{
+            label: 'Diagnosis',
+            data: [{% for value in diagnosis_data_all.values %}{{ value|safe }}, {% endfor %}],
+            borderWidth: 1
+          }]
+
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+                display: true,
+                position: "right",
+                align: "middle"
+            }
+        },
+        layout: {
+          padding: 0
+      },
+      
+        }
+      });
+
+      </script>
+
+{% endblock main_content %}
+

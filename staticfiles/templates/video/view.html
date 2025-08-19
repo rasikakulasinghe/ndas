@@ -1,0 +1,121 @@
+{% extends 'src/base.html' %}
+{% load static %}
+{% block title %}Video - View{% endblock %}
+{% block main_content %}
+
+</br>
+{% include 'src/form_error.html' %}
+
+<div class="container">
+
+<!-- Page header -->
+<div class="card bg-info"><div class="card-header"><h3 class="card-title">View Video</h3></div>
+
+{% if file.isNewFile %}
+<div class="ribbon-wrapper ribbon-xl"><div class="ribbon bg-warning text-lg">New</div></div>
+{% else %}
+<div class="ribbon-wrapper ribbon-xl"><div class="ribbon bg-success text-lg">Completed</div></div>
+{% endif %}
+
+</div>
+
+<div class="row">
+  <div class="col-md-7">
+    <div class="card card-body">
+
+      <video
+        id="videoPlayer"
+        class="video-js"
+        controls
+        preload="auto"
+        data-setup='{"fluid": true}'>
+        <source src="{{file.video.url}}" type="video/mp4"></source>
+        <source src="{{file.video.url}}" type="video/mov"></source>
+        <p>Video Playback Not Supported<br/>Your browser does not support the video tag.</p>
+      </video>
+
+      </div> <!-- /.card body-->
+  </div>
+
+  <div class="col-md-5">
+
+    <div id="accordion">
+      <div class="card card-secondary">
+      <div class="card-header">
+      <h4 class="card-title w-100">
+      <a class="d-block w-100" data-toggle="collapse" href="#collapseOne" aria-expanded="true">
+        <i class="fas fa-eye" style="color: #ffffff;"></i> &nbsp; &nbsp; Document Details
+      </a>
+      </h4>
+      </div>
+      <div id="collapseOne" class="collapse show" data-parent="#accordion" style="">
+      <div class="card-body">
+        <div class="row align-items-center"><label class="col-form-label col-sm-4">Title : </label><div class="col-sm">{{file.caption}}</div></div>
+        <div class="row align-items-center"><label class="col-form-label col-sm-4">Recorded On : </label><div class="col-sm">{{file.recorded_on}}</div></div>
+        <div class="row align-items-center"><label class="col-form-label col-sm-4">Age on Recorded : </label><div class="col-sm">{{file.getAgeOnRecord}}</div></div>
+        <div class="row align-items-center"><label class="col-form-label col-sm-4">Analayze State : </label><div class="col-sm">
+          {% if file.isNewFile %}
+          Assessments Not Yet Created
+          {% else %}
+          Assessment Completed
+          {% endif %}
+        </div></div>
+        <div class="row align-items-center"><label class="col-form-label col-sm-4">Description : </label><div class="col-sm">{{file.description}}</div></div>
+        <div class="row align-items-center"><label class="col-form-label col-sm-4">Uploaded By : </label><div class="col-sm">{{file.uploaded_by}}</div></div>
+        <div class="row align-items-center"><label class="col-form-label col-sm-4">Uploaded On : </label><div class="col-sm">{{file.uploaded_on}}</div></div>
+        {% if file.last_edit_by %}
+        <div class="row align-items-center"><label class="col-form-label col-sm-4">Last Edited By : </label><div class="col-sm">{{file.last_edit_by}}</div></div>
+        <div class="row align-items-center"><label class="col-form-label col-sm-4">Last Edited On : </label><div class="col-sm">{{file.last_edit_on}}</div></div>
+        {% endif %}
+        <hr>
+
+        <a href="{% url 'file-edit' file.id %}" class="btn btn-link"><i class="fas fa-pencil-alt"></i>  Update or Delete this file)</a>
+        {% if file.isNewFile %}
+        <a href="{% url 'assessment-add' file.patient.id file.id %}" class="btn btn-link"><i class="fas fa-circle fa-plus"></i>  Create New Assessment</a>
+        {% else %}
+        <a href="{% url 'assessment-view-by-file-id' file.id %}" class="btn btn-link"><i class="fas fa-eye"></i>  View Assessment</a>
+        <a href="{% url 'assessment-edit-by-file-id' file.id %}" class="btn btn-link"><i class="fas fa-pencil-alt"></i>  Edit Assessment</a>
+        {% endif %}
+
+        {% if bookmark %}
+        <a class="btn btn-link" href="{% url 'bookmark-view' bookmark.id %}" type="button"><i class="fas fa-eye"></i> View Bookmark</a>
+        {% else %}
+        <a class="btn btn-link" href="{% url 'bookmark-add' file.id 'Video' %}" type="button"><i class="fas fa-circle fa-plus"></i>  Add to Bookmark</a>
+        {% endif %}
+
+      </div>
+      </div>
+      </div>
+      </div>
+
+      <div class="card card-secondary">
+      <div class="card-header">
+      <h4 class="card-title w-100">
+      <a class="d-block w-100 collapsed" data-toggle="collapse" href="#collapseTwo" aria-expanded="false">
+        <i class="fas fa-eye" style="color: #ffffff;"></i> &nbsp; &nbsp; Patient Details
+      </a>
+      </h4>
+      </div>
+      <div id="collapseTwo" class="collapse" data-parent="#accordion" style="">
+      <div class="card-body">
+        <div class="row align-items-center"><label class="col-form-label col-sm-4">BHT : </label><div class="col-sm">{{patient.bht}}</div></div>
+        <div class="row align-items-center"><label class="col-form-label col-sm-4">PHN : </label><div class="col-sm">{{patient.pin}}</div></div>
+        <div class="row align-items-center"><label class="col-form-label col-sm-4">NNC No : </label><div class="col-sm">{{patient.nnc_no|default_if_none:"---"}}</div></div>
+        <div class="row align-items-center"><label class="col-form-label col-sm-4">Name of Baby : </label><div class="col-sm">{{patient.baby_name}}</div></div>
+        <div class="row align-items-center"><label class="col-form-label col-sm-4">Name of Mother : </label><div class="col-sm">{{patient.mother_name}}</div></div>
+        <div class="row align-items-center"><label class="col-form-label col-sm-4">Gender : </label><div class="col-sm">{{patient.gender}}</div></div>
+        <div class="row align-items-center"><label class="col-form-label col-sm-4">Age : </label><div class="col-sm">{{patient.mother_name}}</div></div>
+        <hr>
+        {% if bookmark %}
+{% else %}
+{% endif %}
+
+        <a href="{% url 'view-patient' patient.id %}" class="btn btn-link"><i class="fas fa-eye"></i>  View patients' full details...</a></div>
+      </div>
+      </div>
+      </div>
+  </div>
+
+</div> <!-- /.main container -->
+
+{% endblock main_content %}

@@ -1,0 +1,71 @@
+{% extends 'src/base.html' %}
+{% block title %}Search results{% endblock title%}
+
+{% block main_content %}
+
+<div class="container w-75">
+
+<!-- Page header -->
+</br>
+<div class="card bg-info"><div class="card-header"><h3 class="card-title">Search results <a style="color:yellow;">{{ pgn }}</a></h3></div></div>
+<div class="card-body table-responsive p-0">
+
+<!-- results for patients -->
+{% if patient %}
+{% include './partials/patient_view.html' %}
+{% elif patients_page_obj %}
+<div class="card">
+<div class="card-body table-responsive p-0">
+
+    <table class="table table-hover text-nowrap">
+   <thead>
+   <tr>
+   <th>BHT</th>
+   <th>Clinic No</th>
+   <th>Babys Name</th>
+   <th>Gender</th>
+   <th>Date of birth</th>
+   <th>Actions</th>
+   </tr>
+   </thead>
+   <tbody>
+
+     {% for Patient in patients_page_obj %}
+   <tr>
+     <td>{{ Patient.bht }}</td>
+     <td>{{ Patient.clinic_no }}</td>
+     <td>{{ Patient.baby_name }}</td>
+     <td>{{ Patient.gender }}</td>
+     <td>{{ Patient.dob_tob }}</td>
+
+     <td>
+       <div class=" btn-group" role="group">
+         <button id="btnGroupDrop1" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true">
+           Actions
+         </button>
+         <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
+           <a class="dropdown-item" href="{% url 'view-patient' Patient.id %}"><i class="fas fa-eye"></i> View Patient</a>
+           <a class="dropdown-item" href="{% url 'edit-patient' Patient.id %}"><i class="fas fa-pencil-alt"></i> Modify Infomations</a>
+           <a class="dropdown-item" href="#"><i class="fas fa-circle fa-plus"></i> Add record</a>
+           <a class="dropdown-item" href="#"><i class="fas fa-circle fa-plus"></i> Add Video</a>
+           <a class="dropdown-item" href="{% url 'delete-confirm-patient' Patient.id %}"><i class="far fa-trash-alt"></i> Delete Patient</a>
+         </div>
+       </div>
+     </div>
+   </td>
+   </tr>
+   </tbody>
+   {% endfor %}
+   </table>
+</div>
+</div>
+
+{% else %}
+  <div class="alert alert-secondary" role="alert">
+    <div class="container">Records are not found...</div>
+  </div>
+{% endif %}
+
+</div>
+</div>
+{% endblock main_content %}

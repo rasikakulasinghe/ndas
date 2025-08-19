@@ -1,0 +1,70 @@
+{% extends 'src/base.html' %}
+{% load static %}
+{% block title %}Videos - Edit{% endblock %}
+{% block main_content %}
+
+</br>
+{% include 'src/form_error.html' %}
+
+<div class="container">
+
+<!-- Page header -->
+<div class="card bg-info"><div class="card-header"><h3 class="card-title">Edit Video Infomations</h3></div></div>
+
+<div class="row">
+  <div class="col-md">
+    <div class="card card-body">
+
+      <form action="{% url 'file-edit' file.id %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+  
+          <div class="form-group row align-items-center">
+            <label class="col-form-label col-sm-2">File ID : </label>
+            <div class="col-sm">
+              <div>{{file.id}}</div>
+            </div>
+          </div>
+  
+          <div class="form-group row align-items-center">
+            <label class="col-form-label col-sm-2">Title : </label>
+            <div class="col-sm">{{video_form.caption}}</div>
+            <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Name for the video, example : BHT + Recorded date time ect..."></span></a>
+            
+          </div>
+  
+          <div class="form-group row align-items-center">
+            <label class="col-form-label col-sm-2">Video File : </label>
+            <div class="col-sm">
+              <div class="custom-file">{{video_form.video}}</div>
+            </div>
+            <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="You can upload video, image, PDF. Size of the each file should less than 100Mb"></span></a>
+          </div>
+  
+          <div class="form-group row align-items-center">
+            <label class="col-form-label col-sm-2">Recorded On : </label>
+            <div class="col-sm">{{video_form.recorded_on}}</div>
+            <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Please select a date, recording was done..."></span></a>
+          </div>
+  
+          <div class="form-group row align-items-center">
+            <label class="col-form-label col-sm-2">Description : </label>
+            <div class="col-sm">{{video_form.description}}</div>
+            <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Name for the video, example : BHT + Recorded date time ect..."></span></a>
+          </div>
+        
+          </br>
+          
+          <div class="row justify-content-end">
+            <div class="col-auto"><button type="button" class="btn btn-primary" onclick="location.href='{% url 'file-delete_start' file.id %}'">Delete</button></div>
+            <div class="col-auto"><button type="button" class="btn btn-primary" onclick="location.href='{% url 'file-view' file.id %}'">View</button></div>
+            <div class="col-auto"><button type="submit" class="btn btn-primary">Update</button></div>
+          </div>
+  
+        </form>
+
+    </div> <!-- /.card body -->
+  </div>
+</div>
+
+</div> <!-- /.main container -->
+{% endblock main_content %}
