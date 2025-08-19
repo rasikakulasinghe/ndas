@@ -1,0 +1,13 @@
+from enum import Enum
+
+class PtStatus(Enum):
+    NEW = 'NEW'
+    DISCHARGED = 'DISCHARGED'
+    DX_NORMAL = 'DX_NORMAL'
+    DIAGNOSED = 'DIAGNOSED'
+    DX_GMA_NORMAL = 'DX_GMA_NORMAL'
+    DX_GMA_ABNORMAL = 'DX_GMA_ABNORMAL'
+    DX_DA_NORMAL = 'DX_DA_NORMAL'
+    DX_DA_ABNORMAL = 'DX_DA_ABNORMAL'
+    DX_HINE = 'DX_HINE'
+    ALL = 'ALL'

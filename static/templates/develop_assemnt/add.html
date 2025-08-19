@@ -1,0 +1,157 @@
+{% extends 'src/base.html' %}
+{% block title %}Developmental Assessment - Add{% endblock %}
+
+{% block main_content %}
+
+</br>
+{% include 'src/form_error.html' %}
+
+<div class="container-sm">
+  <div class="card">
+  <div class="card-header bg-info"><h3 class="card-title">Create New Developmental Assessment Record</h3></div>
+
+  <form action="{% url 'da-assessment-add' patient.id %}" method="POST">
+    {% csrf_token %}
+
+    <div class="card-body">
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Patient : </label>
+        <div class="col-sm-10">{{patient.baby_name}}</div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Current Age : </label>
+        <div class="col-sm-10">{{patient.getCurrentAge}}</div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Corrected Age : </label>
+        <div class="col-sm-10">{{patient.getCorrectedAge}}</div>
+      </div>
+      
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Assessment Date : </label>
+        <div class="col-sm-3">{{da_form.date_of_assessment}}</div>
+      </div>
+
+      </br> <div> <hr> </div>
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Gross Motor Assessment : </label>
+        <div class="col-sm-10">{{da_form.gm_details}}</div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2"></label>
+        <div class="col-sm">
+          <div class="d-flex align-items-center">
+            <div>Developmental age from &nbsp;&nbsp;</div>
+            <div>{{da_form.gm_age_from}}</div>
+            <div>&nbsp;&nbsp; Months to &nbsp;&nbsp;</div>
+            <div>{{da_form.gm_age_to}}</div>
+            <div>&nbsp;&nbsp; Months</div>
+            </div>
+        </div>
+      </div>
+
+      </br> <div> <hr> </div>
+
+
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Fine motor and vision : </label>
+        <div class="col-sm-10">{{da_form.fmv_details}}</div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2"></label>
+        <div class="col-sm">
+          <div class="d-flex align-items-center">
+            <div>Developmental age from &nbsp;&nbsp;</div>
+            <div>{{da_form.fmv_age_from}}</div>
+            <div>&nbsp;&nbsp; Months to &nbsp;&nbsp;</div>
+            <div>{{da_form.fmv_age_to}}</div>
+            <div>&nbsp;&nbsp; Months</div>
+            </div>
+        </div>
+      </div>
+
+      </br> <div> <hr> </div>
+
+
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Hearing, Speech and Language : </label>
+        <div class="col-sm-10">{{da_form.hsl_details}}</div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2"></label>
+        <div class="col-sm">
+          <div class="d-flex align-items-center">
+            <div>Developmental age from &nbsp;&nbsp;</div>
+            <div>{{da_form.hsl_age_from}}</div>
+            <div>&nbsp;&nbsp; Months to &nbsp;&nbsp;</div>
+            <div>{{da_form.hsl_age_to}}</div>
+            <div>&nbsp;&nbsp; Months</div>
+            </div>
+        </div>
+      </div>
+
+      </br> <div> <hr> </div>
+
+
+
+    <div class="form-group row">
+      <label class="col-form-label col-sm-2">Social, Emotional and Behaviour : </label>
+      <div class="col-sm-10">{{da_form.seb_details}}</div>
+    </div>
+
+    <div class="form-group row">
+      <label class="col-form-label col-sm-2"></label>
+      <div class="col-sm">
+        <div class="d-flex align-items-center">
+          <div>Developmental age from &nbsp;&nbsp;</div>
+          <div>{{da_form.seb_age_from}}</div>
+          <div>&nbsp;&nbsp; Months to &nbsp;&nbsp;</div>
+          <div>{{da_form.seb_age_to}}</div>
+          <div>&nbsp;&nbsp; Months</div>
+          </div>
+      </div>
+    </div>
+
+    </br> <div> <hr> </div> </br>
+
+
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Comment : </label>
+        <div class="col-sm-10">
+            {{da_form.comment}}
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Assessment done by : </label>
+        <div class="col-sm-10">
+            {{da_form.assessment_done_by}}
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-sm-2 col-form-label"></label>
+        <div class="col-sm"><button type="submit" class="btn btn-primary float-right">Add Developmental Assessment Record</button></div>
+      </div>
+
+      </br>
+
+  </form>
+
+    </div>
+    <!-- /.card-body -->
+  </div>
+  <!-- /.card -->
+</div>
+
+{% endblock main_content %}

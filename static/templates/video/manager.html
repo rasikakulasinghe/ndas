@@ -1,0 +1,118 @@
+{% extends 'src/base.html' %}
+{% load static %}
+{% block title %}Video - Manager{% endblock %}
+{% block main_content %}
+
+</br>
+
+<div class="container">
+  
+  {% if file_list %}
+
+  <!-- Identification Details -->
+  {% if patient %}{% include 'patients/partials/patient_identification_details.html' %}{% endif %}
+
+  <div class="card">
+    <div class="card-header bg-info">
+    <h3 class="card-title">Video Manager {% if patient %} :: {{patient.baby_name}}{% endif %}</h3>
+  </div>
+
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th scope="col">Index</th>
+      <th scope="col">File Status</th>
+      <th scope="col">Name of the Patient</th>
+      <th scope="col">Caption</th>
+      <th scope="col">Type</th>
+      <th scope="col">Recorded On</th>
+      <th scope="col">Uploaded On</th>
+      <th scope="col">Uploaded by</th>
+      <th scope="col">Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for File in file_list %}
+    <tr>
+      <th scope="row">{{ File.id }}</th>
+      
+      <td><div class="d-flex align-items-left">
+        {% if File.isNewFile %}<div class="d-inline-block"><span class="right badge badge-danger" data-toggle="tooltip" data-placement="top" title="New record">New</span>{% else %}
+        &nbsp;<div class="d-inline-block" style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="Analyzed by GMA" class="fas fa-check-circle" style="color: #1ab805;"></i></div>
+        {% endif %}
+
+        {% if File.isBookmarked %}&nbsp;<div class="d-inline-block" style="cursor: pointer;"><a href="{% url 'bookmark-view' File.isBookmarked.id %}" data-toggle="tooltip" data-placement="top" title="Bookmarked" class="far fa-bookmark" style="color: #3d7deb;"></a></div>{% endif %}
+        </div>
+      </td>
+      
+      <td>{{File.patient.baby_name}}</td>
+      <td>{{File.caption}}</td>
+      
+      <td>{% if File.ftype == 'Video' %}
+      <i data-toggle="tooltip" data-placement="top" title="Video" class="fas fa-play-circle" style="color: #ff0000;"></i>
+      {% elif File.ftype == 'Photo' %}
+      <i data-toggle="tooltip" data-placement="top" title="Image" class="far fa-image" style="color: #ff0000;"></i>
+      {% elif File.ftype == 'PDF' %}
+      <i data-toggle="tooltip" data-placement="top" title="PDF" class="far fa-file-pdf" style="color: #ff0000;"></i>
+      {% endif %}</td>
+
+      <td>{{File.recorded_on|date}}</td>
+      <td>{{File.uploaded_on|date}}</td>
+      <td>{{File.uploaded_by}}</td>
+      <td>
+        <div class=" btn-group" role="group">
+          <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
+          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
+            <a class="dropdown-item" href="{% url 'file-view' File.id %}"><i class="fas fa-eye"></i> Play</a>
+            <a class="dropdown-item" href="{% url 'file-edit' File.id %}"><i class="fas fa-pencil-alt"></i> Modify record</a>
+            <a class="dropdown-item" href="{% url 'file-delete_start' File.id %}"><i class="far fa-trash-alt"></i> Delete</a>
+            <div><hr></div>
+            {% if File.isNewFile %}<a class="dropdown-item" href="{% url 'assessment-add' File.patient.id File.id %}"><i class="fas fa-circle fa-plus"></i> Add New Assessment</a>
+            {% else %}
+            <a class="dropdown-item" href="{% url 'assessment-view-by-file-id' File.id %}"><i class="fas fa-eye"></i> View Assessment</a>
+            {% endif %}
+            <a class="dropdown-item" href="{% url 'file-manager-patient' File.patient.id %}"><i class="fas fa-eye"></i> View All Videos of this Patient</a>
+            <a class="dropdown-item" href="{% url 'view-patient' File.patient.id %}"><i class="fas fa-eye"></i> View Patient</a>
+          </div>
+        </div>
+      </td>
+    </tr>
+      {% endfor %}
+  </tbody>
+</table>
+
+</div>
+
+      <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-center">
+        <li>
+          {% if file_list.has_previous %}
+            <li class="page-item"> <a class="page-link" href="?page=1" tabindex="-1">&laquo; First</a>
+            <li class="page-item"> <a class="page-link" href="?page={{ file_list.previous_page_number }}" tabindex="-1">Previous</a></li>
+          {% else %}
+            <li class="page-item disabled"> <a class="page-link" href="#" tabindex="-1">&laquo; First</a>
+            <li class="page-item disabled"> <a class="page-link" href="#" tabindex="-1">Previous</a> </li>
+          {% endif %}
+        
+          <li class="page-item"><a class="page-link">Page {{ file_list.number }} of {{ file_list.paginator.num_pages }}</a></li>
+        
+          {% if file_list.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ file_list.next_page_number }}">Next</a></li>
+            <li class="page-item"><a class="page-link" href="?page={{ file_list.paginator.num_pages }}">Last &raquo;</a></li>
+          {% else %}
+            <li class="page-item disabled"><a class="page-link" href="#">Next</a></li>
+            <li class="page-item disabled"><a class="page-link" href="#">Last &raquo;</a></li>
+          {% endif %}
+        
+        </li>
+        </ul>
+        </nav>
+
+{% else %}
+<div class="alert alert-secondary" role="alert">No records found</div>
+
+{% endif %}
+
+</div>
+
+{% endblock main_content %}

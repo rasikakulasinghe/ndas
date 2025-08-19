@@ -1,0 +1,52 @@
+{% extends 'src/base.html' %}
+{% block title %}Attachment - Edit{% endblock %}
+
+{% block main_content %}
+
+</br>
+{% include 'src/form_error.html' %}
+
+<div class="container-sm">
+  <div class="card">
+  <div class="card-header bg-info"><h3 class="card-title">Edit Attachment</h3></div>
+
+  <form action="{% url 'attachment-edit' attachment.id %}" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="card-body">
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Patient : </label>
+        <div class="col-sm">{{attachment.patient.baby_name}}</div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Title : </label>
+        <div class="col-sm">{{form.title}}</div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Attachment : </label>
+        <div class="col-sm">{{form.attachment}}</div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Description : </label>
+        <div class="col-sm">{{form.description}}</div>
+      </div>
+
+      <div class="row justify-content-end align-items-center">
+        <div class="col-auto m-2"><button type="submit" class="btn btn-primary float-right">Update Attachment</button></div>
+        <div class="col-auto m-2"><button type="button" class="btn btn-primary float-right">Delete</button></div>
+      </div>
+
+      </br>
+
+  </form>
+
+    </div>
+    <!-- /.card-body -->
+  </div>
+  <!-- /.card -->
+</div>
+{% endblock main_content %}

@@ -1,0 +1,635 @@
+<!-- Page header -->
+<div class="card bg-info"><div class="card-header"><h3 class="card-title">Patient Details</h3></div>
+
+{% if patient.isNewPatient %}
+<div class="ribbon-wrapper ribbon-xl"><div class="ribbon bg-warning text-lg">New</div></div>
+{% else %}
+
+{% if patient.isDischarged %}
+<div class="ribbon-wrapper ribbon-xl"><div class="ribbon bg-warning text-lg">Discharged</div></div>
+{% else %}{% endif %}
+
+{% endif %}
+</div>
+
+<!-- Identification Details -->
+{% include 'patients/partials/patient_identification_details.html' %}
+
+          <!-- Details summary -->
+          <div class="card card-primary card-outline card-outline-tabs">
+            <div class="card-header p-0 border-bottom-0">
+            <ul class="nav nav-tabs" id="custom-tabs-four-tab" role="tablist">
+            <li class="nav-item">
+            <a class="nav-link active" id="custom-tabs-four-summary-tab" data-toggle="pill" href="#summary" role="tab" aria-controls="custom-tabs-four-summary" aria-selected="true">Summary</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" id="custom-tabs-four-birth-tab" data-toggle="pill" href="#birth" role="tab" aria-controls="custom-tabs-four-birth" aria-selected="false">Birth History</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" id="custom-tabs-four-contact-tab" data-toggle="pill" href="#contact" role="tab" aria-controls="custom-tabs-four-contact" aria-selected="false">Contacts</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" id="custom-tabs-four-video-tab" data-toggle="pill" href="#video" role="tab" aria-controls="custom-tabs-four-video" aria-selected="false">Videos</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" id="custom-tabs-four-gm-tab" data-toggle="pill" href="#assessment-gm" role="tab" aria-controls="custom-tabs-four-gm" aria-selected="false">GMA Record</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" id="custom-tabs-four-hine-tab" data-toggle="pill" href="#assessment-hine" role="tab" aria-controls="custom-tabs-four-hine" aria-selected="false">HINE Record</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" id="custom-tabs-four-da-nd-tab" data-toggle="pill" href="#assessment-da" role="tab" aria-controls="custom-tabs-four-da" aria-selected="false">Developmental Assessments</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" id="custom-tabs-four-cdic-tab" data-toggle="pill" href="#interventions-cdic" role="tab" aria-controls="custom-tabs-four-cdic" aria-selected="false">CDIC Records</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" id="custom-tabs-four-attachment-tab" data-toggle="pill" href="#attachments" role="tab" aria-controls="custom-tabs-four-attachment" aria-selected="false">Attachments</a>
+
+            {% comment %} <a class="nav-link" id="custom-tabs-four-attachment-tab" data-toggle="pill" href="#attachments" role="tab" aria-controls="custom-tabs-four-attachment" aria-selected="false">Attachments</a> {% endcomment %}
+            </li>
+            </ul>
+          </div>
+
+            <div class="card-body">
+            <div class="tab-content" id="custom-tabs-four-tabContent">
+
+            <div class="tab-pane fade active show" id="summary" role="tabpanel" aria-labelledby="custom-tabs-four-summary-tab">
+              <!-- Text for summary -->
+
+                <div class="col">
+
+                <div class="info-box">
+                <div class="info-box-content">
+                <span class="info-box-text">Current age : {{patient.getCurrentAge}}</span>
+                <span class="info-box-text">Corrected age : {{patient.getCorrectedAge}}</span>
+                <span class="info-box-text">Corrected getstational age : {{patient.getCorrectedGestationalAge}}</span>
+                <span class="info-box-text">Attachments : &nbsp;
+                  {% if file_attachment_count == 0 %}No Attachments{% else %} <a href="{% url 'attachment-manager-patient' patient.id %}" target="_blank"> <i class="far fa-eye" style="color: #00328a;"></i> &nbsp; View ({{file_attachment_count}})</a>{% endif %}</span>
+                <span class="info-box-text">Bookmark Status : &nbsp; {% if bookmark %}<a href="{% url 'bookmark-view' bookmark.id %}" target="_blank"> <i class="far fa-bookmark"></i> &nbsp; View</a>{% else %} &nbsp; No Bookmark{% endif %}</span>
+                <span class="info-box-text">Assessment Summary : &nbsp; GMA : {{patient.getDiagnosisList.0}} &nbsp; HINE : {{patient.getDiagnosisList.1}} &nbsp; DA : {{patient.getDiagnosisList.2}}</span>
+                </div>
+                </div>
+
+              {% if patient.getRC %}
+              </br>
+                Recomendations...
+                <div> <hr> </div>
+
+                {% for item in patient.getRC %}
+                  {% if item.display %}
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                      {{ item.msg }}
+                      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                  {% endif %}
+                {% endfor %}
+              {% endif %}
+
+            </div>
+
+              <!-- /end text for summary -->
+            </div>
+
+            <div class="tab-pane fade" id="birth" role="tabpanel" aria-labelledby="custom-tabs-four-birth-tab">
+              <!-- Text for birth -->
+              <dl class="row">
+
+                <dt class="col-sm-2">Gender :</dt>
+                <dd class="col-sm-10">{{patient.gender}}</dd>
+                
+                <dt class="col-sm-2">Date and time of birth :</dt>
+                <dd class="col-sm-10">{{patient.dob_tob}}</dd>
+
+                <dt class="col-sm-2">POG :</dt>
+                <dd class="col-sm-10">{{patient.getPOG}}</dd>
+    
+                <dt class="col-sm-2">Mode of Delivery :</dt>
+                <dd class="col-sm-10">{{patient.mo_delivery}}</dd>
+    
+                <dt class="col-sm-2">APGAR :</dt>
+                <dd class="col-sm-10">{{patient.getAPGAR}}</dd>
+                
+                <dt class="col-sm-2">Ressussitation :</dt>
+                <dd class="col-sm-10">{{patient.getResuscitationState}}</dd>
+    
+                <dt class="col-sm-2">Birth weight :</dt>
+                <dd class="col-sm-10">{{patient.birth_weight}} g</dd>
+
+                <dt class="col-sm-2">OFC :</dt>
+                <dd class="col-sm-10">{{patient.ofc}} cm</dd>
+
+                <dt class="col-sm-2">Length :</dt>
+                <dd class="col-sm-10">{{patient.length}} cm</dd>
+    
+              </dl>
+              <!-- /end text for birth -->
+            </div>
+
+            <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="custom-tabs-four-contact-tab">
+              <!-- Text for contact -->
+              <dl class="row">
+
+                <dt class="col-sm-2">Address :</dt>
+                <dd class="col-sm-10">{{patient.address}}</dd>
+                
+                <dt class="col-sm-2">Telephone (Mobile) :</dt>
+                <dd class="col-sm-10">{{patient.tp_mobile}}</dd>
+    
+                <dt class="col-sm-2">Telephone (Lan) :</dt>
+                <dd class="col-sm-10">{{patient.tp_lan}}</dd>
+    
+                <dt class="col-sm-2">MOH area :</dt>
+                <dd class="col-sm-10">{{patient.moh_area}}</dd>
+    
+                <dt class="col-sm-2">PHM area :</dt>
+                <dd class="col-sm-10">{{patient.phm_area}}</dd>
+    
+              </dl>
+              <!-- /end text for contact -->
+            </div>
+          
+            <div class="tab-pane fade" id="assessment-gm" role="tabpanel" aria-labelledby="custom-tabs-four-gma-tab">
+              <!-- Text for GMA -->
+
+                <div class="row">
+                    <div class="col-md-3 col-sm-6 col-12">
+                    <div class="info-box">
+                    <div class="info-box-content">
+                    <span class="info-box-number">GM Video Assessments :</span>
+                    <span class="info-box-text">{% if file_video_count == 0 %}No Video Assessments{% else %}
+                      Total: {{gm_assessments_count}} </br> New : {{gm_assessments_new}} </br> Completed : {{gm_assessments_completed}} </br> Last assessment was done on : </br> {{gm_last_assessment.date_of_assessment|date}} </br> Result : {{gm_last_assessment.getDiagnosis}} </br> Next action planed : {{gm_last_assessment.managment_plan}}
+                      {% endif %}</span>
+                    </div>
+                    </div>
+                    </div>
+
+                    <div class="col">
+
+                        {% if gm_assessments %}
+                  <table class="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>Index</th>
+                        <th>Patient Name</th>
+                        <th>Date of Assessment</th>
+                        <th>Age of Assessment</th>
+                        <th>Diagnosis</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for Assessment in gm_assessments %}
+                    <tr>
+                      <td>{{ Assessment.id }}</td>
+                      <td>{{ Assessment.patient.baby_name }}</td>
+                      <td>{{ Assessment.date_of_assessment }}</td>
+                      <td>{{ Assessment.patient.getCorrectedAge }}</td>
+
+                      <td>{% if Assessment.isDiagnosisNormal %}
+                        <div style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="Normal" class="fas fa-check-circle" style="color: #1ab805;"></i></div>
+                        {% else %}
+                        <div style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="{% for dx in Assessment.diagnosis.all %}{{dx.title}}{% endfor %}" class="fas fa-times-circle" style="color: #ff0000;"></i></div>
+                        {% endif %}</td>
+
+                      <td>
+                        <div class=" btn-group" role="group">
+                          <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
+                          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
+                            <a class="dropdown-item" href="{% url 'assessment-view' Assessment.id %}"><i class="fas fa-eye"></i> View</a>
+                            <a class="dropdown-item" href="{% url 'assessment-edit' Assessment.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
+                            <a class="dropdown-item" href="{% url 'assessment-delete_start' Assessment.id %}"><i class="far fa-trash-alt"></i> Delete</a>
+                            <a class="dropdown-item" href="{% url 'file-view' Assessment.video_file.id %}"><i class="fas fa-eye"></i> Play Video</a>
+                            <a class="dropdown-item" href="{% url 'user-view-by-username' Assessment.created_by.username %}"><i class="fas fa-eye"></i> View Created User</a>
+                            </div>
+                        </div>
+                      </div>
+                    </td>
+
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                  </table>
+
+                  <div class="text-center">
+                  <hr>
+                    {% if file_assessments_count > 5 %}<a href="{% url 'assessment-manager-patient' patient.id %}" class="btn btn-link"><i class="fas fa-eye"></i>  View All</a>{% endif %}
+                  </div>
+                  
+                  {% else %}
+                  <div class="alert alert-secondary" role="alert">There are no any GM assessments for this patient yet... !</div>
+                  {% endif %}
+
+                      </span>
+
+                      </div>
+                      
+                  </div>
+
+              <!-- /end text for gma -->
+            </div>
+
+            <div class="tab-pane fade" id="assessment-hine" role="tabpanel" aria-labelledby="custom-tabs-four-hine-tab">
+              <!-- Text for hine -->
+
+              {% if hine_assessments_count > 0 %}
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Index</th>
+                    <th>Date of Assessment</th>
+                    <th>Score</th>
+                    <th>Done by</th>
+                    <th>Created by</th>
+                    <th>Comment</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for HINE in hine_assessments %}
+                <tr>
+                  <td>{{HINE.id }}</td>
+                  <td>{{HINE.date_of_assessment }}</td>
+                  <td>{{HINE.score}}</td>
+                  <td>{{HINE.assessment_done_by}}</td>
+                  <td>{{HINE.added_by}}</td>
+                  <td>{{HINE.comment}}</td>
+                  <td>
+                    <div class=" btn-group" role="group">
+                      <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
+                      <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
+                        <a class="dropdown-item" href="{% url 'hine-assessment-view' HINE.id %}"><i class="fas fa-eye"></i> View</a>
+                        <a class="dropdown-item" href="{% url 'hine-assessment-edit' HINE.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
+                        <a class="dropdown-item" href="{% url 'hine-assessment-delete_start' HINE.id %}"><i class="far fa-trash-alt"></i> Delete</a>
+                        <a class="dropdown-item" href="{% url 'user-view-by-username' HINE.added_by.username %}"><i class="fas fa-eye"></i> View Created User</a>
+
+                      </div>
+                    </div>
+                  </div>
+                </td>
+
+                </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+
+              <div class="text-center">
+              <hr>
+                {% if hine_assessments_count > 5 %}<a href="{% url 'hine-assessment-manager-patient' patient.id %}" class="btn btn-link"><i class="fas fa-eye"></i>  View All</a>{% endif %}
+              </div>
+              
+              {% else %}
+              <div class="alert alert-secondary" role="alert">There are no any HINE assessments for this patient yet... !</div>
+              {% endif %}
+
+              <!-- /end text for hine -->
+            </div>
+
+            <div class="tab-pane fade" id="assessment-da" role="tabpanel" aria-labelledby="custom-tabs-four-hine-tab">
+              <!-- Text for Developmental Assessment -->
+
+              {% if da_assessments %}
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Index</th>
+                    <th>Date of Assessment</th>
+                    <th>Done at age (in Months)</th>
+                    <th>Diagnosis Normal</th>
+                    <th>Done by</th>
+                    <th>Comment</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for DA in da_assessments %}
+                <tr>
+                  <td>{{ DA.id }}</td>
+                  <td>{{ DA.date_of_assessment }}</td>
+                  <td>{{ DA.getAssessmentAgeInMonths }}</td>
+                  <td>{{ DA.isNormal }}</td>
+                  <td>{{ DA.assessment_done_by }}</td>
+                  <td>{{ DA.comment }}</td>
+                  <td>
+                    <div style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="Created by : {{ DA.added_by }}, on {{ DA.added_on }}" class="fas fa-info-circle" style="color: #3d7deb;"></i></div>
+                  </td>
+                  <td>
+                    <div class=" btn-group" role="group">
+                      <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
+                      <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
+                        <a class="dropdown-item" href="{% url 'da-assessment-view' DA.id %}"><i class="fas fa-eye"></i> View</a>
+                        <a class="dropdown-item" href="{% url 'da-assessment-edit' DA.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
+                        <a class="dropdown-item" href="{% url 'da-assessment-delete_start' DA.id %}"><i class="far fa-trash-alt"></i> Delete</a>
+                        <a class="dropdown-item" href="{% url 'user-view-by-username' DA.added_by.username %}"><i class="fas fa-eye"></i> View Created User</a>
+
+                      </div>
+                    </div>
+                  </div>
+                </td>
+
+                </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+
+              <div class="text-center">
+              <hr>
+                {% if da_assessments_count > 5 %}<a href="{% url 'da-assessment-manager-patient' patient.id %}" class="btn btn-link"><i class="fas fa-eye"></i>  View All</a>{% endif %}
+              </div>
+              
+              {% else %}
+              <div class="alert alert-secondary" role="alert">There are no any developmental assessment for this patient yet... !</div>
+              {% endif %}
+
+              <!-- /end text for Developmental Assessment -->
+            </div>
+
+            <div class="tab-pane fade" id="interventions-cdic" role="tabpanel" aria-labelledby="custom-tabs-four-cdic-tab">
+              <!-- Text for cdic -->
+
+              {% if cdic_record %}
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Index</th>
+                    <th>Date of Assessment</th>
+                    <th>Next Appoinment Date</th>
+                    <th>Today Actions</th>
+                    <th>Assessment Done By</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for CDIC in cdic_record %}
+                <tr>
+                  <td>{{ CDIC.id }}</td>
+                  <td>{{ CDIC.assessment_date }}</td>
+                  <td>{{ CDIC.next_appoinment_date }}</td>
+                  <td>{{ CDIC.today_interventions }}</td>
+                  <td>{{ CDIC.assessment_done_by }}</td>
+                  <td><div style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="Created by : {{ CDIC.created_by }}, on {{ CDIC.created_on }}" class="fas fa-info-circle" style="color: #3d7deb;"></i></div></td>
+                  <td>
+                    <div class=" btn-group" role="group">
+                      <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
+                      <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
+                        <a class="dropdown-item" href="{% url 'cdic-assessment-view' CDIC.id %}"><i class="fas fa-eye"></i> View</a>
+                        <a class="dropdown-item" href="{% url 'cdic-assessment-edit' CDIC.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
+                        <a class="dropdown-item" href="{% url 'cdic-assessment-delete_start' CDIC.id %}"><i class="far fa-trash-alt"></i> Delete</a>
+                        <a class="dropdown-item" href="{% url 'user-view-by-username' CDIC.created_by.username %}"><i class="fas fa-eye"></i> View Created User</a>
+
+                      </div>
+                    </div>
+                  </div>
+                </td>
+
+                </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+
+              <div class="text-center">
+              <hr>
+                {% if cdic_record_count > 5 %}<a href="{% url 'da-assessment-manager-patient' patient.id %}" class="btn btn-link"><i class="fas fa-eye"></i>  View All</a>{% endif %}
+              </div>
+              
+              {% else %}
+              <div class="alert alert-secondary" role="alert">There are no any CDIC records for this patient yet... !</div>
+              {% endif %}
+
+              <!-- /end text for cdic -->
+            </div>
+
+            <div class="tab-pane fade" id="video" role="tabpanel" aria-labelledby="custom-tabs-four-video-tab">
+              <!-- Text for summary -->
+
+              {% if file_videos %}
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th scope="col">Index</th>
+                    <th scope="col">Caption</th>
+                    <th scope="col">Age of Record (PNA)</th>
+                    <th scope="col">Recorded On</th>
+                    <th scope="col">Uploaded On</th>
+                    <th scope="col">Uploaded by</th>
+                    <th scope="col">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for video in file_videos %}
+                  <tr>
+                    <th scope="row">{{video.id}}
+                      {% if video.isNewFile %}<span class="right badge badge-danger" data-toggle="tooltip" data-placement="top" title="New record">New</span>{% endif %}
+                    </th>
+                    <td>{{video.caption}}</td>
+                    <td>{{video.getAgeOnRecord}}</td>
+                    <td>{{video.recorded_on}}</td>
+                    <td>{{video.uploaded_on}}</td>
+                    <td>{{video.uploaded_by}}</td>
+                    <td>
+                      <div class=" btn-group" role="group">
+                        <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
+                        <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
+                          <a class="dropdown-item" href="{% url 'file-view' video.id %}"><i class="fas fa-eye"></i> Play</a>
+                          <a class="dropdown-item" href="{% url 'file-edit' video.id %}"><i class="fas fa-pencil-alt"></i> Modify record</a>
+                          <a class="dropdown-item" href="{% url 'file-delete_start' video.id %}"><i class="far fa-trash-alt"></i> Delete</a>
+                          {% if video.isNewFile %}<a class="dropdown-item" href="{% url 'assessment-add' video.patient.id video.id %}"><i class="fas fa-circle fa-plus"></i> Add New Assessment</a>
+                          {% else %}
+                          <a class="dropdown-item" href="{% url 'assessment-view-by-file-id' video.id %}"><i class="fas fa-eye"></i> View Assessment</a>
+                          {% endif %}
+                          <a class="dropdown-item" href="{% url 'user-view-by-username' video.uploaded_by.username %}"><i class="fas fa-eye"></i> View Uploaded User</a>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                    {% endfor %}
+                </tbody>
+              </table>
+              {% else %}
+              <div class="alert alert-secondary" role="alert">There are no any videos for this patient... !</div>
+              {% endif %}
+              <!-- /end text for summary -->
+            </div>
+
+            <div class="tab-pane fade" id="attachments" role="tabpanel" aria-labelledby="custom-tabs-four-attachment-tab">
+              <!-- attachments Details -->
+              {% if file_attachment %}
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Created</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for Attachment in file_attachment %}
+                  <tr>
+                    <td>{% if Attachment.attachment_type == 'Video' %}
+                      <i data-toggle="tooltip" data-placement="top" title="Video" class="fas fa-play-circle" style="color: #ff0000;"></i>
+                      {% elif Attachment.attachment_type == 'Image' %}
+                      <i data-toggle="tooltip" data-placement="top" title="Image" class="far fa-image" style="color: #ff0000;"></i>
+                      {% elif Attachment.attachment_type == 'PDF' %}
+                      <i data-toggle="tooltip" data-placement="top" title="PDF" class="far fa-file-pdf" style="color: #ff0000;"></i>
+                      {% endif %}
+                      {% if Attachment.isBookmarked %}&nbsp;<div class="d-inline-block"><a href="{% url 'bookmark-view' Attachment.isBookmarked.id %}" data-toggle="tooltip" data-placement="top" title="Bookmarked" class="far fa-bookmark" style="color: #3d7deb;"></a></div>{% endif %}
+                    </td>
+
+                    <td>{{ Attachment.title }}</td>
+
+                    <td>{{ Attachment.description }}</td>
+                    <td><div style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="Uploaded on : {{ Attachment.uploaded_on }} by : {{ Attachment.uploaded_by.username }}, {% if Attachment.last_edit_by %} last edited on {{ Attachment.last_edit_on }} by {{ Attachment.last_edit_by.username }}{% endif %}" class="fas fa-info-circle" style="color: #3d7deb;"></i></div></td>
+                    
+                    <td><div style="cursor: pointer;" class=" btn-group" role="group">
+                        <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
+                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
+                          {% if Attachment.attachment_type == 'Image' %}
+                          <a class="dropdown-item" href="{% url 'attachment-view' Attachment.id %}"><i class="fas fa-eye"></i> View Attached Image</a>
+                          {% elif Attachment.attachment_type == 'PDF' %}
+                          <a class="dropdown-item" href="{% url 'attachment-view' Attachment.id %}"><i class="fas fa-eye"></i> Read Attached PDF</a>
+                          {% elif Attachment.attachment_type == 'Video' %}
+                          <a class="dropdown-item" href="{% url 'attachment-view' Attachment.id %}"><i class="fas fa-eye"></i> Play Attached Video</a>
+                          {% else %}
+                          {% endif %}
+
+                            <div><hr></div>
+                            <a class="dropdown-item" href="{% url 'attachment-edit' Attachment.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
+                            <a class="dropdown-item" href="{% url 'attachment-delete-confirm' Attachment.id %}"><i class="far fa-trash-alt"></i> Delete</a>
+                            <a class="dropdown-item" href="{% url 'user-view-by-username' Attachment.uploaded_by.username %}"><i class="fas fas fa-eye"></i> View Uploaded user</a>
+                            {% if Attachment.isBookmarked %}
+                            <a class="dropdown-item" href="{% url 'bookmark-view' Attachment.isBookmarked.id %}"><i class="fas fas fa-eye"></i> View Bookmark</a>
+                            {% endif %}
+                            </div>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+
+              <div class="text-center">
+              <hr>
+                {% if file_attachment_count > 5 %}<a href="{% url 'attachment-manager-patient' Attachment.patient.id %}" class="btn btn-link"><i class="fas fa-eye"></i>  View All</a>{% endif %}
+              </div>
+              
+              {% else %}
+              <div class="alert alert-secondary" role="alert">There are no any attachments for this patient... !</div>
+              {% endif %}
+              <!-- /end text for attachments -->
+            </div>
+          
+          </div></div></div>
+          <!-- / End Details attachments -->
+
+      <!-- New card -->
+      <div class="card">
+        <div class="card-header"><h3 class="card-title">Indications for GMA</h3></div>
+        <div class="card-body">
+          {% for gmamodel in patient.indecation_for_gma.all %}
+          <dl class="row">
+            <dd class="col-sm-11">{{ gmamodel.title }}
+            <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="{{gmamodel.description}}"></span></a>
+            </dd>
+          </dl>
+          {% endfor %}
+      </div></div>
+        <!-- /.card-body -->
+
+      <!-- New card -->
+      <div class="card">
+
+        <!-- /.card-header -->
+        <div class="card-header"><h3 class="card-title">Infomations</h3></div>
+
+        <div class="card-body">
+
+          <dl class="row">
+
+            <dt class="col-sm-2">Problems :</dt>
+            <dd class="col-sm-10">{{patient.problems}}</dd>
+
+            <dt class="col-sm-2">Antenatal History :</dt>
+            <dd class="col-sm-10">{{patient.antenatal_hx}}</dd>
+
+            <dt class="col-sm-2">Intranatal History :</dt>
+            <dd class="col-sm-10">{{patient.intranatal_hx}}</dd>
+
+            <dt class="col-sm-2">Postnatal History :</dt>
+            <dd class="col-sm-10">{{patient.postnatal_hx}}</dd>
+
+            <dt class="col-sm-2">Other relevent details :</dt>
+            <dd class="col-sm-10">{{patient.other_relavent_details}}</dd>
+
+          </dl>
+
+      </br>
+
+    </div></div>
+        <!-- /.card-body -->
+
+
+        <div class="card card-body container-fluid">
+          <div class="row justify-content-end align-items-center">
+            <div class="col-auto m-2">
+              <a class="btn btn-primary" href="{% url 'file-add' patient.id %}" type="button"><i class="right fas fa-circle fa-plus"></i>  New Video</a>
+            </div>
+
+            <div class="col-auto m-2">
+              <a class="btn btn-primary" href="{% url 'attachment-add' patient.id %}" type="button"><i class="right fas fa-circle fa-plus"></i>  New Developmental Assessment</a>
+            </div>
+            <div class="col-auto m-2">
+              <a class="btn btn-primary" href="{% url 'attachment-add' patient.id %}" type="button"><i class="right fas fa-circle fa-plus"></i>  New CDIC Record</a>
+            </div>
+            <div class="col-auto m-2">
+              <a class="btn btn-primary" href="{% url 'attachment-add' patient.id %}" type="button"><i class="right fas fa-circle fa-plus"></i>  New Attachment</a>
+            </div>
+
+            <div class="col-auto m-2">
+              {% if bookmark %}
+              <a class="btn btn-primary" href="{% url 'bookmark-view' bookmark.id %}" type="button"><i class="fas fa-eye"></i> View Bookmark</a>
+              {% else %}
+              <a class="btn btn-primary" href="{% url 'bookmark-add' patient.id 'Patient' %}" type="button"><i class="fas fa-circle fa-plus"></i>  Add Bookmark</a>
+              {% endif %}
+            </div>
+
+            {% comment %} {% if file_videos %}
+            <div class="col-auto m-2">
+            <a class="btn btn-primary" href="{% url 'file-manager-patient-type' patient.id 'Video' %}" type="button"><i class="right fas fa-eye"></i>  View Videos</a>
+            </div>
+            {% endif %} {% endcomment %}
+
+            {% if file_videos %}
+            <div class="col-auto m-2">
+            <a class="btn btn-primary" href="{% url 'attachment-manager-patient' patient.id%}" type="button"><i class="right fas fa-eye"></i>  View Attachments</a>
+            </div>
+            {% endif %}
+
+            {% comment %} {% if file_assessments %}
+            <div class="col-auto m-2">
+            <a class="btn btn-primary" href="{% url 'file-manager-patient-type' patient.id 'Video' %}" type="button"><i class="right fas fa-eye"></i>  View Assessment</a>
+            </div>
+            {% endif %} {% endcomment %}
+
+            <div class="col-auto m-2">
+              <a class="btn btn-primary" href="{% url 'edit-patient' patient.id %}" type="button"><i class="fas fa-pencil-alt"></i>  Update Patient</a>
+            </div>
+          </div>
+        </div>
+          </div>
+
+          <!-- Record Details -->
+        <div class="card"><div class="card-header">
+          <div class="container">
+          <dive class="float-right">
+            Created by : {{patient.added_by}}, on {{patient.added_on}}<br> 
+            {% if patient.last_edit_by %}Modified by : {{patient.last_edit_by}}, on {{patient.last_edit_on}} {% endif %}
+          </div>
+        </div>
+        </div>

@@ -1,0 +1,182 @@
+{% extends 'src/base.html' %}
+{% load static %}
+{% block title %}Developmental Assessment Record - View{% endblock %}
+{% block main_content %}
+
+</br>
+
+<div class="container-sm">
+<div class="card">
+<div class="card-header bg-info"><h3 class="card-title">Developmental Assessment Record</h3></div>
+
+{% if DARecord.isNormal %}
+<div class="ribbon-wrapper ribbon-xl"><div class="ribbon bg-success text-lg">Normal</div></div>
+{% else %}
+<div class="ribbon-wrapper ribbon-xl"><div class="ribbon bg-warning text-lg">Abnormal</div></div>
+{% endif %}
+
+<div class="card-body">
+
+    <div class="form-group row d-flex align-items-center">
+        <label class="col-sm-2 col-form-label">Name of Baby : </label>
+        <div class="col-sm-10">{{DARecord.patient.baby_name}}</div>
+    </div>
+
+    <div class="form-group row d-flex align-items-center">
+      <label class="col-form-label col-sm-2">Current Age : </label>
+      <div class="col-sm-10">{{DARecord.patient.getCurrentAge}}</div>
+    </div>
+
+    <div class="form-group row d-flex align-items-center">
+      <label class="col-form-label col-sm-2">Corrected Age : </label>
+      <div class="col-sm-10">{{DARecord.patient.getCorrectedAge}}</div>
+    </div>
+
+    <div class="form-group row d-flex align-items-center">
+      <label class="col-form-label col-sm-2">Date of Assessment : </label>
+      <div class="col-sm-10">{{DARecord.date_of_assessment}}</div>
+    </div>
+
+    <div class="form-group row d-flex align-items-center">
+      <label class="col-form-label col-sm-2">Age of Assessment : </label>
+      <div class="col-sm-10">{{DARecord.getAssessmentAgeInMonths}}</div>
+    </div>
+
+    {% comment %} <div class="form-group row">
+      <label class="col-form-label col-sm-2">Gross Motor Assessment : </label>
+      <div class="col-sm-10">{{DARecord.gm_details}}</div>
+    </div>
+    
+    <div class="form-group row">
+      <label class="col-form-label col-sm-2"></label>
+      <div class="col-sm"><div> <hr> </div>
+        <div class="d-flex align-items-center">
+          <div>Developmental age from &nbsp;&nbsp;</div>
+          <div>{{DARecord.gm_age_from}}</div>
+          <div>&nbsp;&nbsp; Months to &nbsp;&nbsp;</div>
+          <div>{{DARecord.gm_age_to}}</div>
+          <div>&nbsp;&nbsp; Months</div>
+        </div>
+      </div>
+    </div> {% endcomment %}
+
+    <div class="form-group row">
+      <label class="col-form-label col-sm-2">Assessment Records: </label>
+      <div class="col-sm-10">
+
+        <div class="card border-dark mb-3">
+          <div class="card-header">Gross Motor Assessment : </div>
+          <div class="card-body text-dark">
+            <h5 class="card-title">
+              <div class="d-flex align-items-center">
+                Developmental age from &nbsp;{{DARecord.gm_age_from}}&nbsp; Months to &nbsp;{{DARecord.gm_age_to}}&nbsp; Months
+              </div>
+            </h5>
+          </br>
+            <div> <hr> </div>
+            <p class="card-text">{{DARecord.gm_details}}</p>
+          </div>
+        </div>
+
+
+        <div class="card border-dark mb-3">
+          <div class="card-header">Fine motor and vision : </div>
+          <div class="card-body text-dark">
+            <h5 class="card-title">
+              <div class="d-flex align-items-center">
+                Developmental age from &nbsp;{{DARecord.fmv_age_from}}&nbsp; Months to &nbsp;{{DARecord.fmv_age_to}}&nbsp; Months
+              </div>
+            </h5>
+          </br>
+            <div> <hr> </div>
+            <p class="card-text">{{DARecord.fmv_details}}</p>
+          </div>
+        </div>
+
+
+        <div class="card border-dark mb-3">
+          <div class="card-header">Hearing, Speech and Language : </div>
+          <div class="card-body text-dark">
+            <h5 class="card-title">
+              <div class="d-flex align-items-center">
+                Developmental age from &nbsp;{{DARecord.hsl_age_from}}&nbsp; Months to &nbsp;{{DARecord.hsl_age_to}}&nbsp; Months
+              </div>
+            </h5>
+          </br>
+            <div> <hr> </div>
+            <p class="card-text">{{DARecord.hsl_details}}</p>
+          </div>
+        </div>
+
+
+        <div class="card border-dark mb-3">
+          <div class="card-header">Social, Emotional and Behaviour : </div>
+          <div class="card-body text-dark">
+            <h5 class="card-title">
+              <div class="d-flex align-items-center">
+                Developmental age from &nbsp;{{DARecord.seb_age_from}}&nbsp; Months to &nbsp;{{DARecord.seb_age_from}}&nbsp; Months
+              </div>
+            </h5>
+          </br>
+            <div> <hr> </div>
+            <p class="card-text">{{DARecord.seb_details}}</p>
+          </div>
+        </div>
+        
+
+      </div>
+    </div>
+
+
+    <div class="form-group row d-flex align-items-center">
+        <label class="col-form-label col-sm-2">Assessment Done by : </label>
+        <div class="col-sm-10">{{DARecord.assessment_done_by}}</div>
+    </div>
+
+    <div class="form-group row d-flex align-items-center">
+        <label class="col-form-label col-sm-2">Record Create : </label>
+        <div class="col-sm-10">by {{DARecord.added_by}} on {{DARecord.added_on}}</div>
+    </div>
+
+    {% if DARecord.last_edit_by %}
+        <div class="form-group row d-flex align-items-center">
+            <label class="col-form-label col-sm-2">Record Edit : </label>
+            <div class="col-sm-10">by {{DARecord.last_edit_by}} on {{DARecord.last_edit_on}}</div>
+        </div>
+    {% endif %}
+
+      </br><hr>
+
+    <div class="row justify-content-end align-items-center">
+
+        <div class="col-auto m-2">
+          <a class="btn btn-primary" href="{% url 'view-patient' DARecord.patient.id %}" type="button"><i class="right fas fas fa-eye"></i>  View Patient</a>
+        </div>
+
+        <div class="col-auto m-2">
+          <a class="btn btn-primary" href="{% url 'da-assessment-manager-patient' DARecord.patient.id %}" type="button"><i class="right fas fa-eye"></i>  View All Developmental Assessment Records</a>
+        </div>
+
+        <div class="col-auto m-2">
+          <a class="btn btn-primary" href="{% url 'da-assessment-delete_start' DARecord.id %}" type="button"><i class="right far fa-trash-alt"></i>  Delete</a>
+        </div>
+        
+        <div class="col-auto m-2">
+          <a class="btn btn-primary" href="{% url 'da-assessment-edit' DARecord.id %}" type="button"><i class="fas fa-pencil-alt"></i>  Update Record</a>
+        </div>
+
+        {% if bookmark %}
+        <a class="btn btn-primary" href="{% url 'bookmark-view' bookmark.id %}" type="button"><i class="fas fa-eye"></i> View Bookmark</a>
+        {% else %}
+        <a class="btn btn-primary" href="{% url 'bookmark-add' DARecord.id 'HINE' %}" type="button"><i class="fas fa-circle fa-plus"></i>  Add to Bookmark</a>
+        {% endif %}
+
+    </div>
+    </div>
+
+
+</div>
+<!-- /.card-body -->
+
+</div> <!-- /.main container -->
+{% endblock main_content %}

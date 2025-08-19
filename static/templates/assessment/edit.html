@@ -1,0 +1,108 @@
+{% extends 'src/base.html' %}
+{% block title %}Assessment - Edit{% endblock %}
+
+{% block main_content %}
+
+</br>
+{% include 'src/form_error.html' %}
+
+<div class="container-sm">
+  <div class="card">
+  <div class="card-header bg-info"><h3 class="card-title">Edit GM Assessment</h3></div>
+
+  <form action="{% url 'assessment-edit' assmnt.id %}" method="POST">
+    {% csrf_token %}
+
+    <div class="card-body">
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Patient : </label>
+        <div class="col-sm">{{assmnt.patient.baby_name}}</div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Title : </label>
+        <div class="col-sm">
+          <a href="{% url 'file-view' assmnt.video_file.id %}" target="_blank" data-toggle="tooltip" data-placement="top" title="Play this video in another window..."> {{assmnt.video_file.caption}} <i class="fas fa-play-circle" style="color: #0752d5;"></i></a>
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Date of Assessment : </label>
+        <div class="col-sm">
+          <div class=" d-flex align-items-center">
+            <div>{{form.date_of_assessment}}</div>
+            &nbsp; &nbsp; <div><a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Next assessment date if planing to follow up ..."></span></a></div>
+            </div>
+        </div>
+      </div>
+
+      <div class="form-group row align-items-top">
+        <label class="col-form-label col-sm-2">Diagnosis : </label>
+        <div class="col-sm">
+        <div id="accordion">
+          <div class="card">
+          <div class="card-header">
+          <h4 class="card-title w-100">
+          <a class="d-block w-100" data-toggle="collapse" href="#collapseOne" aria-expanded="true">
+            <i class="fas fa-eye" style="color: #00328a;"></i> &nbsp; &nbsp; Click here to see diagnosis list...
+          </a>
+          </h4>
+          </div>
+          <div id="collapseOne" class="collapse hide" data-parent="#accordion" style="">
+          <div class="card-body">
+            <div class="col-sm">{{form.diagnosis}}</div>
+          </div>
+          </div>
+          </div>
+          </div>
+          </div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Diagnosis Other : </label>
+        <div class="col-sm">{{form.diagnosis_other}}</div>
+      </div>
+      
+      <div id="container_dx">
+        <div class="form-group row">
+          <label class="col-form-label col-sm-2">Diagnosis Conclution : </label>
+          <div class="col-sm">{{form.diagnosis_conclution}}</div>
+        </div>
+        </div>
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Managment Plan : </label>
+        <div class="col-sm">{{form.managment_plan}}</div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Next Assessment Date : </label>
+        <div class="col-sm">
+          <div class=" d-flex align-items-center">
+            <div>{{form.next_assessment_date}}</div>
+            &nbsp; &nbsp; <div><a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Select next assessment date if plan to follow up further..."></span></a></div>
+            </div>
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Parent Infomed : </label>
+        <div class="col-sm">{{form.parant_informed}}</div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-sm-2 col-form-label"></label>
+        <div class="col-sm"><button type="submit" class="btn btn-primary float-right">Update Assessment</button></div>
+      </div>
+
+      </br>
+
+  </form>
+
+    </div>
+    <!-- /.card-body -->
+  </div>
+  <!-- /.card -->
+</div>
+{% endblock main_content %}
