@@ -45,6 +45,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_cleanup.apps.CleanupConfig',
     
+    # Security apps
+    'csp',  # Content Security Policy
+    'django_permissions_policy',  # Permissions Policy
+    
     'django_user_agents',
     'users.apps.UsersConfig',
     'patients.apps.PatientsConfig',
@@ -54,6 +58,8 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Add WhiteNoise after SecurityMiddleware
+    'csp.middleware.CSPMiddleware',  # Content Security Policy middleware
+    # 'django_permissions_policy.PermissionsPolicyMiddleware',  # Temporarily disabled - will fix later
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -204,8 +210,11 @@ LOGGING = {
     },
 }
 
-# Security Headers Configuration
-# These settings enhance security by adding HTTP headers
+# ==============================================================================
+# COMPREHENSIVE SECURITY HEADERS CONFIGURATION
+# ==============================================================================
+
+# Basic Security Headers (already configured but enhanced)
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000  # 1 year
@@ -214,13 +223,116 @@ SECURE_HSTS_PRELOAD = True
 X_FRAME_OPTIONS = 'DENY'
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 
-# SSL/HTTPS Settings (enable in production with HTTPS)
-# SECURE_SSL_REDIRECT = True  # Uncomment when using HTTPS in production
-# SESSION_COOKIE_SECURE = True  # Uncomment when using HTTPS in production
-# CSRF_COOKIE_SECURE = True  # Uncomment when using HTTPS in production
+# SSL/HTTPS Settings (CRITICAL - Enable in production with HTTPS)
+# Uncomment these when deploying with HTTPS
+# SECURE_SSL_REDIRECT = True  # Forces HTTPS redirects
+# SESSION_COOKIE_SECURE = True  # Ensures session cookies only sent over HTTPS
+# CSRF_COOKIE_SECURE = True  # Ensures CSRF cookies only sent over HTTPS
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # For reverse proxy setups
 
-# Additional Security Settings
+# ==============================================================================
+# CONTENT SECURITY POLICY (CSP) CONFIGURATION - NEW FORMAT
+# ==============================================================================
+# CSP is the most effective protection against XSS attacks
+
+# New CSP configuration format for django-csp 4.0+
+if DEBUG:
+    # Development CSP - allows inline scripts/styles for admin and development
+    CONTENT_SECURITY_POLICY = {
+        'DIRECTIVES': {
+            'default-src': ("'self'",),
+            'script-src': (
+                "'self'", 
+                "'unsafe-inline'",  # Needed for Django admin and some templates
+                "'unsafe-eval'",    # Needed for some JS libraries
+                "https://cdn.jsdelivr.net",  # For Chart.js and other CDN scripts
+                "https://cdnjs.cloudflare.com",
+            ),
+            'style-src': (
+                "'self'", 
+                "'unsafe-inline'",  # Needed for Django admin and Bootstrap
+                "https://cdn.jsdelivr.net",
+                "https://cdnjs.cloudflare.com",
+            ),
+            'img-src': ("'self'", "data:", "blob:", "https:"),
+            'font-src': ("'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"),
+            'connect-src': ("'self'",),
+            'frame-src': ("'none'",),
+            'object-src': ("'none'",),
+            'base-uri': ("'self'",),
+            'form-action': ("'self'",),
+        }
+    }
+else:
+    # Production CSP - more restrictive
+    CONTENT_SECURITY_POLICY = {
+        'DIRECTIVES': {
+            'default-src': ("'self'",),
+            'script-src': (
+                "'self'",
+                # Add specific script hashes or nonces in production
+                # Remove 'unsafe-inline' and 'unsafe-eval' for maximum security
+            ),
+            'style-src': ("'self'",),
+            'img-src': ("'self'", "data:"),
+            'font-src': ("'self'",),
+            'connect-src': ("'self'",),
+            'frame-src': ("'none'",),
+            'object-src': ("'none'",),
+            'base-uri': ("'self'",),
+            'form-action': ("'self'",),
+        }
+    }
+
+# CSP Reporting (optional but recommended for monitoring)
+# CSP_REPORT_URI = '/csp-report/'  # Uncomment if you want CSP violation reports
+
+# ==============================================================================
+# PERMISSIONS POLICY CONFIGURATION
+# ==============================================================================
+# Controls browser features like camera, microphone, location, etc.
+
+PERMISSIONS_POLICY = {
+    "accelerometer": [],      # Deny access to accelerometer
+    "ambient-light-sensor": [],  # Deny access to ambient light sensor
+    "autoplay": [],           # Deny autoplay
+    "camera": [],             # Deny camera access (important for medical app)
+    "display-capture": [],    # Deny screen capture
+    "document-domain": [],    # Deny document.domain
+    "encrypted-media": [],    # Deny encrypted media
+    "fullscreen": ["self"],   # Allow fullscreen only from same origin
+    "geolocation": [],        # Deny location access
+    "gyroscope": [],          # Deny gyroscope
+    "magnetometer": [],       # Deny magnetometer
+    "microphone": [],         # Deny microphone access
+    "midi": [],               # Deny MIDI access
+    "payment": [],            # Deny payment API
+    "picture-in-picture": [], # Deny picture-in-picture
+    "speaker": [],            # Deny speaker selection
+    "usb": [],                # Deny USB access
+    "vibrate": [],            # Deny vibration API
+    "vr": [],                 # Deny VR access
+}
+
+# ==============================================================================
+# ADDITIONAL SECURITY SETTINGS
+# ==============================================================================
+
+# Cookie Security
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_AGE = 3600  # 1 hour session timeout
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection
+CSRF_COOKIE_SAMESITE = 'Lax'     # CSRF protection
+
+# Additional Security Headers
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'  # Prevents some attacks
+
+# ==============================================================================
+# SECURITY HEADER TESTING
+# ==============================================================================
+# After implementing these settings, test your security headers at:
+# - https://securityheaders.com/
+# - https://observatory.mozilla.org/
+# - https://csp-evaluator.withgoogle.com/
