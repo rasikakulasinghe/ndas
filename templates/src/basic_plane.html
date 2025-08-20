@@ -46,6 +46,13 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 <!-- jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+// Verify jQuery loaded before proceeding
+if (typeof jQuery === 'undefined') {
+    console.error('❌ jQuery failed to load!');
+    document.write('<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"><\/script>');
+}
+</script>
 <!-- Bootstrap 4 -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 <!-- AdminLTE App -->
@@ -55,25 +62,39 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 <!-- Bootstrap 4 initialization script -->
 <script>
-$(document).ready(function() {
-    // Initialize Bootstrap 4 tooltips
-    $('[data-toggle="tooltip"]').tooltip();
-    
-    // Initialize popovers
-    $('[data-toggle="popover"]').popover();
-    
-    // Initialize Select2
-    $('.select2').select2();
-    
-    // Re-initialize for dynamically loaded content
-    if (typeof window.htmx !== 'undefined') {
-        document.addEventListener('htmx:afterSwap', function() {
-            // Re-initialize Bootstrap components after HTMX content swap
-            $('[data-toggle="tooltip"]').tooltip();
-            $('[data-toggle="popover"]').popover();
-            $('.select2').select2();
-        });
+// Wait for DOM and ensure jQuery is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof $ === 'undefined') {
+        console.error('❌ jQuery not loaded - Navigation menu may not work properly');
+        return;
     }
+    
+    $(document).ready(function() {
+        try {
+            // Initialize Bootstrap 4 tooltips
+            $('[data-toggle="tooltip"]').tooltip();
+            
+            // Initialize popovers
+            $('[data-toggle="popover"]').popover();
+            
+            // Initialize Select2
+            $('.select2').select2();
+            
+            console.log('✅ Bootstrap components initialized successfully');
+            
+            // Re-initialize for dynamically loaded content
+            if (typeof window.htmx !== 'undefined') {
+                document.addEventListener('htmx:afterSwap', function() {
+                    // Re-initialize Bootstrap components after HTMX content swap
+                    $('[data-toggle="tooltip"]').tooltip();
+                    $('[data-toggle="popover"]').popover();
+                    $('.select2').select2();
+                });
+            }
+        } catch (error) {
+            console.error('❌ Failed to initialize Bootstrap components:', error);
+        }
+    });
 });
 </script>
 
@@ -94,6 +115,18 @@ $(document).ready(function() {
 
 <!-- Custom rotate functionality -->
 <script type="text/javascript" src="{% static 'js/rotate.js' %}" defer></script>
+
+<!-- Ensure Video.js is loaded before plugins -->
+<script type="text/javascript">
+// Wait for Video.js to be fully loaded before initializing plugins
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof videojs === 'undefined') {
+        console.warn('❌ Video.js not loaded, video functionality will be limited');
+        return;
+    }
+    console.log('✅ Video.js loaded successfully');
+});
+</script>
 
 <!-- Video.js initialization and custom scripts -->
 <script type="text/javascript">

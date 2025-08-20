@@ -1,9 +1,14 @@
 // Main JavaScript file for NDAS application
 
-// Tool Tip initialization
-$(function () {
-    $('[data-toggle="tooltip"]').tooltip()
-});
+// Ensure jQuery is loaded before running any jQuery code
+if (typeof $ === 'undefined') {
+    console.error('❌ jQuery not available in main.js');
+} else {
+    // Tool Tip initialization
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+    });
+}
 
 // Prevent duplicate Video.js initialization - this is handled in the base template
 // This file only contains fallback initialization if base template fails
