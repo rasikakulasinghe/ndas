@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Send Verification Email - NDAS{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4><i class="fas fa-envelope-open-text"></i> Email Verification</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-center mb-4">
+                        Enter your email address to receive a verification link.
+                    </p>
+                    
+                    <form method="post" action="{% url 'resend-verification' %}">
+                        {% csrf_token %}
+                        <div class="form-group mb-3">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope"></i> Email Address
+                            </label>
+                            <input 
+                                type="email" 
+                                class="form-control" 
+                                id="email" 
+                                name="email" 
+                                required 
+                                placeholder="Enter your email address"
+                            >
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane"></i> Send Verification Email
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <a href="{% url 'user-login' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Login
+                        </a>
+                    </div>
+                    
+                    <div class="alert alert-info mt-4">
+                        <small>
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Note:</strong> Check your spam folder if you don't receive the email within a few minutes.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

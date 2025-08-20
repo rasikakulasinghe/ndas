@@ -19,13 +19,11 @@
     {% comment %} {% include './content_headder.html' %} {% endcomment %}
     <!-- /.content-header -->
 
-    {% endif %}
-
     <!-- Main content -->
     <div class="content">
 
       <!-- Message display -->
-      {% if user.is_authenticated  %}{% include 'src/messages.html' %}{% endif %}
+      {% include 'src/messages.html' %}
       {% comment %} {% include './main_content.html' %} {% endcomment %} 
 
       {% block main_content %}
@@ -42,7 +40,11 @@
   {% comment %} {% include './content_headder.html' %} {% endcomment %}
   <!-- /.control-sidebar -->
 
-<!-- Main Footer -->
-{% if user.is_authenticated  %}{% include './main_footer.html' %}{% endif %}
+  <!-- Main Footer -->
+  {% include './main_footer.html' %}
+</div>
+<!-- /.wrapper -->
+
+{% endif %}
 
 {% endblock mainbody %}

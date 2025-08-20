@@ -255,15 +255,23 @@ if DEBUG:
                 "'unsafe-eval'",    # Needed for some JS libraries
                 "https://cdn.jsdelivr.net",  # For Chart.js and other CDN scripts
                 "https://cdnjs.cloudflare.com",
+                "https://vjs.zencdn.net",  # For Video.js scripts
             ),
             'style-src': (
                 "'self'", 
                 "'unsafe-inline'",  # Needed for Django admin and Bootstrap
                 "https://cdn.jsdelivr.net",
                 "https://cdnjs.cloudflare.com",
+                "https://fonts.googleapis.com",  # For Google Fonts
+                "https://vjs.zencdn.net",  # For Video.js styles
             ),
             'img-src': ("'self'", "data:", "blob:", "https:"),
-            'font-src': ("'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"),
+            'font-src': (
+                "'self'", 
+                "https://cdn.jsdelivr.net", 
+                "https://cdnjs.cloudflare.com",
+                "https://fonts.gstatic.com",  # For Google Fonts
+            ),
             'connect-src': ("'self'",),
             'frame-src': ("'none'",),
             'object-src': ("'none'",),

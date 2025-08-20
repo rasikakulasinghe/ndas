@@ -22,7 +22,7 @@ urlpatterns = [
     path("patient/delete/confirm/<str:pk>/", views.patient_delete_confirm, name='delete-confirm-patient'),
     path("patient/delete/<str:pk>/", views.patient_delete, name='delete-patient'),
     path("search/", views.search_start, name='search-start'),
-    path("search/results/", views.earch_results, name='search-results'),
+    path("search/results/", views.search_results, name='search-results'),
     path("help/article/", views.help_home, name='help-home'),
     path("help/article/<str:pk>/", views.help_article, name='help-article'),
 

@@ -302,7 +302,7 @@ def search_start(request):
     return render (request, 'patients/search.html', {'username_list' : username_list})
 
 @login_required(login_url='user-login')
-def earch_results(request):
+def search_results(request):
     combo_record_type = request.POST.get('combo_record_type', None)
     combo_pt_param_type = request.POST.get('combo_pt_param_type', None)
     como_user_username = request.POST.get('combo_users', None)
