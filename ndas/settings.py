@@ -3,22 +3,13 @@ import os
 from django.contrib.messages import constants as messages
 import environ
 
-
-
-
-env = environ.Env(
-    # set casting, default value
-    DEBUG=(bool, False)
-)
+env = environ.Env(DEBUG=(bool, False))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Take environment variables from .env file
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
+environ.Env.read_env(BASE_DIR / '.env')
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
@@ -28,14 +19,7 @@ DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 
-# ==============================================================================
-# SECURITY CONFIGURATION
-# ==============================================================================
-# Security headers and related configurations have been added at the end of this file
-# Search for "Security Headers Configuration" for HTTPS and security settings
-
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -44,11 +28,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_cleanup.apps.CleanupConfig',
-    
-    # Security apps
     'csp',  # Content Security Policy
     'django_permissions_policy',  # Permissions Policy
-    
     'django_user_agents',
     'users.apps.UsersConfig',
     'patients.apps.PatientsConfig',
@@ -57,14 +38,13 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add WhiteNoise after SecurityMiddleware
-    'csp.middleware.CSPMiddleware',  # Content Security Policy middleware
-    # 'django_permissions_policy.PermissionsPolicyMiddleware',  # Temporarily disabled - will fix later
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'csp.middleware.CSPMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'users.middleware.UserActivityMiddleware',  # User activity tracking
+    'users.middleware.UserActivityMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_user_agents.middleware.UserAgentMiddleware',
@@ -75,10 +55,7 @@ ROOT_URLCONF = 'ndas.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            BASE_DIR / 'templates',           # Proper Django templates directory
-            BASE_DIR / 'static/templates',    # Legacy directory for backwards compatibility
-        ],
+        'DIRS': [BASE_DIR / 'templates', BASE_DIR / 'static/templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -93,10 +70,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ndas.wsgi.application'
 
-
 # Database
-# https://docs.djangoproject.com/en/4.1/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -104,104 +78,69 @@ DATABASES = {
     }
 }
 
-
 # Password validation
-# https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
-
 
 # Internationalization
-# https://docs.djangoproject.com/en/4.1/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
-# TIME_ZONE = 'UTC'
 TIME_ZONE = 'Asia/Kolkata'
-
 USE_I18N = True
-
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.1/howto/static-files/
-
 STATIC_URL = env('STATIC_URL')
 MEDIA_URL = env('MEDIA_URL')
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-# STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-
-# LOGIN_URL = 'user-login'
-# LOGIN_REDIRECT_URL = "home"
-# LOGOUT_REDIRECT_URL = "user-login"
-
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static')
-]
+MEDIA_ROOT = BASE_DIR / 'media'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # WhiteNoise configuration for serving static files
 STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = "users.CustomUser"
 
-#SMTP Configuration
-# SMTP Configuration (use environment variables for production)
 # Email Configuration
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # For production
+EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
+EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = ''  # Set this in .env file
-EMAIL_HOST_PASSWORD = ''  # Set this in .env file
+try:
+    EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+except:
+    EMAIL_HOST_USER = ''
+try:
+    EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+except:
+    EMAIL_HOST_PASSWORD = ''
 DEFAULT_FROM_EMAIL = 'noreply@ndas-system.com'
-
-# Email verification settings
 EMAIL_VERIFICATION_REQUIRED = True
 EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS = 24
 
-# email local settings
-EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
-EMAIL_FILE_PATH = str(BASE_DIR.joinpath('sent_emails'))
-
 MESSAGE_TAGS = {
-        messages.DEBUG: 'alert-secondary',
-        messages.INFO: 'alert-info',
-        messages.SUCCESS: 'alert-success',
-        messages.WARNING: 'alert-warning',
-        messages.ERROR: 'alert-danger',
- }
+    messages.DEBUG: 'alert-secondary',
+    messages.INFO: 'alert-info',
+    messages.SUCCESS: 'alert-success',
+    messages.WARNING: 'alert-warning',
+    messages.ERROR: 'alert-danger',
+}
 
+# Admin site customization
 ADMIN_SITE_HEADER = "Neurodevelopmental Assessment System"
 ADMIN_SITE_TITLE = "NDAs"
 ADMIN_INDEX_TITLE = "Welcome to NDAs"
 
+# Logging configuration
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -221,11 +160,7 @@ LOGGING = {
     },
 }
 
-# ==============================================================================
-# COMPREHENSIVE SECURITY HEADERS CONFIGURATION
-# ==============================================================================
-
-# Basic Security Headers (already configured but enhanced)
+# Security Headers Configuration
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000  # 1 year
@@ -233,157 +168,48 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 X_FRAME_OPTIONS = 'DENY'
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
 
-# SSL/HTTPS Settings (CRITICAL - Enable in production with HTTPS)
-# Uncomment these when deploying with HTTPS
-# SECURE_SSL_REDIRECT = True  # Forces HTTPS redirects
-# SESSION_COOKIE_SECURE = True  # Ensures session cookies only sent over HTTPS
-# CSRF_COOKIE_SECURE = True  # Ensures CSRF cookies only sent over HTTPS
-# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # For reverse proxy setups
-
-# ==============================================================================
-# CONTENT SECURITY POLICY (CSP) CONFIGURATION
-# ==============================================================================
-# CSP is the most effective protection against XSS attacks
-
-# Django-CSP configuration format
+# Content Security Policy (CSP)
 if DEBUG:
-    # Development CSP - allows inline scripts/styles for admin and development
     CSP_DEFAULT_SRC = ("'self'",)
-    CSP_SCRIPT_SRC = (
-        "'self'", 
-        "'unsafe-inline'",  # Needed for Django admin and some templates
-        "'unsafe-eval'",    # Needed for some JS libraries
-        "https://cdn.jsdelivr.net",  # For Chart.js and other CDN scripts
-        "https://cdnjs.cloudflare.com",
-        "https://vjs.zencdn.net",  # For Video.js scripts
-    )
-    CSP_SCRIPT_SRC_ELEM = (  # Explicit script-src-elem directive for external scripts
-        "'self'", 
-        "'unsafe-inline'",
-        "https://cdn.jsdelivr.net",
-        "https://cdnjs.cloudflare.com", 
-        "https://vjs.zencdn.net",
-    )
-    CSP_STYLE_SRC = (
-        "'self'", 
-        "'unsafe-inline'",  # Needed for Django admin and Bootstrap
-        "https://cdn.jsdelivr.net",
-        "https://cdnjs.cloudflare.com",
-        "https://fonts.googleapis.com",  # For Google Fonts
-        "https://vjs.zencdn.net",  # For Video.js styles
-    )
-    CSP_STYLE_SRC_ELEM = (  # Explicit style-src-elem directive for external stylesheets
-        "'self'", 
-        "'unsafe-inline'",
-        "https://cdn.jsdelivr.net",
-        "https://cdnjs.cloudflare.com",
-        "https://fonts.googleapis.com",  # For Google Fonts
-        "https://vjs.zencdn.net",  # For Video.js styles
-    )
+    CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://vjs.zencdn.net")
+    CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "https://vjs.zencdn.net")
     CSP_IMG_SRC = ("'self'", "data:", "blob:", "https:")
-    CSP_FONT_SRC = (
-        "'self'", 
-        "data:",  # Allow data: URIs for base64 encoded fonts (needed for Chart.js)
-        "https://cdn.jsdelivr.net", 
-        "https://cdnjs.cloudflare.com",
-        "https://fonts.gstatic.com",  # For Google Fonts
-    )
+    CSP_FONT_SRC = ("'self'", "data:", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com")
     CSP_CONNECT_SRC = ("'self'",)
     CSP_FRAME_SRC = ("'none'",)
     CSP_OBJECT_SRC = ("'none'",)
     CSP_BASE_URI = ("'self'",)
     CSP_FORM_ACTION = ("'self'",)
 else:
-    # Production CSP - more restrictive (only if external CDNs are needed in production)
     CSP_DEFAULT_SRC = ("'self'",)
-    CSP_SCRIPT_SRC = (
-        "'self'",
-        # Add specific script hashes or nonces in production instead of unsafe-inline
-        # For external CDNs, uncomment these if needed:
-        # "https://cdnjs.cloudflare.com",
-        # "https://vjs.zencdn.net",
-    )
-    CSP_SCRIPT_SRC_ELEM = (
-        "'self'",
-        # For external CDNs, uncomment these if needed:
-        # "https://cdnjs.cloudflare.com", 
-        # "https://vjs.zencdn.net",
-    )
-    CSP_STYLE_SRC = (
-        "'self'",
-        # For external fonts/styles, uncomment these if needed:
-        # "https://fonts.googleapis.com",
-        # "https://vjs.zencdn.net",
-    )
-    CSP_STYLE_SRC_ELEM = (
-        "'self'",
-        # For external fonts/styles, uncomment these if needed:
-        # "https://fonts.googleapis.com",
-        # "https://vjs.zencdn.net",
-    )
+    CSP_SCRIPT_SRC = ("'self'",)
+    CSP_STYLE_SRC = ("'self'",)
     CSP_IMG_SRC = ("'self'", "data:")
-    CSP_FONT_SRC = (
-        "'self'",
-        "data:",  # Allow data: URIs for base64 encoded fonts (needed for Chart.js in production)
-        # For Google Fonts, uncomment this if needed:
-        # "https://fonts.gstatic.com",
-    )
+    CSP_FONT_SRC = ("'self'", "data:")
     CSP_CONNECT_SRC = ("'self'",)
     CSP_FRAME_SRC = ("'none'",)
     CSP_OBJECT_SRC = ("'none'",)
     CSP_BASE_URI = ("'self'",)
     CSP_FORM_ACTION = ("'self'",)
 
-# CSP Reporting (optional but recommended for monitoring)
-# CSP_REPORT_URI = '/csp-report/'  # Uncomment if you want CSP violation reports
-
-# ==============================================================================
-# PERMISSIONS POLICY CONFIGURATION
-# ==============================================================================
-# Controls browser features like camera, microphone, location, etc.
-
+# Permissions Policy - Control browser features
 PERMISSIONS_POLICY = {
-    "accelerometer": [],      # Deny access to accelerometer
-    "ambient-light-sensor": [],  # Deny access to ambient light sensor
-    "autoplay": [],           # Deny autoplay
-    "camera": [],             # Deny camera access (important for medical app)
-    "display-capture": [],    # Deny screen capture
-    "document-domain": [],    # Deny document.domain
-    "encrypted-media": [],    # Deny encrypted media
-    "fullscreen": ["self"],   # Allow fullscreen only from same origin
-    "geolocation": [],        # Deny location access
-    "gyroscope": [],          # Deny gyroscope
-    "magnetometer": [],       # Deny magnetometer
-    "microphone": [],         # Deny microphone access
-    "midi": [],               # Deny MIDI access
-    "payment": [],            # Deny payment API
-    "picture-in-picture": [], # Deny picture-in-picture
-    "speaker": [],            # Deny speaker selection
-    "usb": [],                # Deny USB access
-    "vibrate": [],            # Deny vibration API
-    "vr": [],                 # Deny VR access
+    "accelerometer": [],
+    "camera": [],
+    "display-capture": [],
+    "fullscreen": ["self"],
+    "geolocation": [],
+    "microphone": [],
+    "payment": [],
+    "usb": [],
 }
-
-# ==============================================================================
-# ADDITIONAL SECURITY SETTINGS
-# ==============================================================================
 
 # Cookie Security
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_AGE = 3600  # 1 hour session timeout
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection
-CSRF_COOKIE_SAMESITE = 'Lax'     # CSRF protection
-
-# Additional Security Headers
-SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'  # Prevents some attacks
-
-# ==============================================================================
-# SECURITY HEADER TESTING
-# ==============================================================================
-# After implementing these settings, test your security headers at:
-# - https://securityheaders.com/
-# - https://observatory.mozilla.org/
-# - https://csp-evaluator.withgoogle.com/
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'

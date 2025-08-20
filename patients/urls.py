@@ -1,7 +1,11 @@
 from django.urls import path
 from . import views
+from django.views.generic import TemplateView
 
 urlpatterns = [
+
+    # Test route for JavaScript fixes
+    path("test-js-fixes/", TemplateView.as_view(template_name='test_js_fixes.html'), name='test-js-fixes'),
 
     # URLs for patients operations
     path("", views.dashboard, name='home'),

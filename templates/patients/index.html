@@ -252,11 +252,11 @@
 
     </section>
 
+{% endblock main_content %}
 
-<!-- ChartJS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.2.1/chart.min.js" integrity="sha512-v3ygConQmvH0QehvQa6gSvTE2VdBZ6wkLOlmK7Mcy2mZ0ZF9saNbbk19QeaoTHdWIEiTlWmrwAL4hS8ElnGFbA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-    <script>
+{% block extra_js %}
+<!-- Chart.js already loaded in base template, no need to reload -->
+<script>
         const ctx = document.getElementById('new-admissions-month');
         const diagnosis_gma = document.getElementById('diagnosis_gma');
         const diagnosis_all = document.getElementById('diagnosis_all');

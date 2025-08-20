@@ -17,8 +17,10 @@ scratch. This page gets rid of all links and provides the needed markup only.
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="{% static 'plugins/fontawesome-free/css/all.min.css' %}">
 
-  <!-- Theme style -->
-  <link rel="stylesheet" href="{% static 'dist/css/adminlte.min.css' %}">
+  <!-- AdminLTE Theme style from CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@4.0.0-rc4/dist/css/adminlte.min.css" crossorigin="anonymous">
+  
+  <!-- Custom CSS files (keeping local) -->
   <link rel="stylesheet" href="{% static 'dist/css/social.css' %}">
   <link rel="stylesheet" href="{% static 'dist/css/custom_css.css' %}">
   <link rel="stylesheet" href="{% static 'dist/css/menu.css' %}">
@@ -43,8 +45,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
 <script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
 <!-- Bootstrap 4 -->
 <script src="{% static 'plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-<!-- AdminLTE App -->
-<script src="{% static 'dist/js/adminlte.min.js' %}"></script>
+<!-- AdminLTE App from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@4.0.0-rc4/dist/js/adminlte.min.js" crossorigin="anonymous"></script>
 <!-- HTMX -->
 <script src="{% static 'plugins/HTMX/htmx.min.js' %}"></script>
 
@@ -55,38 +57,82 @@ scratch. This page gets rid of all links and provides the needed markup only.
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.2.1/chart.min.js" integrity="sha512-v3ygConQmvH0QehvQa6gSvTE2VdBZ6wkLOlmK7Mcy2mZ0ZF9saNbbk19QeaoTHdWIEiTlWmrwAL4hS8ElnGFbA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <!-- Library for Video Js -->
-<script src="https://vjs.zencdn.net/ie8/1.1.2/videojs-ie8.min.js"></script>
 <script src="https://vjs.zencdn.net/8.0.4/video.min.js"></script>
+
+<!-- Video.js zoom rotate plugin -->
+<script type="text/javascript" src="{% static 'js/zoomrotate.js' %}"></script>
+
+<!-- Custom rotate functionality -->
+<script type="text/javascript" src="{% static 'js/rotate.js' %}"></script>
 
 <!-- Video.js initialization and custom scripts -->
 <script type="text/javascript">
-// Ensure Video.js is loaded before initializing
+// Improved Video.js initialization with better error handling
 document.addEventListener('DOMContentLoaded', function() {
+    // Check if Video.js is loaded
+    if (typeof videojs === 'undefined') {
+        console.warn('Video.js library not loaded');
+        return;
+    }
+    
     // Check if videoPlayer element exists
     var videoElement = document.getElementById('videoPlayer');
-    if (videoElement && typeof videojs !== 'undefined') {
-        try {
-            // Initialize video player only if element exists
-            var player = videojs('videoPlayer');
+    if (!videoElement) {
+        // No video player on this page, skip initialization
+        return;
+    }
+    
+    // Check if player is already initialized
+    if (videoElement.player) {
+        console.log('Video player already initialized');
+        return;
+    }
+    
+    try {
+        // Initialize video player
+        var player = videojs('videoPlayer', {
+            controlBar: {
+                'volumePanel': false,
+            },
+            fluid: true,
+            responsive: true
+        });
+        
+        // Mute the player by default
+        player.muted(true);
+        
+        // Load custom video scripts after player is ready
+        player.ready(function() {
+            console.log('Video.js player ready');
             
-            // Load custom video scripts after player is ready
-            player.ready(function() {
-                // Import rotate functionality if available
-                if (typeof rotate === 'function') {
-                    rotate(player);
+            // Import rotate functionality if available
+            if (typeof window.rotate === 'function') {
+                try {
+                    window.rotate(player);
+                    console.log('Rotate functionality loaded');
+                } catch (rotateError) {
+                    console.warn('Failed to load rotate functionality:', rotateError);
                 }
-            });
-        } catch (error) {
-            console.warn('Video.js player initialization failed:', error);
-        }
+            }
+        });
+        
+        // Handle player errors
+        player.on('error', function() {
+            var error = player.error();
+            console.warn('Video.js player error:', error);
+        });
+        
+    } catch (error) {
+        console.error('Video.js player initialization failed:', error);
     }
 });
 </script>
-<script type="text/javascript" src="{% static 'js/zoomrotate.js' %}"></script>
-<script type="text/javascript" src="{% static 'js/rotate.js' %}"></script>
 
 <!-- Main application JavaScript -->
 <script type="text/javascript" src="{% static 'js/main.js' %}"></script>
+
+<!-- Debug script (can be removed after fixing issues) -->
+<script type="text/javascript" src="{% static 'js/debug.js' %}"></script>
 
 {% block extra_js %}
 {% endblock extra_js %}

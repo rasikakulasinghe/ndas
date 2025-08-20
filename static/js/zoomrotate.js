@@ -1,6 +1,12 @@
 console.log('zoomrotate: Start');
 
 (function(){
+    // Check if videojs is available
+    if (typeof videojs === 'undefined') {
+        console.warn('zoomrotate: Video.js not available, skipping plugin registration');
+        return;
+    }
+
     var defaults, extend;
     console.log('zoomrotate: Init defaults');
     defaults = {
@@ -30,21 +36,27 @@ console.log('zoomrotate: Start');
   /**
     * register the zoomrotate plugin
     */
-    videojs.plugin('zoomrotate', function(settings){
-        if (defaults.debug) console.log('zoomrotate: Register init');
+    if (typeof videojs.plugin === 'function') {
+        videojs.plugin('zoomrotate', function(settings){
+            if (defaults.debug) console.log('zoomrotate: Register init');
 
-        var options, player, video, poster;
-        options = extend(defaults, settings);
+            var options, player, video, poster;
+            options = extend(defaults, settings);
 
-        /* Grab the necessary DOM elements */
-        player = this.el();
-        video = this.el().getElementsByTagName('video')[0];
-        poster = this.el().getElementsByTagName('div')[1]; // div vjs-poster
+            /* Grab the necessary DOM elements */
+            player = this.el();
+            video = this.el().getElementsByTagName('video')[0];
+            poster = this.el().getElementsByTagName('div')[1]; // div vjs-poster
 
-        if (options.debug) console.log('zoomrotate: '+video.style);
-        if (options.debug) console.log('zoomrotate: '+poster.style);
-        if (options.debug) console.log('zoomrotate: '+options.rotate);
-        if (options.debug) console.log('zoomrotate: '+options.zoom);
+            if (!video) {
+                console.warn('zoomrotate: No video element found');
+                return;
+            }
+
+            if (options.debug) console.log('zoomrotate: '+video.style);
+            if (options.debug) console.log('zoomrotate: '+poster.style);
+            if (options.debug) console.log('zoomrotate: '+options.rotate);
+            if (options.debug) console.log('zoomrotate: '+options.zoom);
 
         /* Array of possible browser specific settings for transformation */
         var properties = ['transform', 'WebkitTransform', 'MozTransform',
@@ -67,7 +79,10 @@ console.log('zoomrotate: Start');
         video.style[prop]='scale('+options.zoom+') rotate('+options.rotate+'deg)';
         poster.style[prop]='scale('+options.zoom+') rotate('+options.rotate+'deg)';
         if (options.debug) console.log('zoomrotate: Register end');
-    });
+        });
+    } else {
+        console.warn('zoomrotate: videojs.plugin function not available');
+    }
 })();
 
 console.log('zoomrotate: End');
