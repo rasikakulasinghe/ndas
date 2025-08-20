@@ -53,17 +53,20 @@ scratch. This page gets rid of all links and provides the needed markup only.
 <!-- If you'd like to support IE8 (for Video.js versions prior to v7) -->
 <!-- Removed duplicate script: script src="https://vjs.zencdn.net/ie8/1.1.2/videojs-ie8.min.js" -->
 
-<!-- Library for Chart Js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.2.1/chart.min.js" integrity="sha512-v3ygConQmvH0QehvQa6gSvTE2VdBZ6wkLOlmK7Mcy2mZ0ZF9saNbbk19QeaoTHdWIEiTlWmrwAL4hS8ElnGFbA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<!-- Library for Chart Js (using UMD version to avoid module import errors) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
 
 <!-- Library for Video Js -->
 <script src="https://vjs.zencdn.net/8.0.4/video.min.js"></script>
 
+<!-- Video.js failsafe wrapper to prevent initialization errors -->
+<script type="text/javascript" src="{% static 'js/videojs-failsafe.js' %}"></script>
+
 <!-- Video.js zoom rotate plugin -->
-<script type="text/javascript" src="{% static 'js/zoomrotate.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/zoomrotate.js' %}" defer></script>
 
 <!-- Custom rotate functionality -->
-<script type="text/javascript" src="{% static 'js/rotate.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/rotate.js' %}" defer></script>
 
 <!-- Video.js initialization and custom scripts -->
 <script type="text/javascript">
@@ -75,60 +78,73 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    // Check if videoPlayer element exists
-    var videoElement = document.getElementById('videoPlayer');
-    if (!videoElement) {
-        // No video player on this page, skip initialization
+    // Find all video elements with video-js class
+    var videoElements = document.querySelectorAll('video.video-js');
+    if (videoElements.length === 0) {
+        // No video players on this page, skip initialization
+        console.log('No video elements found on this page');
         return;
     }
     
-    // Check if player is already initialized
-    if (videoElement.player) {
-        console.log('Video player already initialized');
-        return;
-    }
-    
-    try {
-        // Initialize video player
-        var player = videojs('videoPlayer', {
-            controlBar: {
-                'volumePanel': false,
-            },
-            fluid: true,
-            responsive: true
-        });
+    // Initialize each video player
+    videoElements.forEach(function(videoElement) {
+        // Check if player is already initialized
+        if (videoElement.player) {
+            console.log('Video player already initialized for element:', videoElement.id);
+            return;
+        }
         
-        // Mute the player by default
-        player.muted(true);
+        // Make sure the element has an ID
+        if (!videoElement.id) {
+            console.warn('Video element missing ID, skipping initialization');
+            return;
+        }
         
-        // Load custom video scripts after player is ready
-        player.ready(function() {
-            console.log('Video.js player ready');
+        try {
+            // Initialize video player
+            var player = videojs(videoElement.id, {
+                controlBar: {
+                    'volumePanel': false,
+                },
+                fluid: true,
+                responsive: true
+            });
             
-            // Import rotate functionality if available
-            if (typeof window.rotate === 'function') {
-                try {
-                    window.rotate(player);
-                    console.log('Rotate functionality loaded');
-                } catch (rotateError) {
-                    console.warn('Failed to load rotate functionality:', rotateError);
+            // Mute the player by default
+            player.muted(true);
+            
+            // Load custom video scripts after player is ready
+            player.ready(function() {
+                console.log('Video.js player ready for:', videoElement.id);
+                
+                // Import rotate functionality if available
+                if (typeof window.rotate === 'function') {
+                    try {
+                        window.rotate(player);
+                        console.log('Rotate functionality loaded for:', videoElement.id);
+                    } catch (rotateError) {
+                        console.warn('Failed to load rotate functionality for ' + videoElement.id + ':', rotateError);
+                    }
+                } else {
+                    console.log('Rotate functionality not available for:', videoElement.id);
                 }
-            }
-        });
-        
-        // Handle player errors
-        player.on('error', function() {
-            var error = player.error();
-            console.warn('Video.js player error:', error);
-        });
-        
-    } catch (error) {
-        console.error('Video.js player initialization failed:', error);
-    }
+            });
+            
+            // Handle player errors
+            player.on('error', function() {
+                var error = player.error();
+                console.warn('Video.js player error for ' + videoElement.id + ':', error);
+            });
+            
+        } catch (error) {
+            console.error('Video.js player initialization failed for ' + videoElement.id + ':', error);
+        }
+    });
 });
 </script>
 
 <!-- Main application JavaScript -->
+<script type="text/javascript" src="{% static 'js/utils.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/main.js' %}"></script>
 
 <!-- Debug script (can be removed after fixing issues) -->

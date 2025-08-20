@@ -26,10 +26,15 @@ $(document).ready(function() {
 
                     player.muted(true);
                     
-                    // Check if rotate function exists before calling it
+                    // Check if rotate function exists and player is ready before calling it
                     if (typeof window.rotate === 'function') {
                         player.ready(function() {
-                            window.rotate(player);
+                            try {
+                                window.rotate(player);
+                                console.log('Rotate functionality added to fallback player');
+                            } catch (rotateError) {
+                                console.warn('Failed to add rotate functionality:', rotateError);
+                            }
                         });
                     }
                 } catch (error) {

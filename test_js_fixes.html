@@ -43,8 +43,8 @@
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
-    <!-- Chart.js (single instance, not duplicate) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.2.1/chart.min.js" integrity="sha512-v3ygConQmvH0QehvQa6gSvTE2VdBZ6wkLOlmK7Mcy2mZ0ZF9saNbbk19QeaoTHdWIEiTlWmrwAL4hS8ElnGFbA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Chart.js (UMD version to avoid module import errors) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     
     <!-- Video.js -->
     <script src="https://vjs.zencdn.net/8.0.4/video.min.js"></script>
@@ -162,31 +162,5 @@
         });
     </script>
 
-</body>
-</html>
-                }
-            });
-            console.log('✅ Chart.js loaded and working correctly');
-        } catch (error) {
-            console.error('❌ Chart.js error:', error);
-        }
-        
-        // Test Video.js
-        document.addEventListener('DOMContentLoaded', function() {
-            var videoElement = document.getElementById('videoPlayer');
-            if (videoElement && typeof videojs !== 'undefined') {
-                try {
-                    var player = videojs('videoPlayer');
-                    player.ready(function() {
-                        console.log('✅ Video.js loaded and working correctly');
-                    });
-                } catch (error) {
-                    console.error('❌ Video.js error:', error);
-                }
-            } else {
-                console.error('❌ Video element or videojs not found');
-            }
-        });
-    </script>
 </body>
 </html>

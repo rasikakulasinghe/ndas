@@ -7,37 +7,38 @@ console.log('zoomrotate: Start');
         return;
     }
 
-    var defaults, extend;
-    console.log('zoomrotate: Init defaults');
-    defaults = {
-      zoom: 1,
-      rotate: 0,
-      debug: true
-    };
-    extend = function() {
-      var args, target, i, object, property;
-      args = Array.prototype.slice.call(arguments);
-      target = args.shift() || {};
-      for (i in args) {
-        object = args[i];
-        for (property in object) {
-          if (object.hasOwnProperty(property)) {
-            if (typeof object[property] === 'object') {
-              target[property] = extend(target[property], object[property]);
-            } else {
-              target[property] = object[property];
+    // Wait a moment for Video.js to be fully loaded
+    function registerZoomRotatePlugin() {
+        var defaults, extend;
+        console.log('zoomrotate: Init defaults');
+        defaults = {
+          zoom: 1,
+          rotate: 0,
+          debug: true
+        };
+        extend = function() {
+          var args, target, i, object, property;
+          args = Array.prototype.slice.call(arguments);
+          target = args.shift() || {};
+          for (i in args) {
+            object = args[i];
+            for (property in object) {
+              if (object.hasOwnProperty(property)) {
+                if (typeof object[property] === 'object') {
+                  target[property] = extend(target[property], object[property]);
+                } else {
+                  target[property] = object[property];
+                }
+              }
             }
           }
-        }
-      }
-      return target;
-    };
+          return target;
+        };
 
-  /**
-    * register the zoomrotate plugin
-    */
-    if (typeof videojs.plugin === 'function') {
-        videojs.plugin('zoomrotate', function(settings){
+      /**
+        * register the zoomrotate plugin - compatible with both old and new Video.js APIs
+        */
+        var pluginFunction = function(settings){
             if (defaults.debug) console.log('zoomrotate: Register init');
 
             var options, player, video, poster;
@@ -79,10 +80,41 @@ console.log('zoomrotate: Start');
         video.style[prop]='scale('+options.zoom+') rotate('+options.rotate+'deg)';
         poster.style[prop]='scale('+options.zoom+') rotate('+options.rotate+'deg)';
         if (options.debug) console.log('zoomrotate: Register end');
-        });
+        };
+
+        // Try new API first (Video.js 7+), then fall back to old API
+        if (typeof videojs.registerPlugin === 'function') {
+            console.log('zoomrotate: Using new registerPlugin API');
+            videojs.registerPlugin('zoomrotate', pluginFunction);
+        } else if (typeof videojs.plugin === 'function') {
+            console.log('zoomrotate: Using legacy plugin API');
+            videojs.plugin('zoomrotate', pluginFunction);
+        } else {
+            console.warn('zoomrotate: Neither registerPlugin nor plugin function available on videojs object');
+            console.log('zoomrotate: Available videojs methods:', Object.keys(videojs));
+        }
+    }
+
+    // Register immediately if videojs is ready, otherwise wait
+    if (videojs && (typeof videojs.registerPlugin === 'function' || typeof videojs.plugin === 'function')) {
+        registerZoomRotatePlugin();
     } else {
-        console.warn('zoomrotate: videojs.plugin function not available');
+        // Wait for Video.js to be fully loaded
+        var attempts = 0;
+        var maxAttempts = 50; // Wait up to 5 seconds
+        var checkInterval = setInterval(function() {
+            attempts++;
+            if (videojs && (typeof videojs.registerPlugin === 'function' || typeof videojs.plugin === 'function')) {
+                clearInterval(checkInterval);
+                registerZoomRotatePlugin();
+            } else if (attempts >= maxAttempts) {
+                clearInterval(checkInterval);
+                console.error('zoomrotate: Timeout waiting for Video.js to be ready');
+            }
+        }, 100);
     }
 })();
+
+console.log('zoomrotate: End');
 
 console.log('zoomrotate: End');

@@ -12,13 +12,26 @@ document.addEventListener('DOMContentLoaded', function() {
     // Check if Video.js is available
     if (typeof videojs !== 'undefined') {
         console.log('✅ Video.js loaded successfully - Version:', videojs.VERSION);
+        
+        // Check if zoomrotate plugin is available
+        if (typeof videojs.getPlugin === 'function') {
+            var zoomrotatePlugin = videojs.getPlugin('zoomrotate');
+            if (zoomrotatePlugin) {
+                console.log('✅ zoomrotate plugin registered successfully');
+            } else {
+                console.warn('⚠️ zoomrotate plugin not registered');
+            }
+        } else {
+            console.log('ℹ️ videojs.getPlugin method not available (older Video.js version)');
+        }
     } else {
         console.error('❌ Video.js not loaded');
     }
     
     // Check for video elements
     const videoElements = document.querySelectorAll('video');
-    console.log(`Found ${videoElements.length} video elements:`, videoElements);
+    const videoJsElements = document.querySelectorAll('video.video-js');
+    console.log(`Found ${videoElements.length} video elements total, ${videoJsElements.length} with video-js class`);
     
     // Check for canvas elements (for Chart.js)
     const canvasElements = document.querySelectorAll('canvas');
@@ -31,22 +44,23 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('❌ jQuery not loaded');
     }
     
-    // Check for specific video player
-    const videoPlayer = document.getElementById('videoPlayer');
-    if (videoPlayer) {
-        console.log('✅ Video player element found:', videoPlayer);
-        
-        // Check if player is initialized
-        setTimeout(function() {
-            if (videoPlayer.player) {
-                console.log('✅ Video.js player initialized successfully');
-            } else {
-                console.warn('⚠️ Video.js player not initialized');
-            }
-        }, 1000);
-    } else {
-        console.log('ℹ️ No video player element on this page');
-    }
+    // Check for specific video player elements by ID
+    const commonVideoIds = ['videoPlayer', 'video-player', 'mainVideo'];
+    commonVideoIds.forEach(function(id) {
+        const element = document.getElementById(id);
+        if (element) {
+            console.log(`✅ Video element found with ID "${id}":`, element);
+            
+            // Check if player is initialized
+            setTimeout(function() {
+                if (element.player) {
+                    console.log(`✅ Video.js player initialized for "${id}"`);
+                } else {
+                    console.warn(`⚠️ Video.js player not initialized for "${id}"`);
+                }
+            }, 1000);
+        }
+    });
     
     // Check for rotate function
     if (typeof window.rotate === 'function') {
@@ -54,6 +68,42 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         console.warn('⚠️ Rotate function not available');
     }
+    
+    // Test Chart.js functionality
+    setTimeout(function() {
+        if (typeof Chart !== 'undefined') {
+            try {
+                // Try to create a simple chart test
+                const testCanvas = document.createElement('canvas');
+                testCanvas.id = 'debugChart';
+                testCanvas.style.display = 'none';
+                document.body.appendChild(testCanvas);
+                
+                const testChart = new Chart(testCanvas, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Test'],
+                        datasets: [{
+                            label: 'Debug Test',
+                            data: [1]
+                        }]
+                    },
+                    options: {
+                        responsive: false,
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+                
+                console.log('✅ Chart.js functionality test passed');
+                testChart.destroy();
+                document.body.removeChild(testCanvas);
+            } catch (chartError) {
+                console.error('❌ Chart.js functionality test failed:', chartError);
+            }
+        }
+    }, 1500);
     
     console.log('=== End Debug Info ===');
 });
