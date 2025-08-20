@@ -31,11 +31,11 @@
         </br><p class="mb-0">Are you sure you want to delete this record?</p>
         </br><div class="modal-footer">
         {% csrf_token %}
-        <button type="submit" class="btn btn-warning" data-toggle="tooltip" title='Delete patient permanantly...'>Yes, Delete</button>
+        <button type="submit" class="btn btn-warning" data-bs-toggle="tooltip" title='Delete patient permanantly...'>Yes, Delete</button>
     </form>
 
         <a href="{% url 'da-assessment-view' da_record.id %}"><button type="button" class="btn btn-warning">No, View Full Details</button></a>
-        <a href="{% url 'da-assessment-manager-patient' patient.id %}"><button type="button" class="btn btn-primary" data-dismiss="modal">No, Go to the HINE record manager</button></a>
+        <a href="{% url 'da-assessment-manager-patient' patient.id %}"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">No, Go to the HINE record manager</button></a>
     </div>
 </div>
 

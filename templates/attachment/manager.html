@@ -33,23 +33,23 @@
     <tr>
       <td>{{ Attachment.id }}</td>
       <td>{% if Attachment.attachment_type == 'Video' %}
-        <i data-toggle="tooltip" data-placement="top" title="Video" class="fas fa-play-circle" style="color: #ff0000;"></i>
+        <i data-bs-toggle="tooltip" data-bs-placement="top" title="Video" class="fas fa-play-circle" style="color: #ff0000;"></i>
         {% elif Attachment.attachment_type == 'Image' %}
-        <i data-toggle="tooltip" data-placement="top" title="Image" class="far fa-image" style="color: #ff0000;"></i>
+        <i data-bs-toggle="tooltip" data-bs-placement="top" title="Image" class="far fa-image" style="color: #ff0000;"></i>
         {% elif Attachment.attachment_type == 'PDF' %}
-        <i data-toggle="tooltip" data-placement="top" title="PDF" class="far fa-file-pdf" style="color: #ff0000;"></i>
+        <i data-bs-toggle="tooltip" data-bs-placement="top" title="PDF" class="far fa-file-pdf" style="color: #ff0000;"></i>
         {% endif %}
-        {% if Attachment.isBookmarked %}&nbsp;<div class="d-inline-block"><a href="{% url 'bookmark-view' Attachment.isBookmarked.id %}" data-toggle="tooltip" data-placement="top" title="Bookmarked" class="far fa-bookmark" style="color: #3d7deb;"></a></div>{% endif %}
+        {% if Attachment.isBookmarked %}&nbsp;<div class="d-inline-block"><a href="{% url 'bookmark-view' Attachment.isBookmarked.id %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Bookmarked" class="far fa-bookmark" style="color: #3d7deb;"></a></div>{% endif %}
       </td>
 
       <td>{{ Attachment.title }}</td>
       <td>{{ Attachment.patient.baby_name }}</td>
 
       <td>{{ Attachment.description }}</td>
-      <td><div style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="Uploaded on : {{ Attachment.uploaded_on }} by : {{ Attachment.uploaded_by.username }}, {% if Attachment.last_edit_by %} last edited on {{ Attachment.last_edit_on }} by {{ Attachment.last_edit_by.username }}{% endif %}" class="fas fa-info-circle" style="color: #3d7deb;"></i></div></td>
+      <td><div style="cursor: pointer;"><i data-bs-toggle="tooltip" data-bs-placement="top" title="Uploaded on : {{ Attachment.uploaded_on }} by : {{ Attachment.uploaded_by.username }}, {% if Attachment.last_edit_by %} last edited on {{ Attachment.last_edit_on }} by {{ Attachment.last_edit_by.username }}{% endif %}" class="fas fa-info-circle" style="color: #3d7deb;"></i></div></td>
       
       <td><div style="cursor: pointer;" class=" btn-group" role="group">
-          <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
+          <a id="btnGroupDrop1" class="fas fa-walking" data-bs-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
           <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
 
             {% if Attachment.attachment_type == 'Image' %}

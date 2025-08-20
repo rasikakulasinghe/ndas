@@ -31,11 +31,11 @@
         </br><p class="mb-0">Are you sure you want to delete this attachment?</p>
         </br><div class="modal-footer">
         {% csrf_token %}
-        <button type="submit" class="btn btn-warning" data-toggle="tooltip" title='Delete attachment permanantly...'>Yes, Delete</button>
+        <button type="submit" class="btn btn-warning" data-bs-toggle="tooltip" title='Delete attachment permanantly...'>Yes, Delete</button>
     </form>
 
         <a href="{% url 'attachment-view' attachment.id %}"><button type="button" class="btn btn-warning">No, View Full Details</button></a>
-        <a href="{% url 'attachment-manager-patient' attachment.patient.id %}"><button type="button" class="btn btn-primary" data-dismiss="modal">No, Go to attachment manager</button></a>
+        <a href="{% url 'attachment-manager-patient' attachment.patient.id %}"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">No, Go to attachment manager</button></a>
     </div>
 </div>
 

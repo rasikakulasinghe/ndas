@@ -1,8 +1,10 @@
+/* Custom styles for NDAS project with AdminLTE 4 and Bootstrap 5 */
+
 .big-checkbox {
     scale: 1.5;
 }
 
-/* Fix sidebar height and layout */
+/* AdminLTE 4 compatible layout fixes */
 html, body {
     height: 100%;
     margin: 0;
@@ -23,7 +25,7 @@ html, body {
     left: 0;
     bottom: 0;
     z-index: 1000;
-    overflow-y: auto; /* Allow scrolling if content overflows */
+    overflow-y: auto;
 }
 
 .main-sidebar .sidebar {
@@ -34,7 +36,7 @@ html, body {
 
 .content-wrapper {
     min-height: calc(100vh - 56px); /* Subtract navbar height */
-    margin-left: 250px; /* Default sidebar width */
+    margin-left: 250px; /* Default sidebar width for AdminLTE 4 */
     flex: 1;
 }
 
@@ -45,7 +47,7 @@ html, body {
     z-index: 999;
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments for AdminLTE 4 */
 @media (max-width: 768px) {
     .content-wrapper,
     .main-footer {
@@ -64,15 +66,14 @@ html, body {
     }
 }
 
-/* Ensure sidebar is always visible and extends full height */
+/* AdminLTE 4 sidebar state handling */
 .sidebar-mini:not(.sidebar-mini-expand-feature) .main-sidebar {
     min-height: 100vh !important;
 }
 
-/* Fix for when sidebar is collapsed */
 .sidebar-collapse .content-wrapper,
 .sidebar-collapse .main-footer {
-    margin-left: 60px; /* Collapsed sidebar width */
+    margin-left: 60px; /* Collapsed sidebar width in AdminLTE 4 */
 }
 
 .sidebar-collapse .main-sidebar {
@@ -80,7 +81,7 @@ html, body {
     width: 60px;
 }
 
-/* Ensure proper sidebar navigation styling */
+/* Sidebar navigation styling for AdminLTE 4 */
 .main-sidebar .nav-sidebar .nav-item .nav-link {
     border-radius: 0;
 }

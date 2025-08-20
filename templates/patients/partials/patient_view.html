@@ -20,33 +20,33 @@
             <div class="card-header p-0 border-bottom-0">
             <ul class="nav nav-tabs" id="custom-tabs-four-tab" role="tablist">
             <li class="nav-item">
-            <a class="nav-link active" id="custom-tabs-four-summary-tab" data-toggle="pill" href="#summary" role="tab" aria-controls="custom-tabs-four-summary" aria-selected="true">Summary</a>
+            <a class="nav-link active" id="custom-tabs-four-summary-tab" data-bs-toggle="pill" href="#summary" role="tab" aria-controls="custom-tabs-four-summary" aria-selected="true">Summary</a>
             </li>
             <li class="nav-item">
-            <a class="nav-link" id="custom-tabs-four-birth-tab" data-toggle="pill" href="#birth" role="tab" aria-controls="custom-tabs-four-birth" aria-selected="false">Birth History</a>
+            <a class="nav-link" id="custom-tabs-four-birth-tab" data-bs-toggle="pill" href="#birth" role="tab" aria-controls="custom-tabs-four-birth" aria-selected="false">Birth History</a>
             </li>
             <li class="nav-item">
-            <a class="nav-link" id="custom-tabs-four-contact-tab" data-toggle="pill" href="#contact" role="tab" aria-controls="custom-tabs-four-contact" aria-selected="false">Contacts</a>
+            <a class="nav-link" id="custom-tabs-four-contact-tab" data-bs-toggle="pill" href="#contact" role="tab" aria-controls="custom-tabs-four-contact" aria-selected="false">Contacts</a>
             </li>
             <li class="nav-item">
-            <a class="nav-link" id="custom-tabs-four-video-tab" data-toggle="pill" href="#video" role="tab" aria-controls="custom-tabs-four-video" aria-selected="false">Videos</a>
+            <a class="nav-link" id="custom-tabs-four-video-tab" data-bs-toggle="pill" href="#video" role="tab" aria-controls="custom-tabs-four-video" aria-selected="false">Videos</a>
             </li>
             <li class="nav-item">
-            <a class="nav-link" id="custom-tabs-four-gm-tab" data-toggle="pill" href="#assessment-gm" role="tab" aria-controls="custom-tabs-four-gm" aria-selected="false">GMA Record</a>
+            <a class="nav-link" id="custom-tabs-four-gm-tab" data-bs-toggle="pill" href="#assessment-gm" role="tab" aria-controls="custom-tabs-four-gm" aria-selected="false">GMA Record</a>
             </li>
             <li class="nav-item">
-            <a class="nav-link" id="custom-tabs-four-hine-tab" data-toggle="pill" href="#assessment-hine" role="tab" aria-controls="custom-tabs-four-hine" aria-selected="false">HINE Record</a>
+            <a class="nav-link" id="custom-tabs-four-hine-tab" data-bs-toggle="pill" href="#assessment-hine" role="tab" aria-controls="custom-tabs-four-hine" aria-selected="false">HINE Record</a>
             </li>
             <li class="nav-item">
-            <a class="nav-link" id="custom-tabs-four-da-nd-tab" data-toggle="pill" href="#assessment-da" role="tab" aria-controls="custom-tabs-four-da" aria-selected="false">Developmental Assessments</a>
+            <a class="nav-link" id="custom-tabs-four-da-nd-tab" data-bs-toggle="pill" href="#assessment-da" role="tab" aria-controls="custom-tabs-four-da" aria-selected="false">Developmental Assessments</a>
             </li>
             <li class="nav-item">
-            <a class="nav-link" id="custom-tabs-four-cdic-tab" data-toggle="pill" href="#interventions-cdic" role="tab" aria-controls="custom-tabs-four-cdic" aria-selected="false">CDIC Records</a>
+            <a class="nav-link" id="custom-tabs-four-cdic-tab" data-bs-toggle="pill" href="#interventions-cdic" role="tab" aria-controls="custom-tabs-four-cdic" aria-selected="false">CDIC Records</a>
             </li>
             <li class="nav-item">
-            <a class="nav-link" id="custom-tabs-four-attachment-tab" data-toggle="pill" href="#attachments" role="tab" aria-controls="custom-tabs-four-attachment" aria-selected="false">Attachments</a>
+            <a class="nav-link" id="custom-tabs-four-attachment-tab" data-bs-toggle="pill" href="#attachments" role="tab" aria-controls="custom-tabs-four-attachment" aria-selected="false">Attachments</a>
 
-            {% comment %} <a class="nav-link" id="custom-tabs-four-attachment-tab" data-toggle="pill" href="#attachments" role="tab" aria-controls="custom-tabs-four-attachment" aria-selected="false">Attachments</a> {% endcomment %}
+            {% comment %} <a class="nav-link" id="custom-tabs-four-attachment-tab" data-bs-toggle="pill" href="#attachments" role="tab" aria-controls="custom-tabs-four-attachment" aria-selected="false">Attachments</a> {% endcomment %}
             </li>
             </ul>
           </div>
@@ -80,7 +80,7 @@
                   {% if item.display %}
                     <div class="alert alert-warning alert-dismissible fade show" role="alert">
                       {{ item.msg }}
-                      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                      <button type="button" class="close" data-bs-dismiss="alert" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                       </button>
                     </div>
@@ -189,14 +189,14 @@
                       <td>{{ Assessment.patient.getCorrectedAge }}</td>
 
                       <td>{% if Assessment.isDiagnosisNormal %}
-                        <div style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="Normal" class="fas fa-check-circle" style="color: #1ab805;"></i></div>
+                        <div style="cursor: pointer;"><i data-bs-toggle="tooltip" data-bs-placement="top" title="Normal" class="fas fa-check-circle" style="color: #1ab805;"></i></div>
                         {% else %}
-                        <div style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="{% for dx in Assessment.diagnosis.all %}{{dx.title}}{% endfor %}" class="fas fa-times-circle" style="color: #ff0000;"></i></div>
+                        <div style="cursor: pointer;"><i data-bs-toggle="tooltip" data-bs-placement="top" title="{% for dx in Assessment.diagnosis.all %}{{dx.title}}{% endfor %}" class="fas fa-times-circle" style="color: #ff0000;"></i></div>
                         {% endif %}</td>
 
                       <td>
                         <div class=" btn-group" role="group">
-                          <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
+                          <a id="btnGroupDrop1" class="fas fa-walking" data-bs-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
                           <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
                             <a class="dropdown-item" href="{% url 'assessment-view' Assessment.id %}"><i class="fas fa-eye"></i> View</a>
                             <a class="dropdown-item" href="{% url 'assessment-edit' Assessment.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
@@ -258,7 +258,7 @@
                   <td>{{HINE.comment}}</td>
                   <td>
                     <div class=" btn-group" role="group">
-                      <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
+                      <a id="btnGroupDrop1" class="fas fa-walking" data-bs-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
                       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
                         <a class="dropdown-item" href="{% url 'hine-assessment-view' HINE.id %}"><i class="fas fa-eye"></i> View</a>
                         <a class="dropdown-item" href="{% url 'hine-assessment-edit' HINE.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
@@ -314,11 +314,11 @@
                   <td>{{ DA.assessment_done_by }}</td>
                   <td>{{ DA.comment }}</td>
                   <td>
-                    <div style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="Created by : {{ DA.added_by }}, on {{ DA.added_on }}" class="fas fa-info-circle" style="color: #3d7deb;"></i></div>
+                    <div style="cursor: pointer;"><i data-bs-toggle="tooltip" data-bs-placement="top" title="Created by : {{ DA.added_by }}, on {{ DA.added_on }}" class="fas fa-info-circle" style="color: #3d7deb;"></i></div>
                   </td>
                   <td>
                     <div class=" btn-group" role="group">
-                      <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
+                      <a id="btnGroupDrop1" class="fas fa-walking" data-bs-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
                       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
                         <a class="dropdown-item" href="{% url 'da-assessment-view' DA.id %}"><i class="fas fa-eye"></i> View</a>
                         <a class="dropdown-item" href="{% url 'da-assessment-edit' DA.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
@@ -371,10 +371,10 @@
                   <td>{{ CDIC.next_appoinment_date }}</td>
                   <td>{{ CDIC.today_interventions }}</td>
                   <td>{{ CDIC.assessment_done_by }}</td>
-                  <td><div style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="Created by : {{ CDIC.created_by }}, on {{ CDIC.created_on }}" class="fas fa-info-circle" style="color: #3d7deb;"></i></div></td>
+                  <td><div style="cursor: pointer;"><i data-bs-toggle="tooltip" data-bs-placement="top" title="Created by : {{ CDIC.created_by }}, on {{ CDIC.created_on }}" class="fas fa-info-circle" style="color: #3d7deb;"></i></div></td>
                   <td>
                     <div class=" btn-group" role="group">
-                      <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
+                      <a id="btnGroupDrop1" class="fas fa-walking" data-bs-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
                       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
                         <a class="dropdown-item" href="{% url 'cdic-assessment-view' CDIC.id %}"><i class="fas fa-eye"></i> View</a>
                         <a class="dropdown-item" href="{% url 'cdic-assessment-edit' CDIC.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
@@ -423,7 +423,7 @@
                   {% for video in file_videos %}
                   <tr>
                     <th scope="row">{{video.id}}
-                      {% if video.isNewFile %}<span class="right badge badge-danger" data-toggle="tooltip" data-placement="top" title="New record">New</span>{% endif %}
+                      {% if video.isNewFile %}<span class="right badge badge-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="New record">New</span>{% endif %}
                     </th>
                     <td>{{video.caption}}</td>
                     <td>{{video.getAgeOnRecord}}</td>
@@ -432,7 +432,7 @@
                     <td>{{video.uploaded_by}}</td>
                     <td>
                       <div class=" btn-group" role="group">
-                        <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
+                        <a id="btnGroupDrop1" class="fas fa-walking" data-bs-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
                         <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
                           <a class="dropdown-item" href="{% url 'file-view' video.id %}"><i class="fas fa-eye"></i> Play</a>
                           <a class="dropdown-item" href="{% url 'file-edit' video.id %}"><i class="fas fa-pencil-alt"></i> Modify record</a>
@@ -472,22 +472,22 @@
                   {% for Attachment in file_attachment %}
                   <tr>
                     <td>{% if Attachment.attachment_type == 'Video' %}
-                      <i data-toggle="tooltip" data-placement="top" title="Video" class="fas fa-play-circle" style="color: #ff0000;"></i>
+                      <i data-bs-toggle="tooltip" data-bs-placement="top" title="Video" class="fas fa-play-circle" style="color: #ff0000;"></i>
                       {% elif Attachment.attachment_type == 'Image' %}
-                      <i data-toggle="tooltip" data-placement="top" title="Image" class="far fa-image" style="color: #ff0000;"></i>
+                      <i data-bs-toggle="tooltip" data-bs-placement="top" title="Image" class="far fa-image" style="color: #ff0000;"></i>
                       {% elif Attachment.attachment_type == 'PDF' %}
-                      <i data-toggle="tooltip" data-placement="top" title="PDF" class="far fa-file-pdf" style="color: #ff0000;"></i>
+                      <i data-bs-toggle="tooltip" data-bs-placement="top" title="PDF" class="far fa-file-pdf" style="color: #ff0000;"></i>
                       {% endif %}
-                      {% if Attachment.isBookmarked %}&nbsp;<div class="d-inline-block"><a href="{% url 'bookmark-view' Attachment.isBookmarked.id %}" data-toggle="tooltip" data-placement="top" title="Bookmarked" class="far fa-bookmark" style="color: #3d7deb;"></a></div>{% endif %}
+                      {% if Attachment.isBookmarked %}&nbsp;<div class="d-inline-block"><a href="{% url 'bookmark-view' Attachment.isBookmarked.id %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Bookmarked" class="far fa-bookmark" style="color: #3d7deb;"></a></div>{% endif %}
                     </td>
 
                     <td>{{ Attachment.title }}</td>
 
                     <td>{{ Attachment.description }}</td>
-                    <td><div style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="Uploaded on : {{ Attachment.uploaded_on }} by : {{ Attachment.uploaded_by.username }}, {% if Attachment.last_edit_by %} last edited on {{ Attachment.last_edit_on }} by {{ Attachment.last_edit_by.username }}{% endif %}" class="fas fa-info-circle" style="color: #3d7deb;"></i></div></td>
+                    <td><div style="cursor: pointer;"><i data-bs-toggle="tooltip" data-bs-placement="top" title="Uploaded on : {{ Attachment.uploaded_on }} by : {{ Attachment.uploaded_by.username }}, {% if Attachment.last_edit_by %} last edited on {{ Attachment.last_edit_on }} by {{ Attachment.last_edit_by.username }}{% endif %}" class="fas fa-info-circle" style="color: #3d7deb;"></i></div></td>
                     
                     <td><div style="cursor: pointer;" class=" btn-group" role="group">
-                        <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
+                        <a id="btnGroupDrop1" class="fas fa-walking" data-bs-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
                           {% if Attachment.attachment_type == 'Image' %}
                           <a class="dropdown-item" href="{% url 'attachment-view' Attachment.id %}"><i class="fas fa-eye"></i> View Attached Image</a>
@@ -535,7 +535,7 @@
           {% for gmamodel in patient.indecation_for_gma.all %}
           <dl class="row">
             <dd class="col-sm-11">{{ gmamodel.title }}
-            <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="{{gmamodel.description}}"></span></a>
+            <a href="#"><span class="fa fa-question-circle" data-bs-toggle="tooltip" data-original-title="{{gmamodel.description}}"></span></a>
             </dd>
           </dl>
           {% endfor %}
