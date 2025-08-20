@@ -1,8 +1,8 @@
-{% extends 'src/base.html' %}
+{% extends 'src/basic_plane.html' %}
 {% block title %}User Login{% endblock %}
 
 {% load static %}
-{% block main_content %}
+{% block mainbody %}
 
 <div class="hold-transition login-page">
     <div class="login-box">
@@ -19,16 +19,16 @@
                     {% csrf_token %}
         
                     <div class="input-group mb-3">
-                        <input type="text" class="form-control" name="username" placeholder="Enter your username">
+                        <input type="text" class="form-control" name="username" placeholder="Enter your username" required>
                         <div class="input-group-append">
                             <div class="input-group-text">
-                                <span class="fas fa-envelope"></span>
+                                <span class="fas fa-user"></span>
                             </div>
                         </div>
                     </div>
 
                     <div class="input-group mb-3">
-                        <input type="password" class="form-control" name="password" placeholder="Enter your password">
+                        <input type="password" class="form-control" name="password" placeholder="Enter your password" required>
                         <div class="input-group-append">
                             <div class="input-group-text">
                                 <span class="fas fa-lock"></span>
@@ -39,7 +39,7 @@
                     <div class="row">
                         <div class="col-8">
                             <div class="icheck-primary">
-                                <input type="checkbox" id="remember">
+                                <input type="checkbox" id="remember" name="remember">
                                 <label for="remember">Remember Me</label>
                             </div>
                         </div>
@@ -65,5 +65,5 @@
     <!-- /.login-box -->
 </div>
 
-{% endblock main_content%}
+{% endblock mainbody %}
 

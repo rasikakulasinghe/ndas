@@ -34,6 +34,6 @@ urlpatterns = [
     path('api/activity/', views.get_user_activity_api, name='user-activity-api'),
     
     # other urls
-    path("contac-developer/", views.developerContacts, name="developer-contact"),
+    path("contact-developer/", views.developerContacts, name="developer-contact"),
 
 ]

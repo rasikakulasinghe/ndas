@@ -26,8 +26,18 @@ import os
 def loginPage(request):
     logged_user = request.user
     if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+        remember_me = request.POST.get('remember')
+        
+        # Basic validation
+        if not username:
+            messages.error(request, 'Username is required.')
+            return render(request, 'users/login.html', {'logged_user': logged_user})
+        
+        if not password:
+            messages.error(request, 'Password is required.')
+            return render(request, 'users/login.html', {'logged_user': logged_user})
         
         if CustomUser.objects.filter(username=username).exists():
             user = authenticate(request, username=username, password=password)
@@ -43,6 +53,14 @@ def loginPage(request):
                 
                 # Successful login
                 login(request, user)
+                
+                # Handle remember me functionality
+                if remember_me:
+                    # Set session to expire in 30 days if remember me is checked
+                    request.session.set_expiry(30 * 24 * 60 * 60)  # 30 days in seconds
+                else:
+                    # Set session to expire when browser closes (default behavior)
+                    request.session.set_expiry(0)
                 
                 # Ensure session is created/saved before logging
                 if not request.session.session_key:
@@ -217,8 +235,23 @@ def userChangePassword(request):
 # Go to the developer contact page
 def developerContacts(request):
     logged_user = request.user
-    developer = DeveloperContacts.objects.get(id=1)
-    var = getFullDeviceDetails(request)
+    try:
+        developer = DeveloperContacts.objects.get(id=1)
+    except DeveloperContacts.DoesNotExist:
+        # Use the first available developer contact or create a default
+        developer = DeveloperContacts.objects.first()
+        if not developer:
+            # Create a default developer contact if none exists
+            developer = DeveloperContacts.objects.create()
+    
+    try:
+        var = getFullDeviceDetails(request)
+    except Exception as e:
+        var = "Device details unavailable"
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error getting device details: {e}")
+    
     return render(request, 'users/contact-developer.html', {'logged_user': logged_user, 'developer': developer, 'var': var})
 
 
