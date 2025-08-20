@@ -9,17 +9,21 @@ $(function () {
 $(document).ready(function() {
     // Check if videojs exists and if there's a video player element
     if (typeof videojs !== 'undefined' && document.getElementById('videoPlayer')) {
-        var player = videojs('videoPlayer', {
-            controlBar: {
-                'volumePanel': false,
-            }
-        }); 
+        try {
+            var player = videojs('videoPlayer', {
+                controlBar: {
+                    'volumePanel': false,
+                }
+            }); 
 
-        player.muted(true);
-        
-        // Check if rotate function exists before calling it
-        if (player.rotate && typeof player.rotate === 'function') {
-            player.rotate(player);
+            player.muted(true);
+            
+            // Check if rotate function exists before calling it
+            if (player.rotate && typeof player.rotate === 'function') {
+                player.rotate(player);
+            }
+        } catch (error) {
+            console.warn('VideoJS initialization failed:', error);
         }
     }
 });

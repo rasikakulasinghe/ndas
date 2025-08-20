@@ -242,81 +242,98 @@ SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 # SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # For reverse proxy setups
 
 # ==============================================================================
-# CONTENT SECURITY POLICY (CSP) CONFIGURATION - NEW FORMAT
+# CONTENT SECURITY POLICY (CSP) CONFIGURATION
 # ==============================================================================
 # CSP is the most effective protection against XSS attacks
 
-# New CSP configuration format for django-csp 4.0+
+# Django-CSP configuration format
 if DEBUG:
     # Development CSP - allows inline scripts/styles for admin and development
-    CONTENT_SECURITY_POLICY = {
-        'DIRECTIVES': {
-            'default-src': ("'self'",),
-            'script-src': (
-                "'self'", 
-                "'unsafe-inline'",  # Needed for Django admin and some templates
-                "'unsafe-eval'",    # Needed for some JS libraries
-                "https://cdn.jsdelivr.net",  # For Chart.js and other CDN scripts
-                "https://cdnjs.cloudflare.com",
-                "https://vjs.zencdn.net",  # For Video.js scripts
-            ),
-            'script-src-elem': (  # Add explicit script-src-elem directive
-                "'self'", 
-                "'unsafe-inline'",
-                "https://cdn.jsdelivr.net",
-                "https://cdnjs.cloudflare.com", 
-                "https://vjs.zencdn.net",
-            ),
-            'style-src': (
-                "'self'", 
-                "'unsafe-inline'",  # Needed for Django admin and Bootstrap
-                "https://cdn.jsdelivr.net",
-                "https://cdnjs.cloudflare.com",
-                "https://fonts.googleapis.com",  # For Google Fonts
-                "https://vjs.zencdn.net",  # For Video.js styles
-            ),
-            'style-src-elem': (  # Add explicit style-src-elem directive
-                "'self'", 
-                "'unsafe-inline'",
-                "https://cdn.jsdelivr.net",
-                "https://cdnjs.cloudflare.com",
-                "https://fonts.googleapis.com",  # For Google Fonts
-                "https://vjs.zencdn.net",  # For Video.js styles
-            ),
-            'img-src': ("'self'", "data:", "blob:", "https:"),
-            'font-src': (
-                "'self'", 
-                "https://cdn.jsdelivr.net", 
-                "https://cdnjs.cloudflare.com",
-                "https://fonts.gstatic.com",  # For Google Fonts
-            ),
-            'connect-src': ("'self'",),
-            'frame-src': ("'none'",),
-            'object-src': ("'none'",),
-            'base-uri': ("'self'",),
-            'form-action': ("'self'",),
-        }
-    }
+    CSP_DEFAULT_SRC = ("'self'",)
+    CSP_SCRIPT_SRC = (
+        "'self'", 
+        "'unsafe-inline'",  # Needed for Django admin and some templates
+        "'unsafe-eval'",    # Needed for some JS libraries
+        "https://cdn.jsdelivr.net",  # For Chart.js and other CDN scripts
+        "https://cdnjs.cloudflare.com",
+        "https://vjs.zencdn.net",  # For Video.js scripts
+    )
+    CSP_SCRIPT_SRC_ELEM = (  # Explicit script-src-elem directive for external scripts
+        "'self'", 
+        "'unsafe-inline'",
+        "https://cdn.jsdelivr.net",
+        "https://cdnjs.cloudflare.com", 
+        "https://vjs.zencdn.net",
+    )
+    CSP_STYLE_SRC = (
+        "'self'", 
+        "'unsafe-inline'",  # Needed for Django admin and Bootstrap
+        "https://cdn.jsdelivr.net",
+        "https://cdnjs.cloudflare.com",
+        "https://fonts.googleapis.com",  # For Google Fonts
+        "https://vjs.zencdn.net",  # For Video.js styles
+    )
+    CSP_STYLE_SRC_ELEM = (  # Explicit style-src-elem directive for external stylesheets
+        "'self'", 
+        "'unsafe-inline'",
+        "https://cdn.jsdelivr.net",
+        "https://cdnjs.cloudflare.com",
+        "https://fonts.googleapis.com",  # For Google Fonts
+        "https://vjs.zencdn.net",  # For Video.js styles
+    )
+    CSP_IMG_SRC = ("'self'", "data:", "blob:", "https:")
+    CSP_FONT_SRC = (
+        "'self'", 
+        "data:",  # Allow data: URIs for base64 encoded fonts (needed for Chart.js)
+        "https://cdn.jsdelivr.net", 
+        "https://cdnjs.cloudflare.com",
+        "https://fonts.gstatic.com",  # For Google Fonts
+    )
+    CSP_CONNECT_SRC = ("'self'",)
+    CSP_FRAME_SRC = ("'none'",)
+    CSP_OBJECT_SRC = ("'none'",)
+    CSP_BASE_URI = ("'self'",)
+    CSP_FORM_ACTION = ("'self'",)
 else:
-    # Production CSP - more restrictive
-    CONTENT_SECURITY_POLICY = {
-        'DIRECTIVES': {
-            'default-src': ("'self'",),
-            'script-src': (
-                "'self'",
-                # Add specific script hashes or nonces in production
-                # Remove 'unsafe-inline' and 'unsafe-eval' for maximum security
-            ),
-            'style-src': ("'self'",),
-            'img-src': ("'self'", "data:"),
-            'font-src': ("'self'",),
-            'connect-src': ("'self'",),
-            'frame-src': ("'none'",),
-            'object-src': ("'none'",),
-            'base-uri': ("'self'",),
-            'form-action': ("'self'",),
-        }
-    }
+    # Production CSP - more restrictive (only if external CDNs are needed in production)
+    CSP_DEFAULT_SRC = ("'self'",)
+    CSP_SCRIPT_SRC = (
+        "'self'",
+        # Add specific script hashes or nonces in production instead of unsafe-inline
+        # For external CDNs, uncomment these if needed:
+        # "https://cdnjs.cloudflare.com",
+        # "https://vjs.zencdn.net",
+    )
+    CSP_SCRIPT_SRC_ELEM = (
+        "'self'",
+        # For external CDNs, uncomment these if needed:
+        # "https://cdnjs.cloudflare.com", 
+        # "https://vjs.zencdn.net",
+    )
+    CSP_STYLE_SRC = (
+        "'self'",
+        # For external fonts/styles, uncomment these if needed:
+        # "https://fonts.googleapis.com",
+        # "https://vjs.zencdn.net",
+    )
+    CSP_STYLE_SRC_ELEM = (
+        "'self'",
+        # For external fonts/styles, uncomment these if needed:
+        # "https://fonts.googleapis.com",
+        # "https://vjs.zencdn.net",
+    )
+    CSP_IMG_SRC = ("'self'", "data:")
+    CSP_FONT_SRC = (
+        "'self'",
+        "data:",  # Allow data: URIs for base64 encoded fonts (needed for Chart.js in production)
+        # For Google Fonts, uncomment this if needed:
+        # "https://fonts.gstatic.com",
+    )
+    CSP_CONNECT_SRC = ("'self'",)
+    CSP_FRAME_SRC = ("'none'",)
+    CSP_OBJECT_SRC = ("'none'",)
+    CSP_BASE_URI = ("'self'",)
+    CSP_FORM_ACTION = ("'self'",)
 
 # CSP Reporting (optional but recommended for monitoring)
 # CSP_REPORT_URI = '/csp-report/'  # Uncomment if you want CSP violation reports

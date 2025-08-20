@@ -1,7 +1,23 @@
-var player = videojs('videoPlayer');
+// Check if videoPlayer element exists before initializing
+var videoPlayerElement = document.getElementById('videoPlayer');
+var player = null;
 
+// Only initialize if the video element exists and videojs is available
+if (videoPlayerElement && typeof videojs !== 'undefined') {
+    try {
+        player = videojs('videoPlayer');
+    } catch (error) {
+        console.warn('Video.js player initialization failed:', error);
+    }
+}
 
 function rotate(player) {
+    // Guard clause to ensure player exists
+    if (!player) {
+        console.warn('Video player not available for rotate functionality');
+        return;
+    }
+
 	var dimension = 0;
 
 	var rotateLeftButton = createButton('&#8635;');
@@ -22,8 +38,10 @@ function rotate(player) {
 	};
 
 	var playbackRate = document.querySelector('.vjs-playback-rate');
-	insertAfter(rotateLeftButton, playbackRate);
-	insertAfter(rotateRightButton, rotateLeftButton);
+    if (playbackRate) {
+        insertAfter(rotateLeftButton, playbackRate);
+        insertAfter(rotateRightButton, rotateLeftButton);
+    }
 
 	function createButton(icon) {
 		var button = document.createElement('button');
@@ -36,7 +54,9 @@ function rotate(player) {
 	function insertAfter(newEl, element) {
 		element.parentNode.insertBefore(newEl, element.nextSibling);
 	};
-
 };
 
-player.registerPlugin('rotate', rotate);
+// Only register plugin if player exists
+if (player && typeof player.registerPlugin === 'function') {
+    player.registerPlugin('rotate', rotate);
+}

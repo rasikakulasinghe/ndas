@@ -57,6 +57,31 @@ scratch. This page gets rid of all links and provides the needed markup only.
 <!-- Library for Video Js -->
 <script src="https://vjs.zencdn.net/ie8/1.1.2/videojs-ie8.min.js"></script>
 <script src="https://vjs.zencdn.net/8.0.4/video.min.js"></script>
+
+<!-- Video.js initialization and custom scripts -->
+<script type="text/javascript">
+// Ensure Video.js is loaded before initializing
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if videoPlayer element exists
+    var videoElement = document.getElementById('videoPlayer');
+    if (videoElement && typeof videojs !== 'undefined') {
+        try {
+            // Initialize video player only if element exists
+            var player = videojs('videoPlayer');
+            
+            // Load custom video scripts after player is ready
+            player.ready(function() {
+                // Import rotate functionality if available
+                if (typeof rotate === 'function') {
+                    rotate(player);
+                }
+            });
+        } catch (error) {
+            console.warn('Video.js player initialization failed:', error);
+        }
+    }
+});
+</script>
 <script type="text/javascript" src="{% static 'js/zoomrotate.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/rotate.js' %}"></script>
 
