@@ -34,11 +34,11 @@
       <td>{{ Patient.added_by }}</td>
       <td>{{ Patient.added_on }}</td>
 
-      {% comment %} <td data-bs-toggle="tooltip" title='Active Status'>{% if Patient.is_active == True %}<div>Active</div>{% else %}<div>Inactive</div>{% endif %}</td> {% endcomment %}
+      {% comment %} <td data-toggle="tooltip" title='Active Status'>{% if Patient.is_active == True %}<div>Active</div>{% else %}<div>Inactive</div>{% endif %}</td> {% endcomment %}
       
       <td>
         <div class=" btn-group" role="group">
-          <button id="btnGroupDrop1" type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="false" aria-expanded="true">
+          <button id="btnGroupDrop1" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true">
             Actions
           </button>
           <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">

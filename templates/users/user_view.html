@@ -84,7 +84,7 @@
 
             <dt class="col-sm-3">Last Login Device :</dt>
             <dd class="col-sm-9">
-            <a href="#"><span class="fa fa-question-circle" data-bs-toggle="tooltip" data-original-title="{{custom_user.last_login_device}}"></span></a>
+            <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="{{custom_user.last_login_device}}"></span></a>
             </dd>
 
           </dl>
@@ -95,26 +95,26 @@
         <div class="btn-group" role="group" aria-label="User Actions">
           {% if user.username == custom_user.username %}
             <a href="{% url 'user-edit' custom_user.id %}" class="btn btn-outline-primary">
-              <i class="fas fa-edit me-2"></i>Edit Profile
+              <i class="fas fa-edit mr-2"></i>Edit Profile
             </a>
           {% endif %}
           <a href="{% url 'user-logout' %}" class="btn btn-outline-danger" 
              onclick="return confirm('Are you sure you want to log out?')">
-            <i class="fas fa-sign-out-alt me-2"></i>Log Out
+            <i class="fas fa-sign-out-alt mr-2"></i>Log Out
           </a>
         </div>
         
         {% if user.is_staff and user.username != custom_user.username %}
           <div class="btn-group" role="group" aria-label="Admin Actions">
             <a href="{% url 'user-edit' custom_user.id %}" class="btn btn-outline-secondary">
-              <i class="fas fa-user-edit me-2"></i>Edit User
+              <i class="fas fa-user-edit mr-2"></i>Edit User
             </a>
             <button type="button" class="btn btn-outline-warning" 
                     onclick="toggleUserStatus('{{ custom_user.id }}')">
               {% if custom_user.is_active %}
-                <i class="fas fa-user-times me-2"></i>Deactivate
+                <i class="fas fa-user-times mr-2"></i>Deactivate
               {% else %}
-                <i class="fas fa-user-check me-2"></i>Activate
+                <i class="fas fa-user-check mr-2"></i>Activate
               {% endif %}
             </button>
           </div>
@@ -159,7 +159,7 @@ function toggleUserStatus(userId) {
 
 // Initialize tooltips
 $(document).ready(function(){
-    $('[data-bs-toggle="tooltip"]').tooltip();
+    $('[data-toggle="tooltip"]').tooltip();
 });
 </script>
 {% endblock extra_js %}

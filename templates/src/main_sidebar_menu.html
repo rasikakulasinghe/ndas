@@ -4,7 +4,7 @@
 {% comment %}   <!-- Brand Logo -->
   <a href="{% static 'index3.html" class="brand-link">
     <img
-      src="https://via.placeholder.com/33x33/1f2937/ffffff?text=A"
+      src="{% static 'dist/img/AdminLTELogo.png' %}"
       alt="RLM Logo"
       class="brand-image img-circle elevation-3"
       style="opacity: 0.8"
@@ -20,7 +20,7 @@
       {% if user.profile_pic %}
       <img src="{{user.profile_pic.url}}" class="img-circle elevation-2" alt="User Image"/>
       {% else %}
-      <img src="https://via.placeholder.com/40x40/6c757d/ffffff?text=U" class="img-circle elevation-2" alt="User Image"/>
+      <img src="{% static 'dist/img/AdminLTELogo.png' %}" class="img-circle elevation-2" alt="User Image"/>
       {% endif %}
       </a></div>
       <div class="info"><a href="{% url 'user-view' user.id %}" class="d-block"> {{user.username}}</a></div>
@@ -31,7 +31,7 @@
       {% if user.profile_pic %}
       <img src="{{user.profile_pic.url}}" class="img-circle elevation-2" alt="User Image"/>
       {% else %}
-      <img src="https://via.placeholder.com/40x40/6c757d/ffffff?text=U" class="img-circle elevation-2" alt="User Image"/>
+      <img src="{% static 'dist/img/AdminLTELogo.png' %}" class="img-circle elevation-2" alt="User Image"/>
       {% endif %}
       </a></div>
       <div class="info"><a href="{% url 'user-view' user.id %}" class="d-block"> {{user.username}}</a></div>

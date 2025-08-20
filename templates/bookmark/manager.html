@@ -35,9 +35,9 @@
       <td>{{ Bookmark.bookmark_type }}</td>
       <td>{{ Bookmark.description }}</td>
       <td>{{ Bookmark.owner.username }}</td>
-      <td><div style="cursor: pointer;"><i data-bs-toggle="tooltip" data-bs-placement="top" title="Bookmarked on : {{ Bookmark.created_on }} {% if Bookmark.last_edit_by %}last edited on {{ Bookmark.added_on }} by {{ Bookmark.last_edit_by }}{% endif %}" class="fas fa-info-circle" style="color: #3d7deb;"></i></div></td>
+      <td><div style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="Bookmarked on : {{ Bookmark.created_on }} {% if Bookmark.last_edit_by %}last edited on {{ Bookmark.added_on }} by {{ Bookmark.last_edit_by }}{% endif %}" class="fas fa-info-circle" style="color: #3d7deb;"></i></div></td>
       <td><div style="cursor: pointer;" class=" btn-group" role="group">
-          <a id="btnGroupDrop1" class="fas fa-walking" data-bs-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
+          <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
           <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
 
             {% if Bookmark.bookmark_type == 'Patient' %}

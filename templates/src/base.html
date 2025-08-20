@@ -16,23 +16,21 @@
   <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
-    {% comment %} {% include './content_headder.html' %} {% endcomment %}
-    <!-- /.content-header -->
+    <div class="content-header">
+      <div class="container-fluid">
+        {% block content_header %}{% endblock content_header %}
+      </div>
+    </div>
 
     <!-- Main content -->
-    <div class="content">
-
-      <!-- Message display -->
-      {% include 'src/messages.html' %}
-      {% comment %} {% include './main_content.html' %} {% endcomment %} 
-
-      {% block main_content %}
-      <!-- Main content goes here-->
-
-      {% endblock main_content %}
-      
-    </div>
-    <!-- /.content -->
+    <section class="content">
+      <div class="container-fluid">
+        {% include 'src/messages.html' %}
+        {% block main_content %}
+        <!-- Main content goes here-->
+        {% endblock main_content %}
+      </div>
+    </section>
   </div>
   <!-- /.content-wrapper -->
 

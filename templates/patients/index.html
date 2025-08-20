@@ -90,10 +90,10 @@
           <div class="small-box bg-secondary">
           <div class="inner">
             <div class="row">
-              <div class="col"><a href="{% url 'file-manager-common' %}" style="color:white;"><i data-bs-toggle="tooltip" data-bs-placement="top" title="Videos" class="fas fa-play-circle" style="color: #ffffff;"></i></a></div>
-              <div class="col"><a href="{% url 'bookmark-manager' %}" style="color:white;"><i data-bs-toggle="tooltip" data-bs-placement="top" title="Bookmarks" class="far fa-bookmark" style="color: #ffffff;"></i></a></div>
-              <div class="col"><a href="{% url 'attachment-manager' %}" style="color:white;"><i data-bs-toggle="tooltip" data-bs-placement="top" title="Attachments" class="fas fa-paperclip" style="color: #ffffff;"></i></a></div>
-              <div class="col"><a href="{% url 'user-view' user.id %}" style="color:white;"><i data-bs-toggle="tooltip" data-bs-placement="top" title="Users" class="fas fa-users" style="color: #ffffff;"></i></a></div>
+              <div class="col"><a href="{% url 'file-manager-common' %}" style="color:white;"><i data-toggle="tooltip" data-placement="top" title="Videos" class="fas fa-play-circle" style="color: #ffffff;"></i></a></div>
+              <div class="col"><a href="{% url 'bookmark-manager' %}" style="color:white;"><i data-toggle="tooltip" data-placement="top" title="Bookmarks" class="far fa-bookmark" style="color: #ffffff;"></i></a></div>
+              <div class="col"><a href="{% url 'attachment-manager' %}" style="color:white;"><i data-toggle="tooltip" data-placement="top" title="Attachments" class="fas fa-paperclip" style="color: #ffffff;"></i></a></div>
+              <div class="col"><a href="{% url 'user-view' user.id %}" style="color:white;"><i data-toggle="tooltip" data-placement="top" title="Users" class="fas fa-users" style="color: #ffffff;"></i></a></div>
               <div class="w-100"></div>
               <div class="col"><a href="{% url 'file-manager-common' %}" style="color:white;">{{videos_total_count}}</a></div>
               <div class="col"><a href="{% url 'bookmark-manager' %}" style="color:white;">{{bookmark.count}}</a></div>
@@ -122,9 +122,9 @@
         <h3 class="card-title">Admissions</h3>
         <div class="card-tools">
             
-        {% comment %} <ul class="nav nav-pills ms-auto">
-        <li class="nav-item"><a class="nav-link active" href="#admissions-chart" data-bs-toggle="tab">Admissions</a></li>
-        <li class="nav-item"><a class="nav-link" href="#discharge-chart" data-bs-toggle="tab">Discharges</a></li>
+        {% comment %} <ul class="nav nav-pills ml-auto">
+        <li class="nav-item"><a class="nav-link active" href="#admissions-chart" data-toggle="tab">Admissions</a></li>
+        <li class="nav-item"><a class="nav-link" href="#discharge-chart" data-toggle="tab">Discharges</a></li>
         </ul> {% endcomment %}
 
         </div>
