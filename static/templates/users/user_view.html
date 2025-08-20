@@ -12,13 +12,13 @@
         <div class="card-header">
 
         <div class="container"><div class="col-md-4 px-0">
-        <img src="{{custom_user.image_url|default_if_none:"#" }}" class="rounded-circle img-thumbnail" width=200 height=200>
+        <img src="{{custom_user.profile_picture_url|default_if_none:"#" }}" class="rounded-circle img-thumbnail" width=200 height=200>
         </div>
         </div>
         </div>
 
         <!-- /.card-header -->
-        <div class="card-header"><h3 class="card-title">User Details : {{custom_user.first_name}} ({{custom_user.possition}})</h3></div>
+        <div class="card-header"><h3 class="card-title">User Details : {{custom_user.first_name}} ({{custom_user.position}})</h3></div>
 
         <div class="card-body">
 
@@ -33,29 +33,29 @@
             <dt class="col-sm-3">Last Name :</dt>
             <dd class="col-sm-9">{{custom_user.last_name}}</dd>
 
-            <dt class="col-sm-3">Possition :</dt>
-            <dd class="col-sm-9">{{custom_user.possition}}</dd>
+            <dt class="col-sm-3">Position :</dt>
+            <dd class="col-sm-9">{{custom_user.position}}</dd>
 
             <dt class="col-sm-3">Email :</dt>
             <dd class="col-sm-9">{{custom_user.email}}</dd>
 
             <dt class="col-sm-3">Mobile Number 1 :</dt>
-            <dd class="col-sm-9">{{custom_user.tp_mobile_1}}</dd>
+            <dd class="col-sm-9">{{custom_user.mobile_primary}}</dd>
 
             <dt class="col-sm-3">Mobile Number 2 :</dt>
-            <dd class="col-sm-9">{{custom_user.tp_mobile_2}}</dd>
+            <dd class="col-sm-9">{{custom_user.mobile_secondary}}</dd>
             
             <dt class="col-sm-3">Lan Number 1 :</dt>
-            <dd class="col-sm-9">{{custom_user.tp_lan_1}}</dd>
+            <dd class="col-sm-9">{{custom_user.landline_primary}}</dd>
 
             <dt class="col-sm-3">Lan Number 2 :</dt>
-            <dd class="col-sm-9">{{custom_user.tp_lan_2}}</dd>
+            <dd class="col-sm-9">{{custom_user.landline_secondary}}</dd>
 
             <dt class="col-sm-3">Address home :</dt>
-            <dd class="col-sm-9">{{custom_user.address_home}}</dd>
+            <dd class="col-sm-9">{{custom_user.home_address}}</dd>
 
             <dt class="col-sm-3">Address station :</dt>
-            <dd class="col-sm-9">{{custom_user.address_station}}</dd>
+            <dd class="col-sm-9">{{custom_user.station_address}}</dd>
 
             <dt class="col-sm-3">Last Login :</dt>
             <dd class="col-sm-9">{{custom_user.last_login}}</dd>
@@ -63,8 +63,24 @@
             <dt class="col-sm-3">Date Joined :</dt>
             <dd class="col-sm-9">{{custom_user.date_joined}}</dd>
 
+            <dt class="col-sm-3">Email Verified :</dt>
+            <dd class="col-sm-9">
+              {% if custom_user.is_email_verified %}
+                <span class="badge badge-success">Yes</span>
+                {% if custom_user.email_verified_at %}({{custom_user.email_verified_at}}){% endif %}
+              {% else %}
+                <span class="badge badge-warning">No</span>
+              {% endif %}
+            </dd>
+
+            <dt class="col-sm-3">Created At :</dt>
+            <dd class="col-sm-9">{{custom_user.created_at}}</dd>
+
+            <dt class="col-sm-3">Updated At :</dt>
+            <dd class="col-sm-9">{{custom_user.updated_at}}</dd>
+
             <dt class="col-sm-3">Other :</dt>
-            <dd class="col-sm-9">{{custom_user.other}}</dd>
+            <dd class="col-sm-9">{{custom_user.additional_notes}}</dd>
 
             <dt class="col-sm-3">Last Login Device :</dt>
             <dd class="col-sm-9">
@@ -75,9 +91,34 @@
 
       </br>
 
-      <dive class="float-right">
-      {% if user.username == custom_user.username %}<button class="btn btn-primary" onclick="location.href='{% url 'user-edit' custom_user.id %}'" type="button">Edit</button>{% endif %}
-      <button class="btn btn-primary" onclick="location.href='{% url 'user-logout' %}'" type="button">Log Out</button>
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="btn-group" role="group" aria-label="User Actions">
+          {% if user.username == custom_user.username %}
+            <a href="{% url 'user-edit' custom_user.id %}" class="btn btn-outline-primary">
+              <i class="fas fa-edit me-2"></i>Edit Profile
+            </a>
+          {% endif %}
+          <a href="{% url 'user-logout' %}" class="btn btn-outline-danger" 
+             onclick="return confirm('Are you sure you want to log out?')">
+            <i class="fas fa-sign-out-alt me-2"></i>Log Out
+          </a>
+        </div>
+        
+        {% if user.is_staff and user.username != custom_user.username %}
+          <div class="btn-group" role="group" aria-label="Admin Actions">
+            <a href="{% url 'user-edit' custom_user.id %}" class="btn btn-outline-secondary">
+              <i class="fas fa-user-edit me-2"></i>Edit User
+            </a>
+            <button type="button" class="btn btn-outline-warning" 
+                    onclick="toggleUserStatus('{{ custom_user.id }}')">
+              {% if custom_user.is_active %}
+                <i class="fas fa-user-times me-2"></i>Deactivate
+              {% else %}
+                <i class="fas fa-user-check me-2"></i>Activate
+              {% endif %}
+            </button>
+          </div>
+        {% endif %}
       </div>
 
         </div>
@@ -88,3 +129,37 @@
 
 
 {% endblock main_content%}
+
+{% block extra_js %}
+<script>
+function toggleUserStatus(userId) {
+    if (confirm('Are you sure you want to change this user\'s status?')) {
+        // Add AJAX call to toggle user status
+        fetch(`/users/${userId}/toggle-status/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating user status.');
+        });
+    }
+}
+
+// Initialize tooltips
+$(document).ready(function(){
+    $('[data-toggle="tooltip"]').tooltip();
+});
+</script>
+{% endblock extra_js %}

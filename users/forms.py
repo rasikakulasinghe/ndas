@@ -58,6 +58,108 @@ class CustomUserRegistrationForm(forms.ModelForm):
             user.save()
         return user
 
+
+class CustomUserEditForm(forms.ModelForm):
+    """
+    Form for editing user profiles without password fields.
+    Password changes should be handled separately.
+    """
+    profile_picture = forms.ImageField(
+        required=False, 
+        label='Profile Picture',
+        help_text='Supported formats: JPG, JPEG, PNG. Max size: 5MB'
+    )
+    position = forms.ChoiceField(
+        choices=POSSITION, 
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    
+    class Meta:
+        model = CustomUser
+        fields = [
+            'username', 'position', 'first_name', 'last_name', 'email',
+            'profile_picture', 'mobile_primary', 'mobile_secondary', 
+            'landline_primary', 'landline_secondary', 'home_address', 'station_address',
+            'additional_notes',
+        ]
+        
+        widgets = {
+            'username': forms.TextInput(attrs={
+                'class': 'form-control',
+                'readonly': 'readonly',  # Username should not be editable
+            }),
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'required': True}),
+            'mobile_primary': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': '+1234567890',
+                'required': True
+            }),
+            'mobile_secondary': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': '+1234567890'
+            }),
+            'landline_primary': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': '+1234567890'
+            }),
+            'landline_secondary': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': '+1234567890'
+            }),
+            'home_address': forms.Textarea(attrs={
+                'class': 'form-control', 
+                'rows': 3,
+                'placeholder': 'Enter your home address'
+            }),
+            'station_address': forms.Textarea(attrs={
+                'class': 'form-control', 
+                'rows': 3,
+                'placeholder': 'Enter your work station address'
+            }),
+            'additional_notes': forms.Textarea(attrs={
+                'class': 'form-control', 
+                'rows': 3,
+                'placeholder': 'Any additional notes or information'
+            }),
+        }
+        
+        labels = {
+            'mobile_primary': 'Primary Mobile *',
+            'mobile_secondary': 'Secondary Mobile',
+            'landline_primary': 'Primary Landline',
+            'landline_secondary': 'Secondary Landline',
+            'home_address': 'Home Address',
+            'station_address': 'Station Address',
+            'additional_notes': 'Additional Notes',
+        }
+
+    def clean_email(self):
+        """
+        Validate that email is unique (excluding current user).
+        """
+        email = self.cleaned_data.get('email')
+        if email:
+            # Check if another user already has this email
+            existing_user = CustomUser.objects.filter(email=email).exclude(pk=self.instance.pk)
+            if existing_user.exists():
+                raise forms.ValidationError("A user with this email already exists.")
+        return email
+
+    def clean_username(self):
+        """
+        Validate that username is unique (excluding current user).
+        """
+        username = self.cleaned_data.get('username')
+        if username:
+            # Check if another user already has this username
+            existing_user = CustomUser.objects.filter(username=username).exclude(pk=self.instance.pk)
+            if existing_user.exists():
+                raise forms.ValidationError("A user with this username already exists.")
+        return username
+
+
 class UserPasswordResetForm(PasswordResetForm):
     def __init__(self, *args, **kwargs):
         super(UserPasswordResetForm, self).__init__(*args, **kwargs)

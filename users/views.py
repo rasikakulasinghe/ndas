@@ -9,7 +9,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
-from .forms import CustomUserRegistrationForm, UserPasswordChange
+from .forms import CustomUserRegistrationForm, UserPasswordChange, CustomUserEditForm
 from .models import DeveloperContacts
 from .utils import (
     log_user_activity, 
@@ -144,45 +144,56 @@ def userViewByUsername(request, username):
 
 @login_required(login_url='user-login')
 def userEdit(request, pk):
-    selected_user = CustomUser.objects.get(id=pk)
-    user_form = CustomUserRegistrationForm(instance=selected_user)
+    """
+    Edit user profile with enhanced security and validation.
+    """
+    # Get the user to be edited
+    selected_user = get_object_or_404(CustomUser, id=pk)
+    
+    # Security check: Users can only edit their own profile unless they're staff
+    if not request.user.is_staff and request.user.pk != selected_user.pk:
+        messages.error(request, 'You do not have permission to edit this user.')
+        return redirect('user-view', pk=request.user.pk)
     
     if request.method == 'POST':
-        user_form_modified = CustomUserRegistrationForm(request.POST, request.FILES, instance=selected_user)
-        selected_user.position = user_form_modified.data.get("position")
-        selected_user.mobile_primary = user_form_modified.data.get("mobile_primary")
-        selected_user.mobile_secondary = user_form_modified.data.get("mobile_secondary")
-        selected_user.landline_primary = user_form_modified.data.get("landline_primary")
-        selected_user.landline_secondary = user_form_modified.data.get("landline_secondary")
-        selected_user.home_address = user_form_modified.data.get("home_address")
-        selected_user.station_address = user_form_modified.data.get("station_address")
-        selected_user.additional_notes = user_form_modified.data.get("additional_notes")
+        user_form = CustomUserEditForm(
+            request.POST, 
+            request.FILES, 
+            instance=selected_user
+        )
         
-        if 'profile_picture' in request.FILES:
-            image_prop = request.FILES['profile_picture']
+        if user_form.is_valid():
             try:
-                selected_user.profile_picture = image_prop
+                # Save the form which will handle all field updates
+                updated_user = user_form.save()
+                
+                messages.success(request, 'User profile updated successfully!')
+                
+                # Redirect to user view page instead of rendering template
+                return redirect('user-view', pk=updated_user.pk)
+                
             except Exception as e:
-                messages.warning(request, str(e))
-        
-        selected_user.username = user_form_modified.data.get("username")
-        selected_user.first_name = user_form_modified.data.get("first_name")
-        selected_user.last_name = user_form_modified.data.get("last_name")
-        selected_user.email = user_form_modified.data.get("email")
-        
-        selected_user.save(update_fields=[
-            'position', 'mobile_primary', 'mobile_secondary', 'landline_primary', 
-            'landline_secondary', 'home_address', 'station_address', 'additional_notes', 
-            'profile_picture', 'username', 'first_name', 'last_name', 'email'
-        ])
-        
-        updated_user = CustomUser.objects.get(id=pk)
-        
-        messages.success(request, 'User details updated successfully...')
-        
-        return render(request, 'users/user_view.html', {'user': updated_user})
+                messages.error(request, f'Error updating profile: {str(e)}')
+                # Re-display the form with errors
+                return render(request, 'users/user_edit.html', {
+                    'form': user_form,
+                    'selected_user': selected_user
+                })
+        else:
+            # Form is invalid, show errors
+            messages.error(request, 'Please correct the errors below.')
+            return render(request, 'users/user_edit.html', {
+                'form': user_form,
+                'selected_user': selected_user
+            })
+    
     else:
-        return render(request, 'users/user_edit.html', {'form' : user_form})
+        # GET request - show the form
+        user_form = CustomUserEditForm(instance=selected_user)
+        return render(request, 'users/user_edit.html', {
+            'form': user_form,
+            'selected_user': selected_user
+        })
 
 # change the password
 @login_required(login_url='user-login')
