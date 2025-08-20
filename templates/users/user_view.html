@@ -12,7 +12,13 @@
         <div class="card-header">
 
         <div class="container"><div class="col-md-4 px-0">
-        <img src="{{custom_user.profile_picture_url|default_if_none:"#" }}" class="rounded-circle img-thumbnail" width=200 height=200>
+        {% if custom_user.profile_picture_url %}
+        <img src="{{custom_user.profile_picture_url}}" class="rounded-circle img-thumbnail" width=200 height=200 style="object-fit: cover;">
+        {% else %}
+        <div class="rounded-circle img-thumbnail d-flex align-items-center justify-content-center bg-secondary" style="width: 200px; height: 200px; color: white;">
+          <i class="fas fa-user fa-5x"></i>
+        </div>
+        {% endif %}
         </div>
         </div>
         </div>

@@ -17,10 +17,12 @@
     <!-- Sidebar user panel (optional) -->
     <div class="user-panel mt-3 pb-3 mb-3 d-flex">
       <div class="image"><a href="{% url 'user-view' user.id %}">
-      {% if user.profile_pic %}
-      <img src="{{user.profile_pic.url}}" class="img-circle elevation-2" alt="User Image"/>
+      {% if user.profile_picture_url %}
+      <img src="{{user.profile_picture_url}}" class="img-circle elevation-2" alt="User Image" style="width: 33px; height: 33px; object-fit: cover;"/>
       {% else %}
-      <img src="{% static 'dist/img/AdminLTELogo.png' %}" class="img-circle elevation-2" alt="User Image"/>
+      <div class="img-circle elevation-2 d-flex align-items-center justify-content-center bg-secondary" style="width: 33px; height: 33px; color: white;">
+        <i class="fas fa-user"></i>
+      </div>
       {% endif %}
       </a></div>
       <div class="info"><a href="{% url 'user-view' user.id %}" class="d-block"> {{user.username}}</a></div>
@@ -28,10 +30,12 @@
     {% comment %} {% else %}
     <div class="user-panel mt-3 pb-3 mb-3 d-flex">
       <div class="image"><a href="{% url 'user-view' user.id %}">
-      {% if user.profile_pic %}
-      <img src="{{user.profile_pic.url}}" class="img-circle elevation-2" alt="User Image"/>
+      {% if user.profile_picture_url %}
+      <img src="{{user.profile_picture_url}}" class="img-circle elevation-2" alt="User Image" style="width: 33px; height: 33px; object-fit: cover;"/>
       {% else %}
-      <img src="{% static 'dist/img/AdminLTELogo.png' %}" class="img-circle elevation-2" alt="User Image"/>
+      <div class="img-circle elevation-2 d-flex align-items-center justify-content-center bg-secondary" style="width: 33px; height: 33px; color: white;">
+        <i class="fas fa-user"></i>
+      </div>
       {% endif %}
       </a></div>
       <div class="info"><a href="{% url 'user-view' user.id %}" class="d-block"> {{user.username}}</a></div>
