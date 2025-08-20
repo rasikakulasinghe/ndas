@@ -1,0 +1,328 @@
+/* 
+ * NDAS Theme - Optimized AdminLTE Customizations
+ * Consolidated CSS for better performance and maintainability
+ */
+
+/* ===== CSS CUSTOM PROPERTIES ===== */
+:root {
+    /* AdminLTE Compatible Variables */
+    --sidebar-width: 250px;
+    --navbar-height: 56px;
+    --primary-color: #007bff;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --info-color: #17a2b8;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+    
+    /* NDAS Specific Colors */
+    --ndas-primary: #007bff;
+    --ndas-accent: #17a2b8;
+    --ndas-text: #495057;
+    --ndas-border: #dee2e6;
+    
+    /* Layout Variables */
+    --content-padding: 1rem;
+    --card-border-radius: 0.375rem;
+    --transition-speed: 0.15s;
+}
+
+/* ===== LAYOUT FIXES ===== */
+
+/* Ensure full height layout */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Sidebar positioning and sizing */
+.main-sidebar {
+    min-height: 100vh !important;
+    height: 100vh;
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 1000;
+    overflow-y: auto;
+    width: var(--sidebar-width);
+}
+
+.main-sidebar .sidebar {
+    height: 100%;
+    overflow-y: auto;
+    padding-bottom: 60px; /* Space for footer */
+}
+
+/* Content wrapper adjustments */
+.content-wrapper {
+    min-height: calc(100vh - var(--navbar-height));
+    margin-left: var(--sidebar-width);
+    flex: 1;
+    transition: margin-left var(--transition-speed) ease-in-out;
+}
+
+/* Footer positioning */
+.main-footer {
+    margin-left: var(--sidebar-width);
+    margin-top: auto;
+    position: relative;
+    z-index: 999;
+    transition: margin-left var(--transition-speed) ease-in-out;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Mobile devices */
+@media (max-width: 767.98px) {
+    .content-wrapper {
+        margin-left: 0;
+    }
+    
+    .main-footer {
+        margin-left: 0;
+    }
+    
+    .main-sidebar {
+        transform: translateX(-100%);
+        transition: transform var(--transition-speed) ease-in-out;
+    }
+    
+    .sidebar-open .main-sidebar {
+        transform: translateX(0);
+    }
+}
+
+/* Tablet devices */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    :root {
+        --sidebar-width: 230px;
+    }
+}
+
+/* Large screens */
+@media (min-width: 1200px) {
+    :root {
+        --content-padding: 1.5rem;
+    }
+}
+
+/* ===== COMPONENT CUSTOMIZATIONS ===== */
+
+/* Enhanced card styling */
+.card {
+    border-radius: var(--card-border-radius);
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: box-shadow var(--transition-speed) ease-in-out;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Enhanced button styling */
+.btn {
+    border-radius: var(--card-border-radius);
+    transition: all var(--transition-speed) ease-in-out;
+}
+
+/* Form enhancements */
+.form-control {
+    border-radius: var(--card-border-radius);
+    border-color: var(--ndas-border);
+    transition: border-color var(--transition-speed) ease-in-out, box-shadow var(--transition-speed) ease-in-out;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* ===== CUSTOM COMPONENTS ===== */
+
+/* Big checkbox utility */
+.big-checkbox {
+    transform: scale(1.5);
+    margin: 0.5rem;
+}
+
+/* Loading spinner */
+.ndas-spinner {
+    display: inline-block;
+    width: 2rem;
+    height: 2rem;
+    vertical-align: text-bottom;
+    border: 0.25rem solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spinner-border 0.75s linear infinite;
+}
+
+@keyframes spinner-border {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Enhanced notifications */
+.alert {
+    border-radius: var(--card-border-radius);
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Video player enhancements */
+.video-js {
+    border-radius: var(--card-border-radius);
+    overflow: hidden;
+}
+
+/* Table enhancements */
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: var(--ndas-text);
+}
+
+/* Navigation enhancements */
+.nav-sidebar .nav-link {
+    border-radius: var(--card-border-radius);
+    margin: 0.125rem 0.5rem;
+    transition: all var(--transition-speed) ease-in-out;
+}
+
+.nav-sidebar .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ===== UTILITY CLASSES ===== */
+
+/* Spacing utilities */
+.p-xs { padding: 0.25rem !important; }
+.p-sm { padding: 0.5rem !important; }
+.p-md { padding: 1rem !important; }
+.p-lg { padding: 1.5rem !important; }
+.p-xl { padding: 3rem !important; }
+
+.m-xs { margin: 0.25rem !important; }
+.m-sm { margin: 0.5rem !important; }
+.m-md { margin: 1rem !important; }
+.m-lg { margin: 1.5rem !important; }
+.m-xl { margin: 3rem !important; }
+
+/* Text utilities */
+.text-ndas-primary { color: var(--ndas-primary) !important; }
+.text-ndas-accent { color: var(--ndas-accent) !important; }
+
+/* Background utilities */
+.bg-ndas-primary { background-color: var(--ndas-primary) !important; }
+.bg-ndas-accent { background-color: var(--ndas-accent) !important; }
+
+/* Border utilities */
+.border-ndas { border-color: var(--ndas-border) !important; }
+
+/* Shadow utilities */
+.shadow-sm-custom { box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important; }
+.shadow-custom { box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important; }
+
+/* ===== ANIMATIONS ===== */
+
+/* Fade in animation */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Slide in animation */
+@keyframes slideInFromLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.slide-in-left {
+    animation: slideInFromLeft 0.3s ease-out;
+}
+
+/* Pulse animation for important elements */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.pulse-animation {
+    animation: pulse 2s infinite;
+}
+
+/* ===== ACCESSIBILITY IMPROVEMENTS ===== */
+
+/* Focus indicators */
+.btn:focus,
+.form-control:focus,
+.nav-link:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .card {
+        border: 2px solid;
+    }
+    
+    .btn {
+        border-width: 2px;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ===== PRINT STYLES ===== */
+
+@media print {
+    .main-sidebar,
+    .main-header,
+    .btn,
+    .no-print {
+        display: none !important;
+    }
+    
+    .content-wrapper {
+        margin-left: 0 !important;
+    }
+    
+    .card {
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+    }
+}
