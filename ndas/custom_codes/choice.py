@@ -1,13 +1,17 @@
-POSSITION = (
-    ("Medical Officer", "Medical Officer"),
-    ("Consultant", "Consultant"),
-    ("Registrar", "Registrar"),
-    ("Physiotherapist", "Physiotherapist"),
-    ("Occupational Therapist", "Occupational Therapist"),
-    ("Administrator", "Administrator"),
-    ("Nursing officer", "Nursing officer"),
-    ("Senior Registrar", "Senior Registrar"),
-)
+from django.db import models
+
+class Position(models.TextChoices):
+    MEDICAL_OFFICER = "Medical Officer", "Medical Officer"
+    CONSULTANT = "Consultant", "Consultant"
+    REGISTRAR = "Registrar", "Registrar"
+    PHYSIOTHERAPIST = "Physiotherapist", "Physiotherapist"
+    OCCUPATIONAL_THERAPIST = "Occupational Therapist", "Occupational Therapist"
+    ADMINISTRATOR = "Administrator", "Administrator"
+    NURSING_OFFICER = "Nursing officer", "Nursing officer"
+    SENIOR_REGISTRAR = "Senior Registrar", "Senior Registrar"
+
+# Keep the old POSSITION for backward compatibility
+POSSITION = Position.choices
 
 MODE_OF_DELIVERY = (
     ("Normal vaginal delivery (NVD)", "Normal vaginal delivery (NVD)"),

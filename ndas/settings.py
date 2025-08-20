@@ -64,6 +64,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'users.middleware.UserActivityMiddleware',  # User activity tracking
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_user_agents.middleware.UserAgentMiddleware',
@@ -168,12 +169,19 @@ AUTH_USER_MODEL = "users.CustomUser"
 
 #SMTP Configuration
 # SMTP Configuration (use environment variables for production)
-# EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.filebased.EmailBackend')
-# EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com')
-# EMAIL_PORT = env('EMAIL_PORT', default=587)
-# EMAIL_USE_TLS = env('EMAIL_USE_TLS', default=True)
-# EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
-# EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+# Email Configuration
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # For production
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = ''  # Set this in .env file
+EMAIL_HOST_PASSWORD = ''  # Set this in .env file
+DEFAULT_FROM_EMAIL = 'noreply@ndas-system.com'
+
+# Email verification settings
+EMAIL_VERIFICATION_REQUIRED = True
+EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS = 24
 
 # email local settings
 EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"

@@ -4,29 +4,30 @@ from users.models import CustomUser
 from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm, PasswordChangeForm
 
 class CustomUserRegistrationForm(forms.ModelForm):
-    profile_pic = forms.ImageField(required=False, label='Your Profile Picture : ')
-    password1 = forms.CharField(label='Password confirmation', widget=forms.PasswordInput(attrs={
+    profile_picture = forms.ImageField(required=False, label='Your Profile Picture: ')
+    password1 = forms.CharField(label='Password', widget=forms.PasswordInput(attrs={
             'class': "form-control",
             'type': 'password',
             'name': 'password',
             'placeholder': 'Password',
-            'id' : "password1",
+            'id': "password1",
         }))
     password2 = forms.CharField(label='Password confirmation', widget=forms.PasswordInput(attrs={
             'class': "form-control",
             'type': 'password',
             'name': 'password',
-            'placeholder': 'Password',
-            'id' : "password2",
+            'placeholder': 'Confirm Password',
+            'id': "password2",
         }))
-    possition = forms.ChoiceField(choices=POSSITION, widget = forms.Select(attrs = {'class': 'form-control'}))
+    position = forms.ChoiceField(choices=POSSITION, widget=forms.Select(attrs={'class': 'form-control'}))
     
     class Meta:
         model = CustomUser
         fields = [
-            'username', 'possition', 'first_name', 'last_name', 'email', 'password1',  'password2',
-            'profile_pic', 'tp_mobile_1', 'tp_lan_1', 'tp_mobile_2', 'tp_lan_2', 'address_home', 'address_station',
-            'date_joined', 'groups', 'user_permissions', 'other',
+            'username', 'position', 'first_name', 'last_name', 'email', 'password1', 'password2',
+            'profile_picture', 'mobile_primary', 'mobile_secondary', 
+            'landline_primary', 'landline_secondary', 'home_address', 'station_address',
+            'additional_notes',
         ]
         
         widgets = {
@@ -34,17 +35,28 @@ class CustomUserRegistrationForm(forms.ModelForm):
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'profile_pic': forms.TextInput(attrs={'class': 'form-control'}),
-            'tp_mobile_1': forms.TextInput(attrs={'class': 'form-control'}),
-            'tp_mobile_2': forms.TextInput(attrs={'class': 'form-control'}),
-            'tp_lan_1': forms.TextInput(attrs={'class': 'form-control'}),
-            'tp_lan_2': forms.TextInput(attrs={'class': 'form-control'}),
-            'address_home': forms.Textarea(attrs={'class': 'form-control'}),
-            'address_station': forms.Textarea(attrs={'class': 'form-control'}),
-            'other': forms.Textarea(attrs={'class': 'form-control'}),
-            'date_joined': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'},),
-         }
+            'mobile_primary': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+1234567890'}),
+            'mobile_secondary': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+1234567890'}),
+            'landline_primary': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+1234567890'}),
+            'landline_secondary': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+1234567890'}),
+            'home_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'station_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'additional_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+    
+    def clean_password2(self):
+        password1 = self.cleaned_data.get("password1")
+        password2 = self.cleaned_data.get("password2")
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError("Passwords don't match")
+        return password2
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data["password1"])
+        if commit:
+            user.save()
+        return user
 
 class UserPasswordResetForm(PasswordResetForm):
     def __init__(self, *args, **kwargs):
