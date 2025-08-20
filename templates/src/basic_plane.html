@@ -49,7 +49,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
 <script src="{% static 'plugins/HTMX/htmx.min.js' %}"></script>
 
 <!-- If you'd like to support IE8 (for Video.js versions prior to v7) -->
-<script src="https://vjs.zencdn.net/ie8/1.1.2/videojs-ie8.min.js"></script>
+<!-- Removed duplicate script: script src="https://vjs.zencdn.net/ie8/1.1.2/videojs-ie8.min.js" -->
 
 <!-- Library for Chart Js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.2.1/chart.min.js" integrity="sha512-v3ygConQmvH0QehvQa6gSvTE2VdBZ6wkLOlmK7Mcy2mZ0ZF9saNbbk19QeaoTHdWIEiTlWmrwAL4hS8ElnGFbA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -60,26 +60,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
 <script type="text/javascript" src="{% static 'js/zoomrotate.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/rotate.js' %}"></script>
 
-<!-- Tool Tip -->
-<script type="text/javascript">
-  $(function () {
-    $('[data-toggle="tooltip"]').tooltip()
-  })
-</script>
+<!-- Main application JavaScript -->
+<script type="text/javascript" src="{% static 'js/main.js' %}"></script>
 
-
-<!-- VideoJs -->
-<script type="text/javascript">
-  var player = videojs('videoPlayer', {
-    controlBar: {
-        'volumePanel': false,
-    }
-}); 
-
-  player.muted(true);
-  player.rotate(player)
-
-</script>
+{% block extra_js %}
+{% endblock extra_js %}
 
 
 

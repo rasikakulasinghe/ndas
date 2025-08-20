@@ -35,13 +35,23 @@
     {% for File in file_list %}
     <tr>
       <th scope="row">{{ File.id }}</th>
-      
-      <td><div class="d-flex align-items-left">
-        {% if File.isNewFile %}<div class="d-inline-block"><span class="right badge badge-danger" data-toggle="tooltip" data-placement="top" title="New record">New</span>{% else %}
-        &nbsp;<div class="d-inline-block" style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="Analyzed by GMA" class="fas fa-check-circle" style="color: #1ab805;"></i></div>
-        {% endif %}
+      <td>
+        <div class="d-flex align-items-left">
+          {% if File.isNewFile %}
+            <div class="d-inline-block">
+              <span class="right badge badge-danger" data-toggle="tooltip" data-placement="top" title="New record">New</span>
+            </div>
+          {% else %}
+            <div class="d-inline-block" style="cursor: pointer;">
+              <i data-toggle="tooltip" data-placement="top" title="Analyzed by GMA" class="fas fa-check-circle" style="color: #1ab805;"></i>
+            </div>
+          {% endif %}
 
-        {% if File.isBookmarked %}&nbsp;<div class="d-inline-block" style="cursor: pointer;"><a href="{% url 'bookmark-view' File.isBookmarked.id %}" data-toggle="tooltip" data-placement="top" title="Bookmarked" class="far fa-bookmark" style="color: #3d7deb;"></a></div>{% endif %}
+          {% if File.isBookmarked %}
+            <div class="d-inline-block" style="cursor: pointer;">
+              <a href="{% url 'bookmark-view' File.isBookmarked.id %}" data-toggle="tooltip" data-placement="top" title="Bookmarked" class="far fa-bookmark" style="color: #3d7deb;"></a>
+            </div>
+          {% endif %}
         </div>
       </td>
       

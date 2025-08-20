@@ -321,7 +321,7 @@ def search_results(request):
                 return render (request, 'patients/view.html', {'patient' : patient, 'pgn' : pagn})
             except patient.DoesNotExist:
                 pagn = " : Patients > BHT > " + str(search_text)
-                return render (request, 'patients/search_notfount.html', {'patient' : patient, 'pgn' : pagn})
+                return render (request, 'patients/search_notfound.html', {'patient' : patient, 'pgn' : pagn})
 
         elif combo_pt_param_type == 'pts_phn' and PHN_validation(request, search_text):
             pagn = " : Patients > PHN > " + str(search_text)
@@ -330,7 +330,7 @@ def search_results(request):
                 messages.success(request, 'Search results for : %s' % pagn)
                 return render (request, 'patients/view.html', {'patient' : patient})
             except patient.DoesNotExist:
-                return render (request, 'patients/search_notfount.html', {'patient' : patient, 'pgn' : pagn})
+                return render (request, 'patients/search_notfound.html', {'patient' : patient, 'pgn' : pagn})
 
         elif combo_pt_param_type == 'pts_nnc_no' and NNC_validation(request, search_text):
             try:
@@ -338,14 +338,14 @@ def search_results(request):
                 messages.success(request, 'Search results for : %s' % pagn)
                 return render (request, 'patients/view.html', {'patient' : patient, 'pgn' : pagn})
             except patient.DoesNotExist:
-                return render (request, 'patients/search_notfount.html', {'patient' : patient, 'pgn' : pagn})
+                return render (request, 'patients/search_notfound.html', {'patient' : patient, 'pgn' : pagn})
 
         elif combo_pt_param_type == 'pts_name_baby' and Name_baby_validation(request, search_text):
             pagn = " : Patients > Name of the baby > " + str(search_text)
             try:
                 patient = Patient.objects.filter(Q(baby_name__startswith=search_text) | Q(baby_name__icontains=search_text))
             except patient.DoesNotExist:
-                return render (request, 'patients/search_notfount.html', {'pgn' : pagn})
+                return render (request, 'patients/search_notfound.html', {'pgn' : pagn})
             if len(patient) == 1:
                 messages.success(request, 'Search results for : %s' % pagn)
                 return render (request, 'patients/view.html', {'patient' : patient.first(), 'patients_page_obj' : None, 'pgn' : pagn})
@@ -355,14 +355,14 @@ def search_results(request):
                 paginated_pt_list = paginator.get_page(page_number)
                 return render (request, 'patients/results.html', {'patient' : None, 'patients_page_obj' : paginated_pt_list, 'pgn' : pagn})
             else:
-                return render (request, 'patients/search_notfount.html', {'pgn' : pagn})
+                return render (request, 'patients/search_notfound.html', {'pgn' : pagn})
 
         elif combo_pt_param_type == 'pts_name_mother'  and Name_mother_validation(request, search_text):
             pagn = " : Patients > Name of the mother > " + str(search_text)
             try:
                 patient = Patient.objects.filter(Q(mother_name__startswith=search_text) | Q(mother_name__icontains=search_text))
             except patient.DoesNotExist:
-                return render (request, 'patients/search_notfount.html', {'pgn' : pagn})
+                return render (request, 'patients/search_notfound.html', {'pgn' : pagn})
 
             if len(patient) == 1:
                 messages.success(request, 'Search results for : %s' % pagn)
@@ -385,7 +385,7 @@ def search_results(request):
         return userViewByUsername(request, como_user_username)
     else:
         messages.success(request, 'No search results, please use appropriate option and try again...')
-        return render (request, 'patients/search_notfount.html')
+        return render (request, 'patients/search_notfound.html')
 
 # methods for file operations ------------------------------------------------------------------------------
 @csrf_exempt

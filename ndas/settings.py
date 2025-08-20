@@ -75,7 +75,10 @@ ROOT_URLCONF = 'ndas.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'static/templates'],
+        'DIRS': [
+            BASE_DIR / 'templates',           # Proper Django templates directory
+            BASE_DIR / 'static/templates',    # Legacy directory for backwards compatibility
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -257,9 +260,24 @@ if DEBUG:
                 "https://cdnjs.cloudflare.com",
                 "https://vjs.zencdn.net",  # For Video.js scripts
             ),
+            'script-src-elem': (  # Add explicit script-src-elem directive
+                "'self'", 
+                "'unsafe-inline'",
+                "https://cdn.jsdelivr.net",
+                "https://cdnjs.cloudflare.com", 
+                "https://vjs.zencdn.net",
+            ),
             'style-src': (
                 "'self'", 
                 "'unsafe-inline'",  # Needed for Django admin and Bootstrap
+                "https://cdn.jsdelivr.net",
+                "https://cdnjs.cloudflare.com",
+                "https://fonts.googleapis.com",  # For Google Fonts
+                "https://vjs.zencdn.net",  # For Video.js styles
+            ),
+            'style-src-elem': (  # Add explicit style-src-elem directive
+                "'self'", 
+                "'unsafe-inline'",
                 "https://cdn.jsdelivr.net",
                 "https://cdnjs.cloudflare.com",
                 "https://fonts.googleapis.com",  # For Google Fonts
