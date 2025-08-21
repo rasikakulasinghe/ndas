@@ -1,0 +1,208 @@
+/* User Templates Styles */
+
+/* Contact Developer Page Styles */
+.developer-card {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-radius: 15px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    margin-top: 2rem;
+}
+
+.developer-header {
+    background: white;
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+}
+
+.developer-avatar {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    margin: 0 auto 1rem;
+    border: 5px solid #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    object-fit: cover;
+}
+
+.developer-name {
+    color: #2c3e50;
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.developer-title {
+    color: #7f8c8d;
+    font-size: 1.1rem;
+    margin-bottom: 0;
+}
+
+.contact-info {
+    background: white;
+    padding: 2rem;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.contact-item:last-child {
+    border-bottom: none;
+}
+
+.contact-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.contact-label {
+    font-weight: 600;
+    color: #2c3e50;
+    min-width: 120px;
+    margin-bottom: 0;
+}
+
+.contact-value {
+    color: #34495e;
+    margin-bottom: 0;
+    flex: 1;
+}
+
+.social-section {
+    background: #f8f9fa;
+    padding: 2rem;
+    text-align: center;
+}
+
+.social-title {
+    color: #2c3e50;
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.social-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.social-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-decoration: none;
+    font-size: 1.3rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.social-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    color: white;
+    text-decoration: none;
+}
+
+.social-facebook { background: #3b5998; }
+.social-twitter { background: #1da1f2; }
+.social-whatsapp { background: #25d366; }
+.social-youtube { background: #ff0000; }
+.social-linkedin { background: #0077b5; }
+.social-instagram { background: #e4405f; }
+.social-github { background: #333; }
+.social-telegram { background: #0088cc; }
+
+.action-buttons {
+    background: white;
+    padding: 1.5rem 2rem;
+    text-align: center;
+}
+
+.welcome-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem 2rem;
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .contact-item {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .contact-icon {
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+    }
+    
+    .contact-label {
+        min-width: auto;
+        margin-bottom: 0.25rem;
+    }
+    
+    .developer-header {
+        padding: 1.5rem;
+    }
+    
+    .contact-info {
+        padding: 1.5rem;
+    }
+    
+    .social-section {
+        padding: 1.5rem;
+    }
+    
+    .action-buttons {
+        padding: 1.5rem;
+    }
+}
+
+/* Additional User Template Utilities */
+.user-page-container {
+    min-height: calc(100vh - 200px);
+    padding: 2rem 0;
+}
+
+.user-card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.user-btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.user-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}

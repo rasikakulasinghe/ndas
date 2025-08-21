@@ -1,89 +1,255 @@
-{% extends 'src/base.html' %}
+{% extends 'src/basic_plane.html' %}
 {% load static %}
-{% block title %}Devoloper Contact{% endblock %}
+{% block title %}Contact Developer{% endblock %}
 
-{% block main_content %}
-</br>
-<div class="container-sm">
-<div class="col-sm">
-  
-  <div class="card">
+{% block mainbody %}
 
-    <div class="card-header">
+{% if user.is_authenticated %}
+<!-- Authenticated User Layout -->
+<div class="wrapper">
+    <!-- Navbar -->
+    {% include 'src/navbar.html' %}
+    <!-- /.navbar -->
 
-    <div class="container"><div class="col-md-4 px-0">
-      {% if developer.logo %}
-      <img src="{{developer.logo.url}}" class="rounded-circle img-thumbnail" width=200 height=200>
-      {% else %}
-      <img src="https://via.placeholder.com/200x200/007bff/ffffff?text=NDAS" class="rounded-circle img-thumbnail" width=200 height=200>
-      {% endif %}
+    <!-- Main Sidebar Container -->
+    {% include 'src/main_sidebar_menu.html' %}
+    <!-- /.sidebar -->
+
+    <!-- Content Wrapper. Contains page content -->
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <div class="content-header">
+            <div class="container-fluid">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1>Contact Developer</h1>
+                    </div>
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="/">Home</a></li>
+                            <li class="breadcrumb-item active">Contact Developer</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <section class="content">
+            <div class="container-fluid">
+                {% include 'src/messages.html' %}
+                
+                <!-- Developer Contact Card -->
+                <div class="row justify-content-center">
+                    <div class="col-md-10">
+{% else %}
+<!-- Non-authenticated User Layout -->
+<div class="hold-transition login-page">
+    <div style="width: 90%; max-width: 900px; margin: 2rem auto;">
+        <div class="text-center mb-4">
+            <h2><b>NDAS</b> System - Contact Developer</h2>
+            <p class="text-muted">Get in touch with the system developer</p>
+        </div>
+        
+        <!-- Developer Contact Card -->
+        <div class="row justify-content-center">
+            <div class="col-12">
+{% endif %}
+
+                        <div class="card shadow">
+                            <div class="card-header bg-primary text-white">
+                                <div class="row align-items-center">
+                                    <div class="col-md-3 text-center">
+                                        {% if developer.logo %}
+                                            <img src="{{ developer.logo.url }}" class="rounded-circle img-thumbnail bg-white" width="120" height="120" style="object-fit: cover;" alt="{{ developer.name }}">
+                                        {% else %}
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center bg-white" style="width: 120px; height: 120px; margin: 0 auto;">
+                                                <i class="fas fa-user-tie fa-3x text-primary"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-9">
+                                        <h3 class="mb-1">
+                                            <i class="fas fa-code mr-2"></i>{{ developer.name }}
+                                        </h3>
+                                        <p class="mb-0">System Developer & Maintainer</p>
+                                        <small>{{ developer.qualifications|default:"Professional Developer" }}</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h5 class="mb-3"><i class="fas fa-info-circle mr-2"></i>Contact Information</h5>
+                                        <dl class="row">
+                                            <dt class="col-sm-4">Name:</dt>
+                                            <dd class="col-sm-8">{{ developer.name }}</dd>
+
+                                            <dt class="col-sm-4">Qualifications:</dt>
+                                            <dd class="col-sm-8">{{ developer.qualifications|default:"Not specified" }}</dd>
+
+                                            <dt class="col-sm-4">Email:</dt>
+                                            <dd class="col-sm-8">
+                                                <a href="mailto:{{ developer.email }}" class="text-primary">
+                                                    <i class="fas fa-envelope mr-1"></i>{{ developer.email }}
+                                                </a>
+                                            </dd>
+
+                                            {% if developer.mobile_phone %}
+                                            <dt class="col-sm-4">Mobile Phone:</dt>
+                                            <dd class="col-sm-8">
+                                                <a href="tel:{{ developer.mobile_phone }}" class="text-success">
+                                                    <i class="fas fa-mobile-alt mr-1"></i>{{ developer.mobile_phone }}
+                                                </a>
+                                            </dd>
+                                            {% endif %}
+
+                                            {% if developer.landline_phone %}
+                                            <dt class="col-sm-4">Landline:</dt>
+                                            <dd class="col-sm-8">
+                                                <a href="tel:{{ developer.landline_phone }}" class="text-info">
+                                                    <i class="fas fa-phone mr-1"></i>{{ developer.landline_phone }}
+                                                </a>
+                                            </dd>
+                                            {% endif %}
+
+                                            {% if developer.whatsapp_number %}
+                                            <dt class="col-sm-4">WhatsApp:</dt>
+                                            <dd class="col-sm-8">
+                                                <a href="https://wa.me/{{ developer.whatsapp_number }}" target="_blank" class="text-success">
+                                                    <i class="fab fa-whatsapp mr-1"></i>{{ developer.whatsapp_number }}
+                                                </a>
+                                            </dd>
+                                            {% endif %}
+
+                                            {% if developer.website_url %}
+                                            <dt class="col-sm-4">Website:</dt>
+                                            <dd class="col-sm-8">
+                                                <a href="{{ developer.website_url }}" target="_blank" class="text-primary">
+                                                    <i class="fas fa-globe mr-1"></i>Visit Website
+                                                </a>
+                                            </dd>
+                                            {% endif %}
+                                        </dl>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="card bg-light">
+                                            <div class="card-header">
+                                                <h6 class="card-title mb-0">
+                                                    <i class="fas fa-share-alt mr-2"></i>Social Media
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="d-flex flex-column">
+                                                    {% if developer.facebook_url %}
+                                                    <a href="{{ developer.facebook_url }}" target="_blank" class="btn btn-outline-primary btn-sm mb-2">
+                                                        <i class="fab fa-facebook-f mr-2"></i>Facebook
+                                                    </a>
+                                                    {% endif %}
+
+                                                    {% if developer.twitter_url %}
+                                                    <a href="{{ developer.twitter_url }}" target="_blank" class="btn btn-outline-info btn-sm mb-2">
+                                                        <i class="fab fa-twitter mr-2"></i>Twitter
+                                                    </a>
+                                                    {% endif %}
+
+                                                    {% if developer.youtube_url %}
+                                                    <a href="{{ developer.youtube_url }}" target="_blank" class="btn btn-outline-danger btn-sm mb-2">
+                                                        <i class="fab fa-youtube mr-2"></i>YouTube
+                                                    </a>
+                                                    {% endif %}
+
+                                                    {% if not developer.facebook_url and not developer.twitter_url and not developer.youtube_url %}
+                                                    <p class="text-muted small mb-0">No social media links available.</p>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Contact Form Section -->
+                                <div class="row mt-4">
+                                    <div class="col-12">
+                                        <div class="card bg-light">
+                                            <div class="card-header">
+                                                <h6 class="card-title mb-0">
+                                                    <i class="fas fa-paper-plane mr-2"></i>Quick Contact
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <p class="text-muted">
+                                                    Need help or have questions about the NDAS system? Feel free to reach out through any of the contact methods above.
+                                                </p>
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <a href="mailto:{{ developer.email }}?subject=NDAS System Inquiry" class="btn btn-primary btn-block">
+                                                            <i class="fas fa-envelope mr-2"></i>Send Email
+                                                        </a>
+                                                    </div>
+                                                    {% if developer.whatsapp_number %}
+                                                    <div class="col-md-6">
+                                                        <a href="https://wa.me/{{ developer.whatsapp_number }}?text=Hello, I need help with the NDAS system." target="_blank" class="btn btn-success btn-block">
+                                                            <i class="fab fa-whatsapp mr-2"></i>WhatsApp
+                                                        </a>
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- System Information -->
+                                {% if var %}
+                                <div class="row mt-4">
+                                    <div class="col-12">
+                                        <div class="card bg-info">
+                                            <div class="card-header">
+                                                <h6 class="card-title mb-0 text-white">
+                                                    <i class="fas fa-info-circle mr-2"></i>System Information
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <small class="text-white">
+                                                    When contacting support, please include this information: {{ var }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                            </div>
+                            <!-- /.card-body -->
+                        </div>
+                        <!-- /.card -->
+
+{% if user.is_authenticated %}
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
-    </div>
-    </div>
+    <!-- /.content-wrapper -->
 
-    <!-- /.card-header -->
-      <div class="alert alert-primary">Welcome...</div>
-    
-    <div class="card-body">
-
-      <dl class="row">
-        <dt class="col-sm-3">Devoloper :</dt>
-        <dd class="col-sm-9">{{developer.name}} ({{developer.qualifications}})</dd>
-
-        <dt class="col-sm-3">Email :</dt>
-        <dd class="col-sm-9">{{developer.email}}</dd>
-
-        <dt class="col-sm-3">Web :</dt>
-        <dd class="col-sm-9">{{developer.web}}</dd>
-
-        <dt class="col-sm-3">Telephone Mobile :</dt>
-        <dd class="col-sm-9">{{developer.tel_mob}}</dd>
-
-        <dt class="col-sm-3">Telephone Lan :</dt>
-        <dd class="col-sm-9">{{developer.tel_lan}}</dd>
-
-        <dt class="col-sm-3">Location :</dt>
-        <dd class="col-sm-9">{{developer.location}}</dd>
-
-    </br>
-    </br>
-
-        <dt class="col-sm-3">Social Contacts :</dt>
-        <dd class="col-sm-9">
-          <div class="rounded-social-buttons">
-            {% if developer.facebook %}<a class="social-button facebook" href="{{developer.facebook}}" target="_blank"><i class="fab fa-facebook-f"></i></a>{% endif %}
-            {% if developer.twitter %}<a class="social-button twitter" href="{{developer.twitter}}" target="_blank"><i class="fab fa-twitter"></i></a>{% endif %}
-            {% if developer.whatsapp %}<a class="social-button linkedin" href="//api.whatsapp.com/send?phone={{developer.whatsapp}}&text=Hi"
-            target="_blank"><i class="fab fa-whatsapp"></i></a>{% endif %}
-            {% if developer.youtube %}<a class="social-button youtube" href="{{developer.youtube}}" target="_blank"><i class="fab fa-youtube"></i></a>{% endif %}
-          </div>
-        </dd>
-
-    </br>
-    </br>
-
-      </dl>
-      
-      <div class="float-right"><button type="button" class="btn btn-primary" onclick="location.href='{% url 'home' %}'">Home</button>
-      <button class="btn btn-primary" onclick="location.href='{% url 'user-login' %}'" type="button">Login</button></div>
-
-    </div>
-    <!-- /.card-body -->
-  </div>
-  <!-- /.card -->
-
-{% comment %} </div>
-
-        <p>{{var.browser}}</p>
-        <p>{{var.os}}</p>
-        <p>{{var.device}}</p>
-        <p>{{var.ipaddress}}</p>
-        <p>is_mobile : {{var.is_mobile}}</p>
-        <p>is_tablet :{{var.is_tablet}}</p>
-        <p>is_touch_capable :{{var.is_touch_capable}}</p>
-        <p>is_pc :{{var.is_pc}}</p>
-        <p>is_bot :{{var.is_bot}}</p>
-</div> {% endcomment %}
+    <!-- Main Footer -->
+    {% include 'src/main_footer.html' %}
 </div>
+<!-- /.wrapper -->
+{% else %}
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{% url 'user-login' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-sign-in-alt mr-2"></i>Login to Access Full System
+            </a>
+        </div>
+    </div>
 </div>
-{% endblock main_content%}
+{% endif %}
+
+{% endblock mainbody %}
