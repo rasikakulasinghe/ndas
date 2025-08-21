@@ -84,12 +84,26 @@
       </ul>
       </li>
 
+      {% if user.is_staff or user.is_superuser %}
+      <!-- Admin User Management Section -->
+      <li class="nav-item menu-close">
+        <a href="#" class="nav-link active"><i class="nav-icon fas fa-users-cog"></i><p>User Management<i class="right fas fa-angle-left"></i></p></a>
+        <ul class="nav nav-treeview">
+          <li class="nav-item"><a href="{% url 'admin-dashboard' %}" class="nav-link"><i class="right fas fa-tachometer-alt"></i><p>Admin Dashboard</p></a></li>
+          <li class="nav-item"><a href="{% url 'admin-user-list' %}" class="nav-link"><i class="right fas fa-users"></i><p>Manage Users</p></a></li>
+          <li class="nav-item"><a href="{% url 'admin-user-add' %}" class="nav-link"><i class="right fas fa-user-plus"></i><p>Add New User</p></a></li>
+          <li class="nav-item"><a href="{% url 'admin-activity-logs' %}" class="nav-link"><i class="right fas fa-chart-line"></i><p>System Activity Logs</p></a></li>
+        </ul>
+      </li>
+      {% endif %}
+
       <li class="nav-item menu-close">
         <a href="#" class="nav-link active"><i class="nav-icon fas fa-cog"></i><p>Settings<i class="right fas fa-angle-left"></i></p></a>
         <ul class="nav nav-treeview">
           <li class="nav-item"><a href="{% url 'user-edit' user.id %}" class="nav-link"><i class="right fas fa-circle fa-plus"></i><p>Update User Details</p></a></li>
           <li class="nav-item"><a href="{% url 'user-change-password' %}" class="nav-link"><i class="right fas fa-unlock-alt"></i><p>Change Password</p></a></li>
           <li class="nav-item"><a href="{% url 'reset-password' %}" class="nav-link"><i class="right fas fa-unlock-alt"></i><p>Reset Password</p></a></li>
+          <li class="nav-item"><a href="{% url 'user-activity' %}" class="nav-link"><i class="right fas fa-history"></i><p>My Activity</p></a></li>
           <li class="nav-item"><a href="{% url 'user-logout' %}" class="nav-link"><i class="right fas fa-sign-out-alt"></i><p>Log Out</p></a></li>
           <li class="nav-item"><a href="{% url 'developer-contact' %}" class="nav-link"><i class="right fas fa-address-card"></i><p>Contact Developer</p></a></li>
           <li class="nav-item"><a href="{% url 'help-home' %}" class="nav-link"><i class="right fas fa-question-circle" style="color: #ffffff;"></i><p>Help</p></a></li>

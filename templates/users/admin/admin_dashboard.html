@@ -1,0 +1,211 @@
+{% extends 'src/base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid">
+    <!-- User Management Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-info">
+                <div class="inner">
+                    <h3>{{ total_users }}</h3>
+                    <p>Total Users</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <a href="{% url 'admin-user-list' %}" class="small-box-footer">
+                    More info <i class="fas fa-arrow-circle-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-success">
+                <div class="inner">
+                    <h3>{{ active_users }}</h3>
+                    <p>Active Users</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <a href="{% url 'admin-user-list' %}?is_active=true" class="small-box-footer">
+                    More info <i class="fas fa-arrow-circle-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-warning">
+                <div class="inner">
+                    <h3>{{ staff_users }}</h3>
+                    <p>Staff Members</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <a href="{% url 'admin-user-list' %}?is_staff=true" class="small-box-footer">
+                    More info <i class="fas fa-arrow-circle-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-6">
+            <div class="small-box bg-danger">
+                <div class="inner">
+                    <h3>{{ recent_logins }}</h3>
+                    <p>Recent Logins (24h)</p>
+                </div>
+                <div class="icon">
+                    <i class="fas fa-sign-in-alt"></i>
+                </div>
+                <a href="{% url 'admin-activity-logs' %}" class="small-box-footer">
+                    More info <i class="fas fa-arrow-circle-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-bolt"></i> Quick Actions
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <a href="{% url 'admin-user-add' %}" class="btn btn-primary btn-lg btn-block">
+                                <i class="fas fa-user-plus"></i><br>
+                                Add New User
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'admin-user-list' %}" class="btn btn-info btn-lg btn-block">
+                                <i class="fas fa-users"></i><br>
+                                Manage Users
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'admin-activity-logs' %}" class="btn btn-warning btn-lg btn-block">
+                                <i class="fas fa-chart-line"></i><br>
+                                System Logs
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'admin-user-list' %}?is_active=false" class="btn btn-secondary btn-lg btn-block">
+                                <i class="fas fa-user-slash"></i><br>
+                                Inactive Users
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-clock"></i> Recent User Activity
+                    </h3>
+                    <div class="card-tools">
+                        <a href="{% url 'admin-activity-logs' %}" class="btn btn-tool">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body table-responsive p-0" style="height: 300px;">
+                    <table class="table table-head-fixed text-nowrap">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in recent_activities %}
+                            <tr>
+                                <td>{{ activity.user.username|default:"Unknown" }}</td>
+                                <td>
+                                    {% if activity.activity_type == 'LOGIN_SUCCESS' %}
+                                        <span class="badge badge-success">Login</span>
+                                    {% elif activity.activity_type == 'LOGIN_FAILED' %}
+                                        <span class="badge badge-danger">Login Failed</span>
+                                    {% elif activity.activity_type == 'LOGOUT' %}
+                                        <span class="badge badge-info">Logout</span>
+                                    {% else %}
+                                        <span class="badge badge-secondary">{{ activity.get_activity_type_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ activity.login_timestamp|timesince }} ago</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center">No recent activity</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-user-plus"></i> Recently Added Users
+                    </h3>
+                    <div class="card-tools">
+                        <a href="{% url 'admin-user-list' %}" class="btn btn-tool">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body table-responsive p-0" style="height: 300px;">
+                    <table class="table table-head-fixed text-nowrap">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Position</th>
+                                <th>Status</th>
+                                <th>Joined</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in recent_users %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'user-view' user.pk %}">{{ user.username }}</a>
+                                </td>
+                                <td>{{ user.position }}</td>
+                                <td>
+                                    {% if user.is_active %}
+                                        <span class="badge badge-success">Active</span>
+                                    {% else %}
+                                        <span class="badge badge-danger">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ user.date_joined|timesince }} ago</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">No recent users</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

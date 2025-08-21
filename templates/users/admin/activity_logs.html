@@ -1,0 +1,150 @@
+{% extends 'src/base.html' %}
+{% block title %}System Activity Logs{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-chart-line"></i> System Activity Logs
+                    </h3>
+                    <div class="card-tools">
+                        <a href="{% url 'admin-user-list' %}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-users"></i> Back to Users
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Summary Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i>
+                                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ total_activities }} total activities
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Activity Log Table -->
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>User</th>
+                                    <th>Activity Type</th>
+                                    <th>IP Address</th>
+                                    <th>Device Type</th>
+                                    <th>Browser</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activity in page_obj %}
+                                <tr>
+                                    <td>
+                                        {{ activity.login_timestamp|date:"M d, Y H:i:s" }}
+                                        <small class="text-muted d-block">{{ activity.login_timestamp|timesince }} ago</small>
+                                    </td>
+                                    <td>
+                                        {% if activity.user %}
+                                            <a href="{% url 'admin-user-activity' activity.user.pk %}" class="text-decoration-none">
+                                                <strong>{{ activity.user.username }}</strong>
+                                            </a>
+                                            <small class="text-muted d-block">{{ activity.user.first_name }} {{ activity.user.last_name }}</small>
+                                        {% else %}
+                                            <span class="text-muted">Unknown User</span>
+                                            {% if activity.attempted_username %}
+                                                <small class="text-muted d-block">({{ activity.attempted_username }})</small>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if activity.activity_type == 'LOGIN_SUCCESS' %}
+                                            <span class="badge badge-success">Login Success</span>
+                                        {% elif activity.activity_type == 'LOGIN_FAILED' %}
+                                            <span class="badge badge-danger">Login Failed</span>
+                                        {% elif activity.activity_type == 'LOGOUT' %}
+                                            <span class="badge badge-info">Logout</span>
+                                        {% elif activity.activity_type == 'PASSWORD_CHANGE' %}
+                                            <span class="badge badge-warning">Password Change</span>
+                                        {% elif activity.activity_type == 'PROFILE_UPDATE' %}
+                                            <span class="badge badge-primary">Profile Update</span>
+                                        {% elif activity.activity_type == 'EMAIL_VERIFICATION' %}
+                                            <span class="badge badge-success">Email Verification</span>
+                                        {% elif activity.activity_type == 'ACCOUNT_LOCKED' %}
+                                            <span class="badge badge-danger">Account Locked</span>
+                                        {% elif activity.activity_type == 'SESSION_TERMINATED' %}
+                                            <span class="badge badge-warning">Session Terminated</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">{{ activity.get_activity_type_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ activity.ip_address|default:"N/A" }}
+                                        {% if activity.is_suspicious_ip %}
+                                            <i class="fas fa-exclamation-triangle text-warning" title="Suspicious IP"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ activity.device_type|default:"N/A" }}</td>
+                                    <td>{{ activity.browser_name|default:"N/A" }}</td>
+                                    <td>
+                                        {% if activity.attempted_username and not activity.user %}
+                                            <small class="text-danger">Attempted: {{ activity.attempted_username }}</small>
+                                        {% endif %}
+                                        {% if activity.failed_reason %}
+                                            <small class="text-danger d-block">{{ activity.failed_reason }}</small>
+                                        {% endif %}
+                                        {% if activity.attempted_username and activity.user %}
+                                            <small class="text-info">{{ activity.attempted_username }}</small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">No activity records found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                    <nav aria-label="Activity pagination">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1">&laquo; First</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">&lsaquo; Previous</a>
+                                </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                                </span>
+                            </li>
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next &rsaquo;</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

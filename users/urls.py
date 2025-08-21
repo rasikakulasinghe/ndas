@@ -33,6 +33,16 @@ urlpatterns = [
     # API URLs
     path('api/activity/', views.get_user_activity_api, name='user-activity-api'),
     
+    # Admin User Management URLs
+    path('admin/dashboard/', views.admin_dashboard, name='admin-dashboard'),
+    path('admin/users/', views.admin_user_list, name='admin-user-list'),
+    path('admin/users/add/', views.admin_user_add, name='admin-user-add'),
+    path('admin/users/<int:pk>/edit/', views.admin_user_edit, name='admin-user-edit'),
+    path('admin/users/<int:pk>/delete/', views.admin_user_delete, name='admin-user-delete'),
+    path('admin/users/<int:pk>/toggle-status/', views.admin_user_toggle_status, name='admin-user-toggle-status'),
+    path('admin/users/<int:pk>/activity/', views.admin_user_activity, name='admin-user-activity'),
+    path('admin/activity-logs/', views.admin_activity_logs, name='admin-activity-logs'),
+    
     # other urls
     path("contact-developer/", views.developerContacts, name="developer-contact"),
 

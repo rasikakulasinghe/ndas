@@ -213,3 +213,124 @@ class UserPasswordChange(PasswordChangeForm):
     class Meta:
         model = CustomUser
         fields = ['new_password1', 'new_password2']
+
+
+class AdminUserCreationForm(forms.ModelForm):
+    """Admin form for creating new users with all fields."""
+    password1 = forms.CharField(
+        label='Password',
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        help_text="Password must be at least 8 characters long."
+    )
+    password2 = forms.CharField(
+        label='Password confirmation',
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        help_text="Enter the same password as before, for verification."
+    )
+    
+    class Meta:
+        model = CustomUser
+        fields = [
+            'username', 'first_name', 'last_name', 'email', 'position',
+            'mobile_primary', 'mobile_secondary', 'landline_primary', 'landline_secondary',
+            'home_address', 'station_address', 'profile_picture',
+            'is_active', 'is_staff', 'is_superuser', 'additional_notes'
+        ]
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'position': forms.Select(attrs={'class': 'form-control'}),
+            'mobile_primary': forms.TextInput(attrs={'class': 'form-control'}),
+            'mobile_secondary': forms.TextInput(attrs={'class': 'form-control'}),
+            'landline_primary': forms.TextInput(attrs={'class': 'form-control'}),
+            'landline_secondary': forms.TextInput(attrs={'class': 'form-control'}),
+            'home_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'station_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'additional_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_staff': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_superuser': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+    
+    def clean_password2(self):
+        password1 = self.cleaned_data.get("password1")
+        password2 = self.cleaned_data.get("password2")
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError("Passwords don't match")
+        return password2
+    
+    def clean_password1(self):
+        password1 = self.cleaned_data.get("password1")
+        if password1 and len(password1) < 8:
+            raise forms.ValidationError("Password must be at least 8 characters long")
+        return password1
+    
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data["password1"])
+        if commit:
+            user.save()
+        return user
+
+
+class AdminUserEditForm(forms.ModelForm):
+    """Admin form for editing existing users."""
+    
+    class Meta:
+        model = CustomUser
+        fields = [
+            'username', 'first_name', 'last_name', 'email', 'position',
+            'mobile_primary', 'mobile_secondary', 'landline_primary', 'landline_secondary',
+            'home_address', 'station_address', 'profile_picture',
+            'is_active', 'is_staff', 'is_superuser', 'is_email_verified',
+            'additional_notes'
+        ]
+        widgets = {
+            'username': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'readonly': 'readonly'
+            }),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'position': forms.Select(attrs={'class': 'form-control'}),
+            'mobile_primary': forms.TextInput(attrs={'class': 'form-control'}),
+            'mobile_secondary': forms.TextInput(attrs={'class': 'form-control'}),
+            'landline_primary': forms.TextInput(attrs={'class': 'form-control'}),
+            'landline_secondary': forms.TextInput(attrs={'class': 'form-control'}),
+            'home_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'station_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'additional_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_staff': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_superuser': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'is_email_verified': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+
+class UserSearchForm(forms.Form):
+    """Form for searching and filtering users."""
+    search = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Search by username, name, or email...'
+        })
+    )
+    position = forms.ChoiceField(
+        required=False,
+        choices=[('', 'All Positions')] + list(POSSITION),
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    is_active = forms.ChoiceField(
+        required=False,
+        choices=[('', 'All Status'), ('true', 'Active'), ('false', 'Inactive')],
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    is_staff = forms.ChoiceField(
+        required=False,
+        choices=[('', 'All Types'), ('true', 'Staff'), ('false', 'Regular Users')],
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )

@@ -9,6 +9,8 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
+from django.core.paginator import Paginator
+from django.db.models import Q
 from .forms import CustomUserRegistrationForm, UserPasswordChange, CustomUserEditForm
 from .models import DeveloperContacts
 from .utils import (
@@ -426,3 +428,284 @@ def get_user_activity_api(request):
     
     return JsonResponse(response_data)
 
+
+# Admin User Management Views
+from .decorators import admin_required, superuser_required
+from .forms import AdminUserCreationForm, AdminUserEditForm, UserSearchForm
+from datetime import datetime, timedelta
+
+
+@admin_required
+def admin_dashboard(request):
+    """Admin dashboard with user statistics and quick actions."""
+    from django.utils import timezone
+    
+    # Get user statistics
+    total_users = CustomUser.objects.count()
+    active_users = CustomUser.objects.filter(is_active=True).count()
+    staff_users = CustomUser.objects.filter(is_staff=True).count()
+    
+    # Get recent logins (last 24 hours)
+    yesterday = timezone.now() - timedelta(days=1)
+    recent_logins = UserActivityLog.objects.filter(
+        activity_type=UserActivityLog.LOGIN_SUCCESS,
+        login_timestamp__gte=yesterday
+    ).count()
+    
+    # Get recent activities (last 10)
+    recent_activities = UserActivityLog.objects.select_related('user').order_by('-login_timestamp')[:10]
+    
+    # Get recently added users (last 5)
+    recent_users = CustomUser.objects.order_by('-date_joined')[:5]
+    
+    context = {
+        'total_users': total_users,
+        'active_users': active_users,
+        'staff_users': staff_users,
+        'recent_logins': recent_logins,
+        'recent_activities': recent_activities,
+        'recent_users': recent_users,
+    }
+    
+    return render(request, 'users/admin/admin_dashboard.html', context)
+
+
+@admin_required
+def admin_user_list(request):
+    """Admin view to list all users with search and filtering."""
+    form = UserSearchForm(request.GET)
+    users = CustomUser.objects.all().order_by('-date_joined')
+    
+    # Apply filters
+    if form.is_valid():
+        search = form.cleaned_data.get('search')
+        position = form.cleaned_data.get('position')
+        is_active = form.cleaned_data.get('is_active')
+        is_staff = form.cleaned_data.get('is_staff')
+        
+        if search:
+            users = users.filter(
+                Q(username__icontains=search) |
+                Q(first_name__icontains=search) |
+                Q(last_name__icontains=search) |
+                Q(email__icontains=search)
+            )
+        
+        if position:
+            users = users.filter(position=position)
+        
+        if is_active == 'true':
+            users = users.filter(is_active=True)
+        elif is_active == 'false':
+            users = users.filter(is_active=False)
+        
+        if is_staff == 'true':
+            users = users.filter(is_staff=True)
+        elif is_staff == 'false':
+            users = users.filter(is_staff=False)
+    
+    # Pagination
+    paginator = Paginator(users, 25)  # Show 25 users per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'page_obj': page_obj,
+        'form': form,
+        'total_users': users.count(),
+    }
+    
+    return render(request, 'users/admin/user_list.html', context)
+
+
+@admin_required
+def admin_user_add(request):
+    """Admin view to add new users."""
+    if request.method == 'POST':
+        form = AdminUserCreationForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                user = form.save()
+                
+                # Log admin action
+                log_user_activity(
+                    request, 
+                    request.user, 
+                    UserActivityLog.LOGIN_SUCCESS,
+                    attempted_username=f"Created user: {user.username}"
+                )
+                
+                messages.success(request, f'User "{user.username}" created successfully!')
+                return redirect('admin-user-list')
+            except Exception as e:
+                messages.error(request, f'Error creating user: {str(e)}')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = AdminUserCreationForm()
+    
+    return render(request, 'users/admin/user_add.html', {'form': form})
+
+
+@admin_required
+def admin_user_edit(request, pk):
+    """Admin view to edit existing users."""
+    user = get_object_or_404(CustomUser, pk=pk)
+    
+    if request.method == 'POST':
+        form = AdminUserEditForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            try:
+                original_data = {
+                    'is_active': user.is_active,
+                    'is_staff': user.is_staff,
+                    'is_superuser': user.is_superuser,
+                }
+                
+                updated_user = form.save()
+                
+                # Check for important changes and log them
+                changes = []
+                if original_data['is_active'] != updated_user.is_active:
+                    status = "activated" if updated_user.is_active else "deactivated"
+                    changes.append(f"User {status}")
+                
+                if original_data['is_staff'] != updated_user.is_staff:
+                    status = "granted" if updated_user.is_staff else "removed"
+                    changes.append(f"Staff access {status}")
+                
+                if original_data['is_superuser'] != updated_user.is_superuser:
+                    status = "granted" if updated_user.is_superuser else "removed"
+                    changes.append(f"Superuser access {status}")
+                
+                # Log admin action
+                change_description = f"Updated user: {user.username}"
+                if changes:
+                    change_description += f" - {', '.join(changes)}"
+                
+                log_user_activity(
+                    request,
+                    request.user,
+                    UserActivityLog.LOGIN_SUCCESS,
+                    attempted_username=change_description
+                )
+                
+                messages.success(request, f'User "{updated_user.username}" updated successfully!')
+                return redirect('admin-user-list')
+            except Exception as e:
+                messages.error(request, f'Error updating user: {str(e)}')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = AdminUserEditForm(instance=user)
+    
+    return render(request, 'users/admin/user_edit.html', {
+        'form': form,
+        'user_obj': user
+    })
+
+
+@admin_required
+@require_POST
+def admin_user_delete(request, pk):
+    """Admin view to delete users (soft delete by deactivating)."""
+    user = get_object_or_404(CustomUser, pk=pk)
+    
+    # Prevent self-deletion
+    if user == request.user:
+        messages.error(request, 'You cannot delete your own account.')
+        return redirect('admin-user-list')
+    
+    # Prevent deletion of superusers by non-superusers
+    if user.is_superuser and not request.user.is_superuser:
+        messages.error(request, 'You cannot delete superuser accounts.')
+        return redirect('admin-user-list')
+    
+    try:
+        # Soft delete by deactivating
+        user.is_active = False
+        user.save()
+        
+        # Log admin action
+        log_user_activity(
+            request,
+            request.user,
+            UserActivityLog.LOGIN_SUCCESS,
+            attempted_username=f"Deleted user: {user.username}"
+        )
+        
+        messages.success(request, f'User "{user.username}" has been deactivated.')
+    except Exception as e:
+        messages.error(request, f'Error deleting user: {str(e)}')
+    
+    return redirect('admin-user-list')
+
+
+@admin_required
+@require_POST
+def admin_user_toggle_status(request, pk):
+    """Admin view to toggle user active status."""
+    user = get_object_or_404(CustomUser, pk=pk)
+    
+    # Prevent self-deactivation
+    if user == request.user:
+        messages.error(request, 'You cannot deactivate your own account.')
+        return redirect('admin-user-list')
+    
+    try:
+        user.is_active = not user.is_active
+        user.save()
+        
+        status = "activated" if user.is_active else "deactivated"
+        
+        # Log admin action
+        log_user_activity(
+            request,
+            request.user,
+            UserActivityLog.LOGIN_SUCCESS,
+            attempted_username=f"User {status}: {user.username}"
+        )
+        
+        messages.success(request, f'User "{user.username}" has been {status}.')
+    except Exception as e:
+        messages.error(request, f'Error updating user status: {str(e)}')
+    
+    return redirect('admin-user-list')
+
+
+@admin_required
+def admin_user_activity(request, pk):
+    """Admin view to see specific user's activity."""
+    user = get_object_or_404(CustomUser, pk=pk)
+    activities = UserActivityLog.objects.filter(user=user).order_by('-login_timestamp')
+    
+    # Pagination
+    paginator = Paginator(activities, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'user_obj': user,
+        'page_obj': page_obj,
+        'total_activities': activities.count(),
+    }
+    
+    return render(request, 'users/admin/user_activity.html', context)
+
+
+@admin_required
+def admin_activity_logs(request):
+    """Admin view to see all system activity logs."""
+    activities = UserActivityLog.objects.all().order_by('-login_timestamp')
+    
+    # Pagination
+    paginator = Paginator(activities, 100)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'page_obj': page_obj,
+        'total_activities': activities.count(),
+    }
+    
+    return render(request, 'users/admin/activity_logs.html', context)

@@ -1,0 +1,265 @@
+{% extends 'src/base.html' %}
+{% block title %}Add New User{% endblock %}
+
+{% block main_content %}
+<div class="container-sm">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-user-plus"></i> Add New User
+            </h3>
+            <div class="card-tools">
+                <a href="{% url 'admin-user-list' %}" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Back to User List
+                </a>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            {% include 'src/messages.html' %}
+            
+            <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <!-- Basic Information -->
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-user"></i> Basic Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.username.id_for_label }}">Username *</label>
+                                    {{ form.username }}
+                                    {% if form.username.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.username.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.position.id_for_label }}">Position *</label>
+                                    {{ form.position }}
+                                    {% if form.position.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.position.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.first_name.id_for_label }}">First Name</label>
+                                    {{ form.first_name }}
+                                    {% if form.first_name.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.first_name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.last_name.id_for_label }}">Last Name</label>
+                                    {{ form.last_name }}
+                                    {% if form.last_name.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.last_name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="{{ form.email.id_for_label }}">Email Address</label>
+                                    {{ form.email }}
+                                    {% if form.email.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.email.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.profile_picture.id_for_label }}">Profile Picture</label>
+                                    {{ form.profile_picture }}
+                                    {% if form.profile_picture.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.profile_picture.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Password Information -->
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-lock"></i> Password</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.password1.id_for_label }}">Password *</label>
+                                    {{ form.password1 }}
+                                    {% if form.password1.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.password1.errors.0 }}</div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Password must be at least 8 characters long.</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.password2.id_for_label }}">Confirm Password *</label>
+                                    {{ form.password2 }}
+                                    {% if form.password2.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.password2.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Contact Information -->
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-phone"></i> Contact Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.mobile_primary.id_for_label }}">Primary Mobile</label>
+                                    {{ form.mobile_primary }}
+                                    {% if form.mobile_primary.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.mobile_primary.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.mobile_secondary.id_for_label }}">Secondary Mobile</label>
+                                    {{ form.mobile_secondary }}
+                                    {% if form.mobile_secondary.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.mobile_secondary.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.landline_primary.id_for_label }}">Primary Landline</label>
+                                    {{ form.landline_primary }}
+                                    {% if form.landline_primary.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.landline_primary.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.landline_secondary.id_for_label }}">Secondary Landline</label>
+                                    {{ form.landline_secondary }}
+                                    {% if form.landline_secondary.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.landline_secondary.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.home_address.id_for_label }}">Home Address</label>
+                                    {{ form.home_address }}
+                                    {% if form.home_address.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.home_address.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.station_address.id_for_label }}">Station Address</label>
+                                    {{ form.station_address }}
+                                    {% if form.station_address.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.station_address.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Permissions -->
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-shield-alt"></i> Permissions & Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                        Account Active
+                                    </label>
+                                    <small class="form-text text-muted">User can login to the system</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.is_staff }}
+                                    <label class="form-check-label" for="{{ form.is_staff.id_for_label }}">
+                                        Staff Status
+                                    </label>
+                                    <small class="form-text text-muted">User can access admin features</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.is_superuser }}
+                                    <label class="form-check-label" for="{{ form.is_superuser.id_for_label }}">
+                                        Superuser Status
+                                    </label>
+                                    <small class="form-text text-muted">User has all permissions</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Additional Notes -->
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-sticky-note"></i> Additional Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="{{ form.additional_notes.id_for_label }}">Additional Notes</label>
+                            {{ form.additional_notes }}
+                            {% if form.additional_notes.errors %}
+                                <div class="invalid-feedback d-block">{{ form.additional_notes.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Submit Buttons -->
+                <div class="row">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Create User
+                        </button>
+                        <a href="{% url 'admin-user-list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
