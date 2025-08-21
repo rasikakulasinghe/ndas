@@ -14,7 +14,7 @@ class PatientsAdmin(admin.ModelAdmin):
         "dob_tob",
         "address",
     )
-    ordering = ("-added_on",)
+    ordering = ("-created_at",)
     filter_horizontal = ()
     list_filter = ()
     fieldsets = ()
@@ -62,7 +62,7 @@ class IndicationsForGMAAdmin(admin.ModelAdmin):
     )
     ordering = ("-id",)
     filter_horizontal = ()
-    list_filter = ("patient", "level")
+    list_filter = ("level",)
     fieldsets = ()
     readonly_fields = ("created_by", "created_on",
                        "last_edit_by", "last_edit_on")
@@ -70,10 +70,6 @@ class IndicationsForGMAAdmin(admin.ModelAdmin):
         "title",
         "level",
         "description",
-        "created_by",
-        "created_on",
-        "last_edit_by",
-        "last_edit_on",
     )
 
 class VideoAdmin(admin.ModelAdmin):
@@ -94,8 +90,7 @@ class VideoAdmin(admin.ModelAdmin):
         "patient",
         "caption",
         "recorded_on",
-        "file",
-        "ftype",
+        "video",
         "description",
         "uploaded_by",
     )
@@ -105,19 +100,18 @@ class GMAssessmentAdmin(admin.ModelAdmin):
         "id",
         "patient",
         "date_of_assessment",
-        'parant_informed',
-        "created_by",
-        "created_on",
+        'parent_informed',
+        "added_by",
+        "created_at",
     )
     ordering = ("-id",)
     filter_horizontal = ()
-    list_filter = ("date_of_assessment", 'parant_informed',)
+    list_filter = ("date_of_assessment", 'parent_informed',)
     fieldsets = ()
-    readonly_fields = ("edit_by", "edit_on")
+    readonly_fields = ("last_edit_by", "updated_at", "added_by", "created_at")
     fields = (
-        'patient', 'files', 'date_of_assessment', 'diagnosis', 'diagnosis_other', 'managment_plan', 'parant_informed',
-        'next_assessment_date', 'other_details', 'is_discharged', 'discharged_by',
-        'discharg_on', 'discharg_plan', 'created_by', 'edit_by',)
+        'patient', 'video_file', 'date_of_assessment', 'diagnosis', 'diagnosis_other', 'management_plan', 'parent_informed',
+        'next_assessment_date',)
 
 class HelpAdmin(admin.ModelAdmin):
     list_display = (
@@ -193,34 +187,33 @@ class CDICRecordAdmin(admin.ModelAdmin):
         "assessment",
         "assessment_done_by",
         "today_interventions",
-        "next_appoinment_date",
-        "next_appoinment_plan",
+        "next_appointment_date",
+        "next_appointment_plan",
         "is_discharged",
-        "dishcharged_by",
-        "dischaged_date",
+        "discharged_by",
+        "discharge_date",
         "discharge_plan",
-        "created_by",
-        "created_on",
-        "edit_by",
-        "edit_on"
+        "added_by",
+        "created_at",
+        "last_edit_by",
+        "updated_at"
     )
     ordering = ("-id",)
     filter_horizontal = ()
-    list_filter = ()
+    list_filter = ("is_discharged", "assessment_date", "discharge_date")
     fieldsets = ()
-    readonly_fields = ()
+    readonly_fields = ("created_at", "updated_at", "added_by", "last_edit_by")
     fields = (
         "patient",
         "assessment_date",
         "assessment",
         "assessment_done_by",
-        "assessed_officer",
         "today_interventions",
-        "next_appoinment_date",
-        "next_appoinment_plan",
+        "next_appointment_date",
+        "next_appointment_plan",
         "is_discharged",
-        "dishcharged_by",
-        "dischaged_date",
+        "discharged_by",
+        "discharge_date",
         "discharge_plan",
         )
     

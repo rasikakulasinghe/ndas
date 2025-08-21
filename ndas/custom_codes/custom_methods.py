@@ -116,9 +116,75 @@ def getFullDeviceDetails(request):
 
 # set uploaded video name
 def get_video_path_file_name(instance, filename):
+    """
+    Enhanced video file naming with proper organization
+    """
+    import os
+    from django.utils.text import slugify
+    from django.utils import timezone
+    
     ext = filename.split('.')[-1]
-    filename = f"{instance.patient.baby_name}_{instance.caption}_{instance.uploaded_by}_{getCurrentDateTime()}.{ext}"
-    return os.path.join('videos/', filename)
+    patient_name = slugify(instance.patient.baby_name) if instance.patient else 'unknown'
+    title = slugify(instance.title) if hasattr(instance, 'title') and instance.title else slugify(instance.caption if hasattr(instance, 'caption') else 'video')
+    
+    # Create organized folder structure: videos/YYYY/MM/patient_name/
+    now = timezone.now()
+    year = now.strftime('%Y')
+    month = now.strftime('%m')
+    
+    # Generate unique filename
+    timestamp = now.strftime('%Y%m%d_%H%M%S')
+    filename = f"{patient_name}_{title}_original_{timestamp}.{ext}"
+    
+    return os.path.join('videos', year, month, patient_name, filename)
+
+
+def get_compressed_video_path(instance, filename):
+    """
+    Generate path for compressed video files
+    """
+    import os
+    from django.utils.text import slugify
+    from django.utils import timezone
+    
+    ext = os.path.splitext(filename)[1].lower()
+    # Use .mp4 for all compressed videos for consistency
+    compressed_ext = '.mp4'
+    
+    patient_name = slugify(instance.patient.baby_name) if instance.patient else 'unknown'
+    title = slugify(instance.title) if hasattr(instance, 'title') and instance.title else slugify(instance.caption if hasattr(instance, 'caption') else 'video')
+    
+    # Create organized folder structure
+    now = timezone.now()
+    year = now.strftime('%Y')
+    month = now.strftime('%m')
+    
+    timestamp = now.strftime('%Y%m%d_%H%M%S')
+    filename = f"{patient_name}_{title}_compressed_{timestamp}{compressed_ext}"
+    
+    return os.path.join('videos', year, month, patient_name, 'compressed', filename)
+
+
+def get_video_thumbnail_path(instance, filename):
+    """
+    Generate path for video thumbnail images
+    """
+    import os
+    from django.utils.text import slugify
+    from django.utils import timezone
+    
+    patient_name = slugify(instance.patient.baby_name) if instance.patient else 'unknown'
+    title = slugify(instance.title) if hasattr(instance, 'title') and instance.title else slugify(instance.caption if hasattr(instance, 'caption') else 'video')
+    
+    # Create organized folder structure
+    now = timezone.now()
+    year = now.strftime('%Y')
+    month = now.strftime('%m')
+    
+    timestamp = now.strftime('%Y%m%d_%H%M%S')
+    filename = f"{patient_name}_{title}_thumb_{timestamp}.jpg"
+    
+    return os.path.join('videos', year, month, patient_name, 'thumbnails', filename)
 
 # set uploaded attachment name
 def get_attachment_path_file_name(instance, filename):

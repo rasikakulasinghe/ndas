@@ -213,3 +213,24 @@ SESSION_COOKIE_AGE = 3600  # 1 hour session timeout
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
+
+# Video Upload and Processing Settings
+VIDEO_MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024  # 2GB
+VIDEO_ALLOWED_FORMATS = ['mp4', 'mov', 'avi', 'mkv', 'webm']
+VIDEO_COMPRESSION_ENABLED = True
+VIDEO_THUMBNAIL_GENERATION = True
+VIDEO_DEFAULT_QUALITY = 'medium'
+
+# File Upload Security
+DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100MB
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000
+
+# Media file organization
+MEDIA_SUBDIRECTORIES = {
+    'videos': 'videos/',
+    'video_thumbnails': 'videos/thumbnails/',
+    'video_compressed': 'videos/compressed/',
+    'attachments': 'attachments/',
+    'profile_pictures': 'profile_pictures/',
+}

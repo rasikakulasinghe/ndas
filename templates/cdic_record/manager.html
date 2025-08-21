@@ -38,7 +38,7 @@
 
       <td>{{ CDICRecord.patient.baby_name }}</td>
       <td>{{ CDICRecord.assessment_date|date }}</td>
-      <td>{{ CDICRecord.next_appoinment_date|date }}</td>
+      <td>{{ CDICRecord.next_appointment_date|date }}</td>
       
       <td>
         <div style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="Created by : {{ CDICRecord.created_by }}, on {{ CDICRecord.created_on }} {% if CDICRecord.edit_by %} and last edited by {{CDICRecord.edit_by}} on {{CDICRecord.edit_on}}{% endif %}" class="fas fa-info-circle" style="color: #3d7deb;"></i></div>

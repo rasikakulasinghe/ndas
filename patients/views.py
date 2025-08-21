@@ -628,9 +628,9 @@ def assessment_add(request, ptid, fid):
             date = assessment_form_data.cleaned_data['date_of_assessment']
             diagnosis = assessment_form_data.cleaned_data['diagnosis']
             diagnosis_other = assessment_form_data.cleaned_data['diagnosis_other']
-            managment_plan = assessment_form_data.cleaned_data['managment_plan']
+            management_plan = assessment_form_data.cleaned_data['management_plan']
             next_assessment_date = assessment_form_data.cleaned_data['next_assessment_date']
-            parant_informed = assessment_form_data.cleaned_data['parant_informed']
+            parent_informed = assessment_form_data.cleaned_data['parent_informed']
             
             #check assessment already added to this file
             if GMAssessment.objects.filter(video_file=file).exists() == False:
@@ -640,12 +640,11 @@ def assessment_add(request, ptid, fid):
                 video_file = file,
                 date_of_assessment = date,
                 diagnosis_other = diagnosis_other,
-                managment_plan = managment_plan,
+                management_plan = management_plan,
                 next_assessment_date = next_assessment_date,
-                parant_informed = parant_informed,
-                created_by = request.user,
-                edit_by = None,
-                edit_on = None)
+                parent_informed = parent_informed,
+                added_by = request.user,
+                last_edit_by = None)
 
                 prep_assessment.diagnosis.set(diagnosis)
                 prep_assessment.save()
