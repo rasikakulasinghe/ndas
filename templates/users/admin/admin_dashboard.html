@@ -135,14 +135,14 @@
                             <tr>
                                 <td>{{ activity.user.username|default:"Unknown" }}</td>
                                 <td>
-                                    {% if activity.activity_type == 'LOGIN_SUCCESS' %}
+                                    {% if activity.login_status == 'success' %}
                                         <span class="badge badge-success">Login</span>
-                                    {% elif activity.activity_type == 'LOGIN_FAILED' %}
+                                    {% elif activity.login_status == 'failed' %}
                                         <span class="badge badge-danger">Login Failed</span>
-                                    {% elif activity.activity_type == 'LOGOUT' %}
+                                    {% elif activity.login_status == 'logout' %}
                                         <span class="badge badge-info">Logout</span>
                                     {% else %}
-                                        <span class="badge badge-secondary">{{ activity.get_activity_type_display }}</span>
+                                        <span class="badge badge-secondary">{{ activity.get_login_status_display }}</span>
                                     {% endif %}
                                 </td>
                                 <td>{{ activity.login_timestamp|timesince }} ago</td>

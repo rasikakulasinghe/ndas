@@ -63,24 +63,14 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if activity.activity_type == 'LOGIN_SUCCESS' %}
+                                        {% if activity.login_status == 'success' %}
                                             <span class="badge badge-success">Login Success</span>
-                                        {% elif activity.activity_type == 'LOGIN_FAILED' %}
+                                        {% elif activity.login_status == 'failed' %}
                                             <span class="badge badge-danger">Login Failed</span>
-                                        {% elif activity.activity_type == 'LOGOUT' %}
+                                        {% elif activity.login_status == 'logout' %}
                                             <span class="badge badge-info">Logout</span>
-                                        {% elif activity.activity_type == 'PASSWORD_CHANGE' %}
-                                            <span class="badge badge-warning">Password Change</span>
-                                        {% elif activity.activity_type == 'PROFILE_UPDATE' %}
-                                            <span class="badge badge-primary">Profile Update</span>
-                                        {% elif activity.activity_type == 'EMAIL_VERIFICATION' %}
-                                            <span class="badge badge-success">Email Verification</span>
-                                        {% elif activity.activity_type == 'ACCOUNT_LOCKED' %}
-                                            <span class="badge badge-danger">Account Locked</span>
-                                        {% elif activity.activity_type == 'SESSION_TERMINATED' %}
-                                            <span class="badge badge-warning">Session Terminated</span>
                                         {% else %}
-                                            <span class="badge badge-secondary">{{ activity.get_activity_type_display }}</span>
+                                            <span class="badge badge-secondary">{{ activity.get_login_status_display }}</span>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -95,8 +85,8 @@
                                         {% if activity.attempted_username and not activity.user %}
                                             <small class="text-danger">Attempted: {{ activity.attempted_username }}</small>
                                         {% endif %}
-                                        {% if activity.failed_reason %}
-                                            <small class="text-danger d-block">{{ activity.failed_reason }}</small>
+                                        {% if activity.failed_login_reason %}
+                                            <small class="text-info d-block">{{ activity.failed_login_reason }}</small>
                                         {% endif %}
                                         {% if activity.attempted_username and activity.user %}
                                             <small class="text-info">{{ activity.attempted_username }}</small>

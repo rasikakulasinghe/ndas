@@ -448,7 +448,7 @@ def admin_dashboard(request):
     # Get recent logins (last 24 hours)
     yesterday = timezone.now() - timedelta(days=1)
     recent_logins = UserActivityLog.objects.filter(
-        activity_type=UserActivityLog.LOGIN_SUCCESS,
+        login_status=UserActivityLog.LOGIN_SUCCESS,
         login_timestamp__gte=yesterday
     ).count()
     
@@ -532,7 +532,7 @@ def admin_user_add(request):
                     request, 
                     request.user, 
                     UserActivityLog.LOGIN_SUCCESS,
-                    attempted_username=f"Created user: {user.username}"
+                    failed_reason=f"Admin action: Created user: {user.username}"
                 )
                 
                 messages.success(request, f'User "{user.username}" created successfully!')
@@ -587,7 +587,7 @@ def admin_user_edit(request, pk):
                     request,
                     request.user,
                     UserActivityLog.LOGIN_SUCCESS,
-                    attempted_username=change_description
+                    failed_reason=change_description
                 )
                 
                 messages.success(request, f'User "{updated_user.username}" updated successfully!')
@@ -631,7 +631,7 @@ def admin_user_delete(request, pk):
             request,
             request.user,
             UserActivityLog.LOGIN_SUCCESS,
-            attempted_username=f"Deleted user: {user.username}"
+            failed_reason=f"Admin action: Deleted user: {user.username}"
         )
         
         messages.success(request, f'User "{user.username}" has been deactivated.')
@@ -663,7 +663,7 @@ def admin_user_toggle_status(request, pk):
             request,
             request.user,
             UserActivityLog.LOGIN_SUCCESS,
-            attempted_username=f"User {status}: {user.username}"
+            failed_reason=f"Admin action: User {status}: {user.username}"
         )
         
         messages.success(request, f'User "{user.username}" has been {status}.')
