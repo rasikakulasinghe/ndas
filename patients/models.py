@@ -107,32 +107,30 @@ def validate_video_file(value):
     """
     import os
     from django.conf import settings
-    
+
     # Check file extension
     ext = os.path.splitext(value.name)[1].lower()
-    valid_extensions = ['.mp4', '.mov', '.avi', '.mkv', '.webm']
-    
+    valid_extensions = [".mp4", ".mov", ".avi", ".mkv", ".webm"]
+
     if ext not in valid_extensions:
         raise ValidationError(
-            _('Unsupported video format. Allowed formats: %(formats)s') % {
-                'formats': ', '.join(valid_extensions)
-            }
+            _("Unsupported video format. Allowed formats: %(formats)s")
+            % {"formats": ", ".join(valid_extensions)}
         )
-    
+
     # Check file size (default max: 2GB, configurable)
-    max_size = getattr(settings, 'VIDEO_MAX_FILE_SIZE', 2 * 1024 * 1024 * 1024)  # 2GB
+    max_size = getattr(settings, "VIDEO_MAX_FILE_SIZE", 2 * 1024 * 1024 * 1024)  # 2GB
     if value.size > max_size:
         max_size_mb = max_size / (1024 * 1024)
         raise ValidationError(
-            _('File size too large. Maximum allowed size is %(max_size)d MB.') % {
-                'max_size': int(max_size_mb)
-            }
+            _("File size too large. Maximum allowed size is %(max_size)d MB.")
+            % {"max_size": int(max_size_mb)}
         )
-    
+
     # Minimum file size check (1KB to avoid empty files)
     min_size = 1024  # 1KB
     if value.size < min_size:
-        raise ValidationError(_('File appears to be empty or corrupted.'))
+        raise ValidationError(_("File appears to be empty or corrupted."))
 
 
 def validate_recording_date(value):
@@ -140,15 +138,15 @@ def validate_recording_date(value):
     Validate video recording date
     """
     from django.utils import timezone
-    
+
     # Cannot be in the future
     if value > timezone.now():
-        raise ValidationError(_('Recording date cannot be in the future.'))
-    
+        raise ValidationError(_("Recording date cannot be in the future."))
+
     # Cannot be more than 10 years in the past (reasonable medical record limit)
     ten_years_ago = timezone.now() - timezone.timedelta(days=365 * 10)
     if value < ten_years_ago:
-        raise ValidationError(_('Recording date cannot be more than 10 years ago.'))
+        raise ValidationError(_("Recording date cannot be more than 10 years ago."))
 
 
 def get_compressed_video_path(instance, filename):
@@ -157,17 +155,19 @@ def get_compressed_video_path(instance, filename):
     """
     import os
     from django.utils.text import slugify
-    
+
     ext = os.path.splitext(filename)[1].lower()
     # Use .mp4 for all compressed videos for consistency
-    compressed_ext = '.mp4'
-    
-    patient_name = slugify(instance.patient.baby_name) if instance.patient else 'unknown'
+    compressed_ext = ".mp4"
+
+    patient_name = (
+        slugify(instance.patient.baby_name) if instance.patient else "unknown"
+    )
     title = slugify(instance.title)
-    timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
-    
+    timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
+
     filename = f"{patient_name}_{title}_compressed_{timestamp}{compressed_ext}"
-    return os.path.join('videos/compressed/', filename)
+    return os.path.join("videos/compressed/", filename)
 
 
 def get_video_thumbnail_path(instance, filename):
@@ -176,13 +176,15 @@ def get_video_thumbnail_path(instance, filename):
     """
     import os
     from django.utils.text import slugify
-    
-    patient_name = slugify(instance.patient.baby_name) if instance.patient else 'unknown'
+
+    patient_name = (
+        slugify(instance.patient.baby_name) if instance.patient else "unknown"
+    )
     title = slugify(instance.title)
-    timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
-    
+    timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
+
     filename = f"{patient_name}_{title}_thumb_{timestamp}.jpg"
-    return os.path.join('videos/thumbnails/', filename)
+    return os.path.join("videos/thumbnails/", filename)
     phone_regex(value)
 
 
@@ -1417,216 +1419,218 @@ class Video(TimeStampedModel, UserTrackingMixin):
     """
     Enhanced Video model with compression, validation, and optimization features
     """
-    
+
     # File format choices
     VIDEO_FORMATS = [
-        ('mp4', 'MP4'),
-        ('mov', 'MOV/QuickTime'),
-        ('avi', 'AVI'),
-        ('mkv', 'MKV'),
-        ('webm', 'WebM'),
+        ("mp4", "MP4"),
+        ("mov", "MOV/QuickTime"),
+        ("avi", "AVI"),
+        ("mkv", "MKV"),
+        ("webm", "WebM"),
     ]
-    
+
     # Quality/Compression choices
     QUALITY_CHOICES = [
-        ('original', 'Original Quality'),
-        ('high', 'High Quality (1080p)'),
-        ('medium', 'Medium Quality (720p)'),
-        ('low', 'Low Quality (480p)'),
-        ('mobile', 'Mobile Quality (360p)'),
+        ("original", "Original Quality"),
+        ("high", "High Quality (1080p)"),
+        ("medium", "Medium Quality (720p)"),
+        ("low", "Low Quality (480p)"),
+        ("mobile", "Mobile Quality (360p)"),
     ]
-    
+
     # Processing status choices
     PROCESSING_STATUS = [
-        ('pending', 'Pending Upload'),
-        ('uploading', 'Uploading'),
-        ('processing', 'Processing'),
-        ('completed', 'Completed'),
-        ('failed', 'Failed'),
+        ("pending", "Pending Upload"),
+        ("uploading", "Uploading"),
+        ("processing", "Processing"),
+        ("completed", "Completed"),
+        ("failed", "Failed"),
     ]
 
     # Core fields
     patient = models.ForeignKey(
-        "Patient", 
-        on_delete=models.CASCADE, 
+        "Patient",
+        on_delete=models.CASCADE,
         related_name="videos",
         verbose_name=_("Patient"),
-        help_text=_("Patient associated with this video")
+        help_text=_("Patient associated with this video"),
     )
-    
+
     title = models.CharField(
-        max_length=200, 
+        max_length=200,
         verbose_name=_("Video Title"),
         help_text=_("Descriptive title for the video (max 200 characters)"),
         validators=[
             RegexValidator(
-                regex=r'^[a-zA-Z0-9\s\-_\.]+$',
-                message=_('Title can only contain letters, numbers, spaces, hyphens, underscores, and dots.')
+                regex=r"^[a-zA-Z0-9\s\-_\.]+$",
+                message=_(
+                    "Title can only contain letters, numbers, spaces, hyphens, underscores, and dots."
+                ),
             )
-        ]
+        ],
     )
-    
+
     # Video file fields
     original_video = models.FileField(
         upload_to=get_video_path_file_name,
         verbose_name=_("Original Video File"),
         help_text=_("Original uploaded video file"),
-        validators=[validate_video_file]
+        validators=[validate_video_file],
     )
-    
+
     compressed_video = models.FileField(
         upload_to=get_compressed_video_path,
         blank=True,
         null=True,
         verbose_name=_("Compressed Video"),
-        help_text=_("Compressed version of the video for web playback")
+        help_text=_("Compressed version of the video for web playback"),
     )
-    
+
     thumbnail = models.ImageField(
         upload_to=get_video_thumbnail_path,
         blank=True,
         null=True,
         verbose_name=_("Video Thumbnail"),
-        help_text=_("Auto-generated thumbnail from video")
+        help_text=_("Auto-generated thumbnail from video"),
     )
-    
+
     # Video metadata
     recorded_on = models.DateTimeField(
         verbose_name=_("Recorded On"),
         help_text=_("Date and time when the video was recorded"),
-        validators=[validate_recording_date]
+        validators=[validate_recording_date],
     )
-    
+
     duration = models.DurationField(
         blank=True,
         null=True,
         verbose_name=_("Duration"),
-        help_text=_("Video duration in seconds (auto-detected)")
+        help_text=_("Video duration in seconds (auto-detected)"),
     )
-    
+
     file_size = models.PositiveBigIntegerField(
         blank=True,
         null=True,
         verbose_name=_("File Size"),
-        help_text=_("Original file size in bytes")
+        help_text=_("Original file size in bytes"),
     )
-    
+
     compressed_file_size = models.PositiveBigIntegerField(
         blank=True,
         null=True,
         verbose_name=_("Compressed File Size"),
-        help_text=_("Compressed file size in bytes")
+        help_text=_("Compressed file size in bytes"),
     )
-    
+
     format = models.CharField(
         max_length=10,
         choices=VIDEO_FORMATS,
         blank=True,
         verbose_name=_("Video Format"),
-        help_text=_("Original video format")
+        help_text=_("Original video format"),
     )
-    
+
     resolution = models.CharField(
         max_length=20,
         blank=True,
         verbose_name=_("Resolution"),
-        help_text=_("Video resolution (e.g., 1920x1080)")
+        help_text=_("Video resolution (e.g., 1920x1080)"),
     )
-    
+
     frame_rate = models.DecimalField(
         max_digits=5,
         decimal_places=2,
         blank=True,
         null=True,
         verbose_name=_("Frame Rate"),
-        help_text=_("Video frame rate in FPS")
+        help_text=_("Video frame rate in FPS"),
     )
-    
+
     bitrate = models.PositiveIntegerField(
         blank=True,
         null=True,
         verbose_name=_("Bitrate"),
-        help_text=_("Video bitrate in kbps")
+        help_text=_("Video bitrate in kbps"),
     )
-    
+
     # Processing fields
     processing_status = models.CharField(
         max_length=20,
         choices=PROCESSING_STATUS,
-        default='pending',
+        default="pending",
         verbose_name=_("Processing Status"),
-        help_text=_("Current processing status of the video")
+        help_text=_("Current processing status of the video"),
     )
-    
+
     target_quality = models.CharField(
         max_length=20,
         choices=QUALITY_CHOICES,
-        default='medium',
+        default="medium",
         verbose_name=_("Target Quality"),
-        help_text=_("Desired compression quality")
+        help_text=_("Desired compression quality"),
     )
-    
+
     processing_started_at = models.DateTimeField(
         blank=True,
         null=True,
         verbose_name=_("Processing Started"),
-        help_text=_("When video processing began")
+        help_text=_("When video processing began"),
     )
-    
+
     processing_completed_at = models.DateTimeField(
         blank=True,
         null=True,
         verbose_name=_("Processing Completed"),
-        help_text=_("When video processing completed")
+        help_text=_("When video processing completed"),
     )
-    
+
     processing_error = models.TextField(
         blank=True,
         verbose_name=_("Processing Error"),
-        help_text=_("Error message if processing failed")
+        help_text=_("Error message if processing failed"),
     )
-    
+
     # Content fields
     description = models.TextField(
         blank=True,
         max_length=2000,
         verbose_name=_("Description"),
-        help_text=_("Detailed description of the video content (max 2000 characters)")
+        help_text=_("Detailed description of the video content (max 2000 characters)"),
     )
-    
+
     tags = models.CharField(
         max_length=500,
         blank=True,
         verbose_name=_("Tags"),
-        help_text=_("Comma-separated tags for categorization and search")
+        help_text=_("Comma-separated tags for categorization and search"),
     )
-    
+
     is_sensitive = models.BooleanField(
         default=False,
         verbose_name=_("Contains Sensitive Content"),
-        help_text=_("Mark if video contains sensitive medical content")
+        help_text=_("Mark if video contains sensitive medical content"),
     )
-    
+
     # Access control
     is_public = models.BooleanField(
         default=False,
         verbose_name=_("Public Access"),
-        help_text=_("Allow public access to this video")
+        help_text=_("Allow public access to this video"),
     )
-    
+
     access_level = models.CharField(
         max_length=20,
         choices=[
-            ('restricted', 'Restricted'),
-            ('team', 'Team Access'),
-            ('department', 'Department Access'),
-            ('public', 'Public Access'),
+            ("restricted", "Restricted"),
+            ("team", "Team Access"),
+            ("department", "Department Access"),
+            ("public", "Public Access"),
         ],
-        default='restricted',
+        default="restricted",
         verbose_name=_("Access Level"),
-        help_text=_("Who can access this video")
+        help_text=_("Who can access this video"),
     )
-    
+
     # Legacy fields for backward compatibility
     uploaded_by = models.ForeignKey(
         "users.CustomUser",
@@ -1635,15 +1639,15 @@ class Video(TimeStampedModel, UserTrackingMixin):
         null=True,
         blank=True,
         verbose_name=_("Uploaded By"),
-        help_text=_("User who uploaded this video")
+        help_text=_("User who uploaded this video"),
     )
-    
+
     uploaded_on = models.DateTimeField(
         auto_now_add=True,
         verbose_name=_("Uploaded On"),
-        help_text=_("When this video was uploaded")
+        help_text=_("When this video was uploaded"),
     )
-    
+
     last_edit_by = models.ForeignKey(
         "users.CustomUser",
         on_delete=models.SET_NULL,
@@ -1651,78 +1655,83 @@ class Video(TimeStampedModel, UserTrackingMixin):
         null=True,
         blank=True,
         verbose_name=_("Last Edited By"),
-        help_text=_("User who last modified this video")
+        help_text=_("User who last modified this video"),
     )
-    
+
     last_edit_on = models.DateTimeField(
         blank=True,
         null=True,
         verbose_name=_("Last Edited On"),
-        help_text=_("When this video was last modified")
+        help_text=_("When this video was last modified"),
     )
 
     class Meta:
         verbose_name = _("Video")
         verbose_name_plural = _("Videos")
-        ordering = ['-uploaded_on', '-recorded_on']
+        ordering = ["-uploaded_on", "-recorded_on"]
         indexes = [
-            models.Index(fields=['patient', '-uploaded_on']),
-            models.Index(fields=['processing_status']),
-            models.Index(fields=['uploaded_by', '-uploaded_on']),
-            models.Index(fields=['recorded_on']),
-            models.Index(fields=['is_public', 'access_level']),
+            models.Index(fields=["patient", "-uploaded_on"]),
+            models.Index(fields=["processing_status"]),
+            models.Index(fields=["uploaded_by", "-uploaded_on"]),
+            models.Index(fields=["recorded_on"]),
+            models.Index(fields=["is_public", "access_level"]),
         ]
         constraints = [
             models.CheckConstraint(
-                check=models.Q(file_size__gte=0),
-                name='positive_file_size'
+                check=models.Q(file_size__gte=0), name="positive_file_size"
             ),
             models.CheckConstraint(
                 check=models.Q(compressed_file_size__gte=0),
-                name='positive_compressed_file_size'
+                name="positive_compressed_file_size",
             ),
         ]
 
     def __str__(self):
-        return f"{self.title} - {self.patient.baby_name if self.patient else 'No Patient'}"
+        return (
+            f"{self.title} - {self.patient.baby_name if self.patient else 'No Patient'}"
+        )
 
     def clean(self):
         """Model validation"""
         super().clean()
-        
+
         # Validate that recorded_on is not in the future
         from django.utils import timezone
+
         if self.recorded_on and self.recorded_on > timezone.now():
-            raise ValidationError({
-                'recorded_on': _('Recording date cannot be in the future.')
-            })
-        
+            raise ValidationError(
+                {"recorded_on": _("Recording date cannot be in the future.")}
+            )
+
         # Validate file size consistency
         if self.original_video and self.file_size:
-            if abs(self.original_video.size - self.file_size) > 1024:  # Allow 1KB difference
+            if (
+                abs(self.original_video.size - self.file_size) > 1024
+            ):  # Allow 1KB difference
                 self.file_size = self.original_video.size
 
     def save(self, *args, **kwargs):
         """Override save to handle metadata extraction and processing"""
         is_new = self.pk is None
-        
+
         # Set file size if not already set
         if self.original_video and not self.file_size:
             self.file_size = self.original_video.size
-        
+
         # Extract format from filename if not set
         if self.original_video and not self.format:
             import os
-            ext = os.path.splitext(self.original_video.name)[1].lower().lstrip('.')
+
+            ext = os.path.splitext(self.original_video.name)[1].lower().lstrip(".")
             if ext in dict(self.VIDEO_FORMATS):
                 self.format = ext
-        
+
         # Set processing status
         if is_new and self.original_video:
-            self.processing_status = 'pending'
-        
+            self.processing_status = "pending"
+
         super().save(*args, **kwargs)
-        
+
         # Trigger background processing for new videos
         if is_new and self.original_video:
             self.start_video_processing()
@@ -1733,11 +1742,11 @@ class Video(TimeStampedModel, UserTrackingMixin):
         This would typically use Celery or similar for async processing
         """
         from django.utils import timezone
-        
-        self.processing_status = 'processing'
+
+        self.processing_status = "processing"
         self.processing_started_at = timezone.now()
-        self.save(update_fields=['processing_status', 'processing_started_at'])
-        
+        self.save(update_fields=["processing_status", "processing_started_at"])
+
         # TODO: Implement actual video processing with Celery
         # process_video_task.delay(self.pk)
 
@@ -1748,25 +1757,26 @@ class Video(TimeStampedModel, UserTrackingMixin):
         """
         if not self.original_video:
             return
-        
+
         try:
             # TODO: Implement with ffmpeg-python
             # import ffmpeg
             # probe = ffmpeg.probe(self.original_video.path)
             # video_stream = next(s for s in probe['streams'] if s['codec_type'] == 'video')
-            # 
+            #
             # self.duration = float(video_stream.get('duration', 0))
             # self.resolution = f"{video_stream['width']}x{video_stream['height']}"
             # self.frame_rate = eval(video_stream.get('r_frame_rate', '0/1'))
             # self.bitrate = int(video_stream.get('bit_rate', 0)) // 1000  # Convert to kbps
-            
+
             # For now, set placeholder values
             self.resolution = "1920x1080"  # Placeholder
             self.frame_rate = 30.0  # Placeholder
-            
+
         except Exception as e:
             # Log error but don't fail
             import logging
+
             logger = logging.getLogger(__name__)
             logger.error(f"Failed to extract metadata for video {self.pk}: {e}")
 
@@ -1796,12 +1806,12 @@ class Video(TimeStampedModel, UserTrackingMixin):
         """Get human-readable duration"""
         if not self.duration:
             return "Unknown"
-        
+
         total_seconds = int(self.duration.total_seconds())
         hours = total_seconds // 3600
         minutes = (total_seconds % 3600) // 60
         seconds = total_seconds % 60
-        
+
         if hours > 0:
             return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
         else:
@@ -1819,13 +1829,21 @@ class Video(TimeStampedModel, UserTrackingMixin):
         """Get patient age when video was recorded"""
         if not self.patient or not self.recorded_on:
             return "Unknown"
-        
-        recorded_date = self.recorded_on.date() if hasattr(self.recorded_on, 'date') else self.recorded_on
-        birth_date = self.patient.dob_tob.date() if hasattr(self.patient.dob_tob, 'date') else self.patient.dob_tob
-        
+
+        recorded_date = (
+            self.recorded_on.date()
+            if hasattr(self.recorded_on, "date")
+            else self.recorded_on
+        )
+        birth_date = (
+            self.patient.dob_tob.date()
+            if hasattr(self.patient.dob_tob, "date")
+            else self.patient.dob_tob
+        )
+
         age_delta = recorded_date - birth_date
         days = age_delta.days
-        
+
         if days < 7:
             return f"{days} Days"
         elif days == 7:
@@ -1848,14 +1866,19 @@ class Video(TimeStampedModel, UserTrackingMixin):
     def is_new_file(self):
         """Check if video has associated assessments"""
         # Maintain backward compatibility
-        return not hasattr(self, 'gmassessment_set') or not self.gmassessment_set.exists()
+        return (
+            not hasattr(self, "gmassessment_set") or not self.gmassessment_set.exists()
+        )
 
     @property
     def is_bookmarked(self):
         """Check if video is bookmarked (backward compatibility)"""
         try:
             from patients.models import Bookmark
-            return Bookmark.objects.filter(bookmark_type="Video", object_id=self.pk).exists()
+
+            return Bookmark.objects.filter(
+                bookmark_type="Video", object_id=self.pk
+            ).exists()
         except:
             return False
 
@@ -1879,46 +1902,47 @@ class Video(TimeStampedModel, UserTrackingMixin):
     def get_tags_list(self):
         """Get tags as a list"""
         if self.tags:
-            return [tag.strip() for tag in self.tags.split(',') if tag.strip()]
+            return [tag.strip() for tag in self.tags.split(",") if tag.strip()]
         return []
 
     def can_be_accessed_by(self, user):
         """Check if user can access this video"""
         if not user or not user.is_authenticated:
             return self.is_public
-        
+
         # Superusers can access everything
         if user.is_superuser:
             return True
-        
+
         # Uploaded by user
         if self.uploaded_by == user:
             return True
-        
+
         # Access level checks
-        if self.access_level == 'public':
+        if self.access_level == "public":
             return True
-        elif self.access_level == 'department':
+        elif self.access_level == "department":
             # TODO: Implement department-based access
             return True
-        elif self.access_level == 'team':
+        elif self.access_level == "team":
             # TODO: Implement team-based access
             return True
-        
+
         return False
 
     def mark_processing_completed(self):
         """Mark video processing as completed"""
         from django.utils import timezone
-        self.processing_status = 'completed'
+
+        self.processing_status = "completed"
         self.processing_completed_at = timezone.now()
-        self.save(update_fields=['processing_status', 'processing_completed_at'])
+        self.save(update_fields=["processing_status", "processing_completed_at"])
 
     def mark_processing_failed(self, error_message=""):
         """Mark video processing as failed"""
-        self.processing_status = 'failed'
+        self.processing_status = "failed"
         self.processing_error = error_message
-        self.save(update_fields=['processing_status', 'processing_error'])
+        self.save(update_fields=["processing_status", "processing_error"])
 
     # Legacy property for backward compatibility
     @property
