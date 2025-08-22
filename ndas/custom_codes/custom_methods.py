@@ -26,7 +26,7 @@ def get_gma_diagnosis_data():
 def get_all_diagnosis_data():
     from patients.models import GMAssessment, HINEAssessment, DevelopmentalAssessment
 
-    dx_gma_data = getCountZeroIfNone(GMAssessment.objects.filter(diagnosis_conclution='ABNORMAL'))
+    dx_gma_data = getCountZeroIfNone(GMAssessment.objects.filter(diagnosis_conclusion='ABNORMAL'))
     dx_hine_data = getCountZeroIfNone(HINEAssessment.objects.filter(score__lt = 73))
     dx_da_data = getCountZeroIfNone(DevelopmentalAssessment.objects.filter(isDxNormal=False))
 
@@ -241,13 +241,13 @@ def getPatientList(pts_type):
     elif pts_type == PtStatus.DISCHARGED:
         return var_ptl.filter(cdicrecord__is_discharged=True).distinct()
     elif pts_type == PtStatus.DIAGNOSED:
-        return var_ptl.filter(Q(gmassessment__diagnosis_conclution='ABNORMAL') | Q(hineassessment__score__lt = 73) | Q(developmentalassessment__isDxNormal=False)).distinct()
+        return var_ptl.filter(Q(gmassessment__diagnosis_conclusion='ABNORMAL') | Q(hineassessment__score__lt = 73) | Q(developmentalassessment__isDxNormal=False)).distinct()
     elif pts_type == PtStatus.DX_NORMAL:
-        return var_ptl.exclude(Q(gmassessment__diagnosis_conclution='ABNORMAL') and Q(hineassessment__score__lt = 73) and Q(developmentalassessment__isDxNormal=False)).exclude(videos__isnull=True).distinct()
+        return var_ptl.exclude(Q(gmassessment__diagnosis_conclusion='ABNORMAL') and Q(hineassessment__score__lt = 73) and Q(developmentalassessment__isDxNormal=False)).exclude(videos__isnull=True).distinct()
     elif pts_type == PtStatus.DX_GMA_ABNORMAL:
-        return var_ptl.filter(gmassessment__diagnosis_conclution='ABNORMAL').distinct()
+        return var_ptl.filter(gmassessment__diagnosis_conclusion='ABNORMAL').distinct()
     elif pts_type == PtStatus.DX_GMA_NORMAL:
-        return var_ptl.filter(gmassessment__diagnosis_conclution='NORMAL').distinct()
+        return var_ptl.filter(gmassessment__diagnosis_conclusion='NORMAL').distinct()
     elif pts_type == PtStatus.DX_DA_NORMAL:
         return var_ptl.filter(developmentalassessment__isDxNormal=True).distinct()
     elif pts_type == PtStatus.DX_DA_ABNORMAL:

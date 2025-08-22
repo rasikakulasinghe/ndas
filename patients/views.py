@@ -51,7 +51,7 @@ def dashboard(request):
     all_da_assessments_count = getCountZeroIfNone(var_da_assessments)
     all_cdic_records_count = getCountZeroIfNone(var_cdic_records)
     
-    dx_gm_assessments_count = getCountZeroIfNone(GMAssessment.objects.exclude(diagnosis_conclution='NORMAL'))
+    dx_gm_assessments_count = getCountZeroIfNone(GMAssessment.objects.exclude(diagnosis_conclusion='NORMAL'))
     dx_hine_assessments_count = getCountZeroIfNone(HINEAssessment.objects.filter(score__lt=73))
     dx_da_assessments_count = getCountZeroIfNone(DevelopmentalAssessment.objects.filter(isDxNormal=False))
 
