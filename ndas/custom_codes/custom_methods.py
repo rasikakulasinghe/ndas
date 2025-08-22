@@ -3,6 +3,8 @@ from django.db.models.functions import TruncMonth
 from django.db.models import Count, Q
 import os, math
 from django.utils.timezone import localtime, now
+from django.utils import timezone
+from django.utils.text import slugify
 from .ndas_enums import PtStatus
 
 
@@ -235,13 +237,13 @@ def getPatientList(pts_type):
     if pts_type == PtStatus.ALL:
         return var_ptl
     elif pts_type == PtStatus.NEW:
-        return var_ptl.filter(video__isnull=True).distinct()
+        return var_ptl.filter(videos__isnull=True).distinct()
     elif pts_type == PtStatus.DISCHARGED:
         return var_ptl.filter(cdicrecord__is_discharged=True).distinct()
     elif pts_type == PtStatus.DIAGNOSED:
         return var_ptl.filter(Q(gmassessment__diagnosis_conclution='ABNORMAL') | Q(hineassessment__score__lt = 73) | Q(developmentalassessment__isDxNormal=False)).distinct()
     elif pts_type == PtStatus.DX_NORMAL:
-        return var_ptl.exclude(Q(gmassessment__diagnosis_conclution='ABNORMAL') and Q(hineassessment__score__lt = 73) and Q(developmentalassessment__isDxNormal=False)).exclude(video__isnull=True).distinct()
+        return var_ptl.exclude(Q(gmassessment__diagnosis_conclution='ABNORMAL') and Q(hineassessment__score__lt = 73) and Q(developmentalassessment__isDxNormal=False)).exclude(videos__isnull=True).distinct()
     elif pts_type == PtStatus.DX_GMA_ABNORMAL:
         return var_ptl.filter(gmassessment__diagnosis_conclution='ABNORMAL').distinct()
     elif pts_type == PtStatus.DX_GMA_NORMAL:

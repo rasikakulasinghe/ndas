@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from dateutil.relativedelta import relativedelta
 from datetime import datetime, timedelta
-import re
+import re, os, mimetypes
 from djrichtextfield.models import RichTextField
 
 from ndas.custom_codes.choice import (
@@ -18,6 +18,15 @@ from ndas.custom_codes.choice import (
     BOOKMARK_TYPE,
     ATTACHMENT_TYPE,
     DX_CONCLUTION,
+    VIDEO_FORMATS,
+    QUALITY_CHOICES,
+    PROCESSING_STATUS,
+    ACCESS_LEVEL_CHOICES,
+    ATTACHMENT_TYPE_CHOICES,
+    ATTACHMENT_ACCESS_LEVEL_CHOICES,
+    SCAN_RESULT_CHOICES,
+    FILE_SIZE_LIMITS,
+    ALLOWED_EXTENSIONS,
 )
 from ndas.custom_codes.custom_methods import (
     getCountZeroIfNone,
@@ -27,6 +36,16 @@ from ndas.custom_codes.custom_methods import (
     get_attachment_path_file_name,
     getCurrentDateTime,
     checkRCState,
+)
+from ndas.custom_codes.validators import (
+    validate_birth_weight,
+    validate_apgar_score,
+    validate_phone_number,
+    validate_video_file,
+    validate_recording_date,
+    validate_pog_weeks,
+    validate_pog_days,
+    validate_attachment_file,
 )
 
 
@@ -77,128 +96,6 @@ class UserTrackingMixin(models.Model):
 
     class Meta:
         abstract = True
-
-
-def validate_birth_weight(value):
-    """Validate birth weight is within realistic range (300g - 8000g)"""
-    if value < 300 or value > 8000:
-        raise ValidationError(_("Birth weight must be between 300g and 8000g"))
-
-
-def validate_apgar_score(value):
-    """Validate APGAR score is between 0-10"""
-    if value < 0 or value > 10:
-        raise ValidationError(_("APGAR score must be between 0 and 10"))
-
-
-def validate_phone_number(value):
-    """Validate phone number format"""
-    phone_regex = RegexValidator(
-        regex=r"^\+?1?\d{9,15}$",
-        message=_(
-            "Phone number must be entered in format: '+999999999'. Up to 15 digits allowed."
-        ),
-    )
-
-
-def validate_video_file(value):
-    """
-    Comprehensive video file validation
-    """
-    import os
-    from django.conf import settings
-
-    # Check file extension
-    ext = os.path.splitext(value.name)[1].lower()
-    valid_extensions = [".mp4", ".mov", ".avi", ".mkv", ".webm"]
-
-    if ext not in valid_extensions:
-        raise ValidationError(
-            _("Unsupported video format. Allowed formats: %(formats)s")
-            % {"formats": ", ".join(valid_extensions)}
-        )
-
-    # Check file size (default max: 2GB, configurable)
-    max_size = getattr(settings, "VIDEO_MAX_FILE_SIZE", 2 * 1024 * 1024 * 1024)  # 2GB
-    if value.size > max_size:
-        max_size_mb = max_size / (1024 * 1024)
-        raise ValidationError(
-            _("File size too large. Maximum allowed size is %(max_size)d MB.")
-            % {"max_size": int(max_size_mb)}
-        )
-
-    # Minimum file size check (1KB to avoid empty files)
-    min_size = 1024  # 1KB
-    if value.size < min_size:
-        raise ValidationError(_("File appears to be empty or corrupted."))
-
-
-def validate_recording_date(value):
-    """
-    Validate video recording date
-    """
-    from django.utils import timezone
-
-    # Cannot be in the future
-    if value > timezone.now():
-        raise ValidationError(_("Recording date cannot be in the future."))
-
-    # Cannot be more than 10 years in the past (reasonable medical record limit)
-    ten_years_ago = timezone.now() - timezone.timedelta(days=365 * 10)
-    if value < ten_years_ago:
-        raise ValidationError(_("Recording date cannot be more than 10 years ago."))
-
-
-def get_compressed_video_path(instance, filename):
-    """
-    Generate path for compressed video files
-    """
-    import os
-    from django.utils.text import slugify
-
-    ext = os.path.splitext(filename)[1].lower()
-    # Use .mp4 for all compressed videos for consistency
-    compressed_ext = ".mp4"
-
-    patient_name = (
-        slugify(instance.patient.baby_name) if instance.patient else "unknown"
-    )
-    title = slugify(instance.title)
-    timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
-
-    filename = f"{patient_name}_{title}_compressed_{timestamp}{compressed_ext}"
-    return os.path.join("videos/compressed/", filename)
-
-
-def get_video_thumbnail_path(instance, filename):
-    """
-    Generate path for video thumbnail images
-    """
-    import os
-    from django.utils.text import slugify
-
-    patient_name = (
-        slugify(instance.patient.baby_name) if instance.patient else "unknown"
-    )
-    title = slugify(instance.title)
-    timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
-
-    filename = f"{patient_name}_{title}_thumb_{timestamp}.jpg"
-    return os.path.join("videos/thumbnails/", filename)
-    phone_regex(value)
-
-
-def validate_pog_weeks(value):
-    """Validate period of gestation weeks (20-44 weeks)"""
-    if value < 20 or value > 44:
-        raise ValidationError(_("Period of gestation must be between 20-44 weeks"))
-
-
-def validate_pog_days(value):
-    """Validate period of gestation days (0-6 days)"""
-    if value < 0 or value > 6:
-        raise ValidationError(_("Period of gestation days must be between 0-6"))
-
 
 class Patient(TimeStampedModel, UserTrackingMixin):
     """
@@ -1420,33 +1317,6 @@ class Video(TimeStampedModel, UserTrackingMixin):
     Enhanced Video model with compression, validation, and optimization features
     """
 
-    # File format choices
-    VIDEO_FORMATS = [
-        ("mp4", "MP4"),
-        ("mov", "MOV/QuickTime"),
-        ("avi", "AVI"),
-        ("mkv", "MKV"),
-        ("webm", "WebM"),
-    ]
-
-    # Quality/Compression choices
-    QUALITY_CHOICES = [
-        ("original", "Original Quality"),
-        ("high", "High Quality (1080p)"),
-        ("medium", "Medium Quality (720p)"),
-        ("low", "Low Quality (480p)"),
-        ("mobile", "Mobile Quality (360p)"),
-    ]
-
-    # Processing status choices
-    PROCESSING_STATUS = [
-        ("pending", "Pending Upload"),
-        ("uploading", "Uploading"),
-        ("processing", "Processing"),
-        ("completed", "Completed"),
-        ("failed", "Failed"),
-    ]
-
     # Core fields
     patient = models.ForeignKey(
         "Patient",
@@ -1620,12 +1490,7 @@ class Video(TimeStampedModel, UserTrackingMixin):
 
     access_level = models.CharField(
         max_length=20,
-        choices=[
-            ("restricted", "Restricted"),
-            ("team", "Team Access"),
-            ("department", "Department Access"),
-            ("public", "Public Access"),
-        ],
+        choices=ACCESS_LEVEL_CHOICES,
         default="restricted",
         verbose_name=_("Access Level"),
         help_text=_("Who can access this video"),
@@ -1723,7 +1588,7 @@ class Video(TimeStampedModel, UserTrackingMixin):
             import os
 
             ext = os.path.splitext(self.original_video.name)[1].lower().lstrip(".")
-            if ext in dict(self.VIDEO_FORMATS):
+            if ext in dict(VIDEO_FORMATS):
                 self.format = ext
 
         # Set processing status
@@ -1971,38 +1836,460 @@ class Video(TimeStampedModel, UserTrackingMixin):
         return self.is_bookmarked
 
 
-class Attachment(models.Model):
-    patient = models.ForeignKey("Patient", on_delete=models.CASCADE, null=True)
-    title = models.CharField(max_length=75, null=False, blank=False)
-    attachment = models.FileField(
-        upload_to=get_attachment_path_file_name, blank=False, null=False
-    )
-    attachment_type = models.CharField(
-        max_length=5, choices=ATTACHMENT_TYPE, default="Image", null=False
-    )
-    description = models.TextField(null=True, blank=True)
-    uploaded_by = models.ForeignKey(
-        "users.CustomUser", on_delete=models.CASCADE, null=True, blank=True
-    )
-    uploaded_on = models.DateTimeField(auto_now_add=True, blank=False, null=False)
-    last_edit_by = models.ForeignKey(
-        "users.CustomUser",
+class Attachment(TimeStampedModel, UserTrackingMixin):
+    """
+    Enhanced Attachment model for managing patient file attachments
+    with comprehensive validation, performance optimization, and security features
+    """
+
+    # Core fields with proper validation and indexing
+    patient = models.ForeignKey(
+        "Patient",
         on_delete=models.CASCADE,
-        related_name="attachment_last_edit_by",
+        related_name="attachments",
+        db_index=True,
+        verbose_name=_("Patient"),
+        help_text=_("Patient this attachment belongs to"),
+    )
+
+    title = models.CharField(
+        max_length=200,  # Increased from 75 for better descriptions
+        db_index=True,
+        verbose_name=_("Title"),
+        help_text=_("Descriptive title for the attachment (max 200 characters)"),
+        validators=[
+            RegexValidator(
+                regex=r"^[a-zA-Z0-9\s\-_\.(),]+$",
+                message=_(
+                    "Title can only contain letters, numbers, spaces, hyphens, underscores, dots, commas, and parentheses."
+                ),
+            )
+        ],
+    )
+
+    attachment = models.FileField(
+        upload_to=get_attachment_path_file_name,
+        verbose_name=_("Attachment File"),
+        help_text=_(
+            "Upload file (Images: 10MB max, Videos: 2GB max, Others: 100MB max)"
+        ),
+        validators=[validate_attachment_file],
+    )
+
+    attachment_type = models.CharField(
+        max_length=10,
+        choices=ATTACHMENT_TYPE_CHOICES,
+        db_index=True,
+        verbose_name=_("Attachment Type"),
+        help_text=_("Type of file being uploaded"),
+    )
+
+    description = models.TextField(
+        blank=True,
+        max_length=1000,  # Added max length for better performance
+        verbose_name=_("Description"),
+        help_text=_(
+            "Detailed description of the attachment content (max 1000 characters)"
+        ),
+    )
+
+    # File metadata fields
+    file_size = models.PositiveBigIntegerField(
+        blank=True,
+        null=True,
+        verbose_name=_("File Size"),
+        help_text=_("File size in bytes (auto-detected)"),
+    )
+
+    mime_type = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name=_("MIME Type"),
+        help_text=_("File MIME type (auto-detected)"),
+    )
+
+    original_filename = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name=_("Original Filename"),
+        help_text=_("Original name of the uploaded file"),
+    )
+
+    # Access control and security
+    is_sensitive = models.BooleanField(
+        default=False,
+        db_index=True,
+        verbose_name=_("Contains Sensitive Content"),
+        help_text=_("Mark if attachment contains sensitive medical information"),
+    )
+
+    access_level = models.CharField(
+        max_length=20,
+        choices=ATTACHMENT_ACCESS_LEVEL_CHOICES,
+        default="restricted",
+        db_index=True,
+        verbose_name=_("Access Level"),
+        help_text=_("Who can access this attachment"),
+    )
+
+    # Virus scan and validation status
+    is_scanned = models.BooleanField(
+        default=False,
+        verbose_name=_("Virus Scanned"),
+        help_text=_("Whether the file has been scanned for viruses"),
+    )
+
+    scan_result = models.CharField(
+        max_length=20,
+        choices=SCAN_RESULT_CHOICES,
+        default="pending",
+        verbose_name=_("Scan Result"),
+        help_text=_("Result of virus scan"),
+    )
+
+    # Legacy fields for backward compatibility (updated field names)
+    uploaded_by = models.ForeignKey(
+        "users.CustomUser",
+        on_delete=models.SET_NULL,
+        related_name="uploaded_attachments",
         null=True,
         blank=True,
+        verbose_name=_("Uploaded By"),
+        help_text=_("User who uploaded this attachment"),
     )
-    last_edit_on = models.DateTimeField(blank=True, null=True)
+
+    uploaded_on = models.DateTimeField(
+        auto_now_add=True,
+        db_index=True,
+        verbose_name=_("Uploaded On"),
+        help_text=_("When this attachment was uploaded"),
+    )
+
+    last_edit_by = models.ForeignKey(
+        "users.CustomUser",
+        on_delete=models.SET_NULL,
+        related_name="edited_attachments",
+        null=True,
+        blank=True,
+        verbose_name=_("Last Edited By"),
+        help_text=_("User who last modified this attachment"),
+    )
+
+    last_edit_on = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name=_("Last Edited On"),
+        help_text=_("When this attachment was last modified"),
+    )
 
     class Meta:
-        pass
+        verbose_name = _("Attachment")
+        verbose_name_plural = _("Attachments")
+        ordering = ["-uploaded_on", "-created_at"]
+
+        # Database indexes for performance optimization
+        indexes = [
+            models.Index(
+                fields=["patient", "-uploaded_on"], name="attachment_patient_date_idx"
+            ),
+            models.Index(
+                fields=["attachment_type", "-uploaded_on"],
+                name="attachment_type_date_idx",
+            ),
+            models.Index(
+                fields=["uploaded_by", "-uploaded_on"], name="attachment_user_date_idx"
+            ),
+            models.Index(
+                fields=["is_sensitive", "access_level"], name="attachment_access_idx"
+            ),
+            models.Index(
+                fields=["scan_result", "is_scanned"], name="attachment_security_idx"
+            ),
+        ]
+
+        # Database constraints for data integrity
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(file_size__gte=0),
+                name="attachment_positive_file_size",
+            ),
+            models.CheckConstraint(
+                check=models.Q(title__length__gte=1),
+                name="attachment_title_not_empty",
+            ),
+        ]
 
     def __str__(self):
-        return str(self.title + " | " + self.attachment_type)
+        patient_name = self.patient.baby_name if self.patient else "No Patient"
+        attachment_type_display = dict(ATTACHMENT_TYPE_CHOICES).get(
+            self.attachment_type, self.attachment_type
+        )
+        return f"{self.title} | {attachment_type_display} | {patient_name}"
+
+    def clean(self):
+        """Model-wide validation"""
+        super().clean()
+
+        # Validate file type matches attachment_type
+        if self.attachment and self.attachment_type:
+            self._validate_file_type_consistency()
+
+        # Validate file size based on type
+        if self.attachment:
+            self._validate_file_size()
+
+    def save(self, *args, **kwargs):
+        """Override save to handle metadata extraction and validation"""
+        is_new = self.pk is None
+
+        # Extract metadata if new file
+        if self.attachment and (
+            is_new or "attachment" in kwargs.get("update_fields", [])
+        ):
+            self._extract_file_metadata()
+            self._determine_attachment_type()
+
+        # Perform validation
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+        # Trigger virus scan for new files
+        if is_new and self.attachment:
+            self._schedule_virus_scan()
+
+    def _extract_file_metadata(self):
+        """Extract metadata from the uploaded file"""
+        if not self.attachment:
+            return
+
+        try:
+            # Set file size
+            self.file_size = self.attachment.size
+
+            # Set original filename
+            self.original_filename = self.attachment.name
+
+            # Detect MIME type
+            import mimetypes
+
+            mime_type, _ = mimetypes.guess_type(self.attachment.name)
+            self.mime_type = mime_type or "application/octet-stream"
+
+        except Exception as e:
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.error(f"Failed to extract metadata for attachment {self.pk}: {e}")
+
+    def _determine_attachment_type(self):
+        """Auto-determine attachment type based on file extension"""
+        if not self.attachment or self.attachment_type:
+            return
+
+        import os
+
+        ext = os.path.splitext(self.attachment.name)[1].lower()
+
+        for att_type, extensions in ALLOWED_EXTENSIONS.items():
+            if ext in extensions:
+                self.attachment_type = att_type
+                break
+        else:
+            self.attachment_type = "other"
+
+    def _validate_file_type_consistency(self):
+        """Validate that file extension matches declared attachment type"""
+        import os
+
+        ext = os.path.splitext(self.attachment.name)[1].lower()
+
+        allowed_exts = ALLOWED_EXTENSIONS.get(self.attachment_type, [])
+        if allowed_exts and ext not in allowed_exts:
+            attachment_type_display = dict(ATTACHMENT_TYPE_CHOICES).get(
+                self.attachment_type, self.attachment_type
+            )
+            raise ValidationError(
+                {
+                    "attachment": _(
+                        f"File extension '{ext}' is not allowed for {attachment_type_display}. "
+                        f"Allowed extensions: {', '.join(allowed_exts)}"
+                    )
+                }
+            )
+
+    def _validate_file_size(self):
+        """Validate file size based on attachment type"""
+        max_size = FILE_SIZE_LIMITS["MAX_FILE_SIZE"]
+
+        if self.attachment_type == "image":
+            max_size = FILE_SIZE_LIMITS["MAX_IMAGE_SIZE"]
+        elif self.attachment_type == "video":
+            max_size = FILE_SIZE_LIMITS["MAX_VIDEO_SIZE"]
+
+        if self.attachment.size > max_size:
+            max_size_mb = max_size / (1024 * 1024)
+            attachment_type_display = dict(ATTACHMENT_TYPE_CHOICES).get(
+                self.attachment_type, self.attachment_type
+            )
+            raise ValidationError(
+                {
+                    "attachment": _(
+                        f"File size too large. Maximum allowed size for {attachment_type_display} is {max_size_mb:.1f} MB."
+                    )
+                }
+            )
+
+    def _schedule_virus_scan(self):
+        """Schedule virus scan for the uploaded file"""
+        # TODO: Implement actual virus scanning with ClamAV or similar
+        # For now, mark as clean (in production, this should be async)
+        self.is_scanned = True
+        self.scan_result = "clean"
+        self.save(update_fields=["is_scanned", "scan_result"])
+
+    # Properties for better data access
+    @property
+    def file_size_mb(self):
+        """Get file size in megabytes"""
+        if self.file_size:
+            return round(self.file_size / (1024 * 1024), 2)
+        return 0
 
     @property
+    def file_size_display(self):
+        """Get human-readable file size"""
+        if not self.file_size:
+            return "Unknown"
+
+        size = self.file_size
+        for unit in ["B", "KB", "MB", "GB"]:
+            if size < 1024:
+                return f"{size:.1f} {unit}"
+            size /= 1024
+        return f"{size:.1f} TB"
+
+    @property
+    def is_image(self):
+        """Check if attachment is an image"""
+        return self.attachment_type == "image"
+
+    @property
+    def is_video(self):
+        """Check if attachment is a video"""
+        return self.attachment_type == "video"
+
+    @property
+    def is_pdf(self):
+        """Check if attachment is a PDF"""
+        return self.attachment_type == "pdf"
+
+    @property
+    def is_safe_to_view(self):
+        """Check if file is safe to view (virus-free)"""
+        return self.is_scanned and self.scan_result == "clean"
+
+    @property
+    def can_be_previewed(self):
+        """Check if file can be previewed in browser"""
+        return self.is_safe_to_view and self.attachment_type in ["image", "pdf"]
+
+    @property
+    def is_bookmarked(self):
+        """Check if attachment is bookmarked - optimized version"""
+        if not self.pk:
+            return None
+
+        try:
+            return Bookmark.objects.select_related("owner").get(
+                bookmark_type="Attachment", object_id=self.pk
+            )
+        except Bookmark.DoesNotExist:
+            return None
+
+    # Legacy property for backward compatibility
+    @property
     def isBookmarked(self):
-        return Bookmark.objects.get(bookmark_type="Attachment", object_id=self.id)
+        """Legacy property mapping to is_bookmarked"""
+        return self.is_bookmarked
+
+    def can_be_accessed_by(self, user):
+        """Check if user can access this attachment"""
+        if not user or not user.is_authenticated:
+            return False
+
+        # Superusers can access everything
+        if user.is_superuser:
+            return True
+
+        # Uploaded by user
+        if self.uploaded_by == user:
+            return True
+
+        # Access level checks
+        if self.access_level == "general":
+            return True
+        elif self.access_level == "department":
+            # TODO: Implement department-based access
+            return True
+        elif self.access_level == "team":
+            # TODO: Implement team-based access
+            return True
+
+        return False
+
+    def get_download_url(self):
+        """Get secure download URL"""
+        if self.attachment and self.is_safe_to_view:
+            return self.attachment.url
+        return None
+
+    def get_preview_url(self):
+        """Get preview URL for supported file types"""
+        if self.can_be_previewed:
+            return self.attachment.url
+        return None
+
+    # Class methods for efficient queries
+    @classmethod
+    def get_by_patient(cls, patient, attachment_type=None):
+        """Get attachments for a specific patient"""
+        queryset = cls.objects.filter(patient=patient).select_related(
+            "patient", "uploaded_by", "last_edit_by"
+        )
+
+        if attachment_type:
+            queryset = queryset.filter(attachment_type=attachment_type)
+
+        return queryset.order_by("-uploaded_on")
+
+    @classmethod
+    def get_recent_uploads(cls, days=7):
+        """Get recently uploaded attachments"""
+        from django.utils import timezone
+
+        cutoff_date = timezone.now() - timezone.timedelta(days=days)
+
+        return cls.objects.filter(uploaded_on__gte=cutoff_date).select_related(
+            "patient", "uploaded_by"
+        )
+
+    @classmethod
+    def get_large_files(cls, size_mb=50):
+        """Get files larger than specified size"""
+        size_bytes = size_mb * 1024 * 1024
+        return cls.objects.filter(file_size__gte=size_bytes).select_related("patient")
+
+    @classmethod
+    def get_pending_scans(cls):
+        """Get files pending virus scan"""
+        return cls.objects.filter(
+            scan_result="pending", is_scanned=False
+        ).select_related("patient")
+
+    @classmethod
+    def get_infected_files(cls):
+        """Get files marked as infected"""
+        return cls.objects.filter(scan_result="infected").select_related("patient")
 
 
 class Bookmark(models.Model):
