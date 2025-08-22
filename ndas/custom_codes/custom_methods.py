@@ -57,10 +57,10 @@ def get_userStats():
     for u_o in user_list:
         user_stats_val = {'Patient': getCountZeroIfNone(pt_list.filter(added_by=u_o)),
         'Video': getCountZeroIfNone(video_list.filter(uploaded_by=u_o)),
-        'GMA': getCountZeroIfNone(gma_list.filter(created_by=u_o)),
+        'GMA': getCountZeroIfNone(gma_list.filter(added_by=u_o)),
         'HINE': getCountZeroIfNone(hine_list.filter(added_by=u_o)),
         'DA': getCountZeroIfNone(da_list.filter(added_by=u_o)),
-        'CDIC': getCountZeroIfNone(cdic_list.filter(created_by=u_o)),
+        'CDIC': getCountZeroIfNone(cdic_list.filter(added_by=u_o)),
         'Attachment': getCountZeroIfNone(attachments_list.filter(uploaded_by=u_o)),
         'Bookmark': getCountZeroIfNone(bookmark_list.filter(owner=u_o)),
         }

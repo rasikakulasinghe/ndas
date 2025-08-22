@@ -1,21 +1,18 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import RegexValidator
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 import uuid
 from datetime import timedelta
-from ndas.custom_codes.choice import POSSITION
-from ndas.custom_codes.validators import image_extension_validation
-
-# Phone number validator
-phone_validator = RegexValidator(
-    regex=r"^\+?1?\d{9,15}$",
-    message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.",
+from ndas.custom_codes.choice import POSSITION, LOGIN_STATUS_CHOICES
+from ndas.custom_codes.validators import image_extension_validation, validate_phone_number
+from ndas.custom_codes.Custom_abstract_class import (
+    TimeStampedModel,
+    UserTrackingMixin,
 )
 
 
-class CustomUser(AbstractUser):
+class CustomUser(AbstractUser, TimeStampedModel):
     """
     Custom user model extending Django's AbstractUser with additional fields
     for medical staff management.
@@ -33,27 +30,27 @@ class CustomUser(AbstractUser):
     # Contact Information
     mobile_primary = models.CharField(
         max_length=15,
-        validators=[phone_validator],
+        validators=[validate_phone_number],
         help_text="Primary mobile number (required)",
         verbose_name="Primary Mobile",
     )
     mobile_secondary = models.CharField(
         max_length=15,
-        validators=[phone_validator],
+        validators=[validate_phone_number],
         blank=True,
         help_text="Secondary mobile number (optional)",
         verbose_name="Secondary Mobile",
     )
     landline_primary = models.CharField(
         max_length=15,
-        validators=[phone_validator],
+        validators=[validate_phone_number],
         blank=True,
         help_text="Primary landline number",
         verbose_name="Primary Landline",
     )
     landline_secondary = models.CharField(
         max_length=15,
-        validators=[phone_validator],
+        validators=[validate_phone_number],
         blank=True,
         help_text="Secondary landline number",
         verbose_name="Secondary Landline",
@@ -113,10 +110,6 @@ class CustomUser(AbstractUser):
         help_text="Additional notes or information",
         verbose_name="Additional Notes",
     )
-
-    # Timestamps
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ["email", "first_name", "position", "mobile_primary"]
@@ -183,7 +176,7 @@ class CustomUser(AbstractUser):
         ]
 
 
-class UserActivityLog(models.Model):
+class UserActivityLog(TimeStampedModel, UserTrackingMixin):
     """
     Model to track user authentication activity and device information.
     """
@@ -192,12 +185,6 @@ class UserActivityLog(models.Model):
     LOGIN_SUCCESS = 'success'
     LOGIN_FAILED = 'failed'
     LOGOUT = 'logout'
-    
-    LOGIN_STATUS_CHOICES = [
-        (LOGIN_SUCCESS, 'Login Success'),
-        (LOGIN_FAILED, 'Login Failed'),
-        (LOGOUT, 'Logout'),
-    ]
     
     # Core Fields
     user = models.ForeignKey(
@@ -373,7 +360,7 @@ class UserActivityLog(models.Model):
     )
     
     def __str__(self):
-        status_display = dict(self.LOGIN_STATUS_CHOICES).get(self.login_status, self.login_status)
+        status_display = dict(LOGIN_STATUS_CHOICES).get(self.login_status, self.login_status)
         if self.user:
             return f"{self.user.username} - {status_display} at {self.login_timestamp}"
         return f"{self.attempted_username} - {status_display} at {self.login_timestamp}"
@@ -422,7 +409,7 @@ class UserActivityLog(models.Model):
         ]
 
 
-class UserSession(models.Model):
+class UserSession(TimeStampedModel, UserTrackingMixin):
     """
     Model to track active user sessions.
     """
@@ -453,11 +440,6 @@ class UserSession(models.Model):
         max_length=200,
         help_text="Summary of device information",
         verbose_name="Device Summary",
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        help_text="When the session was created",
-        verbose_name="Created At",
     )
     last_activity = models.DateTimeField(
         auto_now=True,
@@ -496,7 +478,7 @@ class UserSession(models.Model):
         ]
 
 
-class DeveloperContacts(models.Model):
+class DeveloperContacts(TimeStampedModel, UserTrackingMixin):
     """
     Model to store developer contact information for the application.
     """
@@ -528,14 +510,14 @@ class DeveloperContacts(models.Model):
     )
     mobile_phone = models.CharField(
         max_length=15,
-        validators=[phone_validator],
+        validators=[validate_phone_number],
         blank=True,
         help_text="Mobile phone number",
         verbose_name="Mobile Phone",
     )
     landline_phone = models.CharField(
         max_length=15,
-        validators=[phone_validator],
+        validators=[validate_phone_number],
         blank=True,
         help_text="Landline phone number",
         verbose_name="Landline Phone",
@@ -548,7 +530,7 @@ class DeveloperContacts(models.Model):
     )
     whatsapp_number = models.CharField(
         max_length=15,
-        validators=[phone_validator],
+        validators=[validate_phone_number],
         blank=True,
         help_text="WhatsApp number",
         verbose_name="WhatsApp",
@@ -561,10 +543,6 @@ class DeveloperContacts(models.Model):
         help_text="Personal or professional website URL",
         verbose_name="Website",
     )
-
-    # Timestamps
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name

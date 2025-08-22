@@ -58,7 +58,7 @@
             <div><hr></div>
             <a class="dropdown-item" href="{% url 'view-patient' DARecord.patient.id %}"><i class="fas fa-eye"></i> View Patient</a>
             <a class="dropdown-item" href="{% url 'da-assessment-manager-patient' DARecord.patient.id %}"><i class="fas fa-eye"></i> View All Record</a>
-            <a class="dropdown-item" href="{% url 'user-view-by-username' DARecord.added_by.username %}"><i class="fas fa-eye"></i> View Created User {{DARecord.created_by.username}}</a>
+            <a class="dropdown-item" href="{% url 'user-view-by-username' DARecord.added_by.username %}"><i class="fas fa-eye"></i> View Created User {{DARecord.added_by.username}}</a>
             <div><hr></div>
             {% if DARecord.isBookmarked %}
             <a class="dropdown-item" href="{% url 'bookmark-view' DARecord.isBookmarked.id %}"><i class="fas fas fa-eye"></i> View Bookmark</a>

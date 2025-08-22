@@ -13,6 +13,13 @@ class Position(models.TextChoices):
 # Keep the old POSSITION for backward compatibility
 POSSITION = Position.choices
 
+# Login Status Choices for UserActivityLog
+LOGIN_STATUS_CHOICES = [
+    ('success', 'Login Success'),
+    ('failed', 'Login Failed'),
+    ('logout', 'Logout'),
+]
+
 MODE_OF_DELIVERY = (
     ("Normal vaginal delivery (NVD)", "Normal vaginal delivery (NVD)"),
     ("Assisted vaginal delivery (AVD)", "Assisted vaginal delivery (AVD)"),
