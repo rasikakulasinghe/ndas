@@ -3,6 +3,75 @@
 
 {% block main_content %}
     </br>
+
+<!-- Custom CSS for enhanced validation styling -->
+<style>
+  .text-danger {
+    color: #dc3545 !important;
+  }
+  
+  .form-control.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+  }
+  
+  .invalid-feedback {
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875em;
+  }
+  
+  .required-field {
+    color: #dc3545;
+    font-weight: bold;
+  }
+  
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .help-text {
+    font-size: 0.875em;
+    color: #6c757d;
+    margin-top: 0.25rem;
+  }
+  
+  .big-checkbox {
+    transform: scale(1.2);
+    margin-right: 0.5rem;
+  }
+  
+  .tooltip-icon {
+    color: #007bff;
+    margin-left: 0.5rem;
+    cursor: help;
+  }
+  
+  /* Alert enhancements */
+  .alert {
+    border-radius: 0.375rem;
+    border: 1px solid transparent;
+  }
+  
+  .alert-danger {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+  }
+  
+  .alert-success {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+  }
+  
+  .alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffeaa7;
+    color: #856404;
+  }
+</style>
+
 <div class="container-sm">
 <div class="col-sm">
 
@@ -20,152 +89,447 @@
             <div class="container">{% include 'src/form_error.html' %}</div>
 
             <div class="form-group row">
-              <label class="col-form-label col-sm-2">BHT : </label>
-              <div class="col-sm">{{form.bht}}</div>
+              <label class="col-form-label col-sm-2">BHT : <span class="text-danger">*</span></label>
+              <div class="col-sm">
+                {{form.bht}}
+                {% if form.bht.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.bht.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
             <div class="form-group row align-items-center">
               <label class="col-form-label col-sm-2">NNC No : </label>
-              <div class="col-sm">{{form.nnc_no}}</div>
+              <div class="col-sm">
+                {{form.nnc_no}}
+                {% if form.nnc_no.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.nnc_no.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
               <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Neonatal clinic registration number, Ex : NNC/123/2023"></span></a>
             </div>
             <div class="form-group row align-items-center">
               <label class="col-form-label col-sm-2">CDIC No : </label>
-              <div class="col-sm">{{form.ptc_no}}</div>
+              <div class="col-sm">
+                {{form.ptc_no}}
+                {% if form.ptc_no.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.ptc_no.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
               <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Child development interventional clinic registration number"></span></a>
             </div>
             <div class="form-group row align-items-center">
               <label class="col-form-label col-sm-2">PC No : </label>
-              <div class="col-sm">{{form.pc_no}}</div>
+              <div class="col-sm">
+                {{form.pc_no}}
+                {% if form.pc_no.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.pc_no.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
               <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Paediatric clinic registration number"></span></a>
             </div>
             <div class="form-group row">
               <label class="col-form-label col-sm-2">PHN : </label>
-              <div class="col-sm">{{form.pin}}</div>
+              <div class="col-sm">
+                {{form.pin}}
+                {% if form.pin.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.pin.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
               <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Persional health number issued from hospital"></span></a>
             </div>
             <div class="form-group row">
               <label class="col-form-label col-sm-2">Disk No : </label>
-              <div class="col-sm">{{form.disk_no}}</div>
+              <div class="col-sm">
+                {{form.disk_no}}
+                {% if form.disk_no.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.disk_no.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
             <div class="form-group row">
-              <label class="col-form-label col-sm-2">Baby : </label>
-              <div class="col-sm">{{form.baby_name}}</div>
+              <label class="col-form-label col-sm-2">Baby : <span class="text-danger">*</span></label>
+              <div class="col-sm">
+                {{form.baby_name}}
+                {% if form.baby_name.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.baby_name.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
             <div class="form-group row">
-              <label class="col-form-label col-sm-2">Mother : </label>
-              <div class="col-sm">{{form.mother_name}}</div>
+              <label class="col-form-label col-sm-2">Mother : <span class="text-danger">*</span></label>
+              <div class="col-sm">
+                {{form.mother_name}}
+                {% if form.mother_name.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.mother_name.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
             <div class="form-group row">
-              <label class="col-form-label col-sm-2">Gender : </label>
-              <div class="col-sm">{{form.gender}}</div>
+              <label class="col-form-label col-sm-2">Gender : <span class="text-danger">*</span></label>
+              <div class="col-sm">
+                {{form.gender}}
+                {% if form.gender.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.gender.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
             <div class="form-group row">
-              <label class="col-form-label col-sm-2">Date and time of birth : </label>
-              <div class="col-sm">{{form.dob_tob}}</div>
+              <label class="col-form-label col-sm-2">Date and time of birth : <span class="text-danger">*</span></label>
+              <div class="col-sm">
+                {{form.dob_tob}}
+                {% if form.dob_tob.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.dob_tob.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
 
             <div class="form-group row">
-              <label class="col-form-label col-sm-2">POG : </label>
+              <label class="col-form-label col-sm-2">POG : <span class="text-danger">*</span></label>
               <div class="col-sm">
                 <div class=" d-flex align-items-center">
-                  <div>{{form.pog_wks}}</div>
-                  <div>&nbsp;&nbsp;Weeks and&nbsp;&nbsp;</div>
-                  <div>{{form.pog_days}}</div>
-                  <div>&nbsp;&nbsp;Days</div>
+                  <div>
+                    {{form.pog_wks}}
+                    {% if form.pog_wks.errors %}
+                      <div class="invalid-feedback d-block">
+                        {% for error in form.pog_wks.errors %}
+                          <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                      </div>
+                    {% endif %}
                   </div>
+                  <div>&nbsp;&nbsp;Weeks and&nbsp;&nbsp;</div>
+                  <div>
+                    {{form.pog_days}}
+                    {% if form.pog_days.errors %}
+                      <div class="invalid-feedback d-block">
+                        {% for error in form.pog_days.errors %}
+                          <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+                  </div>
+                  <div>&nbsp;&nbsp;Days</div>
+                </div>
               </div>
             </div>
             
             <div class="form-group row">
-              <label class="col-form-label col-sm-2">Mode of delivery : </label>
-              <div class="col-sm">{{form.mo_delivery}}</div>
+              <label class="col-form-label col-sm-2">Mode of delivery : <span class="text-danger">*</span></label>
+              <div class="col-sm">
+                {{form.mo_delivery}}
+                {% if form.mo_delivery.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.mo_delivery.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
             <div class="form-group row">
-              <label class="col-form-label col-sm-2">APGAR : </label>
+              <label class="col-form-label col-sm-2">APGAR : <span class="text-danger">*</span></label>
               <div class="col-sm">
                 <div class="d-flex align-items-center">
-                  <div>{{form.apgar_1}}</div>
+                  <div>
+                    {{form.apgar_1}}
+                    {% if form.apgar_1.errors %}
+                      <div class="invalid-feedback d-block">
+                        {% for error in form.apgar_1.errors %}
+                          <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+                  </div>
                   <div>&nbsp;&nbsp;-&nbsp;&nbsp;</div>
-                  <div>{{form.apgar_5}}</div>
+                  <div>
+                    {{form.apgar_5}}
+                    {% if form.apgar_5.errors %}
+                      <div class="invalid-feedback d-block">
+                        {% for error in form.apgar_5.errors %}
+                          <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+                  </div>
                   <div> &nbsp;&nbsp;-&nbsp;&nbsp;</div>
-                  <div>{{form.apgar_10}}</div>
-                  <div>&nbsp;&nbsp;&nbsp;&nbsp;(Ex : 1 minuite > 5minuite > 10 minuite)</div>
+                  <div>
+                    {{form.apgar_10}}
+                    {% if form.apgar_10.errors %}
+                      <div class="invalid-feedback d-block">
+                        {% for error in form.apgar_10.errors %}
+                          <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+                  </div>
+                  <div>&nbsp;&nbsp;&nbsp;&nbsp;(Ex : 1 minute > 5 minute > 10 minute)</div>
                 </div>
               </div>
             </div>
 
             <div class="form-group row">
               <label class="col-form-label col-sm-2">Resuscitated : </label>
-              <div class="col-sm">{{form.resuscitated}}</div>
+              <div class="col-sm">
+                {{form.resuscitated}}
+                {% if form.resuscitated.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.resuscitated.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
       
             <div id="textbox-container" style="display: none;">
             <div class="form-group row align-items-top">
-              <label class="col-form-label col-sm-2">Resuscitation Note : </label>
-              <div class="col-sm">{{form.resustn_note}}</div>
+              <label class="col-form-label col-sm-2">Resuscitation Note : <span class="text-danger">*</span></label>
+              <div class="col-sm">
+                {{form.resustn_note}}
+                {% if form.resustn_note.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.resustn_note.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
             </div>
 
             <div class="form-group row">
-              <label class="col-form-label col-sm-2">Birth weight : </label>
-              <div class="col-sm">{{form.birth_weight}}</div>
+              <label class="col-form-label col-sm-2">Birth weight : <span class="text-danger">*</span></label>
+              <div class="col-sm">
+                {{form.birth_weight}}
+                {% if form.birth_weight.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.birth_weight.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
             <div class="form-group row">
               <label class="col-form-label col-sm-2">Length : </label>
-              <div class="col-sm">{{form.length}}</div>
+              <div class="col-sm">
+                {{form.length}}
+                {% if form.length.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.length.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
             <div class="form-group row">
-              <label class="col-form-label col-sm-2">OFC : </label>
-              <div class="col-sm">{{form.ofc}}</div>
+              <label class="col-form-label col-sm-2">OFC : <span class="text-danger">*</span></label>
+              <div class="col-sm">
+                {{form.ofc}}
+                {% if form.ofc.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.ofc.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
             <div class="form-group row">
               <label class="col-form-label col-sm-2">Address : </label>
-              <div class="col-sm">{{form.address}}</div>
+              <div class="col-sm">
+                {{form.address}}
+                {% if form.address.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.address.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
             <div class="form-group row">
-              <label class="col-form-label col-sm-2">Telephone (Mobile) : </label>
-              <div class="col-sm">{{form.tp_mobile}}</div>
+              <label class="col-form-label col-sm-2">Telephone (Mobile) : <span class="text-danger">*</span></label>
+              <div class="col-sm">
+                {{form.tp_mobile}}
+                {% if form.tp_mobile.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.tp_mobile.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
             <div class="form-group row">
               <label class="col-form-label col-sm-2">Telephone (Lan) : </label>
-              <div class="col-sm">{{form.tp_lan}}</div>
+              <div class="col-sm">
+                {{form.tp_lan}}
+                {% if form.tp_lan.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.tp_lan.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
             <div class="form-group row">
               <label class="col-form-label col-sm-2">MOH area : </label>
-              <div class="col-sm">{{form.moh_area}}</div>
+              <div class="col-sm">
+                {{form.moh_area}}
+                {% if form.moh_area.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.moh_area.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
             <div class="form-group row">
               <label class="col-form-label col-sm-2">PHM area : </label>
-              <div class="col-sm">{{form.phm_area}}</div>
+              <div class="col-sm">
+                {{form.phm_area}}
+                {% if form.phm_area.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.phm_area.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
             <div class="form-group row">
               <label class="col-form-label col-sm-2">Problems : </label>
-              <div class="col-sm">{{form.problems}}</div>
+              <div class="col-sm">
+                {{form.problems}}
+                {% if form.problems.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.problems.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
             <div class="form-group row">
               <label class="col-form-label col-sm-2">Indications for GMA : </label>
-              <div class="col-sm">{{form.indecation_for_gma}}</div>
+              <div class="col-sm">
+                {{form.indecation_for_gma}}
+                {% if form.indecation_for_gma.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.indecation_for_gma.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
             <div class="form-group row">
               <label class="col-form-label col-sm-2">Antenatal history : </label>
-              <div class="col-sm">{{form.antenatal_hx}}</div>
+              <div class="col-sm">
+                {{form.antenatal_hx}}
+                {% if form.antenatal_hx.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.antenatal_hx.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
             <div class="form-group row">
               <label class="col-form-label col-sm-2">Intranatal history : </label>
-              <div class="col-sm">{{form.intranatal_hx}}</div>
+              <div class="col-sm">
+                {{form.intranatal_hx}}
+                {% if form.intranatal_hx.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.intranatal_hx.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
             <div class="form-group row">
               <label class="col-form-label col-sm-2">Postnatal history : </label>
-              <div class="col-sm">{{form.postnatal_hx}}</div>
+              <div class="col-sm">
+                {{form.postnatal_hx}}
+                {% if form.postnatal_hx.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.postnatal_hx.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
             <div class="form-group row">
               <label class="col-form-label col-sm-2">Other details : </label>
-              <div class="col-sm">{{form.other_relavent_details}}</div>
+              <div class="col-sm">
+                {{form.other_relavent_details}}
+                {% if form.other_relavent_details.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in form.other_relavent_details.errors %}
+                      <small class="text-danger">{{ error }}</small>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
             </div>
 
             <div class="form-group row">
               <label class="col-sm-2 col-form-label"></label>
-              <div class="col-sm"><button type="submit" class="btn btn-primary">Update</button>
+              <div class="col-sm">
+                <button type="submit" class="btn btn-primary">Update</button>
+                {% if user.is_superuser %}
+                <button type="button" class="btn btn-danger ml-2" onclick="confirmPatientDeletion()">
+                  <i class="fas fa-trash-alt"></i> Delete Patient
+                </button>
+                {% endif %}
+              </div>
             </div>
             
         </form>
@@ -205,9 +569,339 @@
     } else {
       textboxContainer.style.display = "none";
     }
+
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+
+    // Add client-side validation
+    setupFormValidation();
   };
 
+  function setupFormValidation() {
+    const form = document.querySelector('form');
+    
+    // Real-time validation for numeric fields
+    const numericFields = ['birth_weight', 'length', 'ofc'];
+    numericFields.forEach(fieldName => {
+      const field = document.getElementById(`id_${fieldName}`);
+      if (field) {
+        field.addEventListener('input', function() {
+          validateNumericField(this, fieldName);
+        });
+      }
+    });
 
+    // Real-time validation for phone numbers
+    const phoneFields = ['tp_mobile', 'tp_lan'];
+    phoneFields.forEach(fieldName => {
+      const field = document.getElementById(`id_${fieldName}`);
+      if (field) {
+        field.addEventListener('input', function() {
+          validatePhoneField(this);
+        });
+      }
+    });
+
+    // Real-time validation for names
+    const nameFields = ['baby_name', 'mother_name'];
+    nameFields.forEach(fieldName => {
+      const field = document.getElementById(`id_${fieldName}`);
+      if (field) {
+        field.addEventListener('input', function() {
+          validateNameField(this);
+        });
+      }
+    });
+
+    // Real-time validation for date of birth
+    const dobField = document.getElementById('id_dob_tob');
+    if (dobField) {
+      dobField.addEventListener('change', function() {
+        validateDateOfBirth(this);
+      });
+    }
+
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+      if (!validateForm()) {
+        e.preventDefault();
+        showValidationAlert();
+      }
+    });
+  }
+
+  function validateNumericField(field, fieldType) {
+    const value = parseInt(field.value);
+    let min, max, unit;
+    
+    switch(fieldType) {
+      case 'birth_weight':
+        min = 300; max = 8000; unit = 'grams';
+        break;
+      case 'length':
+        min = 20; max = 70; unit = 'cm';
+        break;
+      case 'ofc':
+        min = 20; max = 50; unit = 'cm';
+        break;
+    }
+    
+    clearFieldError(field);
+    
+    if (field.value && (isNaN(value) || value < min || value > max)) {
+      showFieldError(field, `Value must be between ${min} and ${max} ${unit}`);
+      return false;
+    }
+    return true;
+  }
+
+  function validatePhoneField(field) {
+    clearFieldError(field);
+    
+    if (field.value) {
+      const phoneRegex = /^\+?1?\d{9,15}$/;
+      const cleanedPhone = field.value.replace(/[\s\-\(\)]/g, '');
+      
+      if (!phoneRegex.test(cleanedPhone)) {
+        showFieldError(field, 'Phone number must be 9-15 digits and may start with +');
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function validateNameField(field) {
+    clearFieldError(field);
+    
+    if (field.value) {
+      const nameRegex = /^[A-Za-z\s\-'\.]+$/;
+      const cleanedName = field.value.trim();
+      
+      if (cleanedName.length < 2) {
+        showFieldError(field, 'Name must be at least 2 characters long');
+        return false;
+      }
+      
+      if (!nameRegex.test(cleanedName)) {
+        showFieldError(field, 'Name can only contain letters, spaces, hyphens, apostrophes, and periods');
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function validateDateOfBirth(field) {
+    clearFieldError(field);
+    
+    if (field.value) {
+      const selectedDate = new Date(field.value);
+      const now = new Date();
+      const tenYearsAgo = new Date();
+      tenYearsAgo.setFullYear(now.getFullYear() - 10);
+      
+      if (selectedDate > now) {
+        showFieldError(field, 'Date of birth cannot be in the future');
+        return false;
+      }
+      
+      if (selectedDate < tenYearsAgo) {
+        showFieldError(field, 'Date of birth cannot be more than 10 years ago');
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function showFieldError(field, message) {
+    // Remove existing error
+    clearFieldError(field);
+    
+    // Add error styling
+    field.classList.add('is-invalid');
+    
+    // Create error message
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'invalid-feedback d-block client-side-error';
+    errorDiv.innerHTML = `<small class="text-danger">${message}</small>`;
+    
+    // Insert after the field
+    field.parentNode.insertBefore(errorDiv, field.nextSibling);
+  }
+
+  function clearFieldError(field) {
+    field.classList.remove('is-invalid');
+    
+    // Remove client-side error messages
+    const errorElements = field.parentNode.querySelectorAll('.client-side-error');
+    errorElements.forEach(el => el.remove());
+  }
+
+  function validateForm() {
+    let isValid = true;
+    
+    // Validate required fields
+    const requiredFields = ['bht', 'baby_name', 'mother_name', 'dob_tob', 'birth_weight', 'ofc', 'tp_mobile'];
+    requiredFields.forEach(fieldName => {
+      const field = document.getElementById(`id_${fieldName}`);
+      if (field && !field.value.trim()) {
+        showFieldError(field, 'This field is required');
+        isValid = false;
+      }
+    });
+
+    // Validate resuscitation note if resuscitated is checked
+    const resuscitatedField = document.getElementById('id_resuscitated');
+    const resustnNoteField = document.getElementById('id_resustn_note');
+    
+    if (resuscitatedField && resuscitatedField.checked && resustnNoteField && !resustnNoteField.value.trim()) {
+      showFieldError(resustnNoteField, 'Resuscitation note is required when baby was resuscitated');
+      isValid = false;
+    }
+    
+    return isValid;
+  }
+
+  function showValidationAlert() {
+    alert('Please correct the validation errors and try again.');
+  }
+
+</script>
+
+<!-- Patient Deletion Confirmation Modal -->
+<div class="modal fade" id="deletePatientModal" tabindex="-1" role="dialog" aria-labelledby="deletePatientModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="deletePatientModalLabel">
+          <i class="fas fa-exclamation-triangle"></i> Confirm Patient Deletion
+        </h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger">
+          <h6><strong>Warning: This action cannot be undone!</strong></h6>
+          <p>You are about to permanently delete this patient and ALL associated records including:</p>
+          <ul>
+            <li>All video files and assessments</li>
+            <li>All medical records and attachments</li>
+            <li>All CDIC records and bookmarks</li>
+            <li>All developmental assessments</li>
+          </ul>
+        </div>
+        
+        <div class="patient-info bg-light p-3 rounded">
+          <h6><strong>Patient Details:</strong></h6>
+          <p><strong>Name:</strong> {{form.baby_name.value|default:patient.baby_name}}</p>
+          <p><strong>Mother:</strong> {{form.mother_name.value|default:patient.mother_name}}</p>
+          <p><strong>BHT:</strong> {{form.bht.value|default:patient.bht}}</p>
+          <p><strong>Gender:</strong> {{form.gender.value|default:patient.gender}}</p>
+        </div>
+        
+        <div class="mt-3">
+          <p><strong>To confirm deletion, please enter your password:</strong></p>
+          <input type="password" class="form-control" id="deletePassword" placeholder="Enter your password">
+          <div id="deleteError" class="text-danger mt-2" style="display: none;"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn" onclick="executePatientDeletion()">
+          <span id="deleteSpinner" class="spinner-border spinner-border-sm" style="display: none;"></span>
+          <i class="fas fa-trash-alt"></i> Delete Patient
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function confirmPatientDeletion() {
+    $('#deletePatientModal').modal('show');
+    $('#deletePassword').val('');
+    $('#deleteError').hide();
+}
+
+function executePatientDeletion() {
+    const password = $('#deletePassword').val();
+    const deleteBtn = $('#confirmDeleteBtn');
+    const spinner = $('#deleteSpinner');
+    const errorDiv = $('#deleteError');
+    
+    if (!password) {
+        errorDiv.text('Please enter your password').show();
+        return;
+    }
+    
+    // Show loading state
+    deleteBtn.prop('disabled', true);
+    spinner.show();
+    errorDiv.hide();
+    
+    // Make AJAX request
+    $.ajax({
+        url: '{% url "delete-patient" patient.id %}',
+        type: 'DELETE',
+        headers: {
+            'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val(),
+            'Content-Type': 'application/json',
+        },
+        data: JSON.stringify({
+            'password': password
+        }),
+        success: function(response) {
+            if (response.success) {
+                // Show success message and redirect
+                $('#deletePatientModal').modal('hide');
+                
+                // Show success alert
+                $('body').prepend(`
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle"></i> ${response.message}
+                        <button type="button" class="close" data-dismiss="alert">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                `);
+                
+                // Redirect after a short delay
+                setTimeout(function() {
+                    window.location.href = response.redirect_url || '/patients/manager/';
+                }, 1500);
+            } else {
+                throw new Error(response.message || 'Delete operation failed');
+            }
+        },
+        error: function(xhr) {
+            let errorMessage = 'An error occurred while deleting the patient.';
+            
+            if (xhr.responseJSON) {
+                errorMessage = xhr.responseJSON.message || xhr.responseJSON.error || errorMessage;
+            } else if (xhr.status === 403) {
+                errorMessage = 'You do not have permission to delete this patient.';
+            } else if (xhr.status === 404) {
+                errorMessage = 'Patient not found.';
+            }
+            
+            errorDiv.text(errorMessage).show();
+        },
+        complete: function() {
+            // Hide loading state
+            deleteBtn.prop('disabled', false);
+            spinner.hide();
+        }
+    });
+}
+
+// Handle Enter key in password field
+$(document).ready(function() {
+    $('#deletePassword').keypress(function(e) {
+        if (e.which === 13) { // Enter key
+            executePatientDeletion();
+        }
+    });
+});
 </script>
 
 

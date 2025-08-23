@@ -12,137 +12,313 @@
     <div class="card">
     <div class="card-header bg-info">Add New Patient</div>
 
-  <form action="{% url 'add-patient'%}" method="POST">
+  <form action="{% url 'add-patient'%}" method="POST" id="patient-form">
     {% csrf_token %}
 
     <div class="card-body">
 
+      <!-- Basic Medical Record Identifiers -->
+      <h5 class="text-primary mb-3"><i class="fas fa-id-card"></i> Medical Record Identifiers</h5>
+      
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">BHT : </label>
-        <div class="col-sm">{{form.bht}}</div>
+        <label class="col-form-label col-sm-2">BHT <span class="text-danger">*</span>:</label>
+        <div class="col-sm">
+          {{form.bht}}
+          {% if form.bht.errors %}
+            <div class="invalid-feedback d-block">{{ form.bht.errors.0 }}</div>
+          {% endif %}
+        </div>
       </div>
+      
       <div class="form-group row align-items-center">
-        <label class="col-form-label col-sm-2">NNC No : </label>
-        <div class="col-sm">{{form.nnc_no}}</div>
+        <label class="col-form-label col-sm-2">NNC No :</label>
+        <div class="col-sm">
+          {{form.nnc_no}}
+          {% if form.nnc_no.errors %}
+            <div class="invalid-feedback d-block">{{ form.nnc_no.errors.0 }}</div>
+          {% endif %}
+        </div>
         <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Neonatal clinic registration number, Ex : NNC/123/2023"></span></a>
       </div>
+      
       <div class="form-group row align-items-center">
-        <label class="col-form-label col-sm-2">CDIC No : </label>
-        <div class="col-sm">{{form.ptc_no}}</div>
+        <label class="col-form-label col-sm-2">CDIC No :</label>
+        <div class="col-sm">
+          {{form.ptc_no}}
+          {% if form.ptc_no.errors %}
+            <div class="invalid-feedback d-block">{{ form.ptc_no.errors.0 }}</div>
+          {% endif %}
+        </div>
         <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Child development interventional clinic registration number"></span></a>
       </div>
+      
       <div class="form-group row align-items-center">
-        <label class="col-form-label col-sm-2">PC No : </label>
-        <div class="col-sm">{{form.pc_no}}</div>
+        <label class="col-form-label col-sm-2">PC No :</label>
+        <div class="col-sm">
+          {{form.pc_no}}
+          {% if form.pc_no.errors %}
+            <div class="invalid-feedback d-block">{{ form.pc_no.errors.0 }}</div>
+          {% endif %}
+        </div>
         <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Paediatric clinic registration number"></span></a>
       </div>
+      
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">PHN : </label>
-        <div class="col-sm">{{form.pin}}</div>
-        <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Persional health number issued from hospital"></span></a>
+        <label class="col-form-label col-sm-2">PHN :</label>
+        <div class="col-sm">
+          {{form.pin}}
+          {% if form.pin.errors %}
+            <div class="invalid-feedback d-block">{{ form.pin.errors.0 }}</div>
+          {% endif %}
+        </div>
+        <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Personal health number issued from hospital"></span></a>
       </div>
+      
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">Disk No : </label>
-        <div class="col-sm">{{form.disk_no}}</div>
-      </div>
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Baby : </label>
-        <div class="col-sm">{{form.baby_name}}</div>
-      </div>
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Mother : </label>
-        <div class="col-sm">{{form.mother_name}}</div>
-      </div>
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Gender : </label>
-        <div class="col-sm">{{form.gender}}</div>
-      </div>
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Date and time of birth : </label>
-        <div class="col-sm">{{form.dob_tob}}</div>
+        <label class="col-form-label col-sm-2">Disk No :</label>
+        <div class="col-sm">
+          {{form.disk_no}}
+          {% if form.disk_no.errors %}
+            <div class="invalid-feedback d-block">{{ form.disk_no.errors.0 }}</div>
+          {% endif %}
+        </div>
       </div>
 
+      <!-- Personal Information -->
+      <hr class="mt-4 mb-3">
+      <h5 class="text-primary mb-3"><i class="fas fa-user"></i> Personal Information</h5>
+      
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">POG : </label>
+        <label class="col-form-label col-sm-2">Baby Name <span class="text-danger">*</span>:</label>
         <div class="col-sm">
-          <div class=" d-flex align-items-center">
-            <div>{{form.pog_wks}}</div>
-            <div>&nbsp;&nbsp;Weeks and&nbsp;&nbsp;</div>
-            <div>{{form.pog_days}}</div>
-            <div>&nbsp;&nbsp;Days</div>
-            </div>
+          {{form.baby_name}}
+          {% if form.baby_name.errors %}
+            <div class="invalid-feedback d-block">{{ form.baby_name.errors.0 }}</div>
+          {% endif %}
+        </div>
+      </div>
+      
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Mother Name <span class="text-danger">*</span>:</label>
+        <div class="col-sm">
+          {{form.mother_name}}
+          {% if form.mother_name.errors %}
+            <div class="invalid-feedback d-block">{{ form.mother_name.errors.0 }}</div>
+          {% endif %}
+        </div>
+      </div>
+      
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Gender <span class="text-danger">*</span>:</label>
+        <div class="col-sm">
+          {{form.gender}}
+          {% if form.gender.errors %}
+            <div class="invalid-feedback d-block">{{ form.gender.errors.0 }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Birth Information -->
+      <hr class="mt-4 mb-3">
+      <h5 class="text-primary mb-3"><i class="fas fa-baby"></i> Birth Information</h5>
+      
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Date and Time of Birth <span class="text-danger">*</span>:</label>
+        <div class="col-sm">
+          {{form.dob_tob}}
+          {% if form.dob_tob.errors %}
+            <div class="invalid-feedback d-block">{{ form.dob_tob.errors.0 }}</div>
+          {% endif %}
         </div>
       </div>
 
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">Mode of delivery : </label>
-        <div class="col-sm">{{form.mo_delivery}}</div>
-      </div>
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">APGAR : </label>
+        <label class="col-form-label col-sm-2">POG <span class="text-danger">*</span>:</label>
         <div class="col-sm">
-         <div class="d-flex align-items-center">
-            <div>{{form.apgar_1}}</div>
-            <div>&nbsp;&nbsp;-&nbsp;&nbsp;</div>
-            <div>{{form.apgar_5}}</div>
-            <div> &nbsp;&nbsp;-&nbsp;&nbsp;</div>
-            <div>{{form.apgar_10}}</div>
-            <div>&nbsp;&nbsp;&nbsp;&nbsp;(Ex : 1 minuite > 5minuite > 10 minuite)</div>
+          <div class="d-flex align-items-center">
+            <div>
+              {{form.pog_wks}}
+              {% if form.pog_wks.errors %}
+                <div class="invalid-feedback d-block">{{ form.pog_wks.errors.0 }}</div>
+              {% endif %}
+            </div>
+            <div>&nbsp;&nbsp;Weeks and&nbsp;&nbsp;</div>
+            <div>
+              {{form.pog_days}}
+              {% if form.pog_days.errors %}
+                <div class="invalid-feedback d-block">{{ form.pog_days.errors.0 }}</div>
+              {% endif %}
+            </div>
+            <div>&nbsp;&nbsp;Days</div>
           </div>
         </div>
       </div>
+
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">Resuscitated : </label>
-        <div class="col-sm">{{form.resuscitated}}</div>
+        <label class="col-form-label col-sm-2">Mode of Delivery :</label>
+        <div class="col-sm">
+          {{form.mo_delivery}}
+          {% if form.mo_delivery.errors %}
+            <div class="invalid-feedback d-block">{{ form.mo_delivery.errors.0 }}</div>
+          {% endif %}
+        </div>
+      </div>
+      
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">APGAR :</label>
+        <div class="col-sm">
+         <div class="d-flex align-items-center">
+            <div>
+              {{form.apgar_1}}
+              {% if form.apgar_1.errors %}
+                <div class="invalid-feedback d-block">{{ form.apgar_1.errors.0 }}</div>
+              {% endif %}
+            </div>
+            <div>&nbsp;&nbsp;-&nbsp;&nbsp;</div>
+            <div>
+              {{form.apgar_5}}
+              {% if form.apgar_5.errors %}
+                <div class="invalid-feedback d-block">{{ form.apgar_5.errors.0 }}</div>
+              {% endif %}
+            </div>
+            <div>&nbsp;&nbsp;-&nbsp;&nbsp;</div>
+            <div>
+              {{form.apgar_10}}
+              {% if form.apgar_10.errors %}
+                <div class="invalid-feedback d-block">{{ form.apgar_10.errors.0 }}</div>
+              {% endif %}
+            </div>
+            <div>&nbsp;&nbsp;&nbsp;&nbsp;(Ex: 1 minute > 5 minutes > 10 minutes)</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2">Resuscitated :</label>
+        <div class="col-sm">
+          {{form.resuscitated}}
+          {% if form.resuscitated.errors %}
+            <div class="invalid-feedback d-block">{{ form.resuscitated.errors.0 }}</div>
+          {% endif %}
+        </div>
       </div>
 
       <div id="textbox-container" style="display: none;">
       <div class="form-group row align-items-top">
-        <label class="col-form-label col-sm-2">Resuscitation Note : </label>
-        <div class="col-sm">{{form.resustn_note}}</div>
+        <label class="col-form-label col-sm-2">Resuscitation Note :</label>
+        <div class="col-sm">
+          {{form.resustn_note}}
+          {% if form.resustn_note.errors %}
+            <div class="invalid-feedback d-block">{{ form.resustn_note.errors.0 }}</div>
+          {% endif %}
+        </div>
       </div>
       </div>
 
+      <!-- Physical Measurements -->
+      <hr class="mt-4 mb-3">
+      <h5 class="text-primary mb-3"><i class="fas fa-ruler"></i> Physical Measurements</h5>
+      
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">Birth weight : </label>
-        <div class="col-sm">{{form.birth_weight}}</div>
+        <label class="col-form-label col-sm-2">Birth Weight (g) <span class="text-danger">*</span>:</label>
+        <div class="col-sm">
+          {{form.birth_weight}}
+          {% if form.birth_weight.errors %}
+            <div class="invalid-feedback d-block">{{ form.birth_weight.errors.0 }}</div>
+          {% endif %}
+        </div>
       </div>
+      
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">Length : </label>
-        <div class="col-sm">{{form.length}}</div>
+        <label class="col-form-label col-sm-2">Length (cm) :</label>
+        <div class="col-sm">
+          {{form.length}}
+          {% if form.length.errors %}
+            <div class="invalid-feedback d-block">{{ form.length.errors.0 }}</div>
+          {% endif %}
+        </div>
       </div>
+      
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">OFC : </label>
-        <div class="col-sm">{{form.ofc}}</div>
+        <label class="col-form-label col-sm-2">OFC (cm) <span class="text-danger">*</span>:</label>
+        <div class="col-sm">
+          {{form.ofc}}
+          {% if form.ofc.errors %}
+            <div class="invalid-feedback d-block">{{ form.ofc.errors.0 }}</div>
+          {% endif %}
+        </div>
       </div>
+
+      <!-- Contact Information -->
+      <hr class="mt-4 mb-3">
+      <h5 class="text-primary mb-3"><i class="fas fa-phone"></i> Contact Information</h5>
+      
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">Address : </label>
-        <div class="col-sm">{{form.address}}</div>
+        <label class="col-form-label col-sm-2">Address :</label>
+        <div class="col-sm">
+          {{form.address}}
+          {% if form.address.errors %}
+            <div class="invalid-feedback d-block">{{ form.address.errors.0 }}</div>
+          {% endif %}
+        </div>
       </div>
+      
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">Telephone (Mobile) : </label>
-        <div class="col-sm">{{form.tp_mobile}}</div>
+        <label class="col-form-label col-sm-2">Mobile Phone <span class="text-danger">*</span>:</label>
+        <div class="col-sm">
+          {{form.tp_mobile}}
+          {% if form.tp_mobile.errors %}
+            <div class="invalid-feedback d-block">{{ form.tp_mobile.errors.0 }}</div>
+          {% endif %}
+        </div>
       </div>
+      
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">Telephone (Lan) : </label>
-        <div class="col-sm">{{form.tp_lan}}</div>
+        <label class="col-form-label col-sm-2">Landline Phone :</label>
+        <div class="col-sm">
+          {{form.tp_lan}}
+          {% if form.tp_lan.errors %}
+            <div class="invalid-feedback d-block">{{ form.tp_lan.errors.0 }}</div>
+          {% endif %}
+        </div>
       </div>
+      
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">MOH area : </label>
-        <div class="col-sm">{{form.moh_area}}</div>
+        <label class="col-form-label col-sm-2">MOH Area :</label>
+        <div class="col-sm">
+          {{form.moh_area}}
+          {% if form.moh_area.errors %}
+            <div class="invalid-feedback d-block">{{ form.moh_area.errors.0 }}</div>
+          {% endif %}
+        </div>
       </div>
+      
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">PHM area : </label>
-        <div class="col-sm">{{form.phm_area}}</div>
+        <label class="col-form-label col-sm-2">PHM Area :</label>
+        <div class="col-sm">
+          {{form.phm_area}}
+          {% if form.phm_area.errors %}
+            <div class="invalid-feedback d-block">{{ form.phm_area.errors.0 }}</div>
+          {% endif %}
+        </div>
       </div>
+
+      <!-- Clinical Information -->
+      <hr class="mt-4 mb-3">
+      <h5 class="text-primary mb-3"><i class="fas fa-stethoscope"></i> Clinical Information</h5>
+      
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">Problems : </label>
-        <div class="col-sm">{{form.problems}}</div>
+        <label class="col-form-label col-sm-2">Problems :</label>
+        <div class="col-sm">
+          {{form.problems}}
+          {% if form.problems.errors %}
+            <div class="invalid-feedback d-block">{{ form.problems.errors.0 }}</div>
+          {% endif %}
+        </div>
       </div>
 
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">Indications for GMA : </label>
-        {% comment %} <div class="col-sm">{{form.indecation_for_gma}}</div> {% endcomment %}
+        <label class="col-form-label col-sm-2">Indications for GMA :</label>
         <div class="col-sm">
           <div id="accordion">
             <div class="card">
@@ -153,9 +329,14 @@
             </a>
             </h4>
             </div>
-            <div id="collapseOne" class="collapse hide" data-parent="#accordion" style="">
+            <div id="collapseOne" class="collapse hide" data-parent="#accordion">
             <div class="card-body">
-              <div class="col-sm">{{form.indecation_for_gma}}</div>
+              <div class="col-sm">
+                {{form.indecation_for_gma}}
+                {% if form.indecation_for_gma.errors %}
+                  <div class="invalid-feedback d-block">{{ form.indecation_for_gma.errors.0 }}</div>
+                {% endif %}
+              </div>
             </div>
             </div>
             </div>
@@ -163,26 +344,57 @@
         </div>
       </div>
 
+      <!-- Medical History -->
+      <hr class="mt-4 mb-3">
+      <h5 class="text-primary mb-3"><i class="fas fa-history"></i> Medical History</h5>
+      
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">Antenatal history : </label>
-        <div class="col-sm">{{form.antenatal_hx}}</div>
+        <label class="col-form-label col-sm-2">Antenatal History :</label>
+        <div class="col-sm">
+          {{form.antenatal_hx}}
+          {% if form.antenatal_hx.errors %}
+            <div class="invalid-feedback d-block">{{ form.antenatal_hx.errors.0 }}</div>
+          {% endif %}
+        </div>
       </div>
+      
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">Intranatal history : </label>
-        <div class="col-sm">{{form.intranatal_hx}}</div>
+        <label class="col-form-label col-sm-2">Intranatal History :</label>
+        <div class="col-sm">
+          {{form.intranatal_hx}}
+          {% if form.intranatal_hx.errors %}
+            <div class="invalid-feedback d-block">{{ form.intranatal_hx.errors.0 }}</div>
+          {% endif %}
+        </div>
       </div>
+      
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">Postnatal history : </label>
-        <div class="col-sm">{{form.postnatal_hx}}</div>
+        <label class="col-form-label col-sm-2">Postnatal History :</label>
+        <div class="col-sm">
+          {{form.postnatal_hx}}
+          {% if form.postnatal_hx.errors %}
+            <div class="invalid-feedback d-block">{{ form.postnatal_hx.errors.0 }}</div>
+          {% endif %}
+        </div>
       </div>
+      
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">Other details : </label>
-        <div class="col-sm">{{form.other_relavent_details}}</div>
+        <label class="col-form-label col-sm-2">Other Relevant Details :</label>
+        <div class="col-sm">
+          {{form.other_relavent_details}}
+          {% if form.other_relavent_details.errors %}
+            <div class="invalid-feedback d-block">{{ form.other_relavent_details.errors.0 }}</div>
+          {% endif %}
+        </div>
       </div>
 
       <div class="form-group row">
         <label class="col-sm-2 col-form-label"></label>
-        <div class="col-sm"><button type="submit" class="btn btn-primary float-right">Add New Patient</button></div>
+        <div class="col-sm">
+          <button type="submit" class="btn btn-primary float-right" id="submit-btn">
+            <i class="fas fa-save"></i> Add New Patient
+          </button>
+        </div>
       </div>
 
       </br>
@@ -199,16 +411,120 @@
 
 <!-- JavaScript code -->
 <script>
-  function toggleresuscitated() {
-    var checkbox = document.getElementById("id_resuscitated");
-    var textboxContainer = document.getElementById("textbox-container");
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('patient-form');
+  const submitBtn = document.getElementById('submit-btn');
+  
+  // Initialize resuscitation toggle
+  toggleresuscitated();
+  
+  // Add event listener for resuscitation checkbox
+  const resuscitatedCheckbox = document.getElementById("id_resuscitated");
+  if (resuscitatedCheckbox) {
+    resuscitatedCheckbox.addEventListener('change', toggleresuscitated);
+  }
+  
+  // Form validation
+  form.addEventListener('submit', function(e) {
+    let isValid = true;
+    const requiredFields = [
+      'id_bht', 'id_baby_name', 'id_mother_name', 
+      'id_gender', 'id_dob_tob', 'id_pog_wks', 'id_pog_days',
+      'id_birth_weight', 'id_ofc', 'id_tp_mobile'
+    ];
+    
+    // Clear previous validation states
+    document.querySelectorAll('.is-invalid').forEach(el => {
+      el.classList.remove('is-invalid');
+    });
+    
+    // Validate required fields
+    requiredFields.forEach(fieldId => {
+      const field = document.getElementById(fieldId);
+      if (field && !field.value.trim()) {
+        field.classList.add('is-invalid');
+        isValid = false;
+      }
+    });
+    
+    // Validate POG ranges
+    const pogWks = document.getElementById('id_pog_wks');
+    const pogDays = document.getElementById('id_pog_days');
+    
+    if (pogWks && (pogWks.value < 20 || pogWks.value > 44)) {
+      pogWks.classList.add('is-invalid');
+      isValid = false;
+    }
+    
+    if (pogDays && (pogDays.value < 0 || pogDays.value > 6)) {
+      pogDays.classList.add('is-invalid');
+      isValid = false;
+    }
+    
+    // Validate APGAR scores
+    const apgarFields = ['id_apgar_1', 'id_apgar_5', 'id_apgar_10'];
+    apgarFields.forEach(fieldId => {
+      const field = document.getElementById(fieldId);
+      if (field && field.value && (field.value < 0 || field.value > 10)) {
+        field.classList.add('is-invalid');
+        isValid = false;
+      }
+    });
+    
+    // Validate birth weight
+    const birthWeight = document.getElementById('id_birth_weight');
+    if (birthWeight && birthWeight.value && (birthWeight.value < 300 || birthWeight.value > 6000)) {
+      birthWeight.classList.add('is-invalid');
+      isValid = false;
+    }
+    
+    if (!isValid) {
+      e.preventDefault();
+      alert('Please correct the highlighted fields before submitting.');
+      return false;
+    }
+    
+    // Disable submit button to prevent double submission
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding Patient...';
+  });
+  
+  // Real-time validation for numeric fields
+  const numericFields = ['id_pog_wks', 'id_pog_days', 'id_apgar_1', 'id_apgar_5', 'id_apgar_10', 'id_birth_weight', 'id_length', 'id_ofc'];
+  
+  numericFields.forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    if (field) {
+      field.addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9.]/g, '');
+      });
+    }
+  });
+  
+  // Phone number validation
+  const phoneFields = ['id_tp_mobile', 'id_tp_lan'];
+  phoneFields.forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    if (field) {
+      field.addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9+\-() ]/g, '');
+      });
+    }
+  });
+});
 
+function toggleresuscitated() {
+  const checkbox = document.getElementById("id_resuscitated");
+  const textboxContainer = document.getElementById("textbox-container");
+
+  if (checkbox && textboxContainer) {
     if (checkbox.checked) {
       textboxContainer.style.display = "block";
     } else {
       textboxContainer.style.display = "none";
     }
   }
+}
 </script>
 
 

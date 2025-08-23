@@ -1,7 +1,10 @@
 from django import forms
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
+import re
 from patients.models import Patient, GMAssessment, Bookmark, Attachment, Video, CDICRecord, HINEAssessment, DevelopmentalAssessment
 from ndas.custom_codes.choice import MODE_OF_DELIVERY, GENDER, POG_DAYS, POG_WKS, APGAR, DX_CONCLUTION
-import re
 
 
 class PatientForm(forms.ModelForm):
@@ -68,75 +71,364 @@ class PatientForm(forms.ModelForm):
 
         widgets = {
             "bht": forms.TextInput(
-                attrs={"class": "form-control",
-                       "placeholder": "Example : 123456"}
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Example : 123456",
+                    "required": True,
+                    "maxlength": "20"
+                }
             ),
             "nnc_no": forms.TextInput(
-                attrs={"class": "form-control",
-                       "placeholder": "Example : NNC/123/2023"}
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Example : NNC/123/2023",
+                    "maxlength": "20"
+                }
             ),
             "ptc_no": forms.TextInput(
-                attrs={"class": "form-control",
-                       "placeholder": "Example : PTC/123/2023"}
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Example : PTC/123/2023",
+                    "maxlength": "20"
+                }
             ),
             "pc_no": forms.TextInput(
-                attrs={"class": "form-control",
-                       "placeholder": "Example : PC/123/2023"}
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Example : PC/123/2023",
+                    "maxlength": "20"
+                }
             ),
             "pin": forms.TextInput(
-                attrs={"class": "form-control",
-                       "placeholder": "Example : 0751245852"}
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Example : 0751245852",
+                    "maxlength": "20"
+                }
             ),
             "disk_no": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "Example : 123"}
+                attrs={
+                    "class": "form-control", 
+                    "placeholder": "Example : 123",
+                    "maxlength": "20"
+                }
             ),
             "baby_name": forms.TextInput(
-                attrs={"class": "form-control",
-                       "placeholder": "Name of the baby"}
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Name of the baby",
+                    "required": True,
+                    "maxlength": "100"
+                }
             ),
             "mother_name": forms.TextInput(
-                attrs={"class": "form-control",
-                       "placeholder": "Name of the mother"}
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Name of the mother",
+                    "required": True,
+                    "maxlength": "100"
+                }
             ),
             "dob_tob": forms.DateTimeInput(
-                attrs={"type": "datetime-local", "class": "form-control"},
+                attrs={
+                    "type": "datetime-local", 
+                    "class": "form-control",
+                    "required": True
+                },
             ),
-            "resuscitated": forms.CheckboxInput(attrs={"class": "big-checkbox", 'id': 'id_resuscitated', 'onchange': 'toggleresuscitated()'}),
+            "resuscitated": forms.CheckboxInput(
+                attrs={
+                    "class": "big-checkbox", 
+                    'id': 'id_resuscitated', 
+                    'onchange': 'toggleresuscitated()'
+                }
+            ),
 
-            "resustn_note": forms.Textarea(attrs={"class": "form-control", "rows": "3"}),
+            "resustn_note": forms.Textarea(
+                attrs={
+                    "class": "form-control", 
+                    "rows": "3",
+                    "placeholder": "Detailed notes about resuscitation procedures if applicable"
+                }
+            ),
 
-            "birth_weight": forms.TextInput(
-                attrs={"class": "form-control",
-                       "placeholder": "In grams (g), Ex : 2500"}
+            "birth_weight": forms.NumberInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "In grams (g), Ex : 2500",
+                    "min": "300",
+                    "max": "8000",
+                    "required": True
+                }
             ),
-            "length": forms.TextInput(
-                attrs={"class": "form-control",
-                       "placeholder": "In centimeters (Cm) Ex : 48"}
+            "length": forms.NumberInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "In centimeters (Cm) Ex : 48",
+                    "min": "20",
+                    "max": "70"
+                }
             ),
-            "ofc": forms.TextInput(
-                attrs={"class": "form-control",
-                       "placeholder": "In centimeters (Cm) Ex : 32"}
+            "ofc": forms.NumberInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "In centimeters (Cm) Ex : 32",
+                    "min": "20",
+                    "max": "50",
+                    "required": True
+                }
             ),
-            "address": forms.Textarea(attrs={"class": "form-control", "rows": "3"}),
-            "tp_mobile": forms.TextInput(attrs={"class": "form-control"}),
-            "tp_lan": forms.TextInput(attrs={"class": "form-control"}),
-            "moh_area": forms.TextInput(attrs={"class": "form-control"}),
-            "phm_area": forms.TextInput(attrs={"class": "form-control"}),
-            "problems": forms.Textarea(attrs={"class": "form-control", "rows": "3"}),
+            "address": forms.Textarea(
+                attrs={
+                    "class": "form-control", 
+                    "rows": "3",
+                    "placeholder": "Complete residential address"
+                }
+            ),
+            "tp_mobile": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Primary mobile number (e.g., +94712345678)",
+                    "pattern": r"^\+?1?\d{9,15}$",
+                    "title": "Phone number must be entered in format: '+999999999'. Up to 15 digits allowed.",
+                    "required": True
+                }
+            ),
+            "tp_lan": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Landline number (optional)",
+                    "pattern": r"^\+?1?\d{9,15}$",
+                    "title": "Phone number must be entered in format: '+999999999'. Up to 15 digits allowed."
+                }
+            ),
+            "moh_area": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Medical Officer of Health area",
+                    "maxlength": "255"
+                }
+            ),
+            "phm_area": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Public Health Midwife area",
+                    "maxlength": "255"
+                }
+            ),
+            "problems": forms.Textarea(
+                attrs={
+                    "class": "form-control", 
+                    "rows": "3",
+                    "placeholder": "Current medical problems or concerns"
+                }
+            ),
             "indecation_for_gma": forms.CheckboxSelectMultiple(attrs={"class": ""}),
             "antenatal_hx": forms.Textarea(
-                attrs={"class": "form-control", "rows": "3"}
+                attrs={
+                    "class": "form-control", 
+                    "rows": "3",
+                    "placeholder": "Medical history during pregnancy"
+                }
             ),
             "intranatal_hx": forms.Textarea(
-                attrs={"class": "form-control", "rows": "3"}
+                attrs={
+                    "class": "form-control", 
+                    "rows": "3",
+                    "placeholder": "Medical events during labor and delivery"
+                }
             ),
             "postnatal_hx": forms.Textarea(
-                attrs={"class": "form-control", "rows": "3"}
+                attrs={
+                    "class": "form-control", 
+                    "rows": "3",
+                    "placeholder": "Medical events and care after birth"
+                }
             ),
             "other_relavent_details": forms.Textarea(
-                attrs={"class": "form-control", "rows": "3"}
+                attrs={
+                    "class": "form-control", 
+                    "rows": "3",
+                    "placeholder": "Any other relevant medical information"
+                }
             ),
         }
+
+    def clean_bht(self):
+        """Validate BHT number"""
+        bht = self.cleaned_data.get('bht')
+        if bht:
+            # Check if BHT already exists (excluding current instance during edit)
+            queryset = Patient.objects.filter(bht=bht)
+            if self.instance and self.instance.pk:
+                queryset = queryset.exclude(pk=self.instance.pk)
+            
+            if queryset.exists():
+                raise ValidationError(_("A patient with this BHT number already exists."))
+            
+            # Additional BHT format validation
+            if not re.match(r'^[A-Za-z0-9\-/]+$', bht):
+                raise ValidationError(_("BHT number can only contain letters, numbers, hyphens, and forward slashes."))
+        
+        return bht
+
+    def clean_nnc_no(self):
+        """Validate NNC number"""
+        nnc_no = self.cleaned_data.get('nnc_no')
+        if nnc_no:
+            # Check uniqueness
+            queryset = Patient.objects.filter(nnc_no=nnc_no)
+            if self.instance and self.instance.pk:
+                queryset = queryset.exclude(pk=self.instance.pk)
+            
+            if queryset.exists():
+                raise ValidationError(_("A patient with this NNC number already exists."))
+        
+        return nnc_no
+
+    def clean_pin(self):
+        """Validate PIN number"""
+        pin = self.cleaned_data.get('pin')
+        if pin:
+            # Check uniqueness
+            queryset = Patient.objects.filter(pin=pin)
+            if self.instance and self.instance.pk:
+                queryset = queryset.exclude(pk=self.instance.pk)
+            
+            if queryset.exists():
+                raise ValidationError(_("A patient with this PIN already exists."))
+        
+        return pin
+
+    def clean_baby_name(self):
+        """Validate baby name"""
+        baby_name = self.cleaned_data.get('baby_name')
+        if baby_name:
+            # Remove extra whitespace and validate
+            baby_name = ' '.join(baby_name.split())
+            if len(baby_name.strip()) < 2:
+                raise ValidationError(_("Baby name must be at least 2 characters long."))
+            
+            # Check for valid characters (letters, spaces, hyphens, apostrophes)
+            if not re.match(r"^[A-Za-z\s\-'\.]+$", baby_name):
+                raise ValidationError(_("Baby name can only contain letters, spaces, hyphens, apostrophes, and periods."))
+        
+        return baby_name
+
+    def clean_mother_name(self):
+        """Validate mother name"""
+        mother_name = self.cleaned_data.get('mother_name')
+        if mother_name:
+            # Remove extra whitespace and validate
+            mother_name = ' '.join(mother_name.split())
+            if len(mother_name.strip()) < 2:
+                raise ValidationError(_("Mother name must be at least 2 characters long."))
+            
+            # Check for valid characters
+            if not re.match(r"^[A-Za-z\s\-'\.]+$", mother_name):
+                raise ValidationError(_("Mother name can only contain letters, spaces, hyphens, apostrophes, and periods."))
+        
+        return mother_name
+
+    def clean_dob_tob(self):
+        """Validate date and time of birth"""
+        dob_tob = self.cleaned_data.get('dob_tob')
+        if dob_tob:
+            # Check if date is not in the future
+            if dob_tob > timezone.now():
+                raise ValidationError(_("Date of birth cannot be in the future."))
+            
+            # Check if date is not too far in the past (reasonable limit: 10 years)
+            ten_years_ago = timezone.now() - timezone.timedelta(days=365 * 10)
+            if dob_tob < ten_years_ago:
+                raise ValidationError(_("Date of birth cannot be more than 10 years ago."))
+        
+        return dob_tob
+
+    def clean_birth_weight(self):
+        """Validate birth weight"""
+        birth_weight = self.cleaned_data.get('birth_weight')
+        if birth_weight is not None:
+            if birth_weight < 300 or birth_weight > 8000:
+                raise ValidationError(_("Birth weight must be between 300g and 8000g."))
+        
+        return birth_weight
+
+    def clean_length(self):
+        """Validate length"""
+        length = self.cleaned_data.get('length')
+        if length is not None:
+            if length < 20 or length > 70:
+                raise ValidationError(_("Length must be between 20cm and 70cm."))
+        
+        return length
+
+    def clean_ofc(self):
+        """Validate OFC (Occipital Frontal Circumference)"""
+        ofc = self.cleaned_data.get('ofc')
+        if ofc is not None:
+            if ofc < 20 or ofc > 50:
+                raise ValidationError(_("OFC must be between 20cm and 50cm."))
+        
+        return ofc
+
+    def clean_tp_mobile(self):
+        """Validate mobile phone number"""
+        tp_mobile = self.cleaned_data.get('tp_mobile')
+        if tp_mobile:
+            # Remove spaces and special characters for validation
+            phone_digits = re.sub(r'[^\d+]', '', tp_mobile)
+            
+            # Validate format
+            if not re.match(r'^\+?1?\d{9,15}$', phone_digits):
+                raise ValidationError(_("Phone number must be entered in format: '+999999999'. Up to 15 digits allowed."))
+        
+        return tp_mobile
+
+    def clean_tp_lan(self):
+        """Validate landline phone number"""
+        tp_lan = self.cleaned_data.get('tp_lan')
+        if tp_lan:
+            # Remove spaces and special characters for validation
+            phone_digits = re.sub(r'[^\d+]', '', tp_lan)
+            
+            # Validate format
+            if not re.match(r'^\+?1?\d{9,15}$', phone_digits):
+                raise ValidationError(_("Phone number must be entered in format: '+999999999'. Up to 15 digits allowed."))
+        
+        return tp_lan
+
+    def clean(self):
+        """Cross-field validation"""
+        cleaned_data = super().clean()
+        
+        # Validate APGAR score progression (1min <= 5min <= 10min is not always true, but check for reasonable values)
+        apgar_1 = cleaned_data.get('apgar_1')
+        apgar_5 = cleaned_data.get('apgar_5')
+        apgar_10 = cleaned_data.get('apgar_10')
+        
+        if all([apgar_1 is not None, apgar_5 is not None, apgar_10 is not None]):
+            if any(score < 0 or score > 10 for score in [apgar_1, apgar_5, apgar_10] if score is not None):
+                raise ValidationError(_("All APGAR scores must be between 0 and 10."))
+        
+        # Validate POG (Period of Gestation)
+        pog_wks = cleaned_data.get('pog_wks')
+        pog_days = cleaned_data.get('pog_days')
+        
+        if pog_wks is not None and (pog_wks < 20 or pog_wks > 44):
+            raise ValidationError({'pog_wks': _("Period of gestation must be between 20-44 weeks.")})
+        
+        if pog_days is not None and (pog_days < 0 or pog_days > 6):
+            raise ValidationError({'pog_days': _("Period of gestation days must be between 0-6.")})
+        
+        # Validate resuscitation note is provided if resuscitated is checked
+        resuscitated = cleaned_data.get('resuscitated')
+        resustn_note = cleaned_data.get('resustn_note')
+        
+        if resuscitated and not resustn_note:
+            raise ValidationError({'resustn_note': _("Resuscitation note is required when baby was resuscitated.")})
+        
+        return cleaned_data
 
 
 class GMAssessmentForm(forms.ModelForm):

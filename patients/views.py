@@ -10,15 +10,20 @@ from ndas.custom_codes.validators import Name_baby_validation, Name_mother_valid
 from ndas.custom_codes.custom_methods import get_admissions_data_barchart, get_gma_diagnosis_data, get_all_diagnosis_data, get_userStats, getAttachmentType, getCurrentDateTime, getFileSizeInMb, getPatientList, getCountZeroIfNone
 from datetime import datetime
 from django.views.decorators.csrf import csrf_exempt
-import pytz, os
+from django.views.decorators.http import require_http_methods
+import pytz, os, logging
 from django.http import JsonResponse
 from django.utils.timezone import localtime, now
+from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 # from moviepy.editor import VideoFileClip  # Temporarily commented out
 from django.core.files import File
 from django.core.files.storage import FileSystemStorage
 from ndas.custom_codes.ndas_enums import PtStatus
+
+# Configure logger for patient operations
+logger = logging.getLogger('django')
 
 # Create your views here
 @login_required(login_url='user-login')
@@ -178,24 +183,79 @@ def patient_manager_new_only(request):
 
 @login_required(login_url='user-login')
 def patient_add(request):
-    empty_form = PatientForm()
-    if request.user.is_authenticated:
-        if request.method == 'POST':
-            data_form = PatientForm(request.POST)
-            if data_form.is_valid():
-                var_pt_add = data_form.save()
-                var_pt_add.added_by = request.user
-                var_pt_add.last_edit_by = None
-                var_pt_add.save()
-                messages.success(request, 'New patient added succussfully...')
-                return redirect('manage-patients')
-            else:
-                return render (request, 'patients/add.html', {'form' : data_form})
-        else:
-            return render (request, 'patients/add.html', {'form' : empty_form})
-    else:
+    if not request.user.is_authenticated:
         messages.error(request, 'You are not authorized to perform this action, please login')
         return redirect('user-login')
+    
+    if request.method == 'POST':
+        data_form = PatientForm(request.POST)
+        
+        if data_form.is_valid():
+            # Additional server-side validation
+            cleaned_data = data_form.cleaned_data
+            
+            # Validate POG ranges
+            pog_wks = cleaned_data.get('pog_wks')
+            pog_days = cleaned_data.get('pog_days')
+            
+            if pog_wks and (int(pog_wks) < 20 or int(pog_wks) > 44):
+                data_form.add_error('pog_wks', 'POG weeks must be between 20 and 44')
+            
+            if pog_days and (int(pog_days) < 0 or int(pog_days) > 6):
+                data_form.add_error('pog_days', 'POG days must be between 0 and 6')
+            
+            # Validate APGAR scores
+            apgar_fields = ['apgar_1', 'apgar_5', 'apgar_10']
+            for field in apgar_fields:
+                value = cleaned_data.get(field)
+                if value is not None and (int(value) < 0 or int(value) > 10):
+                    data_form.add_error(field, f'{field.replace("_", " ").title()} score must be between 0 and 10')
+            
+            # Validate birth weight
+            birth_weight = cleaned_data.get('birth_weight')
+            if birth_weight and (birth_weight < 300 or birth_weight > 6000):
+                data_form.add_error('birth_weight', 'Birth weight must be between 300g and 6000g')
+            
+            # Validate measurements
+            length = cleaned_data.get('length')
+            if length and (length < 20 or length > 70):
+                data_form.add_error('length', 'Length must be between 20cm and 70cm')
+            
+            ofc = cleaned_data.get('ofc')
+            if ofc and (ofc < 20 or ofc > 50):
+                data_form.add_error('ofc', 'OFC must be between 20cm and 50cm')
+            
+            # Check for duplicate BHT
+            bht = cleaned_data.get('bht')
+            if bht and Patient.objects.filter(bht=bht).exists():
+                data_form.add_error('bht', 'A patient with this BHT already exists')
+            
+            # Validate date of birth (not in future)
+            dob_tob = cleaned_data.get('dob_tob')
+            if dob_tob and dob_tob > timezone.now():
+                data_form.add_error('dob_tob', 'Date of birth cannot be in the future')
+            
+            # If validation passes, save the patient
+            if not data_form.errors:
+                try:
+                    var_pt_add = data_form.save(commit=False)
+                    var_pt_add.added_by = request.user
+                    var_pt_add.last_edit_by = None
+                    var_pt_add.save()
+                    
+                    messages.success(request, f'New patient "{var_pt_add.baby_name}" added successfully!')
+                    return redirect('view-patient', var_pt_add.id)
+                    
+                except Exception as e:
+                    messages.error(request, 'An error occurred while saving the patient. Please try again.')
+                    return render(request, 'patients/add.html', {'form': data_form})
+        
+        # If form is not valid, return with errors
+        return render(request, 'patients/add.html', {'form': data_form})
+    
+    else:
+        empty_form = PatientForm()
+        return render(request, 'patients/add.html', {'form': empty_form})
 
 @login_required(login_url='user-login')
 def patient_view(request, pk):
@@ -251,20 +311,120 @@ def patient_view(request, pk):
     return render (request, 'patients/view.html', context)
 
 @login_required(login_url='user-login')
+@require_http_methods(["DELETE", "POST"])
 def patient_delete(request, pk):
-    if request.method == 'POST':
+    """
+    Enhanced patient deletion endpoint with proper error handling and audit logging
+    """
+    try:
         patient = Patient.objects.get(id=pk)
-        user = request.user
-        if user.check_password(request.POST['password']):
-            if patient.delete():
-                messages.success(request, 'Patient has deleted succusfully...')
-                return redirect('manage-patients')
-            else:
-                messages.error(request, 'Something went wrong while deleting the patient...')
-                return render (request, 'patients/delete-confirm.html', {'patient' : patient})
+    except Patient.DoesNotExist:
+        logger.warning(f"Attempted to delete non-existent patient with ID: {pk} by user: {request.user.username}")
+        if request.method == 'DELETE':
+            return JsonResponse({
+                'success': False, 
+                'error': 'Patient not found',
+                'message': 'The patient you are trying to delete does not exist.'
+            }, status=404)
         else:
+            messages.error(request, 'Patient not found.')
+            return redirect('manage-patients')
+    
+    # Check user permissions
+    if not request.user.is_superuser:
+        logger.warning(f"Unauthorized patient deletion attempt by user: {request.user.username} for patient ID: {pk}")
+        if request.method == 'DELETE':
+            return JsonResponse({
+                'success': False,
+                'error': 'Permission denied',
+                'message': 'You do not have permission to delete patients.'
+            }, status=403)
+        else:
+            messages.error(request, 'You do not have permission to delete this patient.')
+            return redirect('view-patient', pk=pk)
+    
+    if request.method == 'DELETE':
+        # Handle AJAX DELETE request
+        try:
+            import json
+            request_data = json.loads(request.body) if request.body else {}
+            password = request_data.get('password', '')
+            
+            # Verify password
+            if not request.user.check_password(password):
+                logger.warning(f"Invalid password attempt for patient deletion by user: {request.user.username} for patient ID: {pk}")
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid password',
+                    'message': 'Wrong password, please try again with correct password'
+                }, status=403)
+            
+            # Log the deletion attempt
+            logger.info(f"Patient deletion initiated by user: {request.user.username} for patient: {patient.baby_name} (ID: {pk}, BHT: {patient.bht})")
+            
+            # Store patient info for logging before deletion
+            patient_info = {
+                'id': patient.id,
+                'baby_name': patient.baby_name,
+                'mother_name': patient.mother_name,
+                'bht': patient.bht,
+                'deleted_by': request.user.username,
+                'deleted_at': timezone.now().isoformat()
+            }
+            
+            patient.delete()
+            
+            # Log successful deletion
+            logger.info(f"Patient successfully deleted: {patient_info}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Patient has been deleted successfully.',
+                'redirect_url': '/patients/manager/'
+            })
+            
+        except Exception as e:
+            logger.error(f"Error deleting patient ID {pk}: {str(e)} by user: {request.user.username}")
+            return JsonResponse({
+                'success': False,
+                'error': 'Deletion failed',
+                'message': 'An error occurred while deleting the patient. Please try again.'
+            }, status=500)
+    
+    elif request.method == 'POST':
+        # Handle form-based POST request (legacy support)
+        user = request.user
+        if user.check_password(request.POST.get('password', '')):
+            try:
+                # Log the deletion attempt
+                logger.info(f"Patient deletion initiated by user: {request.user.username} for patient: {patient.baby_name} (ID: {pk}, BHT: {patient.bht})")
+                
+                # Store patient info for logging before deletion
+                patient_info = {
+                    'id': patient.id,
+                    'baby_name': patient.baby_name,
+                    'mother_name': patient.mother_name,
+                    'bht': patient.bht,
+                    'deleted_by': request.user.username,
+                    'deleted_at': timezone.now().isoformat()
+                }
+                
+                patient.delete()
+                
+                # Log successful deletion
+                logger.info(f"Patient successfully deleted: {patient_info}")
+                
+                messages.success(request, 'Patient has been deleted successfully.')
+                return redirect('manage-patients')
+                
+            except Exception as e:
+                logger.error(f"Error deleting patient ID {pk}: {str(e)} by user: {request.user.username}")
+                messages.error(request, 'Something went wrong while deleting the patient.')
+                return render(request, 'patients/delete-confirm.html', {'patient': patient})
+        else:
+            logger.warning(f"Invalid password attempt for patient deletion by user: {request.user.username} for patient ID: {pk}")
             messages.error(request, 'Wrong password, please try again with correct password')
-            return render (request, 'patients/delete-confirm.html', {'patient' : patient})
+            return render(request, 'patients/delete-confirm.html', {'patient': patient})
         
 @login_required(login_url='user-login')
 def patient_delete_confirm(request, pk):
@@ -278,22 +438,48 @@ def patient_delete_confirm(request, pk):
 
 @login_required(login_url='user-login')
 def patient_edit(request, pk):
-    selected_patient = Patient.objects.get(id=pk)
-    data_form = PatientForm(instance=selected_patient)
+    try:
+        selected_patient = Patient.objects.get(id=pk)
+    except Patient.DoesNotExist:
+        messages.error(request, 'Patient not found.')
+        return redirect('manage-patients')
     
     if request.method == 'POST':
         data_form_modified = PatientForm(request.POST, instance=selected_patient)
+        
         if data_form_modified.is_valid():
-            data_form_modified.save()
-            # save object to update last edited user
-            selected_patient.last_edit_by = request.user
-            selected_patient.save()
-            messages.success(request, 'Patient details updated succussfully...')
-            return redirect('manage-patients')
+            try:
+                # Save the form data
+                patient = data_form_modified.save(commit=False)
+                patient.last_edit_by = request.user
+                patient.save()
+                
+                # Save many-to-many relationships
+                data_form_modified.save_m2m()
+                
+                messages.success(request, 'Patient details updated successfully.')
+                return redirect('manage-patients')
+                
+            except Exception as e:
+                messages.error(request, f'An error occurred while saving: {str(e)}')
+                return render(request, 'patients/edit.html', {
+                    'form': data_form_modified, 
+                    'patient': selected_patient
+                })
         else:
-            return render(request, 'patients/edit.html', {'form' : data_form_modified, 'patient' : selected_patient})
+            # Form has validation errors
+            messages.warning(request, 'Please correct the errors below and try again.')
+            return render(request, 'patients/edit.html', {
+                'form': data_form_modified, 
+                'patient': selected_patient
+            })
     else:
-        return render(request, 'patients/edit.html', {'form' : data_form, 'patient' : selected_patient})
+        # GET request - display form with current data
+        data_form = PatientForm(instance=selected_patient)
+        return render(request, 'patients/edit.html', {
+            'form': data_form, 
+            'patient': selected_patient
+        })
 
 @login_required(login_url='user-login')
 def search_start(request):

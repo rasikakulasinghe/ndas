@@ -29,6 +29,9 @@
             <a class="nav-link" id="custom-tabs-four-contact-tab" data-toggle="pill" href="#contact" role="tab" aria-controls="custom-tabs-four-contact" aria-selected="false">Contacts</a>
             </li>
             <li class="nav-item">
+            <a class="nav-link" id="custom-tabs-four-medical-tab" data-toggle="pill" href="#medical-history" role="tab" aria-controls="custom-tabs-four-medical" aria-selected="false">Medical History</a>
+            </li>
+            <li class="nav-item">
             <a class="nav-link" id="custom-tabs-four-video-tab" data-toggle="pill" href="#video" role="tab" aria-controls="custom-tabs-four-video" aria-selected="false">Videos</a>
             </li>
             <li class="nav-item">
@@ -64,8 +67,11 @@
                 <span class="info-box-text">Current age : {{patient.getCurrentAge}}</span>
                 <span class="info-box-text">Corrected age : {{patient.getCorrectedAge}}</span>
                 <span class="info-box-text">Corrected getstational age : {{patient.getCorrectedGestationalAge}}</span>
+                <span class="info-box-text">POG : {{patient.getPOG}}</span>
                 <span class="info-box-text">Attachments : &nbsp;
                   {% if file_attachment_count == 0 %}No Attachments{% else %} <a href="{% url 'attachment-manager-patient' patient.id %}" target="_blank"> <i class="far fa-eye" style="color: #00328a;"></i> &nbsp; View ({{file_attachment_count}})</a>{% endif %}</span>
+                <span class="info-box-text">Videos : &nbsp;
+                  {% if file_video_count == 0 %}No Videos{% else %} <a href="{% url 'file-manager-patient' patient.id %}" target="_blank"> <i class="far fa-eye" style="color: #00328a;"></i> &nbsp; View ({{file_video_count}})</a>{% endif %}</span>
                 <span class="info-box-text">Bookmark Status : &nbsp; {% if bookmark %}<a href="{% url 'bookmark-view' bookmark.id %}" target="_blank"> <i class="far fa-bookmark"></i> &nbsp; View</a>{% else %} &nbsp; No Bookmark{% endif %}</span>
                 <span class="info-box-text">Assessment Summary : &nbsp; GMA : {{patient.getDiagnosisList.0}} &nbsp; HINE : {{patient.getDiagnosisList.1}} &nbsp; DA : {{patient.getDiagnosisList.2}}</span>
                 </div>
@@ -114,6 +120,11 @@
                 
                 <dt class="col-sm-2">Ressussitation :</dt>
                 <dd class="col-sm-10">{{patient.getResuscitationState}}</dd>
+
+                {% if patient.resuscitated %}
+                <dt class="col-sm-2">Resuscitation Note :</dt>
+                <dd class="col-sm-10">{{patient.resustn_note|default:"---"}}</dd>
+                {% endif %}
     
                 <dt class="col-sm-2">Birth weight :</dt>
                 <dd class="col-sm-10">{{patient.birth_weight}} g</dd>
@@ -149,6 +160,46 @@
     
               </dl>
               <!-- /end text for contact -->
+            </div>
+
+            <div class="tab-pane fade" id="medical-history" role="tabpanel" aria-labelledby="custom-tabs-four-medical-tab">
+              <!-- Medical History -->
+              <dl class="row">
+
+                <dt class="col-sm-2">Problems :</dt>
+                <dd class="col-sm-10">{{patient.problems|default:"---"}}</dd>
+
+                <dt class="col-sm-2">Indications for GMA :</dt>
+                <dd class="col-sm-10">
+                  {% if patient.indecation_for_gma.all %}
+                    {% for indication in patient.indecation_for_gma.all %}
+                      <span class="badge badge-info">{{ indication }}</span>
+                    {% endfor %}
+                  {% else %}
+                    ---
+                  {% endif %}
+                </dd>
+
+                <dt class="col-sm-2">Date of Admission :</dt>
+                <dd class="col-sm-10">{{patient.do_admission|default:"---"}}</dd>
+
+                <dt class="col-sm-2">Date of Discharge :</dt>
+                <dd class="col-sm-10">{{patient.do_discharge|default:"---"}}</dd>
+
+                <dt class="col-sm-2">Antenatal History :</dt>
+                <dd class="col-sm-10">{{patient.antenatal_hx|default:"---"}}</dd>
+
+                <dt class="col-sm-2">Intranatal History :</dt>
+                <dd class="col-sm-10">{{patient.intranatal_hx|default:"---"}}</dd>
+
+                <dt class="col-sm-2">Postnatal History :</dt>
+                <dd class="col-sm-10">{{patient.postnatal_hx|default:"---"}}</dd>
+
+                <dt class="col-sm-2">Other Relevant Details :</dt>
+                <dd class="col-sm-10">{{patient.other_relavent_details|default:"---"}}</dd>
+
+              </dl>
+              <!-- /end medical history -->
             </div>
           
             <div class="tab-pane fade" id="assessment-gm" role="tabpanel" aria-labelledby="custom-tabs-four-gma-tab">
@@ -620,6 +671,15 @@
             <div class="col-auto m-2">
               <a class="btn btn-primary" href="{% url 'edit-patient' patient.id %}" type="button"><i class="fas fa-pencil-alt"></i>  Update Patient</a>
             </div>
+            
+            <!-- Delete Patient Button -->
+            {% if user.is_superuser %}
+            <div class="col-auto m-2">
+              <button class="btn btn-danger" onclick="confirmPatientDeletion()" type="button">
+                <i class="fas fa-trash-alt"></i> Delete Patient
+              </button>
+            </div>
+            {% endif %}
           </div>
         </div>
           </div>
@@ -633,3 +693,141 @@
           </div>
         </div>
         </div>
+
+<!-- Patient Deletion Confirmation Modal -->
+<div class="modal fade" id="deletePatientModal" tabindex="-1" role="dialog" aria-labelledby="deletePatientModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="deletePatientModalLabel">
+          <i class="fas fa-exclamation-triangle"></i> Confirm Patient Deletion
+        </h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger">
+          <h6><strong>Warning: This action cannot be undone!</strong></h6>
+          <p>You are about to permanently delete this patient and ALL associated records including:</p>
+          <ul>
+            <li>All video files and assessments</li>
+            <li>All medical records and attachments</li>
+            <li>All CDIC records and bookmarks</li>
+            <li>All developmental assessments</li>
+          </ul>
+        </div>
+        
+        <div class="patient-info bg-light p-3 rounded">
+          <h6><strong>Patient Details:</strong></h6>
+          <p><strong>Name:</strong> {{patient.baby_name}}</p>
+          <p><strong>Mother:</strong> {{patient.mother_name}}</p>
+          <p><strong>BHT:</strong> {{patient.bht}}</p>
+          <p><strong>Gender:</strong> {{patient.gender}}</p>
+          {% if patient.clinic_no %}<p><strong>Clinic Number:</strong> {{patient.clinic_no}}</p>{% endif %}
+        </div>
+        
+        <div class="mt-3">
+          <p><strong>To confirm deletion, please enter your password:</strong></p>
+          <input type="password" class="form-control" id="deletePassword" placeholder="Enter your password">
+          <div id="deleteError" class="text-danger mt-2" style="display: none;"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn" onclick="executePatientDeletion()">
+          <span id="deleteSpinner" class="spinner-border spinner-border-sm" style="display: none;"></span>
+          <i class="fas fa-trash-alt"></i> Delete Patient
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function confirmPatientDeletion() {
+    $('#deletePatientModal').modal('show');
+    $('#deletePassword').val('');
+    $('#deleteError').hide();
+}
+
+function executePatientDeletion() {
+    const password = $('#deletePassword').val();
+    const deleteBtn = $('#confirmDeleteBtn');
+    const spinner = $('#deleteSpinner');
+    const errorDiv = $('#deleteError');
+    
+    if (!password) {
+        errorDiv.text('Please enter your password').show();
+        return;
+    }
+    
+    // Show loading state
+    deleteBtn.prop('disabled', true);
+    spinner.show();
+    errorDiv.hide();
+    
+    // Make AJAX request
+    $.ajax({
+        url: '{% url "delete-patient" patient.id %}',
+        type: 'DELETE',
+        headers: {
+            'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val(),
+            'Content-Type': 'application/json',
+        },
+        data: JSON.stringify({
+            'password': password
+        }),
+        success: function(response) {
+            if (response.success) {
+                // Show success message and redirect
+                $('#deletePatientModal').modal('hide');
+                
+                // Show success alert
+                $('body').prepend(`
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle"></i> ${response.message}
+                        <button type="button" class="close" data-dismiss="alert">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                `);
+                
+                // Redirect after a short delay
+                setTimeout(function() {
+                    window.location.href = response.redirect_url || '/patients/manager/';
+                }, 1500);
+            } else {
+                throw new Error(response.message || 'Delete operation failed');
+            }
+        },
+        error: function(xhr) {
+            let errorMessage = 'An error occurred while deleting the patient.';
+            
+            if (xhr.responseJSON) {
+                errorMessage = xhr.responseJSON.message || xhr.responseJSON.error || errorMessage;
+            } else if (xhr.status === 403) {
+                errorMessage = 'You do not have permission to delete this patient.';
+            } else if (xhr.status === 404) {
+                errorMessage = 'Patient not found.';
+            }
+            
+            errorDiv.text(errorMessage).show();
+        },
+        complete: function() {
+            // Hide loading state
+            deleteBtn.prop('disabled', false);
+            spinner.hide();
+        }
+    });
+}
+
+// Handle Enter key in password field
+$(document).ready(function() {
+    $('#deletePassword').keypress(function(e) {
+        if (e.which === 13) { // Enter key
+            executePatientDeletion();
+        }
+    });
+});
+</script>
