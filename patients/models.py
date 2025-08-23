@@ -473,7 +473,7 @@ class Patient(TimeStampedModel, UserTrackingMixin):
         if not hasattr(self, "pk") or not self.pk:
             return True
         latest = HINEAssessment.objects.filter(patient=self).order_by("-id").first()
-        return latest.isNormal if latest else True
+        return latest.is_normal if latest else True
 
     @property
     def isLastDANormal(self):
@@ -483,7 +483,7 @@ class Patient(TimeStampedModel, UserTrackingMixin):
         latest = (
             DevelopmentalAssessment.objects.filter(patient=self).order_by("-id").first()
         )
-        return latest.isDxNormal if latest else True
+        return latest.is_dx_normal if latest else True
 
     @property
     def isBookmarked(self):
@@ -542,7 +542,7 @@ class Patient(TimeStampedModel, UserTrackingMixin):
             if var_dx_hine is not None
             else "No HINE records"
         )
-        dx_da = var_dx_da.isDxNormal if var_dx_da is not None else "No DA records"
+        dx_da = var_dx_da.is_dx_normal if var_dx_da is not None else "No DA records"
 
         return dx_gma, dx_hine, dx_da
 
@@ -1456,48 +1456,14 @@ class Video(TimeStampedModel, UserTrackingMixin):
         help_text=_("Who can access this video"),
     )
 
-    # Legacy fields for backward compatibility
-    uploaded_by = models.ForeignKey(
-        "users.CustomUser",
-        on_delete=models.SET_NULL,
-        related_name="uploaded_videos",
-        null=True,
-        blank=True,
-        verbose_name=_("Uploaded By"),
-        help_text=_("User who uploaded this video"),
-    )
-
-    uploaded_on = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name=_("Uploaded On"),
-        help_text=_("When this video was uploaded"),
-    )
-
-    last_edit_by = models.ForeignKey(
-        "users.CustomUser",
-        on_delete=models.SET_NULL,
-        related_name="edited_videos",
-        null=True,
-        blank=True,
-        verbose_name=_("Last Edited By"),
-        help_text=_("User who last modified this video"),
-    )
-
-    last_edit_on = models.DateTimeField(
-        blank=True,
-        null=True,
-        verbose_name=_("Last Edited On"),
-        help_text=_("When this video was last modified"),
-    )
-
     class Meta:
         verbose_name = _("Video")
         verbose_name_plural = _("Videos")
-        ordering = ["-uploaded_on", "-recorded_on"]
+        ordering = ["-created_at", "-recorded_on"]
         indexes = [
-            models.Index(fields=["patient", "-uploaded_on"]),
+            models.Index(fields=["patient", "-created_at"]),
             models.Index(fields=["processing_status"]),
-            models.Index(fields=["uploaded_by", "-uploaded_on"]),
+            models.Index(fields=["added_by", "-created_at"]),
             models.Index(fields=["recorded_on"]),
             models.Index(fields=["is_public", "access_level"]),
         ]
@@ -1740,7 +1706,7 @@ class Video(TimeStampedModel, UserTrackingMixin):
             return True
 
         # Uploaded by user
-        if self.uploaded_by == user:
+        if self.added_by == user:
             return True
 
         # Access level checks
@@ -1907,57 +1873,22 @@ class Attachment(TimeStampedModel, UserTrackingMixin):
         help_text=_("Result of virus scan"),
     )
 
-    # Legacy fields for backward compatibility (updated field names)
-    uploaded_by = models.ForeignKey(
-        "users.CustomUser",
-        on_delete=models.SET_NULL,
-        related_name="uploaded_attachments",
-        null=True,
-        blank=True,
-        verbose_name=_("Uploaded By"),
-        help_text=_("User who uploaded this attachment"),
-    )
-
-    uploaded_on = models.DateTimeField(
-        auto_now_add=True,
-        db_index=True,
-        verbose_name=_("Uploaded On"),
-        help_text=_("When this attachment was uploaded"),
-    )
-
-    last_edit_by = models.ForeignKey(
-        "users.CustomUser",
-        on_delete=models.SET_NULL,
-        related_name="edited_attachments",
-        null=True,
-        blank=True,
-        verbose_name=_("Last Edited By"),
-        help_text=_("User who last modified this attachment"),
-    )
-
-    last_edit_on = models.DateTimeField(
-        blank=True,
-        null=True,
-        verbose_name=_("Last Edited On"),
-        help_text=_("When this attachment was last modified"),
-    )
-
     class Meta:
         verbose_name = _("Attachment")
         verbose_name_plural = _("Attachments")
-        ordering = ["-uploaded_on", "-created_at"]
+        ordering = ["-created_at"]
 
         # Database indexes for performance optimization
         indexes = [
             models.Index(
-                fields=["patient", "-uploaded_on"], name="attachment_patient_date_idx"
+                fields=["patient", "-created_at"], name="attachment_patient_date_idx"
             ),
             models.Index(
-                fields=["attachment_type", "-uploaded_on"],
+                fields=["attachment_type", "-created_at"],
                 name="attachment_type_date_idx",
             ),
             models.Index(
-                fields=["uploaded_by", "-uploaded_on"], name="attachment_user_date_idx"
+                fields=["added_by", "-created_at"], name="attachment_user_date_idx"
             ),
             models.Index(
                 fields=["is_sensitive", "access_level"], name="attachment_access_idx"
@@ -1974,7 +1905,7 @@ class Attachment(TimeStampedModel, UserTrackingMixin):
                 name="attachment_positive_file_size",
             ),
             models.CheckConstraint(
-                check=models.Q(title__length__gte=1),
+                check=models.Q(title__gt=''),
                 name="attachment_title_not_empty",
             ),
         ]
@@ -2182,7 +2113,7 @@ class Attachment(TimeStampedModel, UserTrackingMixin):
             return True
 
         # Uploaded by user
-        if self.uploaded_by == user:
+        if self.added_by == user:
             return True
 
         # Access level checks
@@ -2214,13 +2145,13 @@ class Attachment(TimeStampedModel, UserTrackingMixin):
     def get_by_patient(cls, patient, attachment_type=None):
         """Get attachments for a specific patient"""
         queryset = cls.objects.filter(patient=patient).select_related(
-            "patient", "uploaded_by", "last_edit_by"
+            "patient", "added_by", "last_edit_by"
         )
 
         if attachment_type:
             queryset = queryset.filter(attachment_type=attachment_type)
 
-        return queryset.order_by("-uploaded_on")
+        return queryset.order_by("-created_at")
 
     @classmethod
     def get_recent_uploads(cls, days=7):
@@ -2229,8 +2160,8 @@ class Attachment(TimeStampedModel, UserTrackingMixin):
 
         cutoff_date = timezone.now() - timezone.timedelta(days=days)
 
-        return cls.objects.filter(uploaded_on__gte=cutoff_date).select_related(
-            "patient", "uploaded_by"
+        return cls.objects.filter(created_at__gte=cutoff_date).select_related(
+            "patient", "added_by"
         )
 
     @classmethod
@@ -2252,57 +2183,397 @@ class Attachment(TimeStampedModel, UserTrackingMixin):
         return cls.objects.filter(scan_result="infected").select_related("patient")
 
 
-class Bookmark(models.Model):
-    title = models.CharField(max_length=100, null=False, blank=False)
+class Bookmark(TimeStampedModel, UserTrackingMixin):
+    """
+    Enhanced Bookmark model for managing user bookmarks with improved validation,
+    performance optimization, and Django best practices
+    """
+    
+    # Core fields with proper validation and indexing
+    title = models.CharField(
+        max_length=200,  # Increased from 100 for better descriptions
+        db_index=True,
+        verbose_name=_("Title"),
+        help_text=_("Descriptive title for the bookmark (max 200 characters)"),
+        validators=[
+            RegexValidator(
+                regex=r"^[a-zA-Z0-9\s\-_\.(),!?]+$",
+                message=_(
+                    "Title can only contain letters, numbers, spaces, hyphens, underscores, dots, commas, parentheses, and basic punctuation."
+                ),
+            )
+        ],
+    )
+    
     bookmark_type = models.CharField(
-        max_length=10, choices=BOOKMARK_TYPE, default="Video", null=False
+        max_length=20,  # Increased from 10 to accommodate longer type names
+        choices=BOOKMARK_TYPE,
+        default="Video",
+        db_index=True,
+        verbose_name=_("Bookmark Type"),
+        help_text=_("Type of content being bookmarked"),
     )
-    object_id = models.PositiveIntegerField(null=False, blank=False)
-    description = models.TextField(null=True, blank=True)
+    
+    object_id = models.PositiveIntegerField(
+        db_index=True,
+        verbose_name=_("Object ID"),
+        help_text=_("ID of the bookmarked object"),
+    )
+    
+    description = models.TextField(
+        blank=True,
+        null=True,  # Keep nullable for now
+        max_length=1000,  # Added max length for better performance
+        verbose_name=_("Description"),
+        help_text=_("Detailed description of the bookmark (max 1000 characters)"),
+    )
+    
+    # User tracking with proper relationships
     owner = models.ForeignKey(
-        "users.CustomUser", on_delete=models.CASCADE, null=True, blank=True
-    )
-    created_on = models.DateTimeField(auto_now_add=True, blank=False, null=False)
-    last_edit_by = models.ForeignKey(
         "users.CustomUser",
         on_delete=models.CASCADE,
-        related_name="bm_last_edit_by",
-        null=True,
+        related_name="bookmarks",
+        db_index=True,
+        null=True,  # Temporarily nullable for migration
         blank=True,
+        verbose_name=_("Owner"),
+        help_text=_("User who created this bookmark"),
     )
-    last_edit_on = models.DateTimeField(blank=True, null=True)
+    
+    # Additional fields for better functionality
+    is_public = models.BooleanField(
+        default=False,
+        db_index=True,
+        verbose_name=_("Public Bookmark"),
+        help_text=_("Allow other users to see this bookmark"),
+    )
+    
+    tags = models.CharField(
+        max_length=500,
+        blank=True,
+        verbose_name=_("Tags"),
+        help_text=_("Comma-separated tags for categorization and search"),
+    )
+    
+    priority = models.CharField(
+        max_length=10,
+        choices=[
+            ('low', _('Low')),
+            ('normal', _('Normal')),
+            ('high', _('High')),
+            ('urgent', _('Urgent')),
+        ],
+        default='normal',
+        db_index=True,
+        verbose_name=_("Priority"),
+        help_text=_("Priority level of this bookmark"),
+    )
 
     class Meta:
-        pass
+        verbose_name = _("Bookmark")
+        verbose_name_plural = _("Bookmarks")
+        ordering = ["-created_at", "title"]
+        
+        # Database indexes for performance optimization
+        indexes = [
+            models.Index(
+                fields=["owner", "-created_at"], 
+                name="bookmark_owner_date_idx"
+            ),
+            models.Index(
+                fields=["bookmark_type", "object_id"], 
+                name="bookmark_type_object_idx"
+            ),
+            models.Index(
+                fields=["is_public", "priority"], 
+                name="bookmark_public_priority_idx"
+            ),
+            models.Index(
+                fields=["title", "bookmark_type"], 
+                name="bookmark_title_type_idx"
+            ),
+        ]
+        
+        # Database constraints for data integrity
+        constraints = [
+            models.UniqueConstraint(
+                fields=["bookmark_type", "object_id", "owner"],
+                name="unique_bookmark_per_user",
+                violation_error_message=_("You have already bookmarked this item."),
+            ),
+            models.CheckConstraint(
+                check=models.Q(title__gt=''),
+                name="bookmark_title_not_empty",
+            ),
+            models.CheckConstraint(
+                check=models.Q(object_id__gte=1),
+                name="bookmark_valid_object_id",
+            ),
+        ]
 
     def __str__(self):
-        return str(self.title + " | " + self.owner.username)
+        owner_name = self.owner.username if self.owner else "No Owner"
+        return f"{self.title} | {self.bookmark_type} | {owner_name}"
 
-    # @property
-    # def getAgeOnRecord(self):
-    #     return self.patient.dob_tob - self.recorded_on
+    def clean(self):
+        """Model-wide validation"""
+        super().clean()
+        
+        # Validate that the bookmarked object exists
+        self._validate_bookmarked_object()
+        
+        # Clean title (strip whitespace, etc.)
+        if self.title:
+            self.title = self.title.strip()
+
+    def save(self, *args, **kwargs):
+        """Override save to perform validation"""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def _validate_bookmarked_object(self):
+        """Validate that the referenced object exists"""
+        if not self.bookmark_type or not self.object_id:
+            return
+            
+        try:
+            # Import models dynamically to avoid circular imports
+            from django.apps import apps
+            
+            model_mapping = {
+                'Patient': ('patients', 'Patient'),
+                'Video': ('patients', 'Video'),
+                'GMA': ('patients', 'GMAssessment'),
+                'HINE': ('patients', 'HINEAssessment'),
+                'Attachment': ('patients', 'Attachment'),
+                'DA': ('patients', 'DevelopmentalAssessment'),
+                'CDICR': ('patients', 'CDICRecord'),
+            }
+            
+            if self.bookmark_type in model_mapping:
+                app_label, model_name = model_mapping[self.bookmark_type]
+                model_class = apps.get_model(app_label, model_name)
+                
+                if not model_class.objects.filter(pk=self.object_id).exists():
+                    raise ValidationError({
+                        'object_id': _(f"The referenced {self.bookmark_type} object does not exist.")
+                    })
+                    
+        except Exception as e:
+            # Log the error but don't fail validation
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Could not validate bookmarked object: {e}")
+
+    # Properties for better data access
+    @property
+    def bookmarked_object(self):
+        """Get the actual bookmarked object"""
+        if not hasattr(self, '_bookmarked_object'):
+            self._bookmarked_object = self._get_bookmarked_object()
+        return self._bookmarked_object
+
+    def _get_bookmarked_object(self):
+        """Helper method to retrieve the bookmarked object"""
+        try:
+            from django.apps import apps
+            
+            model_mapping = {
+                'Patient': ('patients', 'Patient'),
+                'Video': ('patients', 'Video'),
+                'GMA': ('patients', 'GMAssessment'),
+                'HINE': ('patients', 'HINEAssessment'),
+                'Attachment': ('patients', 'Attachment'),
+                'DA': ('patients', 'DevelopmentalAssessment'),
+                'CDICR': ('patients', 'CDICRecord'),
+            }
+            
+            if self.bookmark_type in model_mapping:
+                app_label, model_name = model_mapping[self.bookmark_type]
+                model_class = apps.get_model(app_label, model_name)
+                return model_class.objects.get(pk=self.object_id)
+                
+        except Exception:
+            pass
+        return None
+
+    @property
+    def bookmarked_object_title(self):
+        """Get a display title for the bookmarked object"""
+        obj = self.bookmarked_object
+        if obj:
+            if hasattr(obj, 'title'):
+                return obj.title
+            elif hasattr(obj, 'baby_name'):
+                return obj.baby_name
+            elif hasattr(obj, '__str__'):
+                return str(obj)
+        return f"{self.bookmark_type} #{self.object_id}"
+
+    @property
+    def age_display(self):
+        """Get human-readable age of the bookmark"""
+        from django.utils import timezone
+        
+        age = timezone.now() - self.created_at
+        days = age.days
+        
+        if days == 0:
+            return _("Today")
+        elif days == 1:
+            return _("Yesterday")
+        elif days < 7:
+            return _(f"{days} days ago")
+        elif days < 30:
+            weeks = days // 7
+            return _(f"{weeks} week{'s' if weeks > 1 else ''} ago")
+        elif days < 365:
+            months = days // 30
+            return _(f"{months} month{'s' if months > 1 else ''} ago")
+        else:
+            years = days // 365
+            return _(f"{years} year{'s' if years > 1 else ''} ago")
+
+    def get_tags_list(self):
+        """Get tags as a list"""
+        if self.tags:
+            return [tag.strip() for tag in self.tags.split(",") if tag.strip()]
+        return []
+
+    def add_tag(self, tag):
+        """Add a new tag to the bookmark"""
+        tags = self.get_tags_list()
+        tag = tag.strip()
+        if tag and tag not in tags:
+            tags.append(tag)
+            self.tags = ", ".join(tags)
+
+    def remove_tag(self, tag):
+        """Remove a tag from the bookmark"""
+        tags = self.get_tags_list()
+        tag = tag.strip()
+        if tag in tags:
+            tags.remove(tag)
+            self.tags = ", ".join(tags)
+
+    def get_absolute_url(self):
+        """Get the URL to view this bookmark"""
+        from django.urls import reverse
+        return reverse('bookmark-view', kwargs={'pk': self.pk})
+
+    def get_bookmarked_object_url(self):
+        """Get the URL to view the bookmarked object"""
+        from django.urls import reverse
+        
+        url_mapping = {
+            'Patient': 'view-patient',
+            'Video': 'file-view',
+            'GMA': 'assessment-view',
+            'HINE': 'hine-assessment-view',
+            'Attachment': 'attachment-view',
+            'DA': 'da-assessment-view',
+            'CDICR': 'cdic-assessment-view',
+        }
+        
+        if self.bookmark_type in url_mapping:
+            try:
+                return reverse(url_mapping[self.bookmark_type], kwargs={'pk': self.object_id})
+            except:
+                pass
+        return None
+
+    # Class methods for efficient queries
+    @classmethod
+    def get_by_user(cls, user, bookmark_type=None):
+        """Get bookmarks for a specific user"""
+        queryset = cls.objects.filter(owner=user).select_related(
+            'owner', 'last_edit_by'
+        )
+        
+        if bookmark_type:
+            queryset = queryset.filter(bookmark_type=bookmark_type)
+            
+        return queryset.order_by('-created_at')
+
+    @classmethod
+    def get_public_bookmarks(cls, bookmark_type=None):
+        """Get public bookmarks"""
+        queryset = cls.objects.filter(is_public=True).select_related(
+            'owner', 'last_edit_by'
+        )
+        
+        if bookmark_type:
+            queryset = queryset.filter(bookmark_type=bookmark_type)
+            
+        return queryset.order_by('-created_at')
+
+    @classmethod
+    def get_by_priority(cls, priority, user=None):
+        """Get bookmarks by priority level"""
+        queryset = cls.objects.filter(priority=priority).select_related(
+            'owner', 'last_edit_by'
+        )
+        
+        if user:
+            queryset = queryset.filter(owner=user)
+            
+        return queryset.order_by('-created_at')
+
+    @classmethod
+    def get_recent_bookmarks(cls, days=7, user=None):
+        """Get recently created bookmarks"""
+        from django.utils import timezone
+        
+        cutoff_date = timezone.now() - timezone.timedelta(days=days)
+        queryset = cls.objects.filter(created_at__gte=cutoff_date).select_related(
+            'owner', 'last_edit_by'
+        )
+        
+        if user:
+            queryset = queryset.filter(owner=user)
+            
+        return queryset.order_by('-created_at')
+
+    @classmethod
+    def search_bookmarks(cls, query, user=None):
+        """Search bookmarks by title, description, or tags"""
+        from django.db.models import Q
+        
+        queryset = cls.objects.filter(
+            Q(title__icontains=query) |
+            Q(description__icontains=query) |
+            Q(tags__icontains=query)
+        ).select_related('owner', 'last_edit_by')
+        
+        if user:
+            queryset = queryset.filter(owner=user)
+            
+        return queryset.order_by('-created_at')
+
+    @classmethod
+    def get_bookmark_stats(cls, user=None):
+        """Get bookmark statistics"""
+        from django.db.models import Count
+        
+        queryset = cls.objects.all()
+        if user:
+            queryset = queryset.filter(owner=user)
+            
+        stats = queryset.values('bookmark_type').annotate(
+            count=Count('id')
+        ).order_by('-count')
+        
+        return {
+            'total': queryset.count(),
+            'by_type': list(stats),
+            'public_count': queryset.filter(is_public=True).count(),
+        }
 
 
-class IndicationsForGMA(models.Model):
+class IndicationsForGMA(TimeStampedModel, UserTrackingMixin):
     title = models.CharField(max_length=75, null=False, blank=False)
     level = models.CharField(max_length=6, choices=LEVEL_OF_INDICATION, null=False)
     description = models.TextField(null=True, blank=True)
-    created_by = models.ForeignKey(
-        "users.CustomUser",
-        on_delete=models.CASCADE,
-        related_name="gmai_created_by",
-        null=True,
-        blank=True,
-    )
-    created_on = models.DateTimeField(auto_now_add=True, blank=False, null=False)
-    last_edit_by = models.ForeignKey(
-        "users.CustomUser",
-        on_delete=models.CASCADE,
-        related_name="gmai_last_edit_by",
-        null=True,
-        blank=True,
-    )
-    last_edit_on = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         pass
@@ -2312,10 +2583,10 @@ class IndicationsForGMA(models.Model):
 
     @property
     def getIndicationList(self):
-        return IndicationsForGMA.objects.all().title
+        return IndicationsForGMA.objects.all().values_list('title', flat=True)
 
 
-class DiagnosisList(models.Model):
+class DiagnosisList(TimeStampedModel, UserTrackingMixin):
     abr = models.CharField(max_length=6, null=False, blank=False)
     title = models.TextField()
     description = models.TextField()
@@ -2327,147 +2598,431 @@ class DiagnosisList(models.Model):
         return str(self.title + " (" + self.title + ")")
 
 
-class Help(models.Model):
-    title = models.CharField(max_length=200, null=False, blank=False)
-    description = RichTextField(null=True, blank=True)
-    video_1 = models.FileField(upload_to="tutorials/", blank=True, null=True)
-    video_2 = models.FileField(upload_to="tutorials/", blank=True, null=True)
+class Help(TimeStampedModel, UserTrackingMixin):
+    """
+    Help and tutorial content model for the NDAS system
+    """
+    
+    title = models.CharField(
+        max_length=200, 
+        db_index=True,
+        verbose_name=_("Title"),
+        help_text=_("Title of the help content")
+    )
+    description = RichTextField(
+        null=True, 
+        blank=True,
+        verbose_name=_("Description"),
+        help_text=_("Detailed description of the help content")
+    )
+    video_1 = models.FileField(
+        upload_to="tutorials/%Y/%m/", 
+        blank=True, 
+        null=True,
+        verbose_name=_("Primary Video"),
+        help_text=_("Main tutorial video file")
+    )
+    video_2 = models.FileField(
+        upload_to="tutorials/%Y/%m/", 
+        blank=True, 
+        null=True,
+        verbose_name=_("Secondary Video"),
+        help_text=_("Additional tutorial video file")
+    )
+    is_active = models.BooleanField(
+        default=True,
+        db_index=True,
+        verbose_name=_("Is Active"),
+        help_text=_("Whether this help content is currently active")
+    )
+    display_order = models.PositiveIntegerField(
+        default=0,
+        db_index=True,
+        verbose_name=_("Display Order"),
+        help_text=_("Order in which help items should be displayed")
+    )
 
     class Meta:
-        pass
+        ordering = ['display_order', 'title']
+        verbose_name = _("Help Content")
+        verbose_name_plural = _("Help Contents")
+        indexes = [
+            models.Index(fields=['is_active', 'display_order']),
+            models.Index(fields=['title']),
+        ]
 
     def __str__(self):
         return self.title
 
+    def clean(self):
+        """Custom validation for Help model"""
+        super().clean()
+        if not self.title.strip():
+            raise ValidationError({
+                'title': _('Title cannot be empty or contain only whitespace.')
+            })
 
-class HINEAssessment(models.Model):
-    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, null=False)
+
+class HINEAssessment(TimeStampedModel, UserTrackingMixin):
+    """
+    Hammersmith Infant Neurological Examination (HINE) Assessment model
+    """
+    
+    patient = models.ForeignKey(
+        Patient, 
+        on_delete=models.CASCADE,
+        related_name='hine_assessments',
+        db_index=True,
+        verbose_name=_("Patient"),
+        help_text=_("Patient being assessed")
+    )
     date_of_assessment = models.DateTimeField(
-        auto_now_add=False, blank=False, null=False
+        db_index=True,
+        verbose_name=_("Assessment Date"),
+        help_text=_("Date and time when the HINE assessment was performed")
     )
-    score = models.SmallIntegerField(
-        verbose_name="HINE Score",
+    score = models.PositiveSmallIntegerField(
+        verbose_name=_("HINE Score"),
         validators=[MinValueValidator(0), MaxValueValidator(78)],
-        null=False,
-        blank=False,
+        db_index=True,
+        help_text=_("Total HINE score (0-78, higher scores indicate better neurological function)")
     )
-    assessment_done_by = models.CharField(max_length=200, null=False, blank=False)
-    comment = models.TextField(null=True, blank=True)
-    added_by = models.ForeignKey(
-        "users.CustomUser",
-        on_delete=models.CASCADE,
-        related_name="hine_added_user",
-        null=True,
+    assessment_done_by = models.CharField(
+        max_length=200,
+        db_index=True,
+        verbose_name=_("Assessed By"),
+        help_text=_("Name of the healthcare professional who conducted the assessment")
     )
-    added_on = models.DateTimeField(auto_now_add=True, blank=False, null=False)
-    last_edit_by = models.ForeignKey(
-        "users.CustomUser",
-        on_delete=models.CASCADE,
-        related_name="hine_created_user",
-        null=True,
+    comment = models.TextField(
+        null=True, 
+        blank=True,
+        verbose_name=_("Comments"),
+        help_text=_("Additional notes and observations from the assessment")
     )
-    last_edit_on = models.DateTimeField(auto_now=True, blank=True, null=True)
 
     class Meta:
-        pass
+        ordering = ['-date_of_assessment']
+        verbose_name = _("HINE Assessment")
+        verbose_name_plural = _("HINE Assessments")
+        indexes = [
+            models.Index(fields=['patient', '-date_of_assessment']),
+            models.Index(fields=['score', 'date_of_assessment']),
+            models.Index(fields=['assessment_done_by']),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['patient', 'date_of_assessment'],
+                name='unique_hine_assessment_per_patient_date'
+            )
+        ]
 
     def __str__(self):
-        return f"{{self.score}} - {{str(self.date_of_assessment)}}"
+        return f"{self.score} - {self.date_of_assessment.strftime('%Y-%m-%d')}"
+
+    def clean(self):
+        """Custom validation for HINE Assessment"""
+        super().clean()
+        
+        # Validate assessment date is not in the future
+        if self.date_of_assessment and self.date_of_assessment > timezone.now():
+            raise ValidationError({
+                'date_of_assessment': _('Assessment date cannot be in the future.')
+            })
+        
+        # Validate assessment date is not before patient's birth
+        if (self.date_of_assessment and self.patient and 
+            self.patient.dob_tob and
+            self.date_of_assessment < self.patient.dob_tob):
+            raise ValidationError({
+                'date_of_assessment': _('Assessment date cannot be before patient birth date.')
+            })
 
     @property
-    def getAssessmentAgeInMonths(self):
-        ageindays_months, ageindays_days = divmod(
-            (self.date_of_assessment - self.patient.dob_tob).days, 30
-        )
-        return f" {ageindays_months} Months and {ageindays_days} Days"
+    def assessment_age_in_months(self):
+        """Calculate patient age at time of assessment"""
+        if not self.date_of_assessment or not self.patient.dob_tob:
+            return "Unknown"
+        
+        age_in_days = (self.date_of_assessment - self.patient.dob_tob).days
+        months, days = divmod(age_in_days, 30)
+        return f"{months} months and {days} days"
 
     @property
-    def isBookmarked(self):
-        return Bookmark.objects.get(bookmark_type="HINE", object_id=self.id)
-
-    @property
-    def isNormal(self):
-        if self.score > 73:
-            return True
-        else:
+    def is_bookmarked(self):
+        """Check if this assessment is bookmarked"""
+        if not hasattr(self, 'pk') or not self.pk:
+            return False
+        try:
+            from .models import Bookmark  # Avoid circular import
+            return Bookmark.objects.filter(
+                bookmark_type="HINE", 
+                object_id=self.pk
+            ).exists()
+        except ImportError:
             return False
 
+    @property
+    def is_normal(self):
+        """Determine if HINE score indicates normal neurological function"""
+        return self.score > 73
 
-class DevelopmentalAssessment(models.Model):
-    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, null=False)
+    @property
+    def severity_category(self):
+        """Categorize HINE score severity"""
+        if self.score > 73:
+            return "Normal"
+        elif self.score > 60:
+            return "Mild Abnormality"
+        elif self.score > 40:
+            return "Moderate Abnormality"
+        else:
+            return "Severe Abnormality"
+
+
+class DevelopmentalAssessment(TimeStampedModel, UserTrackingMixin):
+    """
+    Comprehensive Developmental Assessment model for tracking multiple domains
+    """
+    
+    patient = models.ForeignKey(
+        Patient, 
+        on_delete=models.CASCADE,
+        related_name='developmental_assessments',
+        db_index=True,
+        verbose_name=_("Patient"),
+        help_text=_("Patient being assessed")
+    )
     date_of_assessment = models.DateTimeField(
-        auto_now_add=False, blank=False, null=False
+        db_index=True,
+        verbose_name=_("Assessment Date"),
+        help_text=_("Date and time when the developmental assessment was performed")
     )
-    gm_age_from = models.SmallIntegerField(null=True, blank=True)
-    gm_age_to = models.SmallIntegerField(null=True, blank=True)
-    gm_details = models.TextField(null=True, blank=True)
-    fmv_age_from = models.SmallIntegerField(null=True, blank=True)
-    fmv_age_to = models.SmallIntegerField(null=True, blank=True)
-    fmv_details = models.TextField(null=True, blank=True)
-    hsl_age_from = models.SmallIntegerField(null=True, blank=True)
-    hsl_age_to = models.SmallIntegerField(null=True, blank=True)
-    hsl_details = models.TextField(null=True, blank=True)
-    seb_age_from = models.SmallIntegerField(null=True, blank=True)
-    seb_age_to = models.SmallIntegerField(null=True, blank=True)
-    seb_details = models.TextField(null=True, blank=True)
-    assessment_done_by = models.CharField(max_length=200, null=False, blank=False)
-    comment = models.TextField(null=True, blank=True)
-    added_by = models.ForeignKey(
-        "users.CustomUser",
-        on_delete=models.CASCADE,
-        related_name="da_added_user",
-        null=True,
+    
+    # Gross Motor (GM) domain
+    gm_age_from = models.PositiveSmallIntegerField(
+        null=True, 
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(72)],
+        verbose_name=_("GM Age From (months)"),
+        help_text=_("Gross motor developmental age range start in months")
     )
-    added_on = models.DateTimeField(auto_now_add=True, blank=False, null=False)
-    last_edit_by = models.ForeignKey(
-        "users.CustomUser",
-        on_delete=models.CASCADE,
-        related_name="da_created_user",
-        null=True,
+    gm_age_to = models.PositiveSmallIntegerField(
+        null=True, 
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(72)],
+        verbose_name=_("GM Age To (months)"),
+        help_text=_("Gross motor developmental age range end in months")
     )
-    last_edit_on = models.DateTimeField(auto_now=True, blank=True, null=True)
-    isDxNormal = models.BooleanField(default=False)
+    gm_details = models.TextField(
+        null=True, 
+        blank=True,
+        verbose_name=_("GM Details"),
+        help_text=_("Detailed observations for gross motor development")
+    )
+    
+    # Fine Motor and Vision (FMV) domain
+    fmv_age_from = models.PositiveSmallIntegerField(
+        null=True, 
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(72)],
+        verbose_name=_("FMV Age From (months)"),
+        help_text=_("Fine motor and vision developmental age range start in months")
+    )
+    fmv_age_to = models.PositiveSmallIntegerField(
+        null=True, 
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(72)],
+        verbose_name=_("FMV Age To (months)"),
+        help_text=_("Fine motor and vision developmental age range end in months")
+    )
+    fmv_details = models.TextField(
+        null=True, 
+        blank=True,
+        verbose_name=_("FMV Details"),
+        help_text=_("Detailed observations for fine motor and vision development")
+    )
+    
+    # Hearing, Speech and Language (HSL) domain
+    hsl_age_from = models.PositiveSmallIntegerField(
+        null=True, 
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(72)],
+        verbose_name=_("HSL Age From (months)"),
+        help_text=_("Hearing, speech and language developmental age range start in months")
+    )
+    hsl_age_to = models.PositiveSmallIntegerField(
+        null=True, 
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(72)],
+        verbose_name=_("HSL Age To (months)"),
+        help_text=_("Hearing, speech and language developmental age range end in months")
+    )
+    hsl_details = models.TextField(
+        null=True, 
+        blank=True,
+        verbose_name=_("HSL Details"),
+        help_text=_("Detailed observations for hearing, speech and language development")
+    )
+    
+    # Social, Emotional and Behavioral (SEB) domain
+    seb_age_from = models.PositiveSmallIntegerField(
+        null=True, 
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(72)],
+        verbose_name=_("SEB Age From (months)"),
+        help_text=_("Social, emotional and behavioral developmental age range start in months")
+    )
+    seb_age_to = models.PositiveSmallIntegerField(
+        null=True, 
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(72)],
+        verbose_name=_("SEB Age To (months)"),
+        help_text=_("Social, emotional and behavioral developmental age range end in months")
+    )
+    seb_details = models.TextField(
+        null=True, 
+        blank=True,
+        verbose_name=_("SEB Details"),
+        help_text=_("Detailed observations for social, emotional and behavioral development")
+    )
+    
+    assessment_done_by = models.CharField(
+        max_length=200,
+        db_index=True,
+        verbose_name=_("Assessed By"),
+        help_text=_("Name of the healthcare professional who conducted the assessment")
+    )
+    comment = models.TextField(
+        null=True, 
+        blank=True,
+        verbose_name=_("Comments"),
+        help_text=_("Additional notes and observations from the assessment")
+    )
+    is_dx_normal = models.BooleanField(
+        default=False,
+        db_index=True,
+        verbose_name=_("Is Diagnosis Normal"),
+        help_text=_("Whether the overall developmental assessment is considered normal")
+    )
 
     class Meta:
-        pass
+        ordering = ['-date_of_assessment']
+        verbose_name = _("Developmental Assessment")
+        verbose_name_plural = _("Developmental Assessments")
+        indexes = [
+            models.Index(fields=['patient', '-date_of_assessment']),
+            models.Index(fields=['is_dx_normal', 'date_of_assessment']),
+            models.Index(fields=['assessment_done_by']),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['patient', 'date_of_assessment'],
+                name='unique_dev_assessment_per_patient_date'
+            )
+        ]
 
     def __str__(self):
-        return f"{{self.patient.baby_name}} - {{str(self.date_of_assessment)}}"
+        return f"{self.patient.baby_name} - {self.date_of_assessment.strftime('%Y-%m-%d')}"
+
+    def clean(self):
+        """Custom validation for Developmental Assessment"""
+        super().clean()
+        
+        # Validate assessment date is not in the future
+        if self.date_of_assessment and self.date_of_assessment > timezone.now():
+            raise ValidationError({
+                'date_of_assessment': _('Assessment date cannot be in the future.')
+            })
+        
+        # Validate assessment date is not before patient's birth
+        if (self.date_of_assessment and self.patient and 
+            self.patient.dob_tob and
+            self.date_of_assessment < self.patient.dob_tob):
+            raise ValidationError({
+                'date_of_assessment': _('Assessment date cannot be before patient birth date.')
+            })
+        
+        # Validate age ranges for each domain
+        domains = [
+            ('gm_age_from', 'gm_age_to', 'Gross Motor'),
+            ('fmv_age_from', 'fmv_age_to', 'Fine Motor and Vision'),
+            ('hsl_age_from', 'hsl_age_to', 'Hearing, Speech and Language'),
+            ('seb_age_from', 'seb_age_to', 'Social, Emotional and Behavioral'),
+        ]
+        
+        for from_field, to_field, domain_name in domains:
+            from_val = getattr(self, from_field)
+            to_val = getattr(self, to_field)
+            
+            if from_val is not None and to_val is not None and from_val > to_val:
+                raise ValidationError({
+                    to_field: _(f'{domain_name} age range "to" value must be greater than or equal to "from" value.')
+                })
 
     @property
-    def getAssessmentAgeInMonths(self):
-        ageindays_months, ageindays_days = divmod(
-            (self.date_of_assessment - self.patient.dob_tob).days, 30
-        )
-        return f" {ageindays_months} Months and {ageindays_days} Days"
+    def assessment_age_in_months(self):
+        """Calculate patient age at time of assessment"""
+        if not self.date_of_assessment or not self.patient.dob_tob:
+            return "Unknown"
+        
+        age_in_days = (self.date_of_assessment - self.patient.dob_tob).days
+        months, days = divmod(age_in_days, 30)
+        return f"{months} months and {days} days"
 
     @property
-    def isNormal(self):
-        ageindays_months, xx = divmod(
-            (self.date_of_assessment - self.patient.dob_tob).days, 30
-        )
-        var_gm = (
-            ageindays_months <= self.gm_age_to and ageindays_months >= self.gm_age_from
-        )
-        var_fv = (
-            ageindays_months <= self.fmv_age_to
-            and ageindays_months >= self.fmv_age_from
-        )
-        var_hsl = (
-            ageindays_months <= self.hsl_age_to
-            and ageindays_months >= self.hsl_age_from
-        )
-        var_seb = (
-            ageindays_months <= self.seb_age_to
-            and ageindays_months >= self.seb_age_from
-        )
-
-        return var_gm and var_fv and var_hsl and var_seb
+    def is_normal(self):
+        """Determine if all developmental domains are within normal range for patient's age"""
+        if not self.date_of_assessment or not self.patient.dob_tob:
+            return False
+        
+        age_in_days = (self.date_of_assessment - self.patient.dob_tob).days
+        age_in_months, _ = divmod(age_in_days, 30)
+        
+        # Check each domain against patient's actual age
+        domains = [
+            (self.gm_age_from, self.gm_age_to),
+            (self.fmv_age_from, self.fmv_age_to),
+            (self.hsl_age_from, self.hsl_age_to),
+            (self.seb_age_from, self.seb_age_to),
+        ]
+        
+        for age_from, age_to in domains:
+            if age_from is not None and age_to is not None:
+                if not (age_from <= age_in_months <= age_to):
+                    return False
+        
+        return True
 
     @property
-    def isBookmarked(self):
-        return Bookmark.objects.get(bookmark_type="DA", object_id=self.id)
+    def is_bookmarked(self):
+        """Check if this assessment is bookmarked"""
+        if not hasattr(self, 'pk') or not self.pk:
+            return False
+        try:
+            from .models import Bookmark  # Avoid circular import
+            return Bookmark.objects.filter(
+                bookmark_type="DA", 
+                object_id=self.pk
+            ).exists()
+        except ImportError:
+            return False
+
+    @property
+    def developmental_summary(self):
+        """Get a summary of developmental domains"""
+        domains = []
+        if self.gm_age_from is not None and self.gm_age_to is not None:
+            domains.append(f"GM: {self.gm_age_from}-{self.gm_age_to}m")
+        if self.fmv_age_from is not None and self.fmv_age_to is not None:
+            domains.append(f"FMV: {self.fmv_age_from}-{self.fmv_age_to}m")
+        if self.hsl_age_from is not None and self.hsl_age_to is not None:
+            domains.append(f"HSL: {self.hsl_age_from}-{self.hsl_age_to}m")
+        if self.seb_age_from is not None and self.seb_age_to is not None:
+            domains.append(f"SEB: {self.seb_age_from}-{self.seb_age_to}m")
+        
+        return " | ".join(domains) if domains else "No developmental data"
 
     def save(self, *args, **kwargs):
-        self.isDxNormal = self.isNormal
+        """Override save to automatically update is_dx_normal"""
+        self.is_dx_normal = self.is_normal
         super().save(*args, **kwargs)

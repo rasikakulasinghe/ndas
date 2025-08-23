@@ -64,8 +64,8 @@ class IndicationsForGMAAdmin(admin.ModelAdmin):
     filter_horizontal = ()
     list_filter = ("level",)
     fieldsets = ()
-    readonly_fields = ("created_by", "created_on",
-                       "last_edit_by", "last_edit_on")
+    readonly_fields = ("added_by", "created_at",
+                       "last_edit_by", "updated_at")
     fields = (
         "title",
         "level",
@@ -76,23 +76,23 @@ class VideoAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "patient",
-        "caption",
+        "title",
         "recorded_on",
-        "uploaded_on",
-        "uploaded_by",
+        "created_at",
+        "added_by",
     )
     ordering = ("-id",)
     filter_horizontal = ()
-    list_filter = ("uploaded_by",)
+    list_filter = ("added_by",)
     fieldsets = ()
-    readonly_fields = ("last_edit_by", "last_edit_on")
+    readonly_fields = ("last_edit_by", "updated_at")
     fields = (
         "patient",
-        "caption",
+        "title",
         "recorded_on",
-        "video",
+        "original_video",
         "description",
-        "uploaded_by",
+        "added_by",
     )
 
 class GMAssessmentAdmin(admin.ModelAdmin):
@@ -140,8 +140,8 @@ class BookmarkAdmin(admin.ModelAdmin):
         "description",
         "bookmark_type",
         "owner",
-        "created_on",
-        "last_edit_on",
+        "created_at",
+        "updated_at",
     )
     ordering = ("-id",)
     filter_horizontal = ()
@@ -163,8 +163,8 @@ class AttachmentAdmin(admin.ModelAdmin):
         "title",
         "description",
         "attachment_type",
-        "uploaded_by",
-        "uploaded_on",
+        "added_by",
+        "created_at",
     )
     ordering = ("-id",)
     filter_horizontal = ()
@@ -174,10 +174,10 @@ class AttachmentAdmin(admin.ModelAdmin):
     fields = (
         "title",
         "description",
-        'attachment',
+        'file',
         "attachment_type",
         "patient",
-        "uploaded_by",
+        "added_by",
         )
 
 class CDICRecordAdmin(admin.ModelAdmin):
@@ -225,9 +225,9 @@ class HINEAssessmentAdmin(admin.ModelAdmin):
         "assessment_done_by",
         "comment",
         "added_by",
-        "added_on",
+        "created_at",
         "last_edit_by",
-        "last_edit_on"
+        "updated_at"
     )
     ordering = ("-id",)
     filter_horizontal = ()
@@ -247,11 +247,11 @@ class DevelopmentalAssessmentAdmin(admin.ModelAdmin):
     list_display = (
         "patient",
         "date_of_assessment",
-        "isDxNormal",
+        "is_dx_normal",
         "assessment_done_by",
         "comment",
         "added_by",
-        "added_on",
+        "created_at",
     )
     ordering = ("-id",)
     filter_horizontal = ()
