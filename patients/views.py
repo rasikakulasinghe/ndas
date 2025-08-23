@@ -53,7 +53,7 @@ def dashboard(request):
     
     dx_gm_assessments_count = getCountZeroIfNone(GMAssessment.objects.exclude(diagnosis_conclusion='NORMAL'))
     dx_hine_assessments_count = getCountZeroIfNone(HINEAssessment.objects.filter(score__lt=73))
-    dx_da_assessments_count = getCountZeroIfNone(DevelopmentalAssessment.objects.filter(isDxNormal=False))
+    dx_da_assessments_count = getCountZeroIfNone(DevelopmentalAssessment.objects.filter(is_dx_normal=False))
 
     # get data for bar chart
     bar_chart_monthly_admissions = get_admissions_data_barchart()
@@ -186,7 +186,6 @@ def patient_add(request):
                 var_pt_add = data_form.save()
                 var_pt_add.added_by = request.user
                 var_pt_add.last_edit_by = None
-                var_pt_add.last_edit_on = None
                 var_pt_add.save()
                 messages.success(request, 'New patient added succussfully...')
                 return redirect('manage-patients')
@@ -451,18 +450,17 @@ def video_add(request, pk):
                         # save file object
                         temp_file = Video(
                         patient = selected_patient,
-                        caption = caption,
+                        title = caption,
                         recorded_on = new_recorded_on,
                         description = var_description,
-                        uploaded_by = request.user,
-                        last_edit_by = None,
-                        last_edit_on = None,)
+                        added_by = request.user,
+                        last_edit_by = None,)
 
                         temp_file.save()
                         
                         with open(output_file_path, 'rb') as f:
-                            temp_file.video.save(output_file_path, File(f))
-                        temp_file.save(update_fields=["video"])
+                            temp_file.original_video.save(output_file_path, File(f))
+                        temp_file.save(update_fields=["original_video"])
                         temp_file.save()
                         
                         # Delete the saved file from the temporary location
@@ -480,13 +478,12 @@ def video_add(request, pk):
                     # in case of no need to convert the file save file object
                     temp_file = Video(
                     patient = selected_patient,
-                    caption = caption,
-                    video = uploaded_file,
+                    title = caption,
+                    original_video = uploaded_file,
                     recorded_on = new_recorded_on,
                     description = var_description,
-                    uploaded_by = request.user,
-                    last_edit_by = None,
-                    last_edit_on = None,)
+                    added_by = request.user,
+                    last_edit_by = None,)
                     
                     temp_file.save()
                     
@@ -545,8 +542,8 @@ def video_edit(request, f_id):
                     video_form_updated.save()
 
                     uploaded_file_object.last_edit_by = request.user
-                    uploaded_file_object.last_edit_on = localtime(now())
-                    uploaded_file_object.save(update_fields=['last_edit_by', 'last_edit_on']) 
+                    uploaded_file_object.last_edit_by = request.user
+                    uploaded_file_object.save(update_fields=['last_edit_by']) 
 
                     new_updated_file_object = Video.objects.get(id=f_id)
                     new_updated_file_object.save()
@@ -785,7 +782,6 @@ def bookmark_add(request, item_id, bookmark_type):
                 description = description,
                 owner = request.user,
                 last_edit_by = None,
-                last_edit_on = None,
                 )
 
                 messages.success(request, 'New bookmark created succusfully')
@@ -836,8 +832,8 @@ def bookmark_edit(request, pk):
             selected_bm.title = title
             selected_bm.description = description
             selected_bm.last_edit_by = request.user
-            selected_bm.last_edit_on = localtime(now())
-            selected_bm.save(update_fields=['title', 'description', 'last_edit_by', 'last_edit_on']) 
+            selected_bm.last_edit_by = request.user
+            selected_bm.save(update_fields=['title', 'description', 'last_edit_by']) 
             selected_bm.save()
             messages.success(request, 'Bookmark details are updated succesfully...')
             return redirect('bookmark-view', pk=selected_bm.id)
@@ -887,10 +883,8 @@ def attachment_add(request, pid):
                 attachment = attachment,
                 attachment_type = getAttachmentType(attachment),
                 description = description,
-                uploaded_by = request.user,
-                uploaded_on = getCurrentDateTime(),
-                last_edit_by = None,
-                last_edit_on = None,)
+                added_by = request.user,
+                last_edit_by = None,)
 
                 temp_file.save()
 
@@ -928,8 +922,8 @@ def attachment_edit(request, pk):
                     sa.attachment_type = getAttachmentType(attachment)
 
                     sa.last_edit_by = request.user
-                    sa.last_edit_on = localtime(now())
-                    sa.save(update_fields=['attachment_type', 'last_edit_by', 'last_edit_on'])
+                    sa.last_edit_by = request.user
+                    sa.save(update_fields=['attachment_type', 'last_edit_by'])
                     sa.save()
                     
                     messages.success(request, 'Attachment details are updated succesfully...')

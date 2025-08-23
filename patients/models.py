@@ -486,6 +486,11 @@ class Patient(TimeStampedModel, UserTrackingMixin):
         return latest.is_dx_normal if latest else True
 
     @property
+    def isDiagnosisNormal(self):
+        """Check if all latest assessments are normal (backward compatibility)"""
+        return self.isLastGMANormal and self.isLastHINENormal and self.isLastDANormal
+
+    @property
     def isBookmarked(self):
         """Check if patient is bookmarked"""
         if not hasattr(self, "pk") or not self.pk:
@@ -978,6 +983,22 @@ class GMAssessment(TimeStampedModel, UserTrackingMixin):
             .select_related("patient", "video_file")
             .prefetch_related("diagnosis")
         )
+
+    # Backward compatibility aliases for templates using camelCase
+    @property
+    def isDiagnosisNormal(self):
+        """Alias for is_diagnosis_normal (backward compatibility)"""
+        return self.is_diagnosis_normal
+
+    @property
+    def isBookmarked(self):
+        """Alias for is_bookmarked (backward compatibility)"""
+        return self.is_bookmarked
+
+    @property
+    def getAssessmentAge(self):
+        """Alias for assessment_age (backward compatibility)"""
+        return self.assessment_age
 
 
 class CDICRecord(TimeStampedModel, UserTrackingMixin):
@@ -2901,6 +2922,7 @@ class DevelopmentalAssessment(TimeStampedModel, UserTrackingMixin):
     is_dx_normal = models.BooleanField(
         default=False,
         db_index=True,
+        db_column="isDxNormal",
         verbose_name=_("Is Diagnosis Normal"),
         help_text=_("Whether the overall developmental assessment is considered normal")
     )
@@ -3021,6 +3043,22 @@ class DevelopmentalAssessment(TimeStampedModel, UserTrackingMixin):
             domains.append(f"SEB: {self.seb_age_from}-{self.seb_age_to}m")
         
         return " | ".join(domains) if domains else "No developmental data"
+
+    # Backward compatibility aliases for templates using camelCase
+    @property
+    def isNormal(self):
+        """Alias for is_normal (backward compatibility)"""
+        return self.is_normal
+
+    @property
+    def isBookmarked(self):
+        """Alias for is_bookmarked (backward compatibility)"""
+        return self.is_bookmarked
+
+    @property
+    def getAssessmentAgeInMonths(self):
+        """Alias for assessment_age_in_months (backward compatibility)"""
+        return self.assessment_age_in_months
 
     def save(self, *args, **kwargs):
         """Override save to automatically update is_dx_normal"""

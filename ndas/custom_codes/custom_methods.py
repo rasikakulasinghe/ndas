@@ -28,7 +28,7 @@ def get_all_diagnosis_data():
 
     dx_gma_data = getCountZeroIfNone(GMAssessment.objects.filter(diagnosis_conclusion='ABNORMAL'))
     dx_hine_data = getCountZeroIfNone(HINEAssessment.objects.filter(score__lt = 73))
-    dx_da_data = getCountZeroIfNone(DevelopmentalAssessment.objects.filter(isDxNormal=False))
+    dx_da_data = getCountZeroIfNone(DevelopmentalAssessment.objects.filter(is_dx_normal=False))
 
     # Create a dictionary mapping diagnosis titles to patient counts
     diagnosis_data = {'GMA': dx_gma_data,
@@ -56,12 +56,12 @@ def get_userStats():
     
     for u_o in user_list:
         user_stats_val = {'Patient': getCountZeroIfNone(pt_list.filter(added_by=u_o)),
-        'Video': getCountZeroIfNone(video_list.filter(uploaded_by=u_o)),
+        'Video': getCountZeroIfNone(video_list.filter(added_by=u_o)),
         'GMA': getCountZeroIfNone(gma_list.filter(added_by=u_o)),
         'HINE': getCountZeroIfNone(hine_list.filter(added_by=u_o)),
         'DA': getCountZeroIfNone(da_list.filter(added_by=u_o)),
         'CDIC': getCountZeroIfNone(cdic_list.filter(added_by=u_o)),
-        'Attachment': getCountZeroIfNone(attachments_list.filter(uploaded_by=u_o)),
+        'Attachment': getCountZeroIfNone(attachments_list.filter(added_by=u_o)),
         'Bookmark': getCountZeroIfNone(bookmark_list.filter(owner=u_o)),
         }
         
@@ -192,7 +192,7 @@ def get_video_thumbnail_path(instance, filename):
 def get_attachment_path_file_name(instance, filename):
     ext = filename.split('.')[-1]
     
-    filename = f"{instance.title}_{getAttachmentType(filename)}_{instance.uploaded_by}_{getCurrentDateTime()}.{ext}"
+    filename = f"{instance.title}_{getAttachmentType(filename)}_{instance.added_by}_{getCurrentDateTime()}.{ext}"
     return os.path.join('attachments/', filename)
 
 # get attachment type according to file extension
@@ -241,17 +241,17 @@ def getPatientList(pts_type):
     elif pts_type == PtStatus.DISCHARGED:
         return var_ptl.filter(cdicrecord__is_discharged=True).distinct()
     elif pts_type == PtStatus.DIAGNOSED:
-        return var_ptl.filter(Q(gmassessment__diagnosis_conclusion='ABNORMAL') | Q(hineassessment__score__lt = 73) | Q(developmentalassessment__isDxNormal=False)).distinct()
+        return var_ptl.filter(Q(gmassessment__diagnosis_conclusion='ABNORMAL') | Q(hineassessment__score__lt = 73) | Q(developmentalassessment__is_dx_normal=False)).distinct()
     elif pts_type == PtStatus.DX_NORMAL:
-        return var_ptl.exclude(Q(gmassessment__diagnosis_conclusion='ABNORMAL') and Q(hineassessment__score__lt = 73) and Q(developmentalassessment__isDxNormal=False)).exclude(videos__isnull=True).distinct()
+        return var_ptl.exclude(Q(gmassessment__diagnosis_conclusion='ABNORMAL') and Q(hineassessment__score__lt = 73) and Q(developmentalassessment__is_dx_normal=False)).exclude(videos__isnull=True).distinct()
     elif pts_type == PtStatus.DX_GMA_ABNORMAL:
         return var_ptl.filter(gmassessment__diagnosis_conclusion='ABNORMAL').distinct()
     elif pts_type == PtStatus.DX_GMA_NORMAL:
         return var_ptl.filter(gmassessment__diagnosis_conclusion='NORMAL').distinct()
     elif pts_type == PtStatus.DX_DA_NORMAL:
-        return var_ptl.filter(developmentalassessment__isDxNormal=True).distinct()
+        return var_ptl.filter(developmentalassessment__is_dx_normal=True).distinct()
     elif pts_type == PtStatus.DX_DA_ABNORMAL:
-        return var_ptl.filter(developmentalassessment__isDxNormal=False).distinct()
+        return var_ptl.filter(developmentalassessment__is_dx_normal=False).distinct()
     elif pts_type == PtStatus.DX_HINE:
         return var_ptl.filter(Q(hineassessment__score__lt = 73)).distinct()
     else:
