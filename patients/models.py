@@ -339,23 +339,6 @@ class Patient(TimeStampedModel, UserTrackingMixin):
             ),
         ]
 
-        # Database constraints
-        constraints = [
-            models.CheckConstraint(
-                check=models.Q(birth_weight__gte=300)
-                & models.Q(birth_weight__lte=8000),
-                name="valid_birth_weight",
-            ),
-            models.CheckConstraint(
-                check=models.Q(pog_wks__gte=20) & models.Q(pog_wks__lte=44),
-                name="valid_pog_weeks",
-            ),
-            models.CheckConstraint(
-                check=models.Q(pog_days__gte=0) & models.Q(pog_days__lte=6),
-                name="valid_pog_days",
-            ),
-        ]
-
     def __str__(self):
         return f"{self.baby_name} | {self.pin or 'No PIN'}"
 
@@ -833,20 +816,6 @@ class GMAssessment(TimeStampedModel, UserTrackingMixin):
             ),
         ]
 
-        # Database constraints
-        constraints = [
-            models.CheckConstraint(
-                check=models.Q(date_of_assessment__lte=timezone.now()),
-                name="gma_valid_assessment_date",
-            ),
-            models.CheckConstraint(
-                check=models.Q(
-                    next_assessment_date__gte=models.F("date_of_assessment__date")
-                ),
-                name="gma_valid_next_assessment_date",
-            ),
-        ]
-
     def __str__(self):
         return (
             f"{self.date_of_assessment.strftime('%Y-%m-%d')} | {self.patient.baby_name}"
@@ -1114,33 +1083,6 @@ class CDICRecord(TimeStampedModel, UserTrackingMixin):
             models.Index(
                 fields=["assessment_done_by", "assessment_date"],
                 name="cdic_assessor_idx",
-            ),
-        ]
-
-        # Database constraints for data integrity
-        constraints = [
-            models.CheckConstraint(
-                check=models.Q(assessment_date__lte=timezone.now().date()),
-                name="cdic_valid_assessment_date",
-            ),
-            models.CheckConstraint(
-                check=models.Q(next_appointment_date__gte=models.F("assessment_date"))
-                | models.Q(next_appointment_date__isnull=True),
-                name="cdic_valid_next_appointment_date",
-            ),
-            models.CheckConstraint(
-                check=models.Q(discharge_date__gte=models.F("assessment_date"))
-                | models.Q(discharge_date__isnull=True),
-                name="cdic_valid_discharge_date",
-            ),
-            models.CheckConstraint(
-                check=models.Q(is_discharged=False)
-                | (
-                    models.Q(is_discharged=True)
-                    & models.Q(discharge_date__isnull=False)
-                    & models.Q(discharged_by__isnull=False)
-                ),
-                name="cdic_discharge_completeness",
             ),
         ]
 
@@ -1487,15 +1429,6 @@ class Video(TimeStampedModel, UserTrackingMixin):
             models.Index(fields=["added_by", "-created_at"]),
             models.Index(fields=["recorded_on"]),
             models.Index(fields=["is_public", "access_level"]),
-        ]
-        constraints = [
-            models.CheckConstraint(
-                check=models.Q(file_size__gte=0), name="positive_file_size"
-            ),
-            models.CheckConstraint(
-                check=models.Q(compressed_file_size__gte=0),
-                name="positive_compressed_file_size",
-            ),
         ]
 
     def __str__(self):
@@ -1919,18 +1852,6 @@ class Attachment(TimeStampedModel, UserTrackingMixin):
             ),
         ]
 
-        # Database constraints for data integrity
-        constraints = [
-            models.CheckConstraint(
-                check=models.Q(file_size__gte=0),
-                name="attachment_positive_file_size",
-            ),
-            models.CheckConstraint(
-                check=models.Q(title__gt=''),
-                name="attachment_title_not_empty",
-            ),
-        ]
-
     def __str__(self):
         patient_name = self.patient.baby_name if self.patient else "No Patient"
         attachment_type_display = dict(ATTACHMENT_TYPE_CHOICES).get(
@@ -2312,23 +2233,6 @@ class Bookmark(TimeStampedModel, UserTrackingMixin):
             models.Index(
                 fields=["title", "bookmark_type"], 
                 name="bookmark_title_type_idx"
-            ),
-        ]
-        
-        # Database constraints for data integrity
-        constraints = [
-            models.UniqueConstraint(
-                fields=["bookmark_type", "object_id", "owner"],
-                name="unique_bookmark_per_user",
-                violation_error_message=_("You have already bookmarked this item."),
-            ),
-            models.CheckConstraint(
-                check=models.Q(title__gt=''),
-                name="bookmark_title_not_empty",
-            ),
-            models.CheckConstraint(
-                check=models.Q(object_id__gte=1),
-                name="bookmark_valid_object_id",
             ),
         ]
 
@@ -2730,12 +2634,6 @@ class HINEAssessment(TimeStampedModel, UserTrackingMixin):
             models.Index(fields=['score', 'date_of_assessment']),
             models.Index(fields=['assessment_done_by']),
         ]
-        constraints = [
-            models.UniqueConstraint(
-                fields=['patient', 'date_of_assessment'],
-                name='unique_hine_assessment_per_patient_date'
-            )
-        ]
 
     def __str__(self):
         return f"{self.score} - {self.date_of_assessment.strftime('%Y-%m-%d')}"
@@ -2935,12 +2833,6 @@ class DevelopmentalAssessment(TimeStampedModel, UserTrackingMixin):
             models.Index(fields=['patient', '-date_of_assessment']),
             models.Index(fields=['is_dx_normal', 'date_of_assessment']),
             models.Index(fields=['assessment_done_by']),
-        ]
-        constraints = [
-            models.UniqueConstraint(
-                fields=['patient', 'date_of_assessment'],
-                name='unique_dev_assessment_per_patient_date'
-            )
         ]
 
     def __str__(self):
