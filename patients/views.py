@@ -930,13 +930,18 @@ def assessment_manager_by_patients(request, pk):
 
 @login_required(login_url='user-login')
 def help_home(request):
-    articles = Help.objects.all()
+    articles = Help.objects.filter(is_active=True).order_by('display_order', 'title')
     return render (request, 'help/home.html', {'articles' : articles})
 
 @login_required(login_url='user-login')
 def help_article(request, pk):
-    article = Help.objects.get(id=pk)
-    articles = Help.objects.all()
+    try:
+        article = Help.objects.get(id=pk)
+    except Help.DoesNotExist:
+        messages.error(request, 'Help article not found.')
+        return redirect('help-home')
+    
+    articles = Help.objects.filter(is_active=True).order_by('display_order', 'title')
     return render (request, 'help/article.html', {'article' : article, 'articles' : articles})
 
 @login_required(login_url='user-login')
