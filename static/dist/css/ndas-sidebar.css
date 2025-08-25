@@ -1,0 +1,181 @@
+/* AdminLTE 3.x Compatible Sidebar Styles */
+/* Minimal overrides to maintain NDAS branding while keeping AdminLTE standards */
+
+/* User panel enhancement - keep NDAS specific styling */
+.user-panel .info small {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    display: block;
+    margin-top: 2px;
+}
+
+/* Brand logo hover effect - subtle enhancement */
+.brand-link .brand-image {
+    transition: transform 0.15s ease;
+}
+
+.brand-link:hover .brand-image {
+    transform: scale(1.05);
+}
+
+/* Minimal responsive enhancements */
+@media (max-width: 768px) {
+    .nav-sidebar .nav-item .nav-link {
+        padding: 0.5rem 1rem;
+    }
+    
+    .nav-header {
+        padding: 0.5rem 1rem;
+        font-size: 0.7rem;
+    }
+}
+
+/* Icon Enhancements */
+.nav-sidebar .nav-icon {
+  transition: all 0.3s ease;
+  width: 20px;
+  text-align: center;
+}
+
+.nav-sidebar .nav-link:hover .nav-icon {
+  transform: scale(1.1);
+}
+
+/* Special styling for logout */
+.nav-sidebar .nav-link#nav-logout:hover {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+  border-left: 3px solid #dc3545;
+}
+
+/* Submenu Enhancements */
+.nav-treeview {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+  margin: 3px 8px;
+  padding: 5px 0;
+}
+
+.nav-treeview .nav-item .nav-link {
+  margin: 1px 5px;
+  padding-left: 35px;
+  font-size: 0.9rem;
+}
+
+.nav-treeview .nav-item .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-left: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.nav-treeview .nav-item .nav-link.active {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  border-left: 3px solid #ffffff;
+  font-weight: 500;
+}
+
+/* Menu Animation Enhancements */
+.nav-item.menu-is-opening > .nav-treeview {
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Sidebar Search Enhancements */
+.sidebar-search-results {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.form-control-sidebar {
+  transition: all 0.3s ease;
+}
+
+.form-control-sidebar:focus {
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive Improvements */
+@media (max-width: 767.98px) {
+  .nav-header {
+    font-size: 0.7rem;
+    padding: 6px 12px;
+  }
+  
+  .nav-sidebar .nav-item .nav-link {
+    margin: 1px 4px;
+    padding: 8px 12px;
+  }
+}
+
+/* Dark Theme Adjustments */
+.sidebar-dark-primary {
+  background: linear-gradient(180deg, #343a40 0%, #2c3136 100%);
+}
+
+/* Collapsed Sidebar Enhancements */
+.sidebar-collapse .nav-sidebar .nav-link p {
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-collapse .nav-sidebar .nav-item:hover .nav-link {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Tooltip for collapsed sidebar */
+.sidebar-collapse .nav-sidebar .nav-link[title] {
+  position: relative;
+}
+
+/* Badge support for future notifications */
+.nav-link .badge {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  margin-left: auto;
+}
+
+/* Accessibility Improvements */
+.nav-sidebar .nav-link:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .nav-header {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff !important;
+  }
+  
+  .nav-sidebar .nav-item .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.3) !important;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .nav-sidebar .nav-item .nav-link,
+  .nav-sidebar .nav-icon,
+  .brand-link .brand-image {
+    transition: none;
+  }
+  
+  .nav-item.menu-is-opening > .nav-treeview {
+    animation: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .main-sidebar {
+    display: none;
+  }
+}

@@ -1,118 +1,296 @@
 {% load static %}
 
+<!-- Main Sidebar Container -->
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
-{% comment %}   <!-- Brand Logo -->
-  <a href="{% static 'index3.html" class="brand-link">
-    <img
-      src="{% static 'dist/img/AdminLTELogo.png' %}"
-      alt="RLM Logo"
-      class="brand-image img-circle elevation-3"
-      style="opacity: 0.8"
-    />
-    <span class="brand-text font-weight-light">Remote Loan Manager</span>
-  </a> {% endcomment %}
+  <!-- Brand Logo -->
+  <a href="{% url 'home' %}" class="brand-link">
+    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23007bff'%3E%3Cpath d='M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2M21 9V7L15 1H5C3.9 1 3 1.9 3 3V21C3 22.1 3.9 23 5 23H19C20.1 23 21 22.1 21 21V9M19 9H14V4H19V9Z'/%3E%3C/svg%3E" alt="NDAS Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+    <span class="brand-text font-weight-light">NDAS</span>
+  </a>
 
   <!-- Sidebar -->
   <div class="sidebar">
     <!-- Sidebar user panel (optional) -->
     <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-      <div class="image"><a href="{% url 'user-view' user.id %}">
-      {% if user.profile_picture_url %}
-      <img src="{{user.profile_picture_url}}" class="img-circle elevation-2" alt="User Image" style="width: 33px; height: 33px; object-fit: cover;"/>
-      {% else %}
-      <div class="img-circle elevation-2 d-flex align-items-center justify-content-center bg-secondary" style="width: 33px; height: 33px; color: white;">
-        <i class="fas fa-user"></i>
+      <div class="image">
+        {% if user.profile_picture_url %}
+          <img src="{{user.profile_picture_url}}" class="img-circle elevation-2" alt="User Image">
+        {% else %}
+          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23adb5bd'%3E%3Cpath d='M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z'/%3E%3C/svg%3E" class="img-circle elevation-2" alt="User Image">
+        {% endif %}
       </div>
-      {% endif %}
-      </a></div>
-      <div class="info"><a href="{% url 'user-view' user.id %}" class="d-block"> {{user.username}}</a></div>
+      <div class="info">
+        <a href="{% url 'user-view' user.id %}" class="d-block">{{user.get_full_name|default:user.username}}</a>
+        <small class="text-muted">{{user.get_position_display|default:"User"}}</small>
+      </div>
     </div>
-    {% comment %} {% else %}
-    <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-      <div class="image"><a href="{% url 'user-view' user.id %}">
-      {% if user.profile_picture_url %}
-      <img src="{{user.profile_picture_url}}" class="img-circle elevation-2" alt="User Image" style="width: 33px; height: 33px; object-fit: cover;"/>
-      {% else %}
-      <div class="img-circle elevation-2 d-flex align-items-center justify-content-center bg-secondary" style="width: 33px; height: 33px; color: white;">
-        <i class="fas fa-user"></i>
-      </div>
-      {% endif %}
-      </a></div>
-      <div class="info"><a href="{% url 'user-view' user.id %}" class="d-block"> {{user.username}}</a></div>
-    </div> {% endcomment %}
 
-{% comment %}     <!-- SidebarSearch Form -->
+    <!-- SidebarSearch Form -->
     <div class="form-inline">
       <div class="input-group" data-widget="sidebar-search">
-        <input
-          class="form-control form-control-sidebar"
-          type="search"
-          placeholder="Search"
-          aria-label="Search"
-        />
+        <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
         <div class="input-group-append">
           <button class="btn btn-sidebar">
             <i class="fas fa-search fa-fw"></i>
           </button>
         </div>
       </div>
-    </div> {% endcomment %}
+    </div>
 
     <!-- Sidebar Menu -->
-    <nav class="mt-2"><ul
-        class="nav nav-pills nav-sidebar flex-column"
-        data-widget="treeview"
-        role="menu"
-        data-accordion="true"
-      >
+    <nav class="mt-2">
+      <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+        <!-- Add icons to the links using the .nav-icon class
+             with font-awesome or any other icon font library -->
+        
+        <!-- Dashboard -->
+        <li class="nav-item">
+          <a href="{% url 'home' %}" class="nav-link" id="nav-home">
+            <i class="nav-icon fas fa-tachometer-alt"></i>
+            <p>Dashboard</p>
+          </a>
+        </li>
 
-      <!-- Add icons to the links using the .nav-icon class with font-awesome or any other icon font library -->
-      <li class="nav-item menu-open">
-        <a href="#" class="nav-link active"><i class="nav-icon fas fa-th-large"></i><p>Records<i class="right fas fa-angle-left"></i></p></a>
-        <ul class="nav nav-treeview">
-          <li class="nav-item"><a href="{% url 'home' %}" class="nav-link"><i class="right fas fa-home"></i><p>Home</p></a></li>
-          <li class="nav-item"><a href="{% url 'search-start' %}" class="nav-link"><i class="right fas fa-search"></i><p>Advanced Search</p></a></li>
-          <li class="nav-item"><a href="{% url 'add-patient' %}" class="nav-link"><i class="right fas fa-circle fa-plus"></i><p>Add New Patient</p></a></li>
-          <li class="nav-item"><a href="{% url 'assessment-manager' %}" class="nav-link"><i class="right fas fa-tasks"></i><p>GM Assessment Manager</p></a></li>
-          <li class="nav-item"><a href="{% url 'file-manager-common' %}" class="nav-link"><i class="right fas fa-tasks"></i><p>Video Manager</p></a></li>
-          <li class="nav-item"><a href="{% url 'cdic-assessment-manager' %}" class="nav-link"><i class="right fas fa-tasks"></i><p>CDIC Record Manager</p></a></li>
-          <li class="nav-item"><a href="{% url 'hine-assessment-manager' %}" class="nav-link"><i class="right fas fa-tasks"></i><p>HINE Record Manager</p></a></li>
-          <li class="nav-item"><a href="{% url 'da-assessment-manager' %}" class="nav-link"><i class="right fas fa-tasks"></i><p>DA Record Manager</p></a></li>
-          <li class="nav-item"><a href="{% url 'manage-patients' %}" class="nav-link"><i class="right fas fa-tasks"></i><p>Patient Manager</p></a></li>
-          <li class="nav-item"><a href="{% url 'attachment-manager' %}" class="nav-link"><i class="right fas fa-tasks"></i><p>Attachment Manager</p></a></li>
-          <li class="nav-item"><a href="{% url 'bookmark-manager' %}" class="nav-link"><i class="right far fa-bookmark" style="color: #ffffff;"></i><p>Bookmark Manager</p></a></li>
-      </ul>
-      </li>
+        <!-- Quick Actions -->
+        <li class="nav-item">
+          <a href="{% url 'add-patient' %}" class="nav-link" id="nav-add-patient">
+            <i class="nav-icon fas fa-user-plus"></i>
+            <p>Add New Patient</p>
+          </a>
+        </li>
 
-      {% if user.is_staff or user.is_superuser %}
-      <!-- Admin User Management Section -->
-      <li class="nav-item menu-close">
-        <a href="#" class="nav-link active"><i class="nav-icon fas fa-users-cog"></i><p>User Management<i class="right fas fa-angle-left"></i></p></a>
-        <ul class="nav nav-treeview">
-          <li class="nav-item"><a href="{% url 'admin-dashboard' %}" class="nav-link"><i class="right fas fa-tachometer-alt"></i><p>Admin Dashboard</p></a></li>
-          <li class="nav-item"><a href="{% url 'admin-user-list' %}" class="nav-link"><i class="right fas fa-users"></i><p>Manage Users</p></a></li>
-          <li class="nav-item"><a href="{% url 'admin-user-add' %}" class="nav-link"><i class="right fas fa-user-plus"></i><p>Add New User</p></a></li>
-          <li class="nav-item"><a href="{% url 'admin-activity-logs' %}" class="nav-link"><i class="right fas fa-chart-line"></i><p>System Activity Logs</p></a></li>
-        </ul>
-      </li>
-      {% endif %}
+        <li class="nav-item">
+          <a href="{% url 'search-start' %}" class="nav-link" id="nav-search">
+            <i class="nav-icon fas fa-search"></i>
+            <p>Advanced Search</p>
+          </a>
+        </li>
 
-      <li class="nav-item menu-close">
-        <a href="#" class="nav-link active"><i class="nav-icon fas fa-cog"></i><p>Settings<i class="right fas fa-angle-left"></i></p></a>
-        <ul class="nav nav-treeview">
-          <li class="nav-item"><a href="{% url 'user-edit' user.id %}" class="nav-link"><i class="right fas fa-circle fa-plus"></i><p>Update User Details</p></a></li>
-          <li class="nav-item"><a href="{% url 'user-change-password' %}" class="nav-link"><i class="right fas fa-unlock-alt"></i><p>Change Password</p></a></li>
-          <li class="nav-item"><a href="{% url 'reset-password' %}" class="nav-link"><i class="right fas fa-unlock-alt"></i><p>Reset Password</p></a></li>
-          <li class="nav-item"><a href="{% url 'user-activity' %}" class="nav-link"><i class="right fas fa-history"></i><p>My Activity</p></a></li>
-          <li class="nav-item"><a href="#" class="nav-link logout-confirm"><i class="right fas fa-sign-out-alt"></i><p>Log Out</p></a></li>
-          <li class="nav-item"><a href="{% url 'developer-contact' %}" class="nav-link"><i class="right fas fa-address-card"></i><p>Contact Developer</p></a></li>
-          <li class="nav-item"><a href="{% url 'help-home' %}" class="nav-link"><i class="right fas fa-question-circle" style="color: #ffffff;"></i><p>Help</p></a></li>
-        </ul>
-      </li>
+        <!-- Separator -->
+        <li class="nav-header">PATIENT RECORDS</li>
+
+        <!-- Patient Management -->
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="nav-icon fas fa-folder-open"></i>
+            <p>
+              Patient Records
+              <i class="right fas fa-angle-left"></i>
+            </p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item">
+              <a href="{% url 'manage-patients' %}" class="nav-link" id="nav-patient-manager">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Patient Manager</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'manage-patients-new' %}" class="nav-link" id="nav-patients-new">
+                <i class="far fa-circle nav-icon"></i>
+                <p>New Patients</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'manage-patients-discharged' %}" class="nav-link" id="nav-patients-discharged">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Discharged Patients</p>
+              </a>
+            </li>
+          </ul>
+        </li>
+
+        <!-- Assessments -->
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="nav-icon fas fa-clipboard-list"></i>
+            <p>
+              Assessments
+              <i class="right fas fa-angle-left"></i>
+            </p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item">
+              <a href="{% url 'assessment-manager' %}" class="nav-link" id="nav-gm-assessment">
+                <i class="far fa-circle nav-icon"></i>
+                <p>GM Assessment</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'hine-assessment-manager' %}" class="nav-link" id="nav-hine-assessment">
+                <i class="far fa-circle nav-icon"></i>
+                <p>HINE Assessment</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'da-assessment-manager' %}" class="nav-link" id="nav-da-assessment">
+                <i class="far fa-circle nav-icon"></i>
+                <p>DA Assessment</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'cdic-assessment-manager' %}" class="nav-link" id="nav-cdic-assessment">
+                <i class="far fa-circle nav-icon"></i>
+                <p>CDIC Assessment</p>
+              </a>
+            </li>
+          </ul>
+        </li>
+
+        <!-- Media & Files -->
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="nav-icon fas fa-photo-video"></i>
+            <p>
+              Media & Files
+              <i class="right fas fa-angle-left"></i>
+            </p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item">
+              <a href="{% url 'file-manager-common' %}" class="nav-link" id="nav-video-manager">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Video Manager</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'attachment-manager' %}" class="nav-link" id="nav-attachment-manager">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Attachment Manager</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'bookmark-manager' %}" class="nav-link" id="nav-bookmark-manager">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Bookmark Manager</p>
+              </a>
+            </li>
+          </ul>
+        </li>
+
+        {% if user.is_staff or user.is_superuser %}
+        <!-- Separator -->
+        <li class="nav-header">ADMINISTRATION</li>
+
+        <!-- Admin User Management Section -->
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="nav-icon fas fa-users-cog"></i>
+            <p>
+              User Management
+              <i class="right fas fa-angle-left"></i>
+            </p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item">
+              <a href="{% url 'admin-dashboard' %}" class="nav-link" id="nav-admin-dashboard">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Admin Dashboard</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'admin-user-list' %}" class="nav-link" id="nav-manage-users">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Manage Users</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'admin-user-add' %}" class="nav-link" id="nav-add-user">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Add New User</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'admin-activity-logs' %}" class="nav-link" id="nav-activity-logs">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Activity Logs</p>
+              </a>
+            </li>
+          </ul>
+        </li>
+        {% endif %}
+
+        <!-- Separator -->
+        <li class="nav-header">USER SETTINGS</li>
+
+        <!-- User Profile -->
+        <li class="nav-item">
+          <a href="{% url 'user-view' user.id %}" class="nav-link" id="nav-profile">
+            <i class="nav-icon fas fa-user-circle"></i>
+            <p>My Profile</p>
+          </a>
+        </li>
+
+        <!-- Settings Section -->
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="nav-icon fas fa-cog"></i>
+            <p>
+              Settings
+              <i class="right fas fa-angle-left"></i>
+            </p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item">
+              <a href="{% url 'user-edit' user.id %}" class="nav-link" id="nav-edit-profile">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Edit Profile</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'user-change-password' %}" class="nav-link" id="nav-change-password">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Change Password</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'user-activity' %}" class="nav-link" id="nav-my-activity">
+                <i class="far fa-circle nav-icon"></i>
+                <p>My Activity</p>
+              </a>
+            </li>
+          </ul>
+        </li>
+
+        <!-- Support & Help -->
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="nav-icon fas fa-question-circle"></i>
+            <p>
+              Support & Help
+              <i class="right fas fa-angle-left"></i>
+            </p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item">
+              <a href="{% url 'help-home' %}" class="nav-link" id="nav-help">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Help Center</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'developer-contact' %}" class="nav-link" id="nav-contact">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Contact Support</p>
+              </a>
+            </li>
+          </ul>
+        </li>
+
+        <!-- Separator -->
+        <li class="nav-header">SESSION</li>
+
+        <!-- Logout -->
+        <li class="nav-item">
+          <a href="#" class="nav-link logout-confirm" id="nav-logout">
+            <i class="nav-icon fas fa-sign-out-alt text-danger"></i>
+            <p class="text-danger">Logout</p>
+          </a>
+        </li>
+
       </ul>
     </nav>
     <!-- /.sidebar-menu -->
   </div>
   <!-- /.sidebar -->
 </aside>
-
