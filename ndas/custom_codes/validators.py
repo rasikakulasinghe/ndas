@@ -100,19 +100,17 @@ def validateVideoMetadata(var_uploaded_file):
         # if not video_stream:
         #     return False, "No video stream found in file"
         #
+        # # Check duration
         # duration = float(video_stream.get('duration', 0))
-        # if duration > 3600:  # 1 hour limit
-        #     return False, "Video duration exceeds 1 hour limit"
+        # if duration > 3600:  # 1 hour max
+        #     return False, "Video duration exceeds maximum allowed length (1 hour)"
         #
-        # width = int(video_stream.get('width', 0))
-        # height = int(video_stream.get('height', 0))
-        # if width > 4096 or height > 4096:  # 4K limit
-        #     return False, "Video resolution exceeds 4K limit"
-
-        return True, "Video metadata is valid"
-
+        # return True, "Video metadata is valid"
+        
+        return True, "Metadata validation skipped (ffmpeg not available)"
+        
     except Exception as e:
-        return False, f"Error validating video metadata: {str(e)}"
+        return False, f"Metadata validation error: {str(e)}"
 
 
 def estimateCompressionSize(original_size_bytes, target_quality="medium"):
@@ -213,38 +211,38 @@ def validateAttachmentType(var_uploaded_file):
 def validate_birth_weight(value):
     """Validate birth weight is within realistic range (300g - 8000g)"""
     if value < 300 or value > 8000:
-        raise ValidationError(_("Birth weight must be between 300g and 8000g"))
+        raise ValidationError("Birth weight must be between 300g and 8000g")
 
 
 def validate_apgar_score(value):
     """Validate APGAR score is between 0-10"""
     if value < 0 or value > 10:
-        raise ValidationError(_("APGAR score must be between 0 and 10"))
+        raise ValidationError("APGAR score must be between 0 and 10")
 
 
 def validate_phone_number(value):
     """Validate phone number format"""
     phone_regex = RegexValidator(
         regex=r"^\+?1?\d{9,15}$",
-        message=_(
-            "Phone number must be entered in format: '+999999999'. Up to 15 digits allowed."
-        ),
+        message="Phone number must be entered in format: '+999999999'. Up to 15 digits allowed.",
     )
     phone_regex(value)
 
 
 def validate_video_file(value):
     """
-    Comprehensive video file validation
+    Comprehensive video file validation for Django model fields
     """
+    if not value:
+        return
+        
     # Check file extension
     ext = os.path.splitext(value.name)[1].lower()
     valid_extensions = [".mp4", ".mov", ".avi", ".mkv", ".webm"]
 
     if ext not in valid_extensions:
         raise ValidationError(
-            _("Unsupported video format. Allowed formats: %(formats)s")
-            % {"formats": ", ".join(valid_extensions)}
+            f"Unsupported video format. Allowed formats: {', '.join(valid_extensions)}"
         )
 
     # Check file size (default max: 2GB, configurable)
@@ -252,40 +250,42 @@ def validate_video_file(value):
     if value.size > max_size:
         max_size_mb = max_size / (1024 * 1024)
         raise ValidationError(
-            _("File size too large. Maximum allowed size is %(max_size)d MB.")
-            % {"max_size": int(max_size_mb)}
+            f"File size too large. Maximum allowed size is {int(max_size_mb)} MB."
         )
 
     # Minimum file size check (1KB to avoid empty files)
     min_size = 1024  # 1KB
     if value.size < min_size:
-        raise ValidationError(_("File appears to be empty or corrupted."))
+        raise ValidationError("File appears to be empty or corrupted.")
 
 
 def validate_recording_date(value):
     """
-    Validate video recording date
+    Validate video recording date for Django model fields
     """
+    if not value:
+        return
+        
     # Cannot be in the future
     if value > timezone.now():
-        raise ValidationError(_("Recording date cannot be in the future."))
+        raise ValidationError("Recording date cannot be in the future.")
 
     # Cannot be more than 10 years in the past (reasonable medical record limit)
     ten_years_ago = timezone.now() - timezone.timedelta(days=365 * 10)
     if value < ten_years_ago:
-        raise ValidationError(_("Recording date cannot be more than 10 years ago."))
+        raise ValidationError("Recording date cannot be more than 10 years ago.")
 
 
 def validate_pog_weeks(value):
     """Validate period of gestation weeks (20-44 weeks)"""
     if value < 20 or value > 44:
-        raise ValidationError(_("Period of gestation must be between 20-44 weeks"))
+        raise ValidationError("Period of gestation must be between 20-44 weeks")
 
 
 def validate_pog_days(value):
     """Validate period of gestation days (0-6 days)"""
     if value < 0 or value > 6:
-        raise ValidationError(_("Period of gestation days must be between 0-6"))
+        raise ValidationError("Period of gestation days must be between 0-6")
 
 
 def validate_attachment_file(value):
@@ -315,22 +315,20 @@ def validate_attachment_file(value):
 
     if ext not in all_allowed_extensions:
         raise ValidationError(
-            _("Unsupported file format. Allowed formats: %(formats)s")
-            % {"formats": ", ".join(all_allowed_extensions)}
+            f"Unsupported file format. Allowed formats: {', '.join(all_allowed_extensions)}"
         )
 
     # Check file size (basic check - more specific validation in model)
     if value.size > MAX_VIDEO_SIZE:  # Use largest allowed size
         max_size_gb = MAX_VIDEO_SIZE / (1024 * 1024 * 1024)
         raise ValidationError(
-            _("File size too large. Maximum allowed size is %(max_size).1f GB.")
-            % {"max_size": max_size_gb}
+            f"File size too large. Maximum allowed size is {max_size_gb:.1f} GB."
         )
 
     # Minimum file size check (avoid empty files)
     min_size = 1  # 1 byte
     if value.size < min_size:
-        raise ValidationError(_("File appears to be empty."))
+        raise ValidationError("File appears to be empty.")
 
     # MIME type validation
     mime_type, _ = mimetypes.guess_type(value.name)
@@ -341,4 +339,4 @@ def validate_attachment_file(value):
             "application/x-dosexec",
         ]
         if mime_type in dangerous_types:
-            raise ValidationError(_("Executable files are not allowed for security reasons."))
+            raise ValidationError("Executable files are not allowed for security reasons.")

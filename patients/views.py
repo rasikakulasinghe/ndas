@@ -7,12 +7,20 @@ from patients.forms import PatientForm, GMAssessmentForm, BookmarkForm, Attachme
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from ndas.custom_codes.validators import Name_baby_validation, Name_mother_validation, BHT_validation, PHN_validation, NNC_validation, validateVideoSize, validateVideoType, validateAttachmentSize,validateAttachmentType
-from ndas.custom_codes.custom_methods import get_admissions_data_barchart, get_gma_diagnosis_data, get_all_diagnosis_data, get_userStats, getAttachmentType, getCurrentDateTime, getFileSizeInMb, getPatientList, getCountZeroIfNone
+from ndas.custom_codes.validators import (
+    Name_baby_validation, Name_mother_validation, BHT_validation, PHN_validation, 
+    NNC_validation, validateVideoSize, validateVideoType, validateAttachmentSize, 
+    validateAttachmentType, validate_video_file_upload, getVideoMaxSizeMB
+)
+from ndas.custom_codes.custom_methods import (
+    get_admissions_data_barchart, get_gma_diagnosis_data, get_all_diagnosis_data, 
+    get_userStats, getAttachmentType, getCurrentDateTime, getFileSizeInMb, 
+    getPatientList, getCountZeroIfNone
+)
 from datetime import datetime
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-import pytz, os, logging
+import pytz, os, logging, subprocess, tempfile
 from django.http import JsonResponse
 from django.utils.timezone import localtime, now
 from django.utils import timezone
@@ -584,114 +592,259 @@ def search_results(request):
 @csrf_exempt
 @login_required(login_url='user-login')
 def video_add(request, pk):
-    selected_patient = Patient.objects.get(id=pk)
-    temp_file = None
+    """Enhanced video upload with proper form handling and progress tracking"""
+    try:
+        selected_patient = Patient.objects.get(id=pk)
+    except Patient.DoesNotExist:
+        messages.error(request, 'Patient not found.')
+        return redirect('manage-patients')
+    
     if request.method == 'POST':
-        
-        caption = request.POST['file_title']
-        uploaded_file = request.FILES['file']
-        recorded_on = request.POST["recorded_on"]
-        var_description = request.POST["descreption"]
-        
-        # create recorded time with time zone infomation
-        formated_recorded_date = datetime.strptime(recorded_on, '%Y-%m-%d')
-        asia_timezone = pytz.timezone('Asia/Kolkata')
-        new_recorded_on = asia_timezone.localize(formated_recorded_date)
-        
-        if validateVideoType(uploaded_file) :
-            
-            if getFileSizeInMb(uploaded_file) < 1000:
-                
-                if getFileSizeInMb(uploaded_file) > 30:
-                    try:
-                        fs = FileSystemStorage()
-                        filename = fs.save(uploaded_file.name, uploaded_file)
-                        input_file = fs.path(filename)
-                        
-                        converted_file_name =  f'{request.user.username}_{filename}'
-                        
-                        # Set the format and file extension for the output video
-                        output_format = 'mp4'
-                        output_file_name, _ = os.path.splitext(converted_file_name)
-                        output_file_path = output_file_name + '.' + output_format
-                        
-                        bitrate = '1000k'
-                        
-                        clip = VideoFileClip(input_file)
-                        
-                        if clip.rotation in (90, 270):
-                            clip = clip.resize(clip.size[::-1])
-                            clip.rotation = 0
-                            
-                        vwidth, vheight = clip.size
-                        
-                        if vwidth > vheight:
-                            #Calculate aspect ratio
-                            original_aspect_ratio = clip.size[0] / clip.size[1]
-                            resized_height = int(1280 / original_aspect_ratio)
-                            ffmpeg_params = ['-vf', 'scale=1280:{}'.format(resized_height)]
-                            clip = clip.resize(width=1280)
-                        else:
-                            #Calculate aspect ratio
-                            original_aspect_ratio = clip.size[0] / clip.size[1]
-                            resized_height = int(720 / original_aspect_ratio)
-                            ffmpeg_params = ['-vf', 'scale=720:{}'.format(resized_height)]
-                            clip = clip.resize(width=720)
-                            
-                        clip.write_videofile(output_file_path, preset='medium', ffmpeg_params=ffmpeg_params, bitrate=bitrate, fps=clip.fps, codec = 'libx264', audio=False)
-                        clip.close()
-                        
-                        # save file object
-                        temp_file = Video(
-                        patient = selected_patient,
-                        title = caption,
-                        recorded_on = new_recorded_on,
-                        description = var_description,
-                        added_by = request.user,
-                        last_edit_by = None,)
-
-                        temp_file.save()
-                        
-                        with open(output_file_path, 'rb') as f:
-                            temp_file.original_video.save(output_file_path, File(f))
-                        temp_file.save(update_fields=["original_video"])
-                        temp_file.save()
-                        
-                        # Delete the saved file from the temporary location
-                        fs.delete(filename)
-                        os.remove(output_file_path)
-                        
-                        if temp_file != None:
-                            return JsonResponse({'success': True, 'msg': 'OK', 'p_id': selected_patient.id, 'f_id': temp_file.id})
-                        else:
-                            return None
-                        
-                    except (BufferError, TypeError, TypeError, EOFError, MemoryError, AttributeError, FileExistsError, EnvironmentError, FileNotFoundError) as e:
-                        return JsonResponse({'success': False, 'msg': e, 'p_id': selected_patient.id, 'f_id': ''})
-                else:
-                    # in case of no need to convert the file save file object
-                    temp_file = Video(
-                    patient = selected_patient,
-                    title = caption,
-                    original_video = uploaded_file,
-                    recorded_on = new_recorded_on,
-                    description = var_description,
-                    added_by = request.user,
-                    last_edit_by = None,)
-                    
-                    temp_file.save()
-                    
-                    if temp_file != None:
-                        return JsonResponse({'success': True, 'msg': 'OK', 'p_id': selected_patient.id, 'f_id': temp_file.id})
-                    else:
-                        return None
-                    
-            else:
-                return JsonResponse({'success': False, 'msg': 'You cant upload >1000mb files...'})
-        else:
-            return JsonResponse({'success': False, 'msg': 'Only video files are allowed and it must be in .mp4 or .mov format...'})
+        return handle_video_upload(request, selected_patient)
     else:
-        return render (request, 'video/add.html', {'patient' : selected_patient})
+        # GET request - show the upload form
+        context = {
+            'patient': selected_patient,
+            'today': timezone.now().strftime('%Y%m%d'),
+            'video_form': VideoForm(),
+        }
+        return render(request, 'video/add.html', context)
+
+
+def handle_video_upload(request, patient):
+    """Handle the actual video upload and processing"""
+    try:
+        # Extract form data
+        title = request.POST.get('title_text', '').strip()
+        uploaded_file = request.FILES.get('file')
+        recorded_on_str = request.POST.get('recorded_on')
+        description = request.POST.get('description', '').strip()
+        tags = request.POST.get('tags', '').strip()
+        target_quality = request.POST.get('target_quality', 'medium')
+        access_level = request.POST.get('access_level', 'restricted')
+        is_sensitive = request.POST.get('is_sensitive') == 'on'
+        
+        # Validate required fields
+        if not title:
+            return JsonResponse({'success': False, 'msg': 'Video title is required.'})
+            
+        if not uploaded_file:
+            return JsonResponse({'success': False, 'msg': 'Video file is required.'})
+            
+        if not recorded_on_str:
+            return JsonResponse({'success': False, 'msg': 'Recording date is required.'})
+        
+        # Validate video file
+        validation_result, validation_message = validate_video_file_upload(uploaded_file)
+        if not validation_result:
+            return JsonResponse({'success': False, 'msg': validation_message})
+        
+        # Parse and validate recording date
+        try:
+            # Handle datetime-local format
+            if 'T' in recorded_on_str:
+                recorded_on = timezone.datetime.fromisoformat(recorded_on_str)
+                if timezone.is_naive(recorded_on):
+                    recorded_on = timezone.make_aware(recorded_on)
+            else:
+                # Handle date format
+                recorded_date = datetime.strptime(recorded_on_str, '%Y-%m-%d')
+                asia_timezone = pytz.timezone('Asia/Kolkata')
+                recorded_on = asia_timezone.localize(recorded_date)
+        except (ValueError, TypeError) as e:
+            return JsonResponse({'success': False, 'msg': 'Invalid recording date format.'})
+        
+        # Check if recording date is not in the future
+        if recorded_on > timezone.now():
+            return JsonResponse({'success': False, 'msg': 'Recording date cannot be in the future.'})
+        
+        # Get file size for processing decision
+        file_size_mb = uploaded_file.size / (1024 * 1024)
+        needs_compression = file_size_mb > 25  # 25MB threshold
+        
+        # Create video record
+        video = Video(
+            patient=patient,
+            title=title,
+            recorded_on=recorded_on,
+            description=description,
+            tags=tags,
+            target_quality=target_quality,
+            access_level=access_level,
+            is_sensitive=is_sensitive,
+            file_size=uploaded_file.size,
+            format=get_video_format(uploaded_file),
+            processing_status='pending' if needs_compression else 'completed',
+            added_by=request.user,
+        )
+        
+        # Save the original video file
+        video.original_video = uploaded_file
+        video.save()
+        
+        # Log the upload
+        logger.info(f"Video uploaded: {video.title} by {request.user.username} for patient {patient.bht}")
+        
+        # If file is large, queue for compression
+        if needs_compression:
+            try:
+                # Queue video for processing (this would typically be handled by Celery)
+                video.processing_status = 'processing'
+                video.processing_started_at = timezone.now()
+                video.save(update_fields=['processing_status', 'processing_started_at'])
+                
+                # For now, process synchronously (in production, use Celery)
+                compress_video_sync(video)
+                
+            except Exception as e:
+                video.processing_status = 'failed'
+                video.processing_error = str(e)
+                video.save(update_fields=['processing_status', 'processing_error'])
+                logger.error(f"Video compression failed for {video.id}: {str(e)}")
+                return JsonResponse({
+                    'success': False, 
+                    'msg': f'Video uploaded but compression failed: {str(e)}'
+                })
+        
+        return JsonResponse({
+            'success': True, 
+            'msg': 'Video uploaded successfully!',
+            'p_id': patient.id,
+            'f_id': video.id,
+            'needs_compression': needs_compression,
+            'redirect_url': f'/video/processing/{video.id}/' if needs_compression else f'/video/view/{video.id}/'
+        })
+        
+    except Exception as e:
+        logger.error(f"Video upload error: {str(e)}")
+        return JsonResponse({'success': False, 'msg': f'Upload failed: {str(e)}'})
+
+
+def compress_video_sync(video):
+    """Synchronous video compression (placeholder for async processing)"""
+    try:
+        # This would typically be handled by Celery in production
+        # For now, we'll implement a basic version
+        
+        from django.core.files.storage import default_storage
+        from django.core.files.base import ContentFile
+        import subprocess
+        import tempfile
+        import os
+        
+        # Create temporary files
+        with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as temp_input:
+            # Copy uploaded file to temp location
+            for chunk in video.original_video.chunks():
+                temp_input.write(chunk)
+            temp_input_path = temp_input.name
+        
+        temp_output_path = temp_input_path.replace('.mp4', '_compressed.mp4')
+        
+        try:
+            # Use ffmpeg for compression (if available)
+            compression_settings = get_compression_settings(video.target_quality)
+            
+            cmd = [
+                'ffmpeg', '-i', temp_input_path,
+                '-c:v', 'libx264',
+                '-crf', str(compression_settings['crf']),
+                '-preset', compression_settings['preset'],
+                '-movflags', '+faststart',
+                '-y',  # Overwrite output
+                temp_output_path
+            ]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+            
+            if result.returncode == 0 and os.path.exists(temp_output_path):
+                # Save compressed video
+                with open(temp_output_path, 'rb') as compressed_file:
+                    content = ContentFile(compressed_file.read())
+                    video.compressed_video.save(
+                        f'compressed_{video.original_video.name}',
+                        content,
+                        save=False
+                    )
+                
+                video.compressed_file_size = os.path.getsize(temp_output_path)
+                video.processing_status = 'completed'
+                video.processing_completed_at = timezone.now()
+                
+            else:
+                video.processing_status = 'failed'
+                video.processing_error = f"FFmpeg error: {result.stderr}"
+                
+        except subprocess.TimeoutExpired:
+            video.processing_status = 'failed'
+            video.processing_error = "Compression timed out after 5 minutes"
+            
+        except FileNotFoundError:
+            # FFmpeg not available, skip compression
+            video.processing_status = 'completed'
+            video.processing_error = "FFmpeg not available - using original file"
+            
+        finally:
+            # Cleanup temp files
+            for temp_file in [temp_input_path, temp_output_path]:
+                if os.path.exists(temp_file):
+                    os.unlink(temp_file)
+            
+            video.save()
+            
+    except Exception as e:
+        video.processing_status = 'failed'
+        video.processing_error = str(e)
+        video.save()
+        raise
+
+
+def get_compression_settings(quality):
+    """Get ffmpeg compression settings based on quality choice"""
+    settings = {
+        'low': {'crf': 28, 'preset': 'fast'},
+        'medium': {'crf': 23, 'preset': 'medium'},
+        'high': {'crf': 18, 'preset': 'slow'}
+    }
+    return settings.get(quality, settings['medium'])
+
+
+def get_video_format(uploaded_file):
+    """Extract video format from uploaded file"""
+    extension = os.path.splitext(uploaded_file.name)[1].lower()
+    format_map = {
+        '.mp4': 'mp4',
+        '.mov': 'mov',
+        '.avi': 'avi',
+        '.mkv': 'mkv',
+        '.webm': 'webm'
+    }
+    return format_map.get(extension, 'unknown')
+
+
+def validate_video_file_upload(uploaded_file):
+    """Enhanced validation for video file uploads"""
+    try:
+        # Import validation functions
+        from ndas.custom_codes.validators import validateVideoType, validateVideoSize, getVideoMaxSizeMB
+        
+        # Check file type
+        if not validateVideoType(uploaded_file):
+            return False, "Only video files are allowed. Supported formats: MP4, MOV, AVI, MKV, WebM"
+        
+        # Check file size
+        if not validateVideoSize(uploaded_file):
+            max_size = getVideoMaxSizeMB()
+            return False, f"File size too large. Maximum allowed size is {max_size}MB"
+        
+        # Check for empty files
+        if uploaded_file.size < 1024:  # Less than 1KB
+            return False, "File appears to be empty or corrupted"
+        
+        return True, "File is valid"
+        
+    except Exception as e:
+        return False, f"Validation error: {str(e)}"
 
 @login_required(login_url='user-login')
 def video_view(request, f_id):
@@ -719,6 +872,48 @@ def video_view(request, f_id):
                'total_incompleted_assessments_count' : total_assessments_count}
     
     return render (request, 'video/view.html', context)
+
+
+@login_required(login_url='user-login')
+def video_processing_progress(request, f_id):
+    """View to show video processing progress"""
+    try:
+        video = Video.objects.get(id=f_id)
+        
+        # Check if user has permission to view this video
+        if not request.user.is_staff and video.added_by != request.user:
+            messages.error(request, 'You do not have permission to view this video.')
+            return redirect('manage-patients')
+        
+        # Calculate compression percentage if both sizes are available
+        compression_percentage = None
+        space_saved_mb = None
+        
+        if video.compressed_file_size and video.file_size and video.file_size > 0:
+            compression_percentage = round((video.compressed_file_size * 100) / video.file_size)
+            space_saved_mb = round((video.file_size - video.compressed_file_size) / (1024 * 1024), 1)
+        
+        # Calculate processing time if available
+        processing_duration = None
+        if video.processing_started_at and video.processing_completed_at:
+            processing_duration = video.processing_completed_at - video.processing_started_at
+        
+        context = {
+            'video': video,
+            'compression_percentage': compression_percentage,
+            'space_saved_mb': space_saved_mb,
+            'processing_duration': processing_duration,
+        }
+        
+        return render(request, 'video/conversion_progress.html', context)
+        
+    except Video.DoesNotExist:
+        messages.error(request, 'Video not found.')
+        return redirect('manage-patients')
+    except Exception as e:
+        logger.error(f"Error in video_processing_progress: {str(e)}")
+        messages.error(request, 'An error occurred while loading the video processing page.')
+        return redirect('manage-patients')
 
 @login_required(login_url='user-login')
 def video_edit(request, f_id):

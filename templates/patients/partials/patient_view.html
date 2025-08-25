@@ -486,7 +486,7 @@
                         <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
                         <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
                           <a class="dropdown-item" href="{% url 'file-view' video.id %}"><i class="fas fa-eye"></i> Play</a>
-                          <a class="dropdown-item" href="{% url 'file-edit' video.id %}"><i class="fas fa-pencil-alt"></i> Modify record</a>
+                          <a class="dropdown-item" href="{% url 'video-edit' video.id %}"><i class="fas fa-pencil-alt"></i> Modify record</a>
                           <a class="dropdown-item" href="{% url 'file-delete_start' video.id %}"><i class="far fa-trash-alt"></i> Delete</a>
                           {% if video.isNewFile %}<a class="dropdown-item" href="{% url 'assessment-add' video.patient.id video.id %}"><i class="fas fa-circle fa-plus"></i> Add New Assessment</a>
                           {% else %}

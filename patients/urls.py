@@ -50,7 +50,8 @@ urlpatterns = [
     # URLs for video file operations
     path("video/add/<str:pk>/", views.video_add, name='file-add'),
     path("video/view/<str:f_id>/", views.video_view, name='file-view'),
-    path("video/edit/<str:f_id>/", views.video_edit, name='file-edit'),
+    path("video/edit/<str:f_id>/", views.video_edit, name='video-edit'),
+    path("video/processing/<str:f_id>/", views.video_processing_progress, name='video-processing'),
     path("manager/video/filter/<str:patient_id>/", views.video_manager_by_patient, name='file-manager-patient'),
     # path("manager/video/<str:patient_id>/<str:file_type>/", views.video_manager_by_patient_type, name='file-manager-patient-type'),
     path("manager/video/", views.video_manager, name='file-manager-common'),
