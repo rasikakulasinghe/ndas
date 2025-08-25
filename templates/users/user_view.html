@@ -1,136 +1,276 @@
 {% extends 'src/base.html' %}
-{% block title %}User - View{% endblock %}
+{% block title %}User Profile - {{custom_user.first_name}} {{custom_user.last_name}}{% endblock %}
+
+{% block content_header %}
+<div class="row mb-2">
+  <div class="col-sm-6">
+    <h1 class="m-0">User Profile</h1>
+  </div>
+  <div class="col-sm-6">
+    <ol class="breadcrumb float-sm-right">
+      <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'admin-user-list' %}">Users</a></li>
+      <li class="breadcrumb-item active">{{custom_user.first_name}} {{custom_user.last_name}}</li>
+    </ol>
+  </div>
+</div>
+{% endblock content_header %}
 
 {% block main_content %}
-</br>
-
-<div class="container-sm">
-<div class="col-sm">
-          
-      <div class="card">
-
-        <div class="card-header">
-
-        <div class="container"><div class="col-md-4 px-0">
-        {% if custom_user.profile_picture_url %}
-        <img src="{{custom_user.profile_picture_url}}" class="rounded-circle img-thumbnail" width=200 height=200 style="object-fit: cover;">
-        {% else %}
-        <div class="rounded-circle img-thumbnail d-flex align-items-center justify-content-center bg-secondary" style="width: 200px; height: 200px; color: white;">
-          <i class="fas fa-user fa-5x"></i>
-        </div>
-        {% endif %}
-        </div>
-        </div>
+<div class="row">
+  <!-- Profile Overview Card -->
+  <div class="col-md-4">
+    <div class="card card-primary card-outline">
+      <div class="card-body box-profile">
+        <div class="text-center">
+          {% if custom_user.profile_picture_url %}
+          <img class="profile-user-img img-fluid img-circle" 
+               src="{{custom_user.profile_picture_url}}" 
+               alt="User profile picture"
+               style="width: 150px; height: 150px; object-fit: cover;">
+          {% else %}
+          <div class="profile-user-img img-fluid img-circle d-flex align-items-center justify-content-center bg-secondary mx-auto" 
+               style="width: 150px; height: 150px; color: white;">
+            <i class="fas fa-user fa-4x"></i>
+          </div>
+          {% endif %}
         </div>
 
-        <!-- /.card-header -->
-        <div class="card-header"><h3 class="card-title">User Details : {{custom_user.first_name}} ({{custom_user.position}})</h3></div>
+        <h3 class="profile-username text-center">{{custom_user.first_name}} {{custom_user.last_name}}</h3>
+        <p class="text-muted text-center">{{custom_user.position}}</p>
 
-        <div class="card-body">
-
-          <dl class="row">
-
-            <dt class="col-sm-3">Username :</dt>
-            <dd class="col-sm-9">{{custom_user.username}}</dd>
-
-            <dt class="col-sm-3">First Name :</dt>
-            <dd class="col-sm-9">{{custom_user.first_name}}</dd>
-
-            <dt class="col-sm-3">Last Name :</dt>
-            <dd class="col-sm-9">{{custom_user.last_name}}</dd>
-
-            <dt class="col-sm-3">Position :</dt>
-            <dd class="col-sm-9">{{custom_user.position}}</dd>
-
-            <dt class="col-sm-3">Email :</dt>
-            <dd class="col-sm-9">{{custom_user.email}}</dd>
-
-            <dt class="col-sm-3">Mobile Number 1 :</dt>
-            <dd class="col-sm-9">{{custom_user.mobile_primary}}</dd>
-
-            <dt class="col-sm-3">Mobile Number 2 :</dt>
-            <dd class="col-sm-9">{{custom_user.mobile_secondary}}</dd>
-            
-            <dt class="col-sm-3">Lan Number 1 :</dt>
-            <dd class="col-sm-9">{{custom_user.landline_primary}}</dd>
-
-            <dt class="col-sm-3">Lan Number 2 :</dt>
-            <dd class="col-sm-9">{{custom_user.landline_secondary}}</dd>
-
-            <dt class="col-sm-3">Address home :</dt>
-            <dd class="col-sm-9">{{custom_user.home_address}}</dd>
-
-            <dt class="col-sm-3">Address station :</dt>
-            <dd class="col-sm-9">{{custom_user.station_address}}</dd>
-
-            <dt class="col-sm-3">Last Login :</dt>
-            <dd class="col-sm-9">{{custom_user.last_login}}</dd>
-
-            <dt class="col-sm-3">Date Joined :</dt>
-            <dd class="col-sm-9">{{custom_user.date_joined}}</dd>
-
-            <dt class="col-sm-3">Email Verified :</dt>
-            <dd class="col-sm-9">
+        <ul class="list-group list-group-unbordered mb-3">
+          <li class="list-group-item">
+            <b>Email Verified</b> 
+            <span class="float-right">
               {% if custom_user.is_email_verified %}
                 <span class="badge badge-success">Yes</span>
-                {% if custom_user.email_verified_at %}({{custom_user.email_verified_at}}){% endif %}
               {% else %}
                 <span class="badge badge-warning">No</span>
               {% endif %}
-            </dd>
-
-            <dt class="col-sm-3">Created At :</dt>
-            <dd class="col-sm-9">{{custom_user.created_at}}</dd>
-
-            <dt class="col-sm-3">Updated At :</dt>
-            <dd class="col-sm-9">{{custom_user.updated_at}}</dd>
-
-            <dt class="col-sm-3">Other :</dt>
-            <dd class="col-sm-9">{{custom_user.additional_notes}}</dd>
-
-            <dt class="col-sm-3">Last Login Device :</dt>
-            <dd class="col-sm-9">
-            <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="{{custom_user.last_login_device}}"></span></a>
-            </dd>
-
-          </dl>
-
-      </br>
-
-      <div class="d-flex justify-content-between align-items-center">
-        <div class="btn-group" role="group" aria-label="User Actions">
-          {% if user.username == custom_user.username %}
-            <a href="{% url 'user-edit' custom_user.id %}" class="btn btn-outline-primary">
-              <i class="fas fa-edit mr-2"></i>Edit Profile
-            </a>
-          {% endif %}
-          <a href="{% url 'user-logout' %}" class="btn btn-outline-danger" 
-             onclick="return confirm('Are you sure you want to log out?')">
-            <i class="fas fa-sign-out-alt mr-2"></i>Log Out
-          </a>
-        </div>
-        
-        {% if user.is_staff and user.username != custom_user.username %}
-          <div class="btn-group" role="group" aria-label="Admin Actions">
-            <a href="{% url 'user-edit' custom_user.id %}" class="btn btn-outline-secondary">
-              <i class="fas fa-user-edit mr-2"></i>Edit User
-            </a>
-            <button type="button" class="btn btn-outline-warning" 
-                    onclick="toggleUserStatus('{{ custom_user.id }}')">
+            </span>
+          </li>
+          <li class="list-group-item">
+            <b>Account Status</b> 
+            <span class="float-right">
               {% if custom_user.is_active %}
-                <i class="fas fa-user-times mr-2"></i>Deactivate
+                <span class="badge badge-success">Active</span>
               {% else %}
-                <i class="fas fa-user-check mr-2"></i>Activate
+                <span class="badge badge-danger">Inactive</span>
               {% endif %}
-            </button>
-          </div>
-        {% endif %}
+            </span>
+          </li>
+          <li class="list-group-item">
+            <b>Last Login</b> 
+            <span class="float-right text-muted">
+              {% if custom_user.last_login %}
+                {{custom_user.last_login|date:"M d, Y H:i"}}
+              {% else %}
+                Never
+              {% endif %}
+            </span>
+          </li>
+        </ul>
       </div>
+    </div>
+  </div>
 
-        </div>
-        <!-- /.card-body -->
+  <!-- Detailed Information Card -->
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header p-2">
+        <ul class="nav nav-pills">
+          <li class="nav-item"><a class="nav-link active" href="#personal" data-toggle="tab">Personal Information</a></li>
+          <li class="nav-item"><a class="nav-link" href="#contact" data-toggle="tab">Contact Details</a></li>
+          <li class="nav-item"><a class="nav-link" href="#system" data-toggle="tab">System Information</a></li>
+        </ul>
       </div>
-      <!-- /.card -->
+      <div class="card-body">
+        <div class="tab-content">
+          <!-- Personal Information Tab -->
+          <div class="active tab-pane" id="personal">
+            <div class="row">
+              <div class="col-12">
+                <dl class="row">
+                  <dt class="col-sm-4">Username:</dt>
+                  <dd class="col-sm-8"><code>{{custom_user.username}}</code></dd>
+
+                  <dt class="col-sm-4">First Name:</dt>
+                  <dd class="col-sm-8">{{custom_user.first_name}}</dd>
+
+                  <dt class="col-sm-4">Last Name:</dt>
+                  <dd class="col-sm-8">{{custom_user.last_name}}</dd>
+
+                  <dt class="col-sm-4">Position:</dt>
+                  <dd class="col-sm-8">
+                    <span class="badge badge-info">{{custom_user.position}}</span>
+                  </dd>
+
+                  <dt class="col-sm-4">Additional Notes:</dt>
+                  <dd class="col-sm-8">
+                    {% if custom_user.additional_notes %}
+                      {{custom_user.additional_notes}}
+                    {% else %}
+                      <span class="text-muted">No additional notes</span>
+                    {% endif %}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contact Details Tab -->
+          <div class="tab-pane" id="contact">
+            <div class="row">
+              <div class="col-12">
+                <dl class="row">
+                  <dt class="col-sm-4">Email:</dt>
+                  <dd class="col-sm-8">
+                    <a href="mailto:{{custom_user.email}}">{{custom_user.email}}</a>
+                    {% if custom_user.is_email_verified %}
+                      <i class="fas fa-check-circle text-success ml-1" title="Verified"></i>
+                    {% else %}
+                      <i class="fas fa-exclamation-circle text-warning ml-1" title="Not verified"></i>
+                    {% endif %}
+                  </dd>
+
+                  <dt class="col-sm-4">Primary Mobile:</dt>
+                  <dd class="col-sm-8">
+                    {% if custom_user.mobile_primary %}
+                      <a href="tel:{{custom_user.mobile_primary}}">{{custom_user.mobile_primary}}</a>
+                    {% else %}
+                      <span class="text-muted">Not provided</span>
+                    {% endif %}
+                  </dd>
+
+                  <dt class="col-sm-4">Secondary Mobile:</dt>
+                  <dd class="col-sm-8">
+                    {% if custom_user.mobile_secondary %}
+                      <a href="tel:{{custom_user.mobile_secondary}}">{{custom_user.mobile_secondary}}</a>
+                    {% else %}
+                      <span class="text-muted">Not provided</span>
+                    {% endif %}
+                  </dd>
+
+                  <dt class="col-sm-4">Primary Landline:</dt>
+                  <dd class="col-sm-8">
+                    {% if custom_user.landline_primary %}
+                      <a href="tel:{{custom_user.landline_primary}}">{{custom_user.landline_primary}}</a>
+                    {% else %}
+                      <span class="text-muted">Not provided</span>
+                    {% endif %}
+                  </dd>
+
+                  <dt class="col-sm-4">Secondary Landline:</dt>
+                  <dd class="col-sm-8">
+                    {% if custom_user.landline_secondary %}
+                      <a href="tel:{{custom_user.landline_secondary}}">{{custom_user.landline_secondary}}</a>
+                    {% else %}
+                      <span class="text-muted">Not provided</span>
+                    {% endif %}
+                  </dd>
+
+                  <dt class="col-sm-4">Home Address:</dt>
+                  <dd class="col-sm-8">
+                    {% if custom_user.home_address %}
+                      {{custom_user.home_address}}
+                    {% else %}
+                      <span class="text-muted">Not provided</span>
+                    {% endif %}
+                  </dd>
+
+                  <dt class="col-sm-4">Station Address:</dt>
+                  <dd class="col-sm-8">
+                    {% if custom_user.station_address %}
+                      {{custom_user.station_address}}
+                    {% else %}
+                      <span class="text-muted">Not provided</span>
+                    {% endif %}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+
+          <!-- System Information Tab -->
+          <div class="tab-pane" id="system">
+            <div class="row">
+              <div class="col-12">
+                <dl class="row">
+                  <dt class="col-sm-4">Date Joined:</dt>
+                  <dd class="col-sm-8">{{custom_user.date_joined|date:"F d, Y H:i"}}</dd>
+
+                  <dt class="col-sm-4">Email Verified At:</dt>
+                  <dd class="col-sm-8">
+                    {% if custom_user.email_verified_at %}
+                      {{custom_user.email_verified_at|date:"F d, Y H:i"}}
+                    {% else %}
+                      <span class="text-muted">Not verified</span>
+                    {% endif %}
+                  </dd>
+
+                  <dt class="col-sm-4">Created At:</dt>
+                  <dd class="col-sm-8">{{custom_user.created_at|date:"F d, Y H:i"}}</dd>
+
+                  <dt class="col-sm-4">Updated At:</dt>
+                  <dd class="col-sm-8">{{custom_user.updated_at|date:"F d, Y H:i"}}</dd>
+
+                  <dt class="col-sm-4">Last Login Device:</dt>
+                  <dd class="col-sm-8">
+                    {% if custom_user.last_login_device %}
+                      <span class="badge badge-secondary" data-toggle="tooltip" title="{{custom_user.last_login_device}}">
+                        <i class="fas fa-desktop mr-1"></i>Device Info
+                      </span>
+                    {% else %}
+                      <span class="text-muted">Unknown</span>
+                    {% endif %}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Action Buttons Row -->
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+          <div class="btn-group mb-2" role="group" aria-label="User Actions">
+            {% if user.username == custom_user.username %}
+              <a href="{% url 'user-edit' custom_user.id %}" class="btn btn-primary">
+                <i class="fas fa-edit mr-2"></i>Edit My Profile
+              </a>
+            {% endif %}
+            <a href="#" class="btn btn-outline-danger logout-confirm">
+              <i class="fas fa-sign-out-alt mr-2"></i>Log Out
+            </a>
+          </div>
+          
+          {% if user.is_staff and user.username != custom_user.username %}
+            <div class="btn-group mb-2" role="group" aria-label="Admin Actions">
+              <a href="{% url 'user-edit' custom_user.id %}" class="btn btn-warning">
+                <i class="fas fa-user-edit mr-2"></i>Edit User
+              </a>
+              <button type="button" class="btn btn-outline-{{ custom_user.is_active|yesno:'warning,success' }}" 
+                      onclick="toggleUserStatus('{{ custom_user.id }}')">
+                {% if custom_user.is_active %}
+                  <i class="fas fa-user-times mr-2"></i>Deactivate User
+                {% else %}
+                  <i class="fas fa-user-check mr-2"></i>Activate User
+                {% endif %}
+              </button>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 
@@ -139,7 +279,15 @@
 {% block extra_js %}
 <script>
 function toggleUserStatus(userId) {
-    if (confirm('Are you sure you want to change this user\'s status?')) {
+    const confirmMessage = 'Are you sure you want to change this user\'s status?';
+    
+    if (confirm(confirmMessage)) {
+        // Show loading state
+        const button = event.target.closest('button');
+        const originalContent = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+        button.disabled = true;
+        
         // Add AJAX call to toggle user status
         fetch(`/users/${userId}/toggle-status/`, {
             method: 'POST',
@@ -151,21 +299,59 @@ function toggleUserStatus(userId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                location.reload();
+                // Show success message
+                toastr.success('User status updated successfully!');
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
             } else {
-                alert('Error: ' + data.message);
+                // Show error message
+                toastr.error('Error: ' + (data.message || 'Failed to update user status'));
+                // Restore button state
+                button.innerHTML = originalContent;
+                button.disabled = false;
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while updating user status.');
+            toastr.error('An error occurred while updating user status.');
+            // Restore button state
+            button.innerHTML = originalContent;
+            button.disabled = false;
         });
     }
 }
 
-// Initialize tooltips
+// Initialize tooltips and other components
 $(document).ready(function(){
+    // Initialize tooltips
     $('[data-toggle="tooltip"]').tooltip();
+    
+    // Initialize toastr notifications if available
+    if (typeof toastr !== 'undefined') {
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "newestOnTop": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "preventDuplicates": false,
+            "onclick": null,
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "5000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
+    }
+    
+    // Add smooth transitions to tab switching
+    $('.nav-pills a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+        $(e.target.getAttribute('href')).addClass('fadeIn');
+    });
 });
 </script>
 {% endblock extra_js %}

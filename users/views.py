@@ -151,6 +151,12 @@ def logoutPage(request):
     messages.success(request, 'You have been logged out successfully!')
     return redirect('user-login')
 
+def test_logout_modal(request):
+    """Test view for debugging logout modal"""
+    from django.http import HttpResponse
+    with open('debug_logout_modal.html', 'r') as f:
+        return HttpResponse(f.read())
+
 @login_required(login_url='user-login')
 def userView(request, pk):
     custom_user = CustomUser.objects.get(id=pk)

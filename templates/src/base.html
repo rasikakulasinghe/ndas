@@ -40,6 +40,11 @@
 
   <!-- Main Footer -->
   {% include './main_footer.html' %}
+  
+  <!-- Logout Confirmation Modal (only for authenticated users) -->
+  {% if user.is_authenticated %}
+    {% include './logout_modal.html' %}
+  {% endif %}
 </div>
 <!-- /.wrapper -->
 

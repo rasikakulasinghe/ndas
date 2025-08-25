@@ -1,0 +1,233 @@
+<!-- Logout Confirmation Modal -->
+<div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="logoutModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-gradient-warning border-0 text-center">
+        <div class="w-100">
+          <h5 class="modal-title text-dark font-weight-bold mb-0" id="logoutModalLabel">
+            <i class="fas fa-shield-alt mr-2"></i>Secure Logout
+          </h5>
+        </div>
+        <button type="button" class="close text-dark position-absolute" style="right: 1rem; top: 50%; transform: translateY(-50%);" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body text-center py-4">
+        <div class="mb-4">
+          <div class="d-flex justify-content-center align-items-center mb-3">
+            <div class="logout-icon-wrapper">
+              <i class="fas fa-sign-out-alt text-warning"></i>
+            </div>
+          </div>
+        </div>
+        <h6 class="font-weight-bold text-dark mb-3">Ready to logout?</h6>
+        <p class="text-muted small mb-3 px-2">
+          Your session will be securely terminated and all unsaved work may be lost.
+        </p>
+        <div class="alert alert-light border-0 py-2 mb-0" style="background-color: #f8f9fa;">
+          <small class="text-muted">
+            <i class="fas fa-info-circle mr-1"></i>
+            You'll be redirected to the login page
+          </small>
+        </div>
+      </div>
+      <div class="modal-footer border-0 justify-content-center pt-0 pb-4">
+        <button type="button" class="btn btn-outline-secondary btn-sm px-4 mr-3" data-dismiss="modal">
+          <i class="fas fa-arrow-left mr-1"></i>Stay Logged In
+        </button>
+        <a href="{% url 'user-logout' %}" class="btn btn-warning btn-sm px-4 logout-confirm-btn">
+          <i class="fas fa-sign-out-alt mr-1"></i>Logout Now
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Styles for Logout Modal -->
+<style>
+#logoutModal .modal-content {
+  border-radius: 20px;
+  overflow: hidden;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+#logoutModal .modal-header {
+  padding: 1.5rem 1.5rem 1rem 1.5rem;
+  position: relative;
+}
+
+#logoutModal .modal-body {
+  padding: 0 1.5rem 1rem 1.5rem;
+}
+
+#logoutModal .modal-footer {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+#logoutModal .logout-icon-wrapper {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #fff;
+  box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+}
+
+#logoutModal .logout-icon-wrapper i {
+  font-size: 2rem;
+}
+
+#logoutModal .btn {
+  border-radius: 10px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#logoutModal .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+#logoutModal .btn-warning:hover {
+  background-color: #e0a800;
+  border-color: #d39e00;
+}
+
+#logoutModal .btn-outline-secondary:hover {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  color: white;
+}
+
+#logoutModal .alert {
+  border-radius: 10px;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 576px) {
+  #logoutModal .modal-dialog {
+    margin: 1rem;
+  }
+  
+  #logoutModal .modal-footer .btn {
+    flex: 1;
+    margin: 0 0.25rem;
+  }
+  
+  #logoutModal .modal-footer {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  #logoutModal .modal-footer .btn {
+    width: 100%;
+    margin: 0;
+  }
+}
+</style>
+
+<script type="text/javascript">
+// Use vanilla JavaScript to ensure it works regardless of jQuery timing
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Logout modal script loading...');
+    
+    // Wait for jQuery if it's not loaded yet
+    function initLogoutModal() {
+        if (typeof $ === 'undefined') {
+            console.log('jQuery not ready, waiting...');
+            setTimeout(initLogoutModal, 100);
+            return;
+        }
+        
+        console.log('Initializing logout modal with jQuery...');
+        
+        // Function to show logout confirmation modal
+        window.showLogoutConfirmation = function() {
+            console.log('showLogoutConfirmation called');
+            var modal = $('#logoutModal');
+            if (modal.length) {
+                modal.modal({
+                    backdrop: 'static',
+                    keyboard: true
+                });
+                console.log('Modal shown');
+            } else {
+                console.error('Logout modal not found in DOM');
+                // Fallback to browser confirm
+                if (confirm('Are you sure you want to logout?')) {
+                    window.location.href = "{% url 'user-logout' %}";
+                }
+            }
+        };
+        
+        // Handle logout links with confirmation - Use event delegation
+        $(document).off('click.logoutConfirm').on('click.logoutConfirm', '.logout-confirm', function(e) {
+            console.log('Logout confirm clicked:', this);
+            e.preventDefault();
+            e.stopPropagation();
+            showLogoutConfirmation();
+            return false;
+        });
+        
+        // Add loading state to logout button
+        $(document).off('click.logoutBtn').on('click.logoutBtn', '.logout-confirm-btn', function(e) {
+            e.preventDefault();
+            var btn = $(this);
+            var originalText = btn.html();
+            var logoutUrl = btn.attr('href');
+            
+            btn.html('<i class="fas fa-spinner fa-spin mr-1"></i>Logging out...');
+            btn.addClass('disabled').attr('disabled', true);
+            
+            // Simulate a brief delay for better UX
+            setTimeout(function() {
+                window.location.href = logoutUrl;
+            }, 800);
+            
+            return false;
+        });
+        
+        // Focus management for accessibility
+        $('#logoutModal').on('shown.bs.modal', function () {
+            $(this).find('.btn-warning').focus();
+        });
+        
+        // Keyboard shortcuts
+        $(document).on('keydown', function(e) {
+            if ($('#logoutModal').hasClass('show')) {
+                // Enter key to confirm logout
+                if (e.keyCode === 13) {
+                    e.preventDefault();
+                    $('.logout-confirm-btn').click();
+                }
+            }
+        });
+        
+        console.log('✅ Logout modal script initialized successfully');
+    }
+    
+    initLogoutModal();
+});
+
+// Also provide immediate fallback
+window.showLogoutConfirmation = window.showLogoutConfirmation || function() {
+    if (confirm('Are you sure you want to logout?')) {
+        window.location.href = "{% url 'user-logout' %}";
+    }
+};
+</script>
