@@ -867,7 +867,7 @@ function executePatientDeletion() {
                 
                 // Redirect after a short delay
                 setTimeout(function() {
-                    window.location.href = response.redirect_url || '/patients/manager/';
+                    window.location.href = response.redirect_url || '/manager/patient/';
                 }, 1500);
             } else {
                 throw new Error(response.message || 'Delete operation failed');

@@ -583,14 +583,24 @@
       <div class="card">
         <div class="card-header"><h3 class="card-title">Indications for GMA</h3></div>
         <div class="card-body">
-          {% for gmamodel in patient.indecation_for_gma.all %}
-          <dl class="row">
-            <dd class="col-sm-11">{{ gmamodel.title }}
-            <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="{{gmamodel.description}}"></span></a>
-            </dd>
-          </dl>
-          {% endfor %}
-      </div></div>
+          {% if patient.indecation_for_gma.all %}
+            {% for gmamodel in patient.indecation_for_gma.all %}
+            <div class="row mb-2">
+              <div class="col-sm-11">
+                <span class="badge badge-info mr-2">{{ gmamodel.title }}</span>
+                <a href="#" data-toggle="tooltip" data-placement="top" title="{{gmamodel.description}}">
+                  <i class="fa fa-question-circle text-info"></i>
+                </a>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="alert alert-secondary" role="alert">
+              <i class="fas fa-info-circle"></i> No indications for GMA have been recorded for this patient.
+            </div>
+          {% endif %}
+        </div>
+      </div>
         <!-- /.card-body -->
 
       <!-- New card -->
@@ -795,7 +805,7 @@ function executePatientDeletion() {
                 
                 // Redirect after a short delay
                 setTimeout(function() {
-                    window.location.href = response.redirect_url || '/patients/manager/';
+                    window.location.href = response.redirect_url || '/manager/patient/';
                 }, 1500);
             } else {
                 throw new Error(response.message || 'Delete operation failed');

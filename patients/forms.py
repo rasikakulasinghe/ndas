@@ -408,18 +408,33 @@ class PatientForm(forms.ModelForm):
         apgar_10 = cleaned_data.get('apgar_10')
         
         if all([apgar_1 is not None, apgar_5 is not None, apgar_10 is not None]):
-            if any(score < 0 or score > 10 for score in [apgar_1, apgar_5, apgar_10] if score is not None):
-                raise ValidationError(_("All APGAR scores must be between 0 and 10."))
+            # Convert string values to integers for comparison
+            try:
+                apgar_scores = [int(score) for score in [apgar_1, apgar_5, apgar_10] if score is not None and score != '']
+                if any(score < 0 or score > 10 for score in apgar_scores):
+                    raise ValidationError(_("All APGAR scores must be between 0 and 10."))
+            except (ValueError, TypeError):
+                raise ValidationError(_("All APGAR scores must be valid numbers between 0 and 10."))
         
         # Validate POG (Period of Gestation)
         pog_wks = cleaned_data.get('pog_wks')
         pog_days = cleaned_data.get('pog_days')
         
-        if pog_wks is not None and (pog_wks < 20 or pog_wks > 44):
-            raise ValidationError({'pog_wks': _("Period of gestation must be between 20-44 weeks.")})
+        if pog_wks is not None and pog_wks != '':
+            try:
+                pog_wks_int = int(pog_wks)
+                if pog_wks_int < 20 or pog_wks_int > 44:
+                    raise ValidationError({'pog_wks': _("Period of gestation must be between 20-44 weeks.")})
+            except (ValueError, TypeError):
+                raise ValidationError({'pog_wks': _("Period of gestation weeks must be a valid number.")})
         
-        if pog_days is not None and (pog_days < 0 or pog_days > 6):
-            raise ValidationError({'pog_days': _("Period of gestation days must be between 0-6.")})
+        if pog_days is not None and pog_days != '':
+            try:
+                pog_days_int = int(pog_days)
+                if pog_days_int < 0 or pog_days_int > 6:
+                    raise ValidationError({'pog_days': _("Period of gestation days must be between 0-6.")})
+            except (ValueError, TypeError):
+                raise ValidationError({'pog_days': _("Period of gestation days must be a valid number.")})
         
         # Validate resuscitation note is provided if resuscitated is checked
         resuscitated = cleaned_data.get('resuscitated')

@@ -1,4 +1,5 @@
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from patients.models import Patient, Video, GMAssessment, CDICRecord, Help, Bookmark, Attachment, HINEAssessment, DevelopmentalAssessment
 from users.models import CustomUser
 from users.views import userViewByUsername
@@ -380,7 +381,7 @@ def patient_delete(request, pk):
             return JsonResponse({
                 'success': True,
                 'message': 'Patient has been deleted successfully.',
-                'redirect_url': '/patients/manager/'
+                'redirect_url': reverse('manage-patients')
             })
             
         except Exception as e:

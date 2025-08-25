@@ -1,0 +1,158 @@
+{% extends './src/basic_plane.html' %}
+{% load static %}
+
+{% block title %}Page Not Found{% endblock title %}
+
+{% block mainbody %}
+<div class="wrapper">
+  <!-- Error 404 Content -->
+  <div class="content-wrapper" style="margin-left: 0;">
+    <section class="content">
+      <div class="error-page">
+        <div class="container-fluid">
+          <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+              <div class="card card-outline card-primary shadow-lg" style="margin-top: 100px;">
+                <div class="card-body text-center p-5">
+                  <!-- 404 Icon -->
+                  <div class="error-icon mb-4">
+                    <i class="fas fa-exclamation-triangle text-warning" style="font-size: 72px;"></i>
+                  </div>
+                  
+                  <!-- Error Code -->
+                  <h1 class="error-title text-primary" style="font-size: 72px; font-weight: bold; margin-bottom: 20px;">
+                    404
+                  </h1>
+                  
+                  <!-- Error Message -->
+                  <h3 class="text-secondary mb-3">
+                    Oops! Page not found
+                  </h3>
+                  
+                  <p class="text-muted mb-4" style="font-size: 16px; line-height: 1.6;">
+                    We could not find the page you were looking for. 
+                    Meanwhile, you may <a href="{% url 'patients:home' %}" class="text-primary">return to dashboard</a> 
+                    or try using the search form.
+                  </p>
+                  
+                  <!-- Search Form -->
+                  <div class="input-group mb-4">
+                    <input type="search" class="form-control form-control-lg" placeholder="Search...">
+                    <div class="input-group-append">
+                      <button type="submit" class="btn btn-lg btn-primary">
+                        <i class="fas fa-search"></i>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <!-- Action Buttons -->
+                  <div class="row">
+                    <div class="col-12 col-sm-6 mb-2 mb-sm-0">
+                      <a href="{% url 'patients:home' %}" class="btn btn-primary btn-lg btn-block">
+                        <i class="fas fa-home mr-2"></i>
+                        Go to Dashboard
+                      </a>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                      <a href="javascript:history.back()" class="btn btn-outline-secondary btn-lg btn-block">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Go Back
+                      </a>
+                    </div>
+                  </div>
+                  
+                  <!-- Help Links -->
+                  <div class="mt-4 pt-3 border-top">
+                    <p class="text-muted mb-2">
+                      <small>Need help? Contact our support team</small>
+                    </p>
+                    <div class="btn-group btn-group-sm" role="group">
+                      <a href="#" class="btn btn-outline-info">
+                        <i class="fas fa-question-circle mr-1"></i>
+                        Help Center
+                      </a>
+                      <a href="#" class="btn btn-outline-info">
+                        <i class="fas fa-envelope mr-1"></i>
+                        Contact Support
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- Custom CSS for 404 page -->
+<style>
+  body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+  }
+  
+  .error-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .error-icon {
+    animation: bounce 2s infinite;
+  }
+  
+  @keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+      transform: translateY(0);
+    }
+    40% {
+      transform: translateY(-10px);
+    }
+    60% {
+      transform: translateY(-5px);
+    }
+  }
+  
+  .error-title {
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .card {
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+  }
+  
+  .btn {
+    border-radius: 25px;
+    transition: all 0.3s ease;
+  }
+  
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+</style>
+
+<!-- Custom JavaScript for enhanced interaction -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add smooth hover effects
+    const buttons = document.querySelectorAll('.btn');
+    buttons.forEach(button => {
+        button.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+        });
+        
+        button.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+});
+</script>
+
+{% endblock mainbody %}

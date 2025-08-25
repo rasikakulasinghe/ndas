@@ -15,3 +15,7 @@ urlpatterns = [
     path('djrichtextfield/', include('djrichtextfield.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
+# Custom error handlers
+handler404 = 'ndas.views.handler404'
+handler500 = 'ndas.views.handler500'
+
