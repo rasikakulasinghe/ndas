@@ -3,9 +3,8 @@
 
 {% block main_content %}
 
-<div class="container">
-
-</br>
+{% comment %} <div class="container"> {% endcomment %}
+<div class="container-fluid">
 
   <div class="card">
     <div class="card-header bg-info">
@@ -100,7 +99,10 @@
       <td><div style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="Added by : {{ Patient.added_by }} on {{ Patient.added_on }}" class="fas fa-info-circle" style="color: #3d7deb;"></i></div></td>
 
       <td>
-          <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
+          <div class="btn-group">
+            <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <i class="fas fa-cogs"></i>  Actions
+            </button>
             <div class="dropdown-menu dropleft" aria-labelledby="btnGroupDrop1">
               
             <li><a class="dropdown-item" href="{% url 'view-patient' Patient.id %}"><i class="fas fa-eye"></i>&nbsp; View Patient</a></li>

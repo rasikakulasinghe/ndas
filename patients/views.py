@@ -244,7 +244,14 @@ def patient_add(request):
                     var_pt_add.last_edit_by = None
                     var_pt_add.save()
                     
-                    messages.success(request, f'New patient "{var_pt_add.baby_name}" added successfully!')
+                    # Save many-to-many relationships (including GMA indicators)
+                    data_form.save_m2m()
+                    
+                    # Get count of GMA indicators for success message
+                    gma_count = var_pt_add.indecation_for_gma.count()
+                    gma_message = f" with {gma_count} GMA indicator(s)" if gma_count > 0 else ""
+                    
+                    messages.success(request, f'New patient "{var_pt_add.baby_name}" added successfully{gma_message}!')
                     return redirect('view-patient', var_pt_add.id)
                     
                 except Exception as e:
