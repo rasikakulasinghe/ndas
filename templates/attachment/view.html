@@ -65,7 +65,9 @@
         <a href="{% url 'attachment-edit' attachment.id %}" class="btn btn-link"><i class="fas fa-pencil-alt"></i>  Update</a>
         <a href="{% url 'attachment-manager-patient' attachment.patient.id %}" class="btn btn-link"><i class="fas fa-eye"></i>  View All Attachments</a>
         <a href="{% url 'view-patient' attachment.patient.id %}" class="btn btn-link"><i class="fas fa-eye"></i>  View Patient</a>
+        {% if attachment.uploaded_by and attachment.uploaded_by.username %}
         <a class="btn btn-link" href="{% url 'user-view-by-username' attachment.uploaded_by.username %}" type="button"><i class="fas fa-eye"></i> View Uploaded User</a>
+        {% endif %}
         <a class="btn btn-link" href="{% url 'attachment-delete-confirm' attachment.id %}" type="button"><i class="far fa-trash-alt"></i>  Delete</a>
 
       </div>

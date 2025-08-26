@@ -222,7 +222,11 @@
 
               <ul class="list-group">
                 {% for username, stats in user_stat.items %}
+                {% if username %}
                 <div class="list-group-item align-items-center"><a href="{% url 'user-view-by-username' username %}" >{{ username }} : </a></div>
+                {% else %}
+                <div class="list-group-item align-items-center">Unknown User :</div>
+                {% endif %}
                 
                   <li class="list-group-item align-items-center">
                     {% if stats.Patient > 0 %} Patient : <span class="badge badge-primary badge-pill">{{ stats.Patient }}</span> &nbsp; | &nbsp;{% endif %}

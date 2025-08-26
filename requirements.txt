@@ -43,6 +43,12 @@ psycopg2-binary==2.9.9  # PostgreSQL adapter
 redis==5.0.8
 django-redis==5.4.0
 
+# Task Queue and Video Processing
+celery
+celery[redis]
+ffmpeg-python
+ffprobe
+
 # Environment management
 python-decouple==3.8  # Better than django-environ for security
 

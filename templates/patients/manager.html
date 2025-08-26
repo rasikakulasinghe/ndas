@@ -136,7 +136,9 @@
                 <li><a class="dropdown-item" href="{% url 'cdic-assessment-manager-patient' Patient.id %}"><i class="fas fa-eye"></i>&nbsp; All CDIC Records</a></li>
                 <li><a class="dropdown-item" href="{% url 'attachment-manager-patient' Patient.id %}"><i class="fas fa-eye"></i>&nbsp; All Attachments</a></li>
                 {% endif %}
+                {% if Patient.added_by and Patient.added_by.username %}
                 <li><a class="dropdown-item" href="{% url 'user-view-by-username' Patient.added_by.username %}"><i class="fas fa-eye"></i>&nbsp; View Created User</a></li>
+                {% endif %}
              </ul>
             </li>
 

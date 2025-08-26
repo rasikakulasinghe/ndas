@@ -41,7 +41,7 @@
             <a class="nav-link" id="custom-tabs-four-hine-tab" data-toggle="pill" href="#assessment-hine" role="tab" aria-controls="custom-tabs-four-hine" aria-selected="false">HINE Record</a>
             </li>
             <li class="nav-item">
-            <a class="nav-link" id="custom-tabs-four-da-nd-tab" data-toggle="pill" href="#assessment-da" role="tab" aria-controls="custom-tabs-four-da" aria-selected="false">Developmental Assessments</a>
+            <a class="nav-link" id="custom-tabs-four-da-nd-tab" data-toggle="pill" href="#assessment-da" role="tab" aria-controls="custom-tabs-four-da" aria-selected="false">Developmental Record</a>
             </li>
             <li class="nav-item">
             <a class="nav-link" id="custom-tabs-four-cdic-tab" data-toggle="pill" href="#interventions-cdic" role="tab" aria-controls="custom-tabs-four-cdic" aria-selected="false">CDIC Records</a>
@@ -253,7 +253,9 @@
                             <a class="dropdown-item" href="{% url 'assessment-edit' Assessment.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
                             <a class="dropdown-item" href="{% url 'assessment-delete_start' Assessment.id %}"><i class="far fa-trash-alt"></i> Delete</a>
                             <a class="dropdown-item" href="{% url 'file-view' Assessment.video_file.id %}"><i class="fas fa-eye"></i> Play Video</a>
+                            {% if Assessment.added_by and Assessment.added_by.username %}
                             <a class="dropdown-item" href="{% url 'user-view-by-username' Assessment.added_by.username %}"><i class="fas fa-eye"></i> View Created User</a>
+                            {% endif %}
                             </div>
                         </div>
                       </div>
@@ -314,7 +316,9 @@
                         <a class="dropdown-item" href="{% url 'hine-assessment-view' HINE.id %}"><i class="fas fa-eye"></i> View</a>
                         <a class="dropdown-item" href="{% url 'hine-assessment-edit' HINE.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
                         <a class="dropdown-item" href="{% url 'hine-assessment-delete_start' HINE.id %}"><i class="far fa-trash-alt"></i> Delete</a>
+                        {% if HINE.added_by and HINE.added_by.username %}
                         <a class="dropdown-item" href="{% url 'user-view-by-username' HINE.added_by.username %}"><i class="fas fa-eye"></i> View Created User</a>
+                        {% endif %}
 
                       </div>
                     </div>
@@ -374,7 +378,9 @@
                         <a class="dropdown-item" href="{% url 'da-assessment-view' DA.id %}"><i class="fas fa-eye"></i> View</a>
                         <a class="dropdown-item" href="{% url 'da-assessment-edit' DA.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
                         <a class="dropdown-item" href="{% url 'da-assessment-delete_start' DA.id %}"><i class="far fa-trash-alt"></i> Delete</a>
+                        {% if DA.added_by and DA.added_by.username %}
                         <a class="dropdown-item" href="{% url 'user-view-by-username' DA.added_by.username %}"><i class="fas fa-eye"></i> View Created User</a>
+                        {% endif %}
 
                       </div>
                     </div>
@@ -430,7 +436,9 @@
                         <a class="dropdown-item" href="{% url 'cdic-assessment-view' CDIC.id %}"><i class="fas fa-eye"></i> View</a>
                         <a class="dropdown-item" href="{% url 'cdic-assessment-edit' CDIC.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
                         <a class="dropdown-item" href="{% url 'cdic-assessment-delete_start' CDIC.id %}"><i class="far fa-trash-alt"></i> Delete</a>
+                        {% if CDIC.created_by and CDIC.created_by.username %}
                         <a class="dropdown-item" href="{% url 'user-view-by-username' CDIC.created_by.username %}"><i class="fas fa-eye"></i> View Created User</a>
+                        {% endif %}
 
                       </div>
                     </div>
@@ -492,7 +500,9 @@
                           {% else %}
                           <a class="dropdown-item" href="{% url 'assessment-view-by-file-id' video.id %}"><i class="fas fa-eye"></i> View Assessment</a>
                           {% endif %}
+                          {% if video.uploaded_by and video.uploaded_by.username %}
                           <a class="dropdown-item" href="{% url 'user-view-by-username' video.uploaded_by.username %}"><i class="fas fa-eye"></i> View Uploaded User</a>
+                          {% endif %}
                         </div>
                       </div>
                     </td>
@@ -552,7 +562,9 @@
                             <div><hr></div>
                             <a class="dropdown-item" href="{% url 'attachment-edit' Attachment.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
                             <a class="dropdown-item" href="{% url 'attachment-delete-confirm' Attachment.id %}"><i class="far fa-trash-alt"></i> Delete</a>
+                            {% if Attachment.uploaded_by and Attachment.uploaded_by.username %}
                             <a class="dropdown-item" href="{% url 'user-view-by-username' Attachment.uploaded_by.username %}"><i class="fas fas fa-eye"></i> View Uploaded user</a>
+                            {% endif %}
                             {% if Attachment.isBookmarked %}
                             <a class="dropdown-item" href="{% url 'bookmark-view' Attachment.isBookmarked.id %}"><i class="fas fas fa-eye"></i> View Bookmark</a>
                             {% endif %}

@@ -1,0 +1,125 @@
+# NDAS Video Processing Pipeline with Celery & Redis
+# Docker Compose configuration for development and production
+
+version: '3.8'
+
+services:
+  # Redis - Message broker and result backend
+  redis:
+    image: redis:7-alpine
+    container_name: ndas_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - ndas_network
+
+  # Celery Worker - Video processing
+  celery_worker:
+    build: .
+    container_name: ndas_celery_worker
+    command: celery -A ndas worker --loglevel=info --concurrency=2 --queues=video_processing,default
+    environment:
+      - DJANGO_SETTINGS_MODULE=ndas.settings
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - .:/app
+      - media_files:/app/media
+      - temp_files:/tmp
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - ndas_network
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+          cpus: '1.0'
+
+  # Celery Beat - Periodic tasks scheduler
+  celery_beat:
+    build: .
+    container_name: ndas_celery_beat
+    command: celery -A ndas beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    environment:
+      - DJANGO_SETTINGS_MODULE=ndas.settings
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - celery_worker
+    restart: unless-stopped
+    networks:
+      - ndas_network
+
+  # Celery Flower - Monitoring interface
+  celery_flower:
+    build: .
+    container_name: ndas_celery_flower
+    command: celery -A ndas flower --port=5555
+    environment:
+      - DJANGO_SETTINGS_MODULE=ndas.settings
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    ports:
+      - "5555:5555"
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - celery_worker
+    restart: unless-stopped
+    networks:
+      - ndas_network
+
+  # Django Web Application
+  web:
+    build: .
+    container_name: ndas_web
+    command: python manage.py runserver 0.0.0.0:8000
+    environment:
+      - DJANGO_SETTINGS_MODULE=ndas.settings
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - DEBUG=True
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - media_files:/app/media
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - ndas_network
+
+volumes:
+  redis_data:
+    driver: local
+  media_files:
+    driver: local
+  temp_files:
+    driver: local
+
+networks:
+  ndas_network:
+    driver: bridge

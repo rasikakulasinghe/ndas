@@ -9,13 +9,13 @@ admin.site.site_title = settings.ADMIN_SITE_TITLE
 admin.site.index_title = settings.ADMIN_INDEX_TITLE
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('users/', include('users.urls')),
-    path('', include('patients.urls')),
-    path('djrichtextfield/', include('djrichtextfield.urls')),
+    path("admin/", admin.site.urls),
+    path("users/", include("users.urls")),
+    path("", include("patients.urls")),
+    path("djrichtextfield/", include("djrichtextfield.urls")),
+    path("video/", include("video.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Custom error handlers
-handler404 = 'ndas.views.handler404'
-handler500 = 'ndas.views.handler500'
-
+handler404 = "ndas.views.handler404"
+handler500 = "ndas.views.handler500"
