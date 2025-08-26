@@ -322,7 +322,7 @@ def video_manager_new_only(request):
 @login_required(login_url='user-login')
 def video_manager_by_patient(request, patient_id):
     """Video manager by patient view - placeholder"""
-    return redirect('view-patient', patient_id=patient_id)
+    return redirect('view-patient', pk=patient_id)
 
 @login_required(login_url='user-login')
 def video_delete_confirm(request, video_id):
