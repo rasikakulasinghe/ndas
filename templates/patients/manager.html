@@ -118,11 +118,11 @@
 
             <li><a class="dropdown-item dropdown-toggle" href="#">&nbsp; Add New Record </a>
               <ul class="submenu dropdown-menu">
-                <li><a class="dropdown-item" href="{% url 'video:add' Patient.id %}"><i class="fas fa-circle fa-plus"></i>&nbsp; GMA Video</a></li>
-                <li><a class="dropdown-item" href="{% url 'cdic-assessment-add' Patient.id %}"><i class="fas fa-circle fa-plus"></i>&nbsp; CDIC Record</a></li>
-                <li><a class="dropdown-item" href="{% url 'da-assessment-add' Patient.id %}"><i class="fas fa-circle fa-plus"></i>&nbsp; Developmental Assessment</a></li>
-                <li><a class="dropdown-item" href="{% url 'hine-assessment-add' Patient.id %}"><i class="fas fa-circle fa-plus"></i>&nbsp; HINE Assessment</a></li>
-                <li><a class="dropdown-item" href="{% url 'attachment-add' Patient.id %}"><i class="fas fa-circle fa-plus"></i>&nbsp; Attachment</a></li>
+                <li><a class="dropdown-item" href="{% url 'video:add' Patient.id %}"><i class="fas fa-plus-circle"></i>&nbsp; GMA Video</a></li>
+                <li><a class="dropdown-item" href="{% url 'cdic-assessment-add' Patient.id %}"><i class="fas fa-plus-circle"></i>&nbsp; CDIC Record</a></li>
+                <li><a class="dropdown-item" href="{% url 'da-assessment-add' Patient.id %}"><i class="fas fa-plus-circle"></i>&nbsp; Developmental Assessment</a></li>
+                <li><a class="dropdown-item" href="{% url 'hine-assessment-add' Patient.id %}"><i class="fas fa-plus-circle"></i>&nbsp; HINE Assessment</a></li>
+                <li><a class="dropdown-item" href="{% url 'attachment-add' Patient.id %}"><i class="fas fa-plus-circle"></i>&nbsp; Attachment</a></li>
              </ul>
             </li>
 
@@ -144,9 +144,9 @@
 
             <div class="dropdown-divider"></div>
             {% if Patient.isBookmarked %}
-            <a class="dropdown-item" href="{% url 'bookmark-view' Patient.isBookmarked.id %}"><i class="fas fas fa-eye"></i> View Bookmark</a>
+            <a class="dropdown-item" href="{% url 'bookmark-view' Patient.isBookmarked.id %}"><i class="fas fa-eye"></i> View Bookmark</a>
             {% else %}
-            <a class="dropdown-item" href="{% url 'bookmark-add' Patient.id 'Patient' %}"><i class="fas fa-circle fa-plus"></i> Add Bookmark</a>
+            <a class="dropdown-item" href="{% url 'bookmark-add' Patient.id 'Patient' %}"><i class="fas fa-plus-circle"></i> Add Bookmark</a>
             {% endif %}
 
             </div>

@@ -5,14 +5,23 @@
 
 /* Fix for nested dropdown menus */
 .submenu {
+  position: absolute;
   left: 100%;
   top: 0;
   margin-top: -1px;
   border-radius: 0 0.25rem 0.25rem 0.25rem;
+  display: none;
+  z-index: 1001;
+  min-width: 200px;
 }
 
 .submenu.show {
   display: block;
+}
+
+/* Ensure parent dropdown item has relative positioning */
+.dropdown-item.dropdown-toggle {
+  position: relative;
 }
 
 .dropdown-item.dropdown-toggle::after {
@@ -21,6 +30,34 @@
   border-bottom: 0.3em solid transparent;
   border-left: 0.3em solid;
   margin-left: auto;
+}
+
+/* Create a hover bridge between parent and submenu */
+.dropdown-item.dropdown-toggle:hover + .submenu,
+.submenu:hover {
+  display: block !important;
+}
+
+/* Improve hover detection by extending hover area */
+.dropdown-item.dropdown-toggle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -5px;
+  width: 5px;
+  height: 100%;
+  background: transparent;
+}
+
+/* Additional styling for better submenu appearance */
+.submenu {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+/* Ensure submenu doesn't interfere with parent dropdown positioning */
+.dropdown-menu {
+  position: relative;
 }
 
 /* Mobile responsive adjustments */
@@ -38,5 +75,39 @@
   .submenu .dropdown-item {
     padding-left: 1.5rem;
     font-size: 0.9rem;
+  }
+  
+  /* Disable hover effects on mobile */
+  .dropdown-item.dropdown-toggle::before {
+    display: none;
+  }
+}
+
+/* Desktop-specific improvements */
+@media (min-width: 992px) {
+  /* Ensure parent menu item creates stacking context */
+  .dropdown-item.dropdown-toggle {
+    overflow: visible;
+  }
+  
+  /* Better positioning for dropdown menu container */
+  .btn-group .dropdown-menu {
+    position: absolute;
+    z-index: 1000;
+  }
+  
+  /* Ensure submenu appears above other elements */
+  .submenu {
+    z-index: 1001;
+  }
+  
+  /* Smooth transition for better UX */
+  .submenu {
+    transition: opacity 0.1s ease-in-out;
+    opacity: 0;
+  }
+  
+  .submenu.show {
+    opacity: 1;
   }
 }

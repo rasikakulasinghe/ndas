@@ -32,11 +32,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Toggle current submenu
                 if ($(window).width() < 992) {
-                    // Mobile behavior
+                    // Mobile behavior - simple toggle
                     $submenu.toggle();
                 } else {
-                    // Desktop behavior
-                    $submenu.toggleClass('show');
+                    // Desktop behavior - ensure it shows and stays visible
+                    if ($submenu.hasClass('show')) {
+                        $submenu.removeClass('show').hide();
+                    } else {
+                        $submenu.addClass('show').show();
+                        // Keep it visible even without hover for a moment
+                        $submenu.data('clickOpened', true);
+                        setTimeout(function() {
+                            $submenu.removeData('clickOpened');
+                        }, 2000);
+                    }
                 }
             });
 
@@ -68,39 +77,81 @@ document.addEventListener('DOMContentLoaded', function() {
                 $(this).find('.submenu').removeClass('show').hide();
             });
 
-            // Handle hover effects on desktop
+            // Handle hover effects on desktop with improved behavior
             if ($(window).width() >= 992) {
+                // Improved hover handling for dropdown toggles
                 $('.dropdown-item.dropdown-toggle').hover(
                     function() {
                         // Mouse enter
-                        const $submenu = $(this).next('.submenu');
+                        const $this = $(this);
+                        const $submenu = $this.next('.submenu');
+                        const $parentDropdown = $this.closest('.dropdown-menu');
+                        
+                        // Clear any existing timeouts
                         clearTimeout($submenu.data('hideTimeout'));
-                        $submenu.addClass('show');
+                        clearTimeout($this.data('hideTimeout'));
+                        
+                        // Hide other submenus
+                        $parentDropdown.find('.submenu').not($submenu).removeClass('show').hide();
+                        
+                        // Show current submenu
+                        $submenu.addClass('show').show();
                     },
                     function() {
-                        // Mouse leave
-                        const $submenu = $(this).next('.submenu');
+                        // Mouse leave - set a timeout to hide submenu
+                        const $this = $(this);
+                        const $submenu = $this.next('.submenu');
+                        
                         const hideTimeout = setTimeout(function() {
-                            $submenu.removeClass('show');
-                        }, 300);
+                            // Don't hide if submenu was opened by click and still within timeout
+                            if (!$submenu.is(':hover') && !$this.is(':hover') && !$submenu.data('clickOpened')) {
+                                $submenu.removeClass('show').hide();
+                            }
+                        }, 200); // Reduced timeout for better responsiveness
+                        
                         $submenu.data('hideTimeout', hideTimeout);
+                        $this.data('hideTimeout', hideTimeout);
                     }
                 );
 
+                // Improved hover handling for submenus
                 $('.submenu').hover(
                     function() {
                         // Mouse enter submenu
-                        clearTimeout($(this).data('hideTimeout'));
+                        const $submenu = $(this);
+                        const $parentToggle = $submenu.prev('.dropdown-toggle');
+                        
+                        // Clear timeouts
+                        clearTimeout($submenu.data('hideTimeout'));
+                        clearTimeout($parentToggle.data('hideTimeout'));
+                        
+                        // Ensure submenu stays visible
+                        $submenu.addClass('show').show();
                     },
                     function() {
                         // Mouse leave submenu
                         const $submenu = $(this);
+                        const $parentToggle = $submenu.prev('.dropdown-toggle');
+                        
                         const hideTimeout = setTimeout(function() {
-                            $submenu.removeClass('show');
-                        }, 300);
+                            if (!$submenu.is(':hover') && !$parentToggle.is(':hover') && !$submenu.data('clickOpened')) {
+                                $submenu.removeClass('show').hide();
+                            }
+                        }, 200);
+                        
                         $submenu.data('hideTimeout', hideTimeout);
                     }
                 );
+                
+                // Additional safety: handle mouse leave from entire dropdown area
+                $('.dropdown-menu').on('mouseleave', function() {
+                    const $menu = $(this);
+                    setTimeout(function() {
+                        if (!$menu.is(':hover')) {
+                            $menu.find('.submenu').removeClass('show').hide();
+                        }
+                    }, 300);
+                });
             }
             
             console.log('✅ Patient manager navigation initialized');
