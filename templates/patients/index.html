@@ -90,12 +90,12 @@
           <div class="small-box bg-secondary">
           <div class="inner">
             <div class="row">
-              <div class="col"><a href="{% url 'file-manager-common' %}" style="color:white;"><i data-toggle="tooltip" data-placement="top" title="Videos" class="fas fa-play-circle" style="color: #ffffff;"></i></a></div>
+              <div class="col"><a href="{% url 'video:manager' %}" style="color:white;"><i data-toggle="tooltip" data-placement="top" title="Videos" class="fas fa-play-circle" style="color: #ffffff;"></i></a></div>
               <div class="col"><a href="{% url 'bookmark-manager' %}" style="color:white;"><i data-toggle="tooltip" data-placement="top" title="Bookmarks" class="far fa-bookmark" style="color: #ffffff;"></i></a></div>
               <div class="col"><a href="{% url 'attachment-manager' %}" style="color:white;"><i data-toggle="tooltip" data-placement="top" title="Attachments" class="fas fa-paperclip" style="color: #ffffff;"></i></a></div>
               <div class="col"><a href="{% url 'user-view' user.id %}" style="color:white;"><i data-toggle="tooltip" data-placement="top" title="Users" class="fas fa-users" style="color: #ffffff;"></i></a></div>
               <div class="w-100"></div>
-              <div class="col"><a href="{% url 'file-manager-common' %}" style="color:white;">{{videos_total_count}}</a></div>
+              <div class="col"><a href="{% url 'video:manager' %}" style="color:white;">{{videos_total_count}}</a></div>
               <div class="col"><a href="{% url 'bookmark-manager' %}" style="color:white;">{{bookmark.count}}</a></div>
               <div class="col"><a href="{% url 'attachment-manager' %}" style="color:white;">{{attachments_count}}</a></div>
               <div class="col"><a href="{% url 'user-view' user.id %}" style="color:white;">{{users_total_count}}</a></div>
@@ -172,7 +172,7 @@
                     <ul class="nav flex-column">
                         {% if new_videos %}
                         <li class="nav-item">
-                        <a href="{% url 'file-manager-common-new' %}" class="nav-link">Videos &nbsp; <small class="badge badge-danger">New</small><span class="float-right badge bg-primary">{{new_videos_count}}</span></a>
+                        <a href="{% url 'video:manager-new' %}" class="nav-link">Videos &nbsp; <small class="badge badge-danger">New</small><span class="float-right badge bg-primary">{{new_videos_count}}</span></a>
                         </li>{% endif %}
 
                         {% if Patients_new_list_10 %}
@@ -191,11 +191,11 @@
                   <ul class="nav flex-column">
                       {% for Videos in new_videos %}
                       <li class="nav-item">
-                      <a href="{% url 'file-view' Videos.id %}" target="_blank" class="nav-link">{{Videos.caption}} &nbsp; <small class="badge badge-danger">New</small><span class="float-right"><i class="far fa-clock"></i>&nbsp;&nbsp; {{Videos.uploaded_on|timesince}} ago</span></a>
+                      <a href="{% url 'video:view' Videos.id %}" target="_blank" class="nav-link">{{Videos.caption}} &nbsp; <small class="badge badge-danger">New</small><span class="float-right"><i class="far fa-clock"></i>&nbsp;&nbsp; {{Videos.uploaded_on|timesince}} ago</span></a>
                       </li>
                       {% endfor %}
                   </ul>
-                {% if new_videos_count > 5 %}<div class="clearfix"><hr><a href="{% url 'file-manager-common-new' %}" target="_blank" class="float-right">View All</a></div>{% endif %}
+                {% if new_videos_count > 5 %}<div class="clearfix"><hr><a href="{% url 'video:manager-new' %}" target="_blank" class="float-right">View All</a></div>{% endif %}
                 {% else %}No new videos{% endif %}
           </div>
         </div>
