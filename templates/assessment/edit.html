@@ -23,7 +23,11 @@
       <div class="form-group row">
         <label class="col-form-label col-sm-2">Title : </label>
         <div class="col-sm">
-          <a href="{% url 'file-view' assmnt.video_file.id %}" target="_blank" data-toggle="tooltip" data-placement="top" title="Play this video in another window..."> {{assmnt.video_file.caption}} <i class="fas fa-play-circle" style="color: #0752d5;"></i></a>
+          {% if assmnt.video_file and assmnt.video_file.id %}
+          <a href="{% url 'video:view' assmnt.video_file.id %}" target="_blank" data-toggle="tooltip" data-placement="top" title="Play this video in another window..."> {{assmnt.video_file.caption}} <i class="fas fa-play-circle" style="color: #0752d5;"></i></a>
+          {% else %}
+          No video associated
+          {% endif %}
         </div>
       </div>
 

@@ -8,7 +8,6 @@ from patients.models import (
     GMAssessment,
     Bookmark,
     Attachment,
-    Video,
     CDICRecord,
     HINEAssessment,
     DevelopmentalAssessment,

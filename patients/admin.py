@@ -1,5 +1,17 @@
 from django.contrib import admin
-from patients.models import Patient, GMAssessment, DevelopmentalAssessment, Video, IndicationsForGMA, DiagnosisList, Help, Bookmark, Attachment, CDICRecord, HINEAssessment
+from patients.models import (
+    Patient,
+    GMAssessment,
+    DevelopmentalAssessment,
+    IndicationsForGMA,
+    DiagnosisList,
+    Help,
+    Bookmark,
+    Attachment,
+    CDICRecord,
+    HINEAssessment,
+)
+
 
 class PatientsAdmin(admin.ModelAdmin):
     list_display = (
@@ -53,6 +65,7 @@ class PatientsAdmin(admin.ModelAdmin):
         "last_edit_by",
     )
 
+
 class IndicationsForGMAAdmin(admin.ModelAdmin):
     list_display = (
         "id",
@@ -64,54 +77,42 @@ class IndicationsForGMAAdmin(admin.ModelAdmin):
     filter_horizontal = ()
     list_filter = ("level",)
     fieldsets = ()
-    readonly_fields = ("added_by", "created_at",
-                       "last_edit_by", "updated_at")
+    readonly_fields = ("added_by", "created_at", "last_edit_by", "updated_at")
     fields = (
         "title",
         "level",
         "description",
     )
 
-class VideoAdmin(admin.ModelAdmin):
-    list_display = (
-        "id",
-        "patient",
-        "title",
-        "recorded_on",
-        "created_at",
-        "added_by",
-    )
-    ordering = ("-id",)
-    filter_horizontal = ()
-    list_filter = ("added_by",)
-    fieldsets = ()
-    readonly_fields = ("last_edit_by", "updated_at")
-    fields = (
-        "patient",
-        "title",
-        "recorded_on",
-        "original_video",
-        "description",
-        "added_by",
-    )
 
 class GMAssessmentAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "patient",
         "date_of_assessment",
-        'parent_informed',
+        "parent_informed",
         "added_by",
         "created_at",
     )
     ordering = ("-id",)
     filter_horizontal = ()
-    list_filter = ("date_of_assessment", 'parent_informed',)
+    list_filter = (
+        "date_of_assessment",
+        "parent_informed",
+    )
     fieldsets = ()
     readonly_fields = ("last_edit_by", "updated_at", "added_by", "created_at")
     fields = (
-        'patient', 'video_file', 'date_of_assessment', 'diagnosis', 'diagnosis_other', 'management_plan', 'parent_informed',
-        'next_assessment_date',)
+        "patient",
+        "video_file",
+        "date_of_assessment",
+        "diagnosis",
+        "diagnosis_other",
+        "management_plan",
+        "parent_informed",
+        "next_assessment_date",
+    )
+
 
 class HelpAdmin(admin.ModelAdmin):
     list_display = (
@@ -131,7 +132,8 @@ class HelpAdmin(admin.ModelAdmin):
         "description",
         "video_1",
         "video_2",
-        )
+    )
+
 
 class BookmarkAdmin(admin.ModelAdmin):
     list_display = (
@@ -154,8 +156,9 @@ class BookmarkAdmin(admin.ModelAdmin):
         "bookmark_type",
         "owner",
         "object_id",
-        )
-    
+    )
+
+
 class AttachmentAdmin(admin.ModelAdmin):
     list_display = (
         "id",
@@ -174,11 +177,12 @@ class AttachmentAdmin(admin.ModelAdmin):
     fields = (
         "title",
         "description",
-        'file',
+        "file",
         "attachment_type",
         "patient",
         "added_by",
-        )
+    )
+
 
 class CDICRecordAdmin(admin.ModelAdmin):
     list_display = (
@@ -196,7 +200,7 @@ class CDICRecordAdmin(admin.ModelAdmin):
         "added_by",
         "created_at",
         "last_edit_by",
-        "updated_at"
+        "updated_at",
     )
     ordering = ("-id",)
     filter_horizontal = ()
@@ -215,8 +219,9 @@ class CDICRecordAdmin(admin.ModelAdmin):
         "discharged_by",
         "discharge_date",
         "discharge_plan",
-        )
-    
+    )
+
+
 class HINEAssessmentAdmin(admin.ModelAdmin):
     list_display = (
         "patient",
@@ -227,7 +232,7 @@ class HINEAssessmentAdmin(admin.ModelAdmin):
         "added_by",
         "created_at",
         "last_edit_by",
-        "updated_at"
+        "updated_at",
     )
     ordering = ("-id",)
     filter_horizontal = ()
@@ -241,8 +246,9 @@ class HINEAssessmentAdmin(admin.ModelAdmin):
         "assessment_done_by",
         "comment",
         "added_by",
-        )
-    
+    )
+
+
 class DevelopmentalAssessmentAdmin(admin.ModelAdmin):
     list_display = (
         "patient",
@@ -262,15 +268,26 @@ class DevelopmentalAssessmentAdmin(admin.ModelAdmin):
         "patient",
         "date_of_assessment",
         "assessment_done_by",
-        "gm_age_from","gm_age_to", "gm_details", "fmv_age_from", "fmv_age_to", "fmv_details", "hsl_age_from", "hsl_age_to", "hsl_details", "seb_age_from", "seb_age_to", "seb_details",
+        "gm_age_from",
+        "gm_age_to",
+        "gm_details",
+        "fmv_age_from",
+        "fmv_age_to",
+        "fmv_details",
+        "hsl_age_from",
+        "hsl_age_to",
+        "hsl_details",
+        "seb_age_from",
+        "seb_age_to",
+        "seb_details",
         "comment",
         "added_by",
-        )
+    )
+
 
 # Register your models here.
 admin.site.register(Patient, PatientsAdmin)
 admin.site.register(DiagnosisList)
-admin.site.register(Video, VideoAdmin)
 admin.site.register(IndicationsForGMA, IndicationsForGMAAdmin)
 admin.site.register(GMAssessment, GMAssessmentAdmin)
 admin.site.register(Help, HelpAdmin)

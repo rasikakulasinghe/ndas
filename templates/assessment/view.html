@@ -21,9 +21,11 @@
     <div class="form-group row d-flex align-items-center">
       <label class="col-form-label col-sm-2">Video : </label>
       <div class="col-sm-10">
-        
-        <a href="{% url 'file-view' assessment.video_file.id %}" target="_blank" data-toggle="tooltip" data-placement="top" title="Play this video in another window..."> {{assessment.video_file.caption}} <i class="fas fa-play-circle" style="color: #0752d5;"></i></a>
-
+        {% if assessment.video_file and assessment.video_file.id %}
+        <a href="{% url 'video:view' assessment.video_file.id %}" target="_blank" data-toggle="tooltip" data-placement="top" title="Play this video in another window..."> {{assessment.video_file.caption}} <i class="fas fa-play-circle" style="color: #0752d5;"></i></a>
+        {% else %}
+        No video associated
+        {% endif %}
     </div>
     </div>
 

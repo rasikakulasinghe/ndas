@@ -445,7 +445,7 @@ function handleVideoUpload() {
     });
 
     // Send request
-    xhr.open('POST', '{% url "file-add" patient.id %}', true);
+    xhr.open('POST', '{% url "video:add" patient.id %}', true);
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
     xhr.send(formData);
 }

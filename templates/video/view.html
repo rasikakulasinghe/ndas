@@ -69,7 +69,7 @@
         {% endif %}
         <hr>
 
-        <a href="{% url 'video-edit' file.id %}" class="btn btn-link"><i class="fas fa-pencil-alt"></i>  Update or Delete this file)</a>
+        <a href="{% url 'video:edit' file.id %}" class="btn btn-link"><i class="fas fa-pencil-alt"></i>  Update or Delete this file)</a>
         {% if file.isNewFile %}
         <a href="{% url 'assessment-add' file.patient.id file.id %}" class="btn btn-link"><i class="fas fa-circle fa-plus"></i>  Create New Assessment</a>
         {% else %}

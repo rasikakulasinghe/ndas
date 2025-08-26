@@ -38,7 +38,8 @@ def get_all_diagnosis_data():
     return diagnosis_data
 
 def get_userStats():
-    from patients.models import GMAssessment, HINEAssessment, DevelopmentalAssessment, Patient, Video, CDICRecord, Attachment, Bookmark
+    from patients.models import GMAssessment, HINEAssessment, DevelopmentalAssessment, Patient, CDICRecord, Attachment, Bookmark
+    from video.models import Video
     from users.models import CustomUser
 
     user_list = CustomUser.objects.all()
@@ -237,13 +238,13 @@ def getPatientList(pts_type):
     if pts_type == PtStatus.ALL:
         return var_ptl
     elif pts_type == PtStatus.NEW:
-        return var_ptl.filter(videos__isnull=True).distinct()
+        return var_ptl.filter(video_files__isnull=True).distinct()
     elif pts_type == PtStatus.DISCHARGED:
         return var_ptl.filter(cdicrecord__is_discharged=True).distinct()
     elif pts_type == PtStatus.DIAGNOSED:
         return var_ptl.filter(Q(gmassessment__diagnosis_conclusion='ABNORMAL') | Q(hineassessment__score__lt = 73) | Q(developmentalassessment__is_dx_normal=False)).distinct()
     elif pts_type == PtStatus.DX_NORMAL:
-        return var_ptl.exclude(Q(gmassessment__diagnosis_conclusion='ABNORMAL') and Q(hineassessment__score__lt = 73) and Q(developmentalassessment__is_dx_normal=False)).exclude(videos__isnull=True).distinct()
+        return var_ptl.exclude(Q(gmassessment__diagnosis_conclusion='ABNORMAL') and Q(hineassessment__score__lt = 73) and Q(developmentalassessment__is_dx_normal=False)).exclude(video_files__isnull=True).distinct()
     elif pts_type == PtStatus.DX_GMA_ABNORMAL:
         return var_ptl.filter(gmassessment__diagnosis_conclusion='ABNORMAL').distinct()
     elif pts_type == PtStatus.DX_GMA_NORMAL:

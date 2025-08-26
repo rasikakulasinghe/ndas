@@ -21,8 +21,8 @@
 
         {% if bookmark.bookmark_type  == 'Patient'%}
         <a href="{% url 'view-patient' bookmark.object_id %}" target="_blank" data-toggle="tooltip" data-placement="top" title="View Patient"><i class="fas fa-eye" style="color: #0752d5;"></i></a>
-        {% elif bookmark.bookmark_type  == 'Video' %}
-        <a href="{% url 'file-view' bookmark.object_id %}" target="_blank" data-toggle="tooltip" data-placement="top" title="View Video"><i class="fas fa-eye" style="color: #0752d5;"></i></a>
+        {% elif bookmark.bookmark_type  == 'Video' and bookmark.object_id %}
+        <a href="{% url 'video:view' bookmark.object_id %}" target="_blank" data-toggle="tooltip" data-placement="top" title="View Video"><i class="fas fa-eye" style="color: #0752d5;"></i></a>
         {% elif bookmark.bookmark_type  == 'GMA' %}
         <a href="{% url 'assessment-view' bookmark.object_id %}" target="_blank" data-toggle="tooltip" data-placement="top" title="View General Movement Assessment"><i class="fas fa-eye" style="color: #0752d5;"></i></a>
         {% elif bookmark.bookmark_type  == 'HINE' %}
