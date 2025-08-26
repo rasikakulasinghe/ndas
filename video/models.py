@@ -32,9 +32,30 @@ class Video(TimeStampedModel, UserTrackingMixin):
     patient = models.ForeignKey(
         "patients.Patient",
         on_delete=models.CASCADE,
-        related_name="videos",
+        related_name="video_files",  # Changed from "videos" to avoid conflict
         verbose_name=_("Patient"),
         help_text=_("Patient associated with this video"),
+    )
+
+    # Override UserTrackingMixin fields to avoid conflicts with patients.Video
+    added_by = models.ForeignKey(
+        "users.CustomUser",
+        on_delete=models.SET_NULL,
+        related_name="video_app_videos_added",  # Unique related name
+        null=True,
+        blank=True,
+        verbose_name=_("Added By"),
+        help_text=_("User who created this record"),
+    )
+    
+    last_edit_by = models.ForeignKey(
+        "users.CustomUser",
+        on_delete=models.SET_NULL,
+        related_name="video_app_videos_last_edited",  # Unique related name
+        null=True,
+        blank=True,
+        verbose_name=_("Last Edited By"),
+        help_text=_("User who last modified this record"),
     )
 
     # File fields

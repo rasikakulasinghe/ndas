@@ -1,21 +1,53 @@
 from django.shortcuts import redirect, render
 from django.urls import reverse
-from patients.models import Patient, Video, GMAssessment, CDICRecord, Help, Bookmark, Attachment, HINEAssessment, DevelopmentalAssessment
+from patients.models import (
+    Patient,
+    Video,
+    GMAssessment,
+    CDICRecord,
+    Help,
+    Bookmark,
+    Attachment,
+    HINEAssessment,
+    DevelopmentalAssessment,
+)
 from users.models import CustomUser
 from users.views import userViewByUsername
-from patients.forms import PatientForm, GMAssessmentForm, BookmarkForm, AttachmentkForm, VideoForm, CDICRecordForm, HINEAssessmentForm, DevelopmentalAssessmentForm
+from patients.forms import (
+    PatientForm,
+    GMAssessmentForm,
+    BookmarkForm,
+    AttachmentkForm,
+    CDICRecordForm,
+    HINEAssessmentForm,
+    DevelopmentalAssessmentForm,
+)
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from ndas.custom_codes.validators import (
-    Name_baby_validation, Name_mother_validation, BHT_validation, PHN_validation, 
-    NNC_validation, validateVideoSize, validateVideoType, validateAttachmentSize, 
-    validateAttachmentType, validate_video_file_upload, getVideoMaxSizeMB
+    Name_baby_validation,
+    Name_mother_validation,
+    BHT_validation,
+    PHN_validation,
+    NNC_validation,
+    validateVideoSize,
+    validateVideoType,
+    validateAttachmentSize,
+    validateAttachmentType,
+    validate_video_file_upload,
+    getVideoMaxSizeMB,
 )
 from ndas.custom_codes.custom_methods import (
-    get_admissions_data_barchart, get_gma_diagnosis_data, get_all_diagnosis_data, 
-    get_userStats, getAttachmentType, getCurrentDateTime, getFileSizeInMb, 
-    getPatientList, getCountZeroIfNone
+    get_admissions_data_barchart,
+    get_gma_diagnosis_data,
+    get_all_diagnosis_data,
+    get_userStats,
+    getAttachmentType,
+    getCurrentDateTime,
+    getFileSizeInMb,
+    getPatientList,
+    getCountZeroIfNone,
 )
 from datetime import datetime
 from django.views.decorators.csrf import csrf_exempt
@@ -26,16 +58,18 @@ from django.utils.timezone import localtime, now
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
+
 # from moviepy.editor import VideoFileClip  # Temporarily commented out
 from django.core.files import File
 from django.core.files.storage import FileSystemStorage
 from ndas.custom_codes.ndas_enums import PtStatus
 
 # Configure logger for patient operations
-logger = logging.getLogger('django')
+logger = logging.getLogger("django")
+
 
 # Create your views here
-@login_required(login_url='user-login')
+@login_required(login_url="user-login")
 def dashboard(request):
     # load common record as variables
     var_patients = getPatientList(PtStatus.ALL)
@@ -50,7 +84,7 @@ def dashboard(request):
     patients_new_count = getCountZeroIfNone(var_new_Patients)
     patients_total_count = getCountZeroIfNone(var_patients)
     patients_discharged_count = getCountZeroIfNone(getPatientList(PtStatus.DISCHARGED))
-    
+
     bookmark = Bookmark.objects.all()
     attachments_count = getCountZeroIfNone(Attachment.objects.all())
     users_total_count = getCountZeroIfNone(CustomUser.objects.all())
@@ -59,191 +93,245 @@ def dashboard(request):
     var_new_videos = var_videos.filter(gmassessment__isnull=True).distinct()
     new_videos = var_new_videos[:5]
     new_videos_count = getCountZeroIfNone(var_new_videos)
-    
+
     all_gm_assessments_count = getCountZeroIfNone(var_gm_assessments)
     all_hine_assessments_count = getCountZeroIfNone(var_hine_assessments)
     all_da_assessments_count = getCountZeroIfNone(var_da_assessments)
     all_cdic_records_count = getCountZeroIfNone(var_cdic_records)
-    
-    dx_gm_assessments_count = getCountZeroIfNone(GMAssessment.objects.exclude(diagnosis_conclusion='NORMAL'))
-    dx_hine_assessments_count = getCountZeroIfNone(HINEAssessment.objects.filter(score__lt=73))
-    dx_da_assessments_count = getCountZeroIfNone(DevelopmentalAssessment.objects.filter(is_dx_normal=False))
+
+    dx_gm_assessments_count = getCountZeroIfNone(
+        GMAssessment.objects.exclude(diagnosis_conclusion="NORMAL")
+    )
+    dx_hine_assessments_count = getCountZeroIfNone(
+        HINEAssessment.objects.filter(score__lt=73)
+    )
+    dx_da_assessments_count = getCountZeroIfNone(
+        DevelopmentalAssessment.objects.filter(is_dx_normal=False)
+    )
 
     # get data for bar chart
     bar_chart_monthly_admissions = get_admissions_data_barchart()
     diagnosis_data_gma = get_gma_diagnosis_data()
     diagnosis_data_all = get_all_diagnosis_data()
     user_stat = get_userStats()
-    
+
     context = {
-        'videos_total_count' : videos_total_count,
+        "videos_total_count": videos_total_count,
+        "dx_gm_assessments_count": dx_gm_assessments_count,
+        "dx_hine_assessments_count": dx_hine_assessments_count,
+        "dx_da_assessments_count": dx_da_assessments_count,
+        "all_gm_assessments_count": all_gm_assessments_count,
+        "all_hine_assessments_count": all_hine_assessments_count,
+        "all_da_assessments_count": all_da_assessments_count,
+        "all_cdic_records_count": all_cdic_records_count,
+        "new_videos": new_videos,
+        "new_videos_count": new_videos_count,
+        "videos_total_count": videos_total_count,
+        "patients_total_count": patients_total_count,
+        "Patients_new_list_10": Patients_new_list_10,
+        "patients_new_count": patients_new_count,
+        "patients_discharged_count": patients_discharged_count,
+        "bookmark": bookmark,
+        "bar_chart_monthly_admissions": bar_chart_monthly_admissions,
+        "diagnosis_data_gma": diagnosis_data_gma,
+        "diagnosis_data_all": diagnosis_data_all,
+        "users_total_count": users_total_count,
+        "attachments_count": attachments_count,
+        "user_stat": user_stat,
+    }
 
-        'dx_gm_assessments_count' : dx_gm_assessments_count,
-        'dx_hine_assessments_count' : dx_hine_assessments_count,
-        'dx_da_assessments_count' : dx_da_assessments_count,
-        
-        'all_gm_assessments_count' : all_gm_assessments_count,
-        'all_hine_assessments_count' : all_hine_assessments_count,
-        'all_da_assessments_count' : all_da_assessments_count,
-        
-        'all_cdic_records_count' : all_cdic_records_count,
+    return render(request, "patients/index.html", context)
 
-        'new_videos' : new_videos,
-        'new_videos_count' : new_videos_count,
-        'videos_total_count' : videos_total_count,
-        
-        'patients_total_count' : patients_total_count,
-        'Patients_new_list_10' : Patients_new_list_10,
-        'patients_new_count' : patients_new_count,
-        'patients_discharged_count' : patients_discharged_count,
-        
-        'bookmark' : bookmark,
-        'bar_chart_monthly_admissions' : bar_chart_monthly_admissions,
-        'diagnosis_data_gma' : diagnosis_data_gma,
-        'diagnosis_data_all' : diagnosis_data_all,
 
-        'users_total_count' : users_total_count,
-        'attachments_count' : attachments_count,
-        
-        'user_stat' : user_stat,
-        }
-
-    return render (request, 'patients/index.html', context)
-
-@login_required(login_url='user-login')
+@login_required(login_url="user-login")
 def patient_manager(request):
-    patients_list = Patient.objects.all().order_by('-id')
+    patients_list = Patient.objects.all().order_by("-id")
     paginator = Paginator(patients_list, 10)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     paginated_pt_list = paginator.get_page(page_number)
-    return render (request, 'patients/manager.html', {'patients_page_obj': paginated_pt_list})
+    return render(
+        request, "patients/manager.html", {"patients_page_obj": paginated_pt_list}
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def patient_manager_diagnosed_any(request):
-    patients_list = getPatientList(PtStatus.DIAGNOSED).order_by('-id')
+    patients_list = getPatientList(PtStatus.DIAGNOSED).order_by("-id")
     paginator = Paginator(patients_list, 10)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     paginated_pt_list = paginator.get_page(page_number)
-    return render (request, 'patients/manager.html', {'patients_page_obj': paginated_pt_list, 'type' : 'DIAGNOSED'})
+    return render(
+        request,
+        "patients/manager.html",
+        {"patients_page_obj": paginated_pt_list, "type": "DIAGNOSED"},
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def patient_manager_diagnosis_normal(request):
-    patients_list = getPatientList(PtStatus.DX_NORMAL).order_by('-id')
+    patients_list = getPatientList(PtStatus.DX_NORMAL).order_by("-id")
     paginator = Paginator(patients_list, 10)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     paginated_pt_list = paginator.get_page(page_number)
-    return render (request, 'patients/manager.html', {'patients_page_obj': paginated_pt_list, 'type' : 'DX_NORMAL'})
+    return render(
+        request,
+        "patients/manager.html",
+        {"patients_page_obj": paginated_pt_list, "type": "DX_NORMAL"},
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def patient_manager_diagnosed_gma_normal(request):
-    patients_list = getPatientList(PtStatus.DX_GMA_NORMAL).order_by('-id')
+    patients_list = getPatientList(PtStatus.DX_GMA_NORMAL).order_by("-id")
     paginator = Paginator(patients_list, 10)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     paginated_pt_list = paginator.get_page(page_number)
-    return render (request, 'patients/manager.html', {'patients_page_obj': paginated_pt_list, 'type' : 'DX_GMA_NORMAL'})
+    return render(
+        request,
+        "patients/manager.html",
+        {"patients_page_obj": paginated_pt_list, "type": "DX_GMA_NORMAL"},
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def patient_manager_diagnosed_gma_abnormal(request):
-    patients_list = getPatientList(PtStatus.DX_GMA_ABNORMAL).order_by('-id')
+    patients_list = getPatientList(PtStatus.DX_GMA_ABNORMAL).order_by("-id")
     paginator = Paginator(patients_list, 10)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     paginated_pt_list = paginator.get_page(page_number)
-    return render (request, 'patients/manager.html', {'patients_page_obj': paginated_pt_list, 'type' : 'DX_GMA_ABNORMAL'})
+    return render(
+        request,
+        "patients/manager.html",
+        {"patients_page_obj": paginated_pt_list, "type": "DX_GMA_ABNORMAL"},
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def patient_manager_diagnosed_hine(request):
-    patients_list = getPatientList(PtStatus.DX_HINE).order_by('-id')
+    patients_list = getPatientList(PtStatus.DX_HINE).order_by("-id")
     paginator = Paginator(patients_list, 10)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     paginated_pt_list = paginator.get_page(page_number)
-    return render (request, 'patients/manager.html', {'patients_page_obj': paginated_pt_list, 'type' : 'DX_HINE'})
+    return render(
+        request,
+        "patients/manager.html",
+        {"patients_page_obj": paginated_pt_list, "type": "DX_HINE"},
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def patient_manager_da_normal(request):
-    patients_list = getPatientList(PtStatus.DX_DA_NORMAL).order_by('-id')
+    patients_list = getPatientList(PtStatus.DX_DA_NORMAL).order_by("-id")
     paginator = Paginator(patients_list, 10)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     paginated_pt_list = paginator.get_page(page_number)
-    return render (request, 'patients/manager.html', {'patients_page_obj': paginated_pt_list, 'type' : 'DX_DA_NORMAL'})
+    return render(
+        request,
+        "patients/manager.html",
+        {"patients_page_obj": paginated_pt_list, "type": "DX_DA_NORMAL"},
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def patient_manager_da_abnormal(request):
-    patients_list = getPatientList(PtStatus.DX_DA_ABNORMAL).order_by('-id')
+    patients_list = getPatientList(PtStatus.DX_DA_ABNORMAL).order_by("-id")
     paginator = Paginator(patients_list, 10)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     paginated_pt_list = paginator.get_page(page_number)
-    return render (request, 'patients/manager.html', {'patients_page_obj': paginated_pt_list, 'type' : 'DX_DA_ABNORMAL'})
+    return render(
+        request,
+        "patients/manager.html",
+        {"patients_page_obj": paginated_pt_list, "type": "DX_DA_ABNORMAL"},
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def patient_manager_discharged_only(request):
-    patients_list = getPatientList(PtStatus.DISCHARGED).order_by('-id')
+    patients_list = getPatientList(PtStatus.DISCHARGED).order_by("-id")
     paginator = Paginator(patients_list, 10)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     paginated_pt_list = paginator.get_page(page_number)
-    return render (request, 'patients/manager.html', {'patients_page_obj': paginated_pt_list, 'type' : 'DISCHARGED'})
+    return render(
+        request,
+        "patients/manager.html",
+        {"patients_page_obj": paginated_pt_list, "type": "DISCHARGED"},
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def patient_manager_new_only(request):
-    patients_list = Patient.objects.filter(videos__isnull=True).order_by('-id')
+    patients_list = Patient.objects.filter(videos__isnull=True).order_by("-id")
     paginator = Paginator(patients_list, 10)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     paginated_pt_list = paginator.get_page(page_number)
-    return render (request, 'patients/manager.html', {'patients_page_obj': paginated_pt_list, 'type' : 'NEW'})
+    return render(
+        request,
+        "patients/manager.html",
+        {"patients_page_obj": paginated_pt_list, "type": "NEW"},
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def patient_add(request):
     if not request.user.is_authenticated:
-        messages.error(request, 'You are not authorized to perform this action, please login')
-        return redirect('user-login')
-    
-    if request.method == 'POST':
+        messages.error(
+            request, "You are not authorized to perform this action, please login"
+        )
+        return redirect("user-login")
+
+    if request.method == "POST":
         data_form = PatientForm(request.POST)
-        
+
         if data_form.is_valid():
             # Additional server-side validation
             cleaned_data = data_form.cleaned_data
-            
+
             # Validate POG ranges
-            pog_wks = cleaned_data.get('pog_wks')
-            pog_days = cleaned_data.get('pog_days')
-            
+            pog_wks = cleaned_data.get("pog_wks")
+            pog_days = cleaned_data.get("pog_days")
+
             if pog_wks and (int(pog_wks) < 20 or int(pog_wks) > 44):
-                data_form.add_error('pog_wks', 'POG weeks must be between 20 and 44')
-            
+                data_form.add_error("pog_wks", "POG weeks must be between 20 and 44")
+
             if pog_days and (int(pog_days) < 0 or int(pog_days) > 6):
-                data_form.add_error('pog_days', 'POG days must be between 0 and 6')
-            
+                data_form.add_error("pog_days", "POG days must be between 0 and 6")
+
             # Validate APGAR scores
-            apgar_fields = ['apgar_1', 'apgar_5', 'apgar_10']
+            apgar_fields = ["apgar_1", "apgar_5", "apgar_10"]
             for field in apgar_fields:
                 value = cleaned_data.get(field)
                 if value is not None and (int(value) < 0 or int(value) > 10):
-                    data_form.add_error(field, f'{field.replace("_", " ").title()} score must be between 0 and 10')
-            
+                    data_form.add_error(
+                        field,
+                        f'{field.replace("_", " ").title()} score must be between 0 and 10',
+                    )
+
             # Validate birth weight
-            birth_weight = cleaned_data.get('birth_weight')
+            birth_weight = cleaned_data.get("birth_weight")
             if birth_weight and (birth_weight < 300 or birth_weight > 6000):
-                data_form.add_error('birth_weight', 'Birth weight must be between 300g and 6000g')
-            
+                data_form.add_error(
+                    "birth_weight", "Birth weight must be between 300g and 6000g"
+                )
+
             # Validate measurements
-            length = cleaned_data.get('length')
+            length = cleaned_data.get("length")
             if length and (length < 20 or length > 70):
-                data_form.add_error('length', 'Length must be between 20cm and 70cm')
-            
-            ofc = cleaned_data.get('ofc')
+                data_form.add_error("length", "Length must be between 20cm and 70cm")
+
+            ofc = cleaned_data.get("ofc")
             if ofc and (ofc < 20 or ofc > 50):
-                data_form.add_error('ofc', 'OFC must be between 20cm and 50cm')
-            
+                data_form.add_error("ofc", "OFC must be between 20cm and 50cm")
+
             # Check for duplicate BHT
-            bht = cleaned_data.get('bht')
+            bht = cleaned_data.get("bht")
             if bht and Patient.objects.filter(bht=bht).exists():
-                data_form.add_error('bht', 'A patient with this BHT already exists')
-            
+                data_form.add_error("bht", "A patient with this BHT already exists")
+
             # Validate date of birth (not in future)
-            dob_tob = cleaned_data.get('dob_tob')
+            dob_tob = cleaned_data.get("dob_tob")
             if dob_tob and dob_tob > timezone.now():
-                data_form.add_error('dob_tob', 'Date of birth cannot be in the future')
-            
+                data_form.add_error("dob_tob", "Date of birth cannot be in the future")
+
             # If validation passes, save the patient
             if not data_form.errors:
                 try:
@@ -251,82 +339,103 @@ def patient_add(request):
                     var_pt_add.added_by = request.user
                     var_pt_add.last_edit_by = None
                     var_pt_add.save()
-                    
+
                     # Save many-to-many relationships (including GMA indicators)
                     data_form.save_m2m()
-                    
+
                     # Get count of GMA indicators for success message
                     gma_count = var_pt_add.indecation_for_gma.count()
-                    gma_message = f" with {gma_count} GMA indicator(s)" if gma_count > 0 else ""
-                    
-                    messages.success(request, f'New patient "{var_pt_add.baby_name}" added successfully{gma_message}!')
-                    return redirect('view-patient', var_pt_add.id)
-                    
+                    gma_message = (
+                        f" with {gma_count} GMA indicator(s)" if gma_count > 0 else ""
+                    )
+
+                    messages.success(
+                        request,
+                        f'New patient "{var_pt_add.baby_name}" added successfully{gma_message}!',
+                    )
+                    return redirect("view-patient", var_pt_add.id)
+
                 except Exception as e:
-                    messages.error(request, 'An error occurred while saving the patient. Please try again.')
-                    return render(request, 'patients/add.html', {'form': data_form})
-        
+                    messages.error(
+                        request,
+                        "An error occurred while saving the patient. Please try again.",
+                    )
+                    return render(request, "patients/add.html", {"form": data_form})
+
         # If form is not valid, return with errors
-        return render(request, 'patients/add.html', {'form': data_form})
-    
+        return render(request, "patients/add.html", {"form": data_form})
+
     else:
         empty_form = PatientForm()
-        return render(request, 'patients/add.html', {'form': empty_form})
+        return render(request, "patients/add.html", {"form": empty_form})
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def patient_view(request, pk):
     selected_patient = Patient.objects.get(id=pk)
     indications = selected_patient.indecation_for_gma
-    
-    var_file_video = Video.objects.filter(patient=selected_patient).order_by('-id')
+
+    var_file_video = Video.objects.filter(patient=selected_patient).order_by("-id")
     file_video_count = var_file_video.count()
     file_videos = var_file_video[:5]
-    
-    var_file_attachments = Attachment.objects.filter(patient=selected_patient).order_by('-id')
+
+    var_file_attachments = Attachment.objects.filter(patient=selected_patient).order_by(
+        "-id"
+    )
     file_attachment_count = var_file_attachments.count()
     file_attachment = var_file_attachments[:5]
 
-    var_gma = GMAssessment.objects.filter(patient=selected_patient).order_by('-id')
+    var_gma = GMAssessment.objects.filter(patient=selected_patient).order_by("-id")
     gm_assessments_count = var_gma.count()
     gm_assessments = var_gma[:5]
     gm_last_assessment = var_gma.last
-    
-    var_hine = HINEAssessment.objects.filter(patient=selected_patient).order_by('-id')
+
+    var_hine = HINEAssessment.objects.filter(patient=selected_patient).order_by("-id")
     hine_assessments_count = var_hine.count()
     hine_assessments = var_hine[:5]
-    
-    var_da = DevelopmentalAssessment.objects.filter(patient=selected_patient).order_by('-id')
+
+    var_da = DevelopmentalAssessment.objects.filter(patient=selected_patient).order_by(
+        "-id"
+    )
     da_assessments_count = var_da.count()
     da_assessments = var_da[:5]
-    
-    var_cdic = CDICRecord.objects.filter(patient=selected_patient).order_by('-id')
+
+    var_cdic = CDICRecord.objects.filter(patient=selected_patient).order_by("-id")
     cdic_record_count = var_cdic.count()
     cdic_record = var_cdic[:5]
-    
-    #check bookmark
-    bm = Bookmark.objects.filter(bookmark_type='Patient').filter(object_id=selected_patient.id).first
 
-    context = {'patient' : selected_patient,
-               'file_videos' : file_videos, 'file_video_count' : file_video_count,
-               'file_attachment' : file_attachment, 'file_attachment_count' : file_attachment_count,
-               'indications' : indications,
-               'bookmark' : bm,
-               'gm_assessments_new' : '',
-               'gm_assessments_completed' : '',
-               'gm_assessments' : gm_assessments,
-               'gm_assessments_count' : gm_assessments_count,
-               'gm_last_assessment' : gm_last_assessment,
-               'hine_assessments_count' : hine_assessments_count,
-               'hine_assessments' : hine_assessments,
-               'da_assessments_count' : da_assessments_count,
-               'da_assessments' : da_assessments,
-               'cdic_record_count' : cdic_record_count,
-               'cdic_record' : cdic_record,
-               }
+    # check bookmark
+    bm = (
+        Bookmark.objects.filter(bookmark_type="Patient")
+        .filter(object_id=selected_patient.id)
+        .first
+    )
 
-    return render (request, 'patients/view.html', context)
+    context = {
+        "patient": selected_patient,
+        "file_videos": file_videos,
+        "file_video_count": file_video_count,
+        "file_attachment": file_attachment,
+        "file_attachment_count": file_attachment_count,
+        "indications": indications,
+        "bookmark": bm,
+        "gm_assessments_new": "",
+        "gm_assessments_completed": "",
+        "gm_assessments": gm_assessments,
+        "gm_assessments_count": gm_assessments_count,
+        "gm_last_assessment": gm_last_assessment,
+        "hine_assessments_count": hine_assessments_count,
+        "hine_assessments": hine_assessments,
+        "da_assessments_count": da_assessments_count,
+        "da_assessments": da_assessments,
+        "cdic_record_count": cdic_record_count,
+        "cdic_record": cdic_record,
+    }
 
-@login_required(login_url='user-login')
+    return render(request, "patients/view.html", context)
+
+
+@login_required(login_url="user-login")
 @require_http_methods(["DELETE", "POST"])
 def patient_delete(request, pk):
     """
@@ -335,980 +444,837 @@ def patient_delete(request, pk):
     try:
         patient = Patient.objects.get(id=pk)
     except Patient.DoesNotExist:
-        logger.warning(f"Attempted to delete non-existent patient with ID: {pk} by user: {request.user.username}")
-        if request.method == 'DELETE':
-            return JsonResponse({
-                'success': False, 
-                'error': 'Patient not found',
-                'message': 'The patient you are trying to delete does not exist.'
-            }, status=404)
+        logger.warning(
+            f"Attempted to delete non-existent patient with ID: {pk} by user: {request.user.username}"
+        )
+        if request.method == "DELETE":
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Patient not found",
+                    "message": "The patient you are trying to delete does not exist.",
+                },
+                status=404,
+            )
         else:
-            messages.error(request, 'Patient not found.')
-            return redirect('manage-patients')
-    
+            messages.error(request, "Patient not found.")
+            return redirect("manage-patients")
+
     # Check user permissions
     if not request.user.is_superuser:
-        logger.warning(f"Unauthorized patient deletion attempt by user: {request.user.username} for patient ID: {pk}")
-        if request.method == 'DELETE':
-            return JsonResponse({
-                'success': False,
-                'error': 'Permission denied',
-                'message': 'You do not have permission to delete patients.'
-            }, status=403)
+        logger.warning(
+            f"Unauthorized patient deletion attempt by user: {request.user.username} for patient ID: {pk}"
+        )
+        if request.method == "DELETE":
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Permission denied",
+                    "message": "You do not have permission to delete patients.",
+                },
+                status=403,
+            )
         else:
-            messages.error(request, 'You do not have permission to delete this patient.')
-            return redirect('view-patient', pk=pk)
-    
-    if request.method == 'DELETE':
+            messages.error(
+                request, "You do not have permission to delete this patient."
+            )
+            return redirect("view-patient", pk=pk)
+
+    if request.method == "DELETE":
         # Handle AJAX DELETE request
         try:
             import json
+
             request_data = json.loads(request.body) if request.body else {}
-            password = request_data.get('password', '')
-            
+            password = request_data.get("password", "")
+
             # Verify password
             if not request.user.check_password(password):
-                logger.warning(f"Invalid password attempt for patient deletion by user: {request.user.username} for patient ID: {pk}")
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Invalid password',
-                    'message': 'Wrong password, please try again with correct password'
-                }, status=403)
-            
+                logger.warning(
+                    f"Invalid password attempt for patient deletion by user: {request.user.username} for patient ID: {pk}"
+                )
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "error": "Invalid password",
+                        "message": "Wrong password, please try again with correct password",
+                    },
+                    status=403,
+                )
+
             # Log the deletion attempt
-            logger.info(f"Patient deletion initiated by user: {request.user.username} for patient: {patient.baby_name} (ID: {pk}, BHT: {patient.bht})")
-            
+            logger.info(
+                f"Patient deletion initiated by user: {request.user.username} for patient: {patient.baby_name} (ID: {pk}, BHT: {patient.bht})"
+            )
+
             # Store patient info for logging before deletion
             patient_info = {
-                'id': patient.id,
-                'baby_name': patient.baby_name,
-                'mother_name': patient.mother_name,
-                'bht': patient.bht,
-                'deleted_by': request.user.username,
-                'deleted_at': timezone.now().isoformat()
+                "id": patient.id,
+                "baby_name": patient.baby_name,
+                "mother_name": patient.mother_name,
+                "bht": patient.bht,
+                "deleted_by": request.user.username,
+                "deleted_at": timezone.now().isoformat(),
             }
-            
+
             patient.delete()
-            
+
             # Log successful deletion
             logger.info(f"Patient successfully deleted: {patient_info}")
-            
-            return JsonResponse({
-                'success': True,
-                'message': 'Patient has been deleted successfully.',
-                'redirect_url': reverse('manage-patients')
-            })
-            
+
+            return JsonResponse(
+                {
+                    "success": True,
+                    "message": "Patient has been deleted successfully.",
+                    "redirect_url": reverse("manage-patients"),
+                }
+            )
+
         except Exception as e:
-            logger.error(f"Error deleting patient ID {pk}: {str(e)} by user: {request.user.username}")
-            return JsonResponse({
-                'success': False,
-                'error': 'Deletion failed',
-                'message': 'An error occurred while deleting the patient. Please try again.'
-            }, status=500)
-    
-    elif request.method == 'POST':
+            logger.error(
+                f"Error deleting patient ID {pk}: {str(e)} by user: {request.user.username}"
+            )
+            return JsonResponse(
+                {
+                    "success": False,
+                    "error": "Deletion failed",
+                    "message": "An error occurred while deleting the patient. Please try again.",
+                },
+                status=500,
+            )
+
+    elif request.method == "POST":
         # Handle form-based POST request (legacy support)
         user = request.user
-        if user.check_password(request.POST.get('password', '')):
+        if user.check_password(request.POST.get("password", "")):
             try:
                 # Log the deletion attempt
-                logger.info(f"Patient deletion initiated by user: {request.user.username} for patient: {patient.baby_name} (ID: {pk}, BHT: {patient.bht})")
-                
+                logger.info(
+                    f"Patient deletion initiated by user: {request.user.username} for patient: {patient.baby_name} (ID: {pk}, BHT: {patient.bht})"
+                )
+
                 # Store patient info for logging before deletion
                 patient_info = {
-                    'id': patient.id,
-                    'baby_name': patient.baby_name,
-                    'mother_name': patient.mother_name,
-                    'bht': patient.bht,
-                    'deleted_by': request.user.username,
-                    'deleted_at': timezone.now().isoformat()
+                    "id": patient.id,
+                    "baby_name": patient.baby_name,
+                    "mother_name": patient.mother_name,
+                    "bht": patient.bht,
+                    "deleted_by": request.user.username,
+                    "deleted_at": timezone.now().isoformat(),
                 }
-                
+
                 patient.delete()
-                
+
                 # Log successful deletion
                 logger.info(f"Patient successfully deleted: {patient_info}")
-                
-                messages.success(request, 'Patient has been deleted successfully.')
-                return redirect('manage-patients')
-                
+
+                messages.success(request, "Patient has been deleted successfully.")
+                return redirect("manage-patients")
+
             except Exception as e:
-                logger.error(f"Error deleting patient ID {pk}: {str(e)} by user: {request.user.username}")
-                messages.error(request, 'Something went wrong while deleting the patient.')
-                return render(request, 'patients/delete-confirm.html', {'patient': patient})
+                logger.error(
+                    f"Error deleting patient ID {pk}: {str(e)} by user: {request.user.username}"
+                )
+                messages.error(
+                    request, "Something went wrong while deleting the patient."
+                )
+                return render(
+                    request, "patients/delete-confirm.html", {"patient": patient}
+                )
         else:
-            logger.warning(f"Invalid password attempt for patient deletion by user: {request.user.username} for patient ID: {pk}")
-            messages.error(request, 'Wrong password, please try again with correct password')
-            return render(request, 'patients/delete-confirm.html', {'patient': patient})
-        
-@login_required(login_url='user-login')
+            logger.warning(
+                f"Invalid password attempt for patient deletion by user: {request.user.username} for patient ID: {pk}"
+            )
+            messages.error(
+                request, "Wrong password, please try again with correct password"
+            )
+            return render(request, "patients/delete-confirm.html", {"patient": patient})
+
+
+@login_required(login_url="user-login")
 def patient_delete_confirm(request, pk):
     patient = Patient.objects.get(id=pk)
     user = request.user
     if user.is_superuser:
-        return render (request, 'patients/delete-confirm.html', {'patient' : patient})
+        return render(request, "patients/delete-confirm.html", {"patient": patient})
     else:
-        messages.warning(request, 'You dont have permission to delete this record. Please contact Administrator/ Developer')
-        return render (request, 'patients/delete-confirm.html', {'patient' : patient, 'hide':True})
+        messages.warning(
+            request,
+            "You dont have permission to delete this record. Please contact Administrator/ Developer",
+        )
+        return render(
+            request, "patients/delete-confirm.html", {"patient": patient, "hide": True}
+        )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def patient_edit(request, pk):
     try:
         selected_patient = Patient.objects.get(id=pk)
     except Patient.DoesNotExist:
-        messages.error(request, 'Patient not found.')
-        return redirect('manage-patients')
-    
-    if request.method == 'POST':
+        messages.error(request, "Patient not found.")
+        return redirect("manage-patients")
+
+    if request.method == "POST":
         data_form_modified = PatientForm(request.POST, instance=selected_patient)
-        
+
         if data_form_modified.is_valid():
             try:
                 # Save the form data
                 patient = data_form_modified.save(commit=False)
                 patient.last_edit_by = request.user
                 patient.save()
-                
+
                 # Save many-to-many relationships
                 data_form_modified.save_m2m()
-                
-                messages.success(request, 'Patient details updated successfully.')
-                return redirect('manage-patients')
-                
+
+                messages.success(request, "Patient details updated successfully.")
+                return redirect("manage-patients")
+
             except Exception as e:
-                messages.error(request, f'An error occurred while saving: {str(e)}')
-                return render(request, 'patients/edit.html', {
-                    'form': data_form_modified, 
-                    'patient': selected_patient
-                })
+                messages.error(request, f"An error occurred while saving: {str(e)}")
+                return render(
+                    request,
+                    "patients/edit.html",
+                    {"form": data_form_modified, "patient": selected_patient},
+                )
         else:
             # Form has validation errors
-            messages.warning(request, 'Please correct the errors below and try again.')
-            return render(request, 'patients/edit.html', {
-                'form': data_form_modified, 
-                'patient': selected_patient
-            })
+            messages.warning(request, "Please correct the errors below and try again.")
+            return render(
+                request,
+                "patients/edit.html",
+                {"form": data_form_modified, "patient": selected_patient},
+            )
     else:
         # GET request - display form with current data
         data_form = PatientForm(instance=selected_patient)
-        return render(request, 'patients/edit.html', {
-            'form': data_form, 
-            'patient': selected_patient
-        })
+        return render(
+            request,
+            "patients/edit.html",
+            {"form": data_form, "patient": selected_patient},
+        )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def search_start(request):
     username_list = CustomUser.objects.all()
-    return render (request, 'patients/search.html', {'username_list' : username_list})
+    return render(request, "patients/search.html", {"username_list": username_list})
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def search_results(request):
-    combo_record_type = request.POST.get('combo_record_type', None)
-    combo_pt_param_type = request.POST.get('combo_pt_param_type', None)
-    como_user_username = request.POST.get('combo_users', None)
-    pagn = ''
-    search_text = request.POST.get('search_text', None)
+    combo_record_type = request.POST.get("combo_record_type", None)
+    combo_pt_param_type = request.POST.get("combo_pt_param_type", None)
+    como_user_username = request.POST.get("combo_users", None)
+    pagn = ""
+    search_text = request.POST.get("search_text", None)
 
-# search patients --------------------------------------------------------------
-    if (combo_record_type == 'rtype_pt'):
+    # search patients --------------------------------------------------------------
+    if combo_record_type == "rtype_pt":
         patient = Patient()
-        if combo_pt_param_type == 'pts_bht' and BHT_validation(request, search_text):
+        if combo_pt_param_type == "pts_bht" and BHT_validation(request, search_text):
             pagn = " : Patients > BHT > " + str(search_text)
             try:
                 pagn = " : Patients > BHT > " + str(search_text)
                 patient = Patient.objects.get(bht=search_text)
-                messages.success(request, 'Search results for : %s' % pagn)
-                return render (request, 'patients/view.html', {'patient' : patient, 'pgn' : pagn})
+                messages.success(request, "Search results for : %s" % pagn)
+                return render(
+                    request, "patients/view.html", {"patient": patient, "pgn": pagn}
+                )
             except patient.DoesNotExist:
                 pagn = " : Patients > BHT > " + str(search_text)
-                return render (request, 'patients/search_notfound.html', {'patient' : patient, 'pgn' : pagn})
+                return render(
+                    request,
+                    "patients/search_notfound.html",
+                    {"patient": patient, "pgn": pagn},
+                )
 
-        elif combo_pt_param_type == 'pts_phn' and PHN_validation(request, search_text):
+        elif combo_pt_param_type == "pts_phn" and PHN_validation(request, search_text):
             pagn = " : Patients > PHN > " + str(search_text)
             try:
                 patient = Patient.objects.get(pin=search_text)
-                messages.success(request, 'Search results for : %s' % pagn)
-                return render (request, 'patients/view.html', {'patient' : patient})
+                messages.success(request, "Search results for : %s" % pagn)
+                return render(request, "patients/view.html", {"patient": patient})
             except patient.DoesNotExist:
-                return render (request, 'patients/search_notfound.html', {'patient' : patient, 'pgn' : pagn})
+                return render(
+                    request,
+                    "patients/search_notfound.html",
+                    {"patient": patient, "pgn": pagn},
+                )
 
-        elif combo_pt_param_type == 'pts_nnc_no' and NNC_validation(request, search_text):
+        elif combo_pt_param_type == "pts_nnc_no" and NNC_validation(
+            request, search_text
+        ):
             try:
                 patient = Patient.objects.get(nnc_no=search_text)
-                messages.success(request, 'Search results for : %s' % pagn)
-                return render (request, 'patients/view.html', {'patient' : patient, 'pgn' : pagn})
+                messages.success(request, "Search results for : %s" % pagn)
+                return render(
+                    request, "patients/view.html", {"patient": patient, "pgn": pagn}
+                )
             except patient.DoesNotExist:
-                return render (request, 'patients/search_notfound.html', {'patient' : patient, 'pgn' : pagn})
+                return render(
+                    request,
+                    "patients/search_notfound.html",
+                    {"patient": patient, "pgn": pagn},
+                )
 
-        elif combo_pt_param_type == 'pts_name_baby' and Name_baby_validation(request, search_text):
+        elif combo_pt_param_type == "pts_name_baby" and Name_baby_validation(
+            request, search_text
+        ):
             pagn = " : Patients > Name of the baby > " + str(search_text)
             try:
-                patient = Patient.objects.filter(Q(baby_name__startswith=search_text) | Q(baby_name__icontains=search_text))
+                patient = Patient.objects.filter(
+                    Q(baby_name__startswith=search_text)
+                    | Q(baby_name__icontains=search_text)
+                )
             except patient.DoesNotExist:
-                return render (request, 'patients/search_notfound.html', {'pgn' : pagn})
+                return render(request, "patients/search_notfound.html", {"pgn": pagn})
             if len(patient) == 1:
-                messages.success(request, 'Search results for : %s' % pagn)
-                return render (request, 'patients/view.html', {'patient' : patient.first(), 'patients_page_obj' : None, 'pgn' : pagn})
+                messages.success(request, "Search results for : %s" % pagn)
+                return render(
+                    request,
+                    "patients/view.html",
+                    {
+                        "patient": patient.first(),
+                        "patients_page_obj": None,
+                        "pgn": pagn,
+                    },
+                )
             if len(patient) > 1:
                 paginator = Paginator(patient, 10)
-                page_number = request.GET.get('page')
+                page_number = request.GET.get("page")
                 paginated_pt_list = paginator.get_page(page_number)
-                return render (request, 'patients/results.html', {'patient' : None, 'patients_page_obj' : paginated_pt_list, 'pgn' : pagn})
+                return render(
+                    request,
+                    "patients/results.html",
+                    {
+                        "patient": None,
+                        "patients_page_obj": paginated_pt_list,
+                        "pgn": pagn,
+                    },
+                )
             else:
-                return render (request, 'patients/search_notfound.html', {'pgn' : pagn})
+                return render(request, "patients/search_notfound.html", {"pgn": pagn})
 
-        elif combo_pt_param_type == 'pts_name_mother'  and Name_mother_validation(request, search_text):
+        elif combo_pt_param_type == "pts_name_mother" and Name_mother_validation(
+            request, search_text
+        ):
             pagn = " : Patients > Name of the mother > " + str(search_text)
             try:
-                patient = Patient.objects.filter(Q(mother_name__startswith=search_text) | Q(mother_name__icontains=search_text))
+                patient = Patient.objects.filter(
+                    Q(mother_name__startswith=search_text)
+                    | Q(mother_name__icontains=search_text)
+                )
             except patient.DoesNotExist:
-                return render (request, 'patients/search_notfound.html', {'pgn' : pagn})
+                return render(request, "patients/search_notfound.html", {"pgn": pagn})
 
             if len(patient) == 1:
-                messages.success(request, 'Search results for : %s' % pagn)
-                return render (request, 'patients/view.html', {'patient' : patient.first(), 'patients_page_obj' : None, 'pgn' : pagn})
+                messages.success(request, "Search results for : %s" % pagn)
+                return render(
+                    request,
+                    "patients/view.html",
+                    {
+                        "patient": patient.first(),
+                        "patients_page_obj": None,
+                        "pgn": pagn,
+                    },
+                )
             if len(patient) > 1:
                 paginator = Paginator(patient, 10)
-                page_number = request.GET.get('page')
+                page_number = request.GET.get("page")
                 paginated_pt_list = paginator.get_page(page_number)
-                return render (request, 'patients/results.html', {'patient' : None, 'patients_page_obj' : paginated_pt_list, 'pgn' : pagn})
+                return render(
+                    request,
+                    "patients/results.html",
+                    {
+                        "patient": None,
+                        "patients_page_obj": paginated_pt_list,
+                        "pgn": pagn,
+                    },
+                )
             else:
-                return render (request, 'patients/results.html', {'patient' : patient, 'patients_page_obj' : None, 'pgn' : pagn})
+                return render(
+                    request,
+                    "patients/results.html",
+                    {"patient": patient, "patients_page_obj": None, "pgn": pagn},
+                )
         else:
             username_list = CustomUser.objects.all()
-            return render (request, 'patients/search.html', {'username_list' : username_list})
+            return render(
+                request, "patients/search.html", {"username_list": username_list}
+            )
 
     # search users --------------------------------------------------------------
-    elif (combo_record_type == 'rtype_user'):
+    elif combo_record_type == "rtype_user":
         pagn = " : Users > by username > " + como_user_username
-        messages.success(request, 'Search results for : %s' % pagn)
+        messages.success(request, "Search results for : %s" % pagn)
         return userViewByUsername(request, como_user_username)
     else:
-        messages.success(request, 'No search results, please use appropriate option and try again...')
-        return render (request, 'patients/search_notfound.html')
-
-# methods for file operations ------------------------------------------------------------------------------
-@csrf_exempt
-@login_required(login_url='user-login')
-def video_add(request, pk):
-    """Enhanced video upload with proper form handling and progress tracking"""
-    try:
-        selected_patient = Patient.objects.get(id=pk)
-    except Patient.DoesNotExist:
-        messages.error(request, 'Patient not found.')
-        return redirect('manage-patients')
-    
-    if request.method == 'POST':
-        return handle_video_upload(request, selected_patient)
-    else:
-        # GET request - show the upload form
-        context = {
-            'patient': selected_patient,
-            'today': timezone.now().strftime('%Y%m%d'),
-            'video_form': VideoForm(),
-        }
-        return render(request, 'video/add.html', context)
-
-
-def handle_video_upload(request, patient):
-    """Handle the actual video upload and processing"""
-    try:
-        # Extract form data
-        title = request.POST.get('title_text', '').strip()
-        uploaded_file = request.FILES.get('file')
-        recorded_on_str = request.POST.get('recorded_on')
-        description = request.POST.get('description', '').strip()
-        tags = request.POST.get('tags', '').strip()
-        target_quality = request.POST.get('target_quality', 'medium')
-        access_level = request.POST.get('access_level', 'restricted')
-        is_sensitive = request.POST.get('is_sensitive') == 'on'
-        
-        # Validate required fields
-        if not title:
-            return JsonResponse({'success': False, 'msg': 'Video title is required.'})
-            
-        if not uploaded_file:
-            return JsonResponse({'success': False, 'msg': 'Video file is required.'})
-            
-        if not recorded_on_str:
-            return JsonResponse({'success': False, 'msg': 'Recording date is required.'})
-        
-        # Validate video file
-        validation_result, validation_message = validate_video_file_upload(uploaded_file)
-        if not validation_result:
-            return JsonResponse({'success': False, 'msg': validation_message})
-        
-        # Parse and validate recording date
-        try:
-            # Handle datetime-local format
-            if 'T' in recorded_on_str:
-                recorded_on = timezone.datetime.fromisoformat(recorded_on_str)
-                if timezone.is_naive(recorded_on):
-                    recorded_on = timezone.make_aware(recorded_on)
-            else:
-                # Handle date format
-                recorded_date = datetime.strptime(recorded_on_str, '%Y-%m-%d')
-                asia_timezone = pytz.timezone('Asia/Kolkata')
-                recorded_on = asia_timezone.localize(recorded_date)
-        except (ValueError, TypeError) as e:
-            return JsonResponse({'success': False, 'msg': 'Invalid recording date format.'})
-        
-        # Check if recording date is not in the future
-        if recorded_on > timezone.now():
-            return JsonResponse({'success': False, 'msg': 'Recording date cannot be in the future.'})
-        
-        # Get file size for processing decision
-        file_size_mb = uploaded_file.size / (1024 * 1024)
-        needs_compression = file_size_mb > 25  # 25MB threshold
-        
-        # Create video record
-        video = Video(
-            patient=patient,
-            title=title,
-            recorded_on=recorded_on,
-            description=description,
-            tags=tags,
-            target_quality=target_quality,
-            access_level=access_level,
-            is_sensitive=is_sensitive,
-            file_size=uploaded_file.size,
-            format=get_video_format(uploaded_file),
-            processing_status='pending' if needs_compression else 'completed',
-            added_by=request.user,
+        messages.success(
+            request, "No search results, please use appropriate option and try again..."
         )
-        
-        # Save the original video file
-        video.original_video = uploaded_file
-        video.save()
-        
-        # Log the upload
-        logger.info(f"Video uploaded: {video.title} by {request.user.username} for patient {patient.bht}")
-        
-        # If file is large, queue for compression
-        if needs_compression:
-            try:
-                # Queue video for processing (this would typically be handled by Celery)
-                video.processing_status = 'processing'
-                video.processing_started_at = timezone.now()
-                video.save(update_fields=['processing_status', 'processing_started_at'])
-                
-                # For now, process synchronously (in production, use Celery)
-                compress_video_sync(video)
-                
-            except Exception as e:
-                video.processing_status = 'failed'
-                video.processing_error = str(e)
-                video.save(update_fields=['processing_status', 'processing_error'])
-                logger.error(f"Video compression failed for {video.id}: {str(e)}")
-                return JsonResponse({
-                    'success': False, 
-                    'msg': f'Video uploaded but compression failed: {str(e)}'
-                })
-        
-        return JsonResponse({
-            'success': True, 
-            'msg': 'Video uploaded successfully!',
-            'p_id': patient.id,
-            'f_id': video.id,
-            'needs_compression': needs_compression,
-            'redirect_url': f'/video/processing/{video.id}/' if needs_compression else f'/video/view/{video.id}/'
-        })
-        
-    except Exception as e:
-        logger.error(f"Video upload error: {str(e)}")
-        return JsonResponse({'success': False, 'msg': f'Upload failed: {str(e)}'})
+        return render(request, "patients/search_notfound.html")
 
-
-def compress_video_sync(video):
-    """Synchronous video compression (placeholder for async processing)"""
-    try:
-        # This would typically be handled by Celery in production
-        # For now, we'll implement a basic version
-        
-        from django.core.files.storage import default_storage
-        from django.core.files.base import ContentFile
-        import subprocess
-        import tempfile
-        import os
-        
-        # Create temporary files
-        with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as temp_input:
-            # Copy uploaded file to temp location
-            for chunk in video.original_video.chunks():
-                temp_input.write(chunk)
-            temp_input_path = temp_input.name
-        
-        temp_output_path = temp_input_path.replace('.mp4', '_compressed.mp4')
-        
-        try:
-            # Use ffmpeg for compression (if available)
-            compression_settings = get_compression_settings(video.target_quality)
-            
-            cmd = [
-                'ffmpeg', '-i', temp_input_path,
-                '-c:v', 'libx264',
-                '-crf', str(compression_settings['crf']),
-                '-preset', compression_settings['preset'],
-                '-movflags', '+faststart',
-                '-y',  # Overwrite output
-                temp_output_path
-            ]
-            
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-            
-            if result.returncode == 0 and os.path.exists(temp_output_path):
-                # Save compressed video
-                with open(temp_output_path, 'rb') as compressed_file:
-                    content = ContentFile(compressed_file.read())
-                    video.compressed_video.save(
-                        f'compressed_{video.original_video.name}',
-                        content,
-                        save=False
-                    )
-                
-                video.compressed_file_size = os.path.getsize(temp_output_path)
-                video.processing_status = 'completed'
-                video.processing_completed_at = timezone.now()
-                
-            else:
-                video.processing_status = 'failed'
-                video.processing_error = f"FFmpeg error: {result.stderr}"
-                
-        except subprocess.TimeoutExpired:
-            video.processing_status = 'failed'
-            video.processing_error = "Compression timed out after 5 minutes"
-            
-        except FileNotFoundError:
-            # FFmpeg not available, skip compression
-            video.processing_status = 'completed'
-            video.processing_error = "FFmpeg not available - using original file"
-            
-        finally:
-            # Cleanup temp files
-            for temp_file in [temp_input_path, temp_output_path]:
-                if os.path.exists(temp_file):
-                    os.unlink(temp_file)
-            
-            video.save()
-            
-    except Exception as e:
-        video.processing_status = 'failed'
-        video.processing_error = str(e)
-        video.save()
-        raise
-
-
-def get_compression_settings(quality):
-    """Get ffmpeg compression settings based on quality choice"""
-    settings = {
-        'low': {'crf': 28, 'preset': 'fast'},
-        'medium': {'crf': 23, 'preset': 'medium'},
-        'high': {'crf': 18, 'preset': 'slow'}
-    }
-    return settings.get(quality, settings['medium'])
-
-
-def get_video_format(uploaded_file):
-    """Extract video format from uploaded file"""
-    extension = os.path.splitext(uploaded_file.name)[1].lower()
-    format_map = {
-        '.mp4': 'mp4',
-        '.mov': 'mov',
-        '.avi': 'avi',
-        '.mkv': 'mkv',
-        '.webm': 'webm'
-    }
-    return format_map.get(extension, 'unknown')
-
-
-def validate_video_file_upload(uploaded_file):
-    """Enhanced validation for video file uploads"""
-    try:
-        # Import validation functions
-        from ndas.custom_codes.validators import validateVideoType, validateVideoSize, getVideoMaxSizeMB
-        
-        # Check file type
-        if not validateVideoType(uploaded_file):
-            return False, "Only video files are allowed. Supported formats: MP4, MOV, AVI, MKV, WebM"
-        
-        # Check file size
-        if not validateVideoSize(uploaded_file):
-            max_size = getVideoMaxSizeMB()
-            return False, f"File size too large. Maximum allowed size is {max_size}MB"
-        
-        # Check for empty files
-        if uploaded_file.size < 1024:  # Less than 1KB
-            return False, "File appears to be empty or corrupted"
-        
-        return True, "File is valid"
-        
-    except Exception as e:
-        return False, f"Validation error: {str(e)}"
-
-@login_required(login_url='user-login')
-def video_view(request, f_id):
-    uploaded_file = Video.objects.get(id=f_id)
-    patient = Patient.objects.get(id=uploaded_file.patient.id)
-
-    try:
-        assessment_id = GMAssessment.objects.get(video_file = uploaded_file).id
-    except ObjectDoesNotExist:
-        assessment_id = False
-        
-    total_assessments_count = GMAssessment.objects.filter(patient= patient).count()
-    # total_completed_assessments_count = GMAssessment.objects.filter(patient= patient, erert = True).count()
-    # total_incompleted_assessments_count = GMAssessment.objects.filter(patient= patient, werwe = False).count()
-    
-    #check bookmark
-    bm = Bookmark.objects.filter(bookmark_type='File').filter(object_id=uploaded_file.id).first
-    
-    context = {'patient' : patient,
-               'file' : uploaded_file,
-               'assessment_id' : assessment_id,
-               'total_assessments_count' : total_assessments_count,
-               'total_completed_assessments_count' : total_assessments_count,
-               'bookmark' : bm,
-               'total_incompleted_assessments_count' : total_assessments_count}
-    
-    return render (request, 'video/view.html', context)
-
-
-@login_required(login_url='user-login')
-def video_processing_progress(request, f_id):
-    """View to show video processing progress"""
-    try:
-        video = Video.objects.get(id=f_id)
-        
-        # Check if user has permission to view this video
-        if not request.user.is_staff and video.added_by != request.user:
-            messages.error(request, 'You do not have permission to view this video.')
-            return redirect('manage-patients')
-        
-        # Calculate compression percentage if both sizes are available
-        compression_percentage = None
-        space_saved_mb = None
-        
-        if video.compressed_file_size and video.file_size and video.file_size > 0:
-            compression_percentage = round((video.compressed_file_size * 100) / video.file_size)
-            space_saved_mb = round((video.file_size - video.compressed_file_size) / (1024 * 1024), 1)
-        
-        # Calculate processing time if available
-        processing_duration = None
-        if video.processing_started_at and video.processing_completed_at:
-            processing_duration = video.processing_completed_at - video.processing_started_at
-        
-        context = {
-            'video': video,
-            'compression_percentage': compression_percentage,
-            'space_saved_mb': space_saved_mb,
-            'processing_duration': processing_duration,
-        }
-        
-        return render(request, 'video/conversion_progress.html', context)
-        
-    except Video.DoesNotExist:
-        messages.error(request, 'Video not found.')
-        return redirect('manage-patients')
-    except Exception as e:
-        logger.error(f"Error in video_processing_progress: {str(e)}")
-        messages.error(request, 'An error occurred while loading the video processing page.')
-        return redirect('manage-patients')
-
-@login_required(login_url='user-login')
-def video_edit(request, f_id):
-    uploaded_file_object = Video.objects.get(id=f_id)
-    selected_patient = Patient.objects.get(id=uploaded_file_object.patient.id)
-    video_form = VideoForm(instance=uploaded_file_object)
-    
-    if request.method == 'POST':
-        video_form_updated = VideoForm(request.POST, request.FILES, instance=uploaded_file_object)
-        
-        if video_form_updated.is_valid():
-            var_uploaded_file = video_form_updated.cleaned_data['video']
-            if validateVideoSize(var_uploaded_file):
-                if validateVideoType(var_uploaded_file):
-                    video_form_updated.save()
-
-                    uploaded_file_object.last_edit_by = request.user
-                    uploaded_file_object.last_edit_by = request.user
-                    uploaded_file_object.save(update_fields=['last_edit_by']) 
-
-                    new_updated_file_object = Video.objects.get(id=f_id)
-                    new_updated_file_object.save()
-                    
-                    messages.success(request, 'Video infomations are updated succussfully...')
-                    return render (request, 'video/view.html', {'patient' : selected_patient, 'file' : new_updated_file_object})
-                else:
-                    messages.warning(request, 'Only video files(mp4, mov) are allowed to upload...')
-                    return render (request, 'video/edit.html', {'file' : uploaded_file_object, 'patient' : selected_patient, 'video_form' : video_form_updated})
-            else:
-                messages.warning(request, 'You cant upload file size > 100mb video...')
-                return render (request, 'video/edit.html', {'file' : uploaded_file_object, 'patient' : selected_patient, 'video_form' : video_form_updated})
-        else:
-            messages.error(request, video_form_updated.errors)
-            return render (request, 'video/edit.html', {'file' : uploaded_file_object, 'patient' : selected_patient, 'video_form' : video_form_updated})
-    else:
-        return render (request, 'video/edit.html', {'file' : uploaded_file_object, 'patient' : selected_patient, 'video_form' : video_form})
-
-@login_required(login_url='user-login')
-def video_delete_start(request, pk):
-    file = Video.objects.get(id=pk)
-    patient = Patient.objects.get(id=file.patient.id)
-    return render (request, 'video/delete-confirm.html', {'file' : file, 'patient' : patient})
-
-@login_required(login_url='user-login')
-def video_delete(request, pk):
-    if request.method == 'POST':
-        file = Video.objects.get(id=pk)
-        patient = Patient.objects.get(id=file.patient.id)
-        user = request.user
-        if user.check_password(request.POST['password']):
-            if file.delete():
-                messages.success(request, 'File was deleted succussfully')
-                return redirect('view-patient', pk=patient.id)
-            else:
-                return render (request, 'video/delete-confirm.html', {'file' : file, 'patient' : patient})
-        else:
-            messages.error(request, 'Wrong password, please try again with correct password')
-            return render (request, 'video/delete-confirm.html', {'file' : file, 'patient' : patient})
-
-@login_required(login_url='user-login')
-def video_manager_by_patient(request, patient_id):
-    patient = Patient.objects.get(id=patient_id)
-    var_file_list = Video.objects.filter(patient=patient).order_by('-id')
-    paginator = Paginator(var_file_list, 25)
-    page_number = request.GET.get('page')
-    file_list = paginator.get_page(page_number)
-    context= {'patient' : patient, 'file_list' : file_list}
-    return render (request, 'video/manager.html', context)
-
-@login_required(login_url='user-login')
-def video_manager(request):
-    var_file_list = Video.objects.all().order_by('-id')
-    paginator = Paginator(var_file_list, 25)
-    page_number = request.GET.get('page')
-    file_list = paginator.get_page(page_number)
-    return render (request, 'video/manager.html', {'patient' : '', 'file_list' : file_list})
-
-@login_required(login_url='user-login')
-def video_manager_new_only(request):
-    var_file_list = Video.objects.filter(gmassessment__isnull=True)
-    paginator = Paginator(var_file_list, 25)
-    page_number = request.GET.get('page')
-    file_list = paginator.get_page(page_number)
-    return render (request, 'video/manager.html', {'patient' : '', 'file_list' : file_list})
 
 # methods for assessment operations ------------------------------------------------------------------------------
-@login_required(login_url='user-login')
+@login_required(login_url="user-login")
 def assessment_add(request, ptid, fid):
     patient = Patient.objects.get(pk=ptid)
     assessment_form = GMAssessmentForm()
     file = Video.objects.get(pk=fid)
-    
-    if request.method == 'POST':
-        
+
+    if request.method == "POST":
+
         assessment_form_data = GMAssessmentForm(request.POST)
         if assessment_form_data.is_valid():
-            
-            date = assessment_form_data.cleaned_data['date_of_assessment']
-            diagnosis = assessment_form_data.cleaned_data['diagnosis']
-            diagnosis_other = assessment_form_data.cleaned_data['diagnosis_other']
-            management_plan = assessment_form_data.cleaned_data['management_plan']
-            next_assessment_date = assessment_form_data.cleaned_data['next_assessment_date']
-            parent_informed = assessment_form_data.cleaned_data['parent_informed']
-            
-            #check assessment already added to this file
+
+            date = assessment_form_data.cleaned_data["date_of_assessment"]
+            diagnosis = assessment_form_data.cleaned_data["diagnosis"]
+            diagnosis_other = assessment_form_data.cleaned_data["diagnosis_other"]
+            management_plan = assessment_form_data.cleaned_data["management_plan"]
+            next_assessment_date = assessment_form_data.cleaned_data[
+                "next_assessment_date"
+            ]
+            parent_informed = assessment_form_data.cleaned_data["parent_informed"]
+
+            # check assessment already added to this file
             if GMAssessment.objects.filter(video_file=file).exists() == False:
-                
+
                 prep_assessment = GMAssessment.objects.create(
-                patient = patient,
-                video_file = file,
-                date_of_assessment = date,
-                diagnosis_other = diagnosis_other,
-                management_plan = management_plan,
-                next_assessment_date = next_assessment_date,
-                parent_informed = parent_informed,
-                added_by = request.user,
-                last_edit_by = None)
+                    patient=patient,
+                    video_file=file,
+                    date_of_assessment=date,
+                    diagnosis_other=diagnosis_other,
+                    management_plan=management_plan,
+                    next_assessment_date=next_assessment_date,
+                    parent_informed=parent_informed,
+                    added_by=request.user,
+                    last_edit_by=None,
+                )
 
                 prep_assessment.diagnosis.set(diagnosis)
                 prep_assessment.save()
 
-                messages.success(request, 'New assessment added succusfully')
-                return redirect('assessment-view', pk=prep_assessment.id)
+                messages.success(request, "New assessment added succusfully")
+                return redirect("assessment-view", pk=prep_assessment.id)
             else:
                 previous_assmnt = GMAssessment.objects.get(files=file)
-                messages.warning(request, 'One assessment already there for this file...')
-                return redirect('assessment-view', pk=previous_assmnt.id)
+                messages.warning(
+                    request, "One assessment already there for this file..."
+                )
+                return redirect("assessment-view", pk=previous_assmnt.id)
         else:
             messages.error(request, assessment_form_data.errors)
-            return render (request, 'assessment/add.html', {'form' : assessment_form_data, 'patient' : patient, 'file' : file})
+            return render(
+                request,
+                "assessment/add.html",
+                {"form": assessment_form_data, "patient": patient, "file": file},
+            )
     else:
-        return render (request, 'assessment/add.html', {'form' : assessment_form, 'patient' : patient, 'file' : file})
+        return render(
+            request,
+            "assessment/add.html",
+            {"form": assessment_form, "patient": patient, "file": file},
+        )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def assessment_view(request, pk):
     assmnt = GMAssessment.objects.get(id=pk)
-    #check bookmark
-    bm = Bookmark.objects.filter(bookmark_type='Assessment').filter(object_id=assmnt.id).first
-    return render (request, 'assessment/view.html', {'assessment' : assmnt, 'bookmark' : bm})
+    # check bookmark
+    bm = (
+        Bookmark.objects.filter(bookmark_type="Assessment")
+        .filter(object_id=assmnt.id)
+        .first
+    )
+    return render(
+        request, "assessment/view.html", {"assessment": assmnt, "bookmark": bm}
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def assessment_view_by_fileid(request, file_id):
     assmnt = GMAssessment.objects.get(video_file=file_id)
-    return render (request, 'assessment/view.html', {'assessment' : assmnt})
+    return render(request, "assessment/view.html", {"assessment": assmnt})
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def assessment_edit(request, pk):
     assmnt = GMAssessment.objects.get(id=pk)
     assessment_form = GMAssessmentForm(instance=assmnt)
-    if request.method == 'POST':
+    if request.method == "POST":
         assessment_form_data = GMAssessmentForm(request.POST, instance=assmnt)
         if assessment_form_data.is_valid():
             assessment_form_data.save()
-            messages.success(request, 'Assessment details are updated succesfully...')
-            return redirect('assessment-view', pk=assmnt.id)
+            messages.success(request, "Assessment details are updated succesfully...")
+            return redirect("assessment-view", pk=assmnt.id)
         else:
             messages.success(request, assessment_form_data.errors)
-            return render (request, 'assessment/edit.html', {'form' : assessment_form_data, 'assmnt' : assmnt})
-    return render (request, 'assessment/edit.html', {'form' : assessment_form, 'assmnt' : assmnt})
+            return render(
+                request,
+                "assessment/edit.html",
+                {"form": assessment_form_data, "assmnt": assmnt},
+            )
+    return render(
+        request, "assessment/edit.html", {"form": assessment_form, "assmnt": assmnt}
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def assessment_edit_by_fileid(request, pk):
     assmnt = GMAssessment.objects.get(files=pk)
     assessment_form = GMAssessmentForm(instance=assmnt)
-    if request.method == 'POST':
+    if request.method == "POST":
         assessment_form_data = GMAssessmentForm(request.POST, instance=assmnt)
         if assessment_form_data.is_valid():
             assessment_form_data.save()
-            messages.success(request, 'Assessment details are updated succesfully...')
-            return redirect('assessment-view', pk=assmnt.id)
+            messages.success(request, "Assessment details are updated succesfully...")
+            return redirect("assessment-view", pk=assmnt.id)
         else:
             messages.success(request, assessment_form_data.errors)
-            return render (request, 'assessment/edit.html', {'form' : assessment_form_data, 'assmnt' : assmnt})
-    return render (request, 'assessment/edit.html', {'form' : assessment_form, 'assmnt' : assmnt})
+            return render(
+                request,
+                "assessment/edit.html",
+                {"form": assessment_form_data, "assmnt": assmnt},
+            )
+    return render(
+        request, "assessment/edit.html", {"form": assessment_form, "assmnt": assmnt}
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def assessment_delete_start(request, pk):
     assemnt = GMAssessment.objects.get(id=pk)
     patient = Patient.objects.get(id=assemnt.patient.id)
-    return render (request, 'assessment/delete-confirm.html', {'assemnt' : assemnt, 'patient' : patient})
+    return render(
+        request,
+        "assessment/delete-confirm.html",
+        {"assemnt": assemnt, "patient": patient},
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def assessment_delete(request, pk):
-    if request.method == 'POST':
+    if request.method == "POST":
         assemnt = GMAssessment.objects.get(id=pk)
         patient = Patient.objects.get(id=assemnt.patient.id)
         user = request.user
-        if user.check_password(request.POST['password']):
+        if user.check_password(request.POST["password"]):
             if assemnt.delete():
-                messages.success(request, 'Assessment deleted succusfully...')
-                return redirect('assessment-manager-patient', pk=patient.id)
+                messages.success(request, "Assessment deleted succusfully...")
+                return redirect("assessment-manager-patient", pk=patient.id)
             else:
-                messages.error(request, 'Something went wrong while deleting the assessment...')
-                return render (request, 'assessment/delete-confirm.html', {'assemnt' : assemnt, 'patient' : patient})
+                messages.error(
+                    request, "Something went wrong while deleting the assessment..."
+                )
+                return render(
+                    request,
+                    "assessment/delete-confirm.html",
+                    {"assemnt": assemnt, "patient": patient},
+                )
         else:
-            messages.error(request, 'Wrong password, please try again with correct password')
-            return render (request, 'assessment/delete-confirm.html', {'assemnt' : assemnt, 'patient' : patient})
+            messages.error(
+                request, "Wrong password, please try again with correct password"
+            )
+            return render(
+                request,
+                "assessment/delete-confirm.html",
+                {"assemnt": assemnt, "patient": patient},
+            )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def assessment_manager(request):
-    assessment_list = GMAssessment.objects.all().order_by('-id')
+    assessment_list = GMAssessment.objects.all().order_by("-id")
     paginator = Paginator(assessment_list, 10)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     paginated_assmnt_list = paginator.get_page(page_number)
-    return render (request, 'assessment/manager.html', {'assessment_page_obj': paginated_assmnt_list})
+    return render(
+        request,
+        "assessment/manager.html",
+        {"assessment_page_obj": paginated_assmnt_list},
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def assessment_manager_by_patients(request, pk):
     patient = Patient.objects.get(id=pk)
-    assessment_list = GMAssessment.objects.filter(patient=patient).order_by('-id')
+    assessment_list = GMAssessment.objects.filter(patient=patient).order_by("-id")
     paginator = Paginator(assessment_list, 10)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     paginated_assmnt_list = paginator.get_page(page_number)
-    return render (request, 'assessment/manager.html', {'patient' : patient, 'assessment_page_obj': paginated_assmnt_list})
+    return render(
+        request,
+        "assessment/manager.html",
+        {"patient": patient, "assessment_page_obj": paginated_assmnt_list},
+    )
+
 
 # Help/ tutorials
 
-@login_required(login_url='user-login')
-def help_home(request):
-    articles = Help.objects.filter(is_active=True).order_by('display_order', 'title')
-    return render (request, 'help/home.html', {'articles' : articles})
 
-@login_required(login_url='user-login')
+@login_required(login_url="user-login")
+def help_home(request):
+    articles = Help.objects.filter(is_active=True).order_by("display_order", "title")
+    return render(request, "help/home.html", {"articles": articles})
+
+
+@login_required(login_url="user-login")
 def help_article(request, pk):
     try:
         article = Help.objects.get(id=pk)
     except Help.DoesNotExist:
-        messages.error(request, 'Help article not found.')
-        return redirect('help-home')
-    
-    articles = Help.objects.filter(is_active=True).order_by('display_order', 'title')
-    return render (request, 'help/article.html', {'article' : article, 'articles' : articles})
+        messages.error(request, "Help article not found.")
+        return redirect("help-home")
 
-@login_required(login_url='user-login')
+    articles = Help.objects.filter(is_active=True).order_by("display_order", "title")
+    return render(
+        request, "help/article.html", {"article": article, "articles": articles}
+    )
+
+
+@login_required(login_url="user-login")
 def bookmark_manager(request):
-    var_patients_list = Bookmark.objects.all().order_by('-id')
+    var_patients_list = Bookmark.objects.all().order_by("-id")
     paginator = Paginator(var_patients_list, 10)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     bookmark_list = paginator.get_page(page_number)
-    return render (request, 'bookmark/manager.html', {'bookmark_page_obj': bookmark_list})
+    return render(
+        request, "bookmark/manager.html", {"bookmark_page_obj": bookmark_list}
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def bookmark_add(request, item_id, bookmark_type):
     bookmark_form = BookmarkForm()
-    
-    if request.method == 'POST':
+
+    if request.method == "POST":
         bookmark_form_data = BookmarkForm(request.POST)
         if bookmark_form_data.is_valid():
-            
-            title = bookmark_form_data.cleaned_data['title']
-            description = bookmark_form_data.cleaned_data['description']
 
-            #check bookmark already exist
-            if Bookmark.objects.filter(bookmark_type=bookmark_type).filter(object_id=item_id).exists() == False:
-                
+            title = bookmark_form_data.cleaned_data["title"]
+            description = bookmark_form_data.cleaned_data["description"]
+
+            # check bookmark already exist
+            if (
+                Bookmark.objects.filter(bookmark_type=bookmark_type)
+                .filter(object_id=item_id)
+                .exists()
+                == False
+            ):
+
                 prep_bm = Bookmark.objects.create(
-                title = title,
-                bookmark_type = bookmark_type,
-                object_id = item_id,
-                description = description,
-                owner = request.user,
-                last_edit_by = None,
+                    title=title,
+                    bookmark_type=bookmark_type,
+                    object_id=item_id,
+                    description=description,
+                    owner=request.user,
+                    last_edit_by=None,
                 )
 
-                messages.success(request, 'New bookmark created succusfully')
-                return redirect('bookmark-view', pk=prep_bm.id)
+                messages.success(request, "New bookmark created succusfully")
+                return redirect("bookmark-view", pk=prep_bm.id)
             else:
-                messages.warning(request, 'Already bookmarked, please remove before create new bookmark...')
-                return render (request, 'bookmark/add.html', {'form' : bookmark_form_data, 'item_id' : item_id, 'bookmark_type' : bookmark_type})
+                messages.warning(
+                    request,
+                    "Already bookmarked, please remove before create new bookmark...",
+                )
+                return render(
+                    request,
+                    "bookmark/add.html",
+                    {
+                        "form": bookmark_form_data,
+                        "item_id": item_id,
+                        "bookmark_type": bookmark_type,
+                    },
+                )
         else:
             messages.error(request, bookmark_form_data.errors)
-            return render (request, 'bookmark/add.html', {'form' : bookmark_form_data, 'item_id' : item_id, 'bookmark_type' : bookmark_type})
+            return render(
+                request,
+                "bookmark/add.html",
+                {
+                    "form": bookmark_form_data,
+                    "item_id": item_id,
+                    "bookmark_type": bookmark_type,
+                },
+            )
     else:
-        return render (request, 'bookmark/add.html', {'form' : bookmark_form, 'item_id' : item_id, 'bookmark_type' : bookmark_type})
-    
-@login_required(login_url='user-login')
+        return render(
+            request,
+            "bookmark/add.html",
+            {"form": bookmark_form, "item_id": item_id, "bookmark_type": bookmark_type},
+        )
+
+
+@login_required(login_url="user-login")
 def bookmark_view(request, pk):
     bookmark = Bookmark.objects.get(id=pk)
-    return render (request, 'bookmark/view.html', {'bookmark' : bookmark})
+    return render(request, "bookmark/view.html", {"bookmark": bookmark})
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def bookmark_delete(request, pk):
     bookmark = Bookmark.objects.get(id=pk)
     if bookmark.owner == request.user:
         bookmark.delete()
-        messages.success(request, 'Bookmark deleted succusfully')
-        return redirect('bookmark-manager-user', request.user.username)
+        messages.success(request, "Bookmark deleted succusfully")
+        return redirect("bookmark-manager-user", request.user.username)
     else:
-        messages.error(request, 'You have no permission to remove this book mark...')
-        return render (request, 'bookmark/view.html', {'bookmark' : bookmark})
+        messages.error(request, "You have no permission to remove this book mark...")
+        return render(request, "bookmark/view.html", {"bookmark": bookmark})
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def bookmark_manager_user(request, username):
     user = CustomUser.objects.get(username=username)
-    var_patients_list = Bookmark.objects.filter(owner=user).order_by('-id')
+    var_patients_list = Bookmark.objects.filter(owner=user).order_by("-id")
     paginator = Paginator(var_patients_list, 10)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     bookmark_list = paginator.get_page(page_number)
-    return render (request, 'bookmark/manager.html', {'bookmark_page_obj': bookmark_list})
+    return render(
+        request, "bookmark/manager.html", {"bookmark_page_obj": bookmark_list}
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def bookmark_edit(request, pk):
     selected_bm = Bookmark.objects.get(id=pk)
     bm_form = BookmarkForm(instance=selected_bm)
-    if request.method == 'POST':
+    if request.method == "POST":
         bm_form_data = BookmarkForm(request.POST, instance=selected_bm)
         if bm_form_data.is_valid():
-            title = bm_form_data.cleaned_data['title']
-            description = bm_form_data.cleaned_data['description']
+            title = bm_form_data.cleaned_data["title"]
+            description = bm_form_data.cleaned_data["description"]
             selected_bm.title = title
             selected_bm.description = description
             selected_bm.last_edit_by = request.user
             selected_bm.last_edit_by = request.user
-            selected_bm.save(update_fields=['title', 'description', 'last_edit_by']) 
+            selected_bm.save(update_fields=["title", "description", "last_edit_by"])
             selected_bm.save()
-            messages.success(request, 'Bookmark details are updated succesfully...')
-            return redirect('bookmark-view', pk=selected_bm.id)
+            messages.success(request, "Bookmark details are updated succesfully...")
+            return redirect("bookmark-view", pk=selected_bm.id)
         else:
             messages.success(request, bm_form_data.errors)
-            return render (request, 'bookmark/edit.html', {'form' : bm_form_data, 'bookmark' : selected_bm})
-    return render (request, 'bookmark/edit.html', {'form' : bm_form, 'bookmark' : selected_bm})
+            return render(
+                request,
+                "bookmark/edit.html",
+                {"form": bm_form_data, "bookmark": selected_bm},
+            )
+    return render(
+        request, "bookmark/edit.html", {"form": bm_form, "bookmark": selected_bm}
+    )
+
 
 # functionf for attachment operations
 
-@login_required(login_url='user-login')
-def attachment_manager(request):
-    var_attachment_list = Attachment.objects.order_by('-id')
-    paginator = Paginator(var_attachment_list, 10)
-    page_number = request.GET.get('page')
-    attachment_list = paginator.get_page(page_number)
-    return render (request, 'attachment/manager.html', {'attachment_page_obj': attachment_list})
 
-@login_required(login_url='user-login')
-def attachment_manager_patient(request, pid):
-    var_attachment_list = Attachment.objects.filter(patient=pid).order_by('-id')
+@login_required(login_url="user-login")
+def attachment_manager(request):
+    var_attachment_list = Attachment.objects.order_by("-id")
     paginator = Paginator(var_attachment_list, 10)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     attachment_list = paginator.get_page(page_number)
-    return render (request, 'attachment/manager.html', {'attachment_page_obj': attachment_list})
+    return render(
+        request, "attachment/manager.html", {"attachment_page_obj": attachment_list}
+    )
+
+
+@login_required(login_url="user-login")
+def attachment_manager_patient(request, pid):
+    var_attachment_list = Attachment.objects.filter(patient=pid).order_by("-id")
+    paginator = Paginator(var_attachment_list, 10)
+    page_number = request.GET.get("page")
+    attachment_list = paginator.get_page(page_number)
+    return render(
+        request, "attachment/manager.html", {"attachment_page_obj": attachment_list}
+    )
+
 
 @csrf_exempt
-@login_required(login_url='user-login')
+@login_required(login_url="user-login")
 def attachment_add(request, pid):
-    
+
     selected_patient = Patient.objects.get(pk=pid)
     attachment_form = AttachmentkForm()
-    
+
     temp_file = None
-    
-    if request.method == 'POST':
-        title = request.POST['title']
-        attachment = request.FILES['attachment']
+
+    if request.method == "POST":
+        title = request.POST["title"]
+        attachment = request.FILES["attachment"]
         description = request.POST["descreption"]
-        
+
         if validateAttachmentSize(attachment):
             if validateAttachmentType(attachment):
                 # save file object
                 temp_file = Attachment(
-                patient = selected_patient,
-                title = title,
-                attachment = attachment,
-                attachment_type = getAttachmentType(attachment),
-                description = description,
-                added_by = request.user,
-                last_edit_by = None,)
+                    patient=selected_patient,
+                    title=title,
+                    attachment=attachment,
+                    attachment_type=getAttachmentType(attachment),
+                    description=description,
+                    added_by=request.user,
+                    last_edit_by=None,
+                )
 
                 temp_file.save()
 
                 if temp_file != None:
-                    return JsonResponse({'success': True, 'msg': 'OK', 'p_id': selected_patient.id, 'f_id': temp_file.id})
+                    return JsonResponse(
+                        {
+                            "success": True,
+                            "msg": "OK",
+                            "p_id": selected_patient.id,
+                            "f_id": temp_file.id,
+                        }
+                    )
                 else:
-                    return JsonResponse({'success': False, 'msg': 'Something went wrong during file uploading, Please try again...'})
+                    return JsonResponse(
+                        {
+                            "success": False,
+                            "msg": "Something went wrong during file uploading, Please try again...",
+                        }
+                    )
             else:
-                return JsonResponse({'success': False, 'msg': 'Only allowed file types are PDF, Videos (.mp4, .mov), Images (.jpg, .jpeg)...'})
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "msg": "Only allowed file types are PDF, Videos (.mp4, .mov), Images (.jpg, .jpeg)...",
+                    }
+                )
         else:
-            return JsonResponse({'success': False, 'msg': 'You cant upload >100mb files...'})
+            return JsonResponse(
+                {"success": False, "msg": "You cant upload >100mb files..."}
+            )
     else:
-        return render (request, 'attachment/add.html', {'patient' : selected_patient, 'attachment_form' : attachment_form})
+        return render(
+            request,
+            "attachment/add.html",
+            {"patient": selected_patient, "attachment_form": attachment_form},
+        )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def attachment_view(request, pk):
     sa = Attachment.objects.get(pk=pk)
-    return render (request, 'attachment/view.html', {'patient': sa.patient, 'attachment': sa})
+    return render(
+        request, "attachment/view.html", {"patient": sa.patient, "attachment": sa}
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def attachment_edit(request, pk):
     sa = Attachment.objects.get(pk=pk)
 
     a_form = AttachmentkForm(instance=sa)
-    
-    if request.method == 'POST':
+
+    if request.method == "POST":
         bm_form_data = AttachmentkForm(request.POST, request.FILES, instance=sa)
-        
+
         if bm_form_data.is_valid():
-            attachment = bm_form_data.cleaned_data['attachment']
+            attachment = bm_form_data.cleaned_data["attachment"]
             if validateAttachmentSize(attachment):
                 if validateAttachmentType(attachment):
                     bm_form_data.save()
@@ -1317,72 +1283,112 @@ def attachment_edit(request, pk):
 
                     sa.last_edit_by = request.user
                     sa.last_edit_by = request.user
-                    sa.save(update_fields=['attachment_type', 'last_edit_by'])
+                    sa.save(update_fields=["attachment_type", "last_edit_by"])
                     sa.save()
-                    
-                    messages.success(request, 'Attachment details are updated succesfully...')
-                    return redirect('attachment-view', pk=sa.id)
+
+                    messages.success(
+                        request, "Attachment details are updated succesfully..."
+                    )
+                    return redirect("attachment-view", pk=sa.id)
                 else:
-                    messages.warning(request, 'You cant upload files other dan videos(mp4, mov), image(jpg, jpeg), PDF...')
-                    return render (request, 'attachment/edit.html', {'form' : a_form, 'attachment' : sa})
+                    messages.warning(
+                        request,
+                        "You cant upload files other dan videos(mp4, mov), image(jpg, jpeg), PDF...",
+                    )
+                    return render(
+                        request,
+                        "attachment/edit.html",
+                        {"form": a_form, "attachment": sa},
+                    )
             else:
-                messages.warning(request, 'You cant upload file size >100mb...')
-                return render (request, 'attachment/edit.html', {'form' : a_form, 'attachment' : sa})
+                messages.warning(request, "You cant upload file size >100mb...")
+                return render(
+                    request, "attachment/edit.html", {"form": a_form, "attachment": sa}
+                )
         else:
             messages.success(request, bm_form_data.errors)
-            return render (request, 'attachment/edit.html', {'form' : bm_form_data, 'attachment' : sa})
+            return render(
+                request,
+                "attachment/edit.html",
+                {"form": bm_form_data, "attachment": sa},
+            )
     else:
-        return render (request, 'attachment/edit.html', {'form' : a_form, 'attachment' : sa})
+        return render(
+            request, "attachment/edit.html", {"form": a_form, "attachment": sa}
+        )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def attachment_delete_confirm(request, pk):
     attachment = Attachment.objects.get(id=pk)
     patient = attachment.patient
-    return render (request, 'attachment/delete-confirm.html', {'attachment' : attachment, 'patient' : patient}) 
+    return render(
+        request,
+        "attachment/delete-confirm.html",
+        {"attachment": attachment, "patient": patient},
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def attachment_delete(request, pk):
     user = request.user
     attachment = Attachment.objects.get(pk=pk)
-    
-    if user.check_password(request.POST['password']):
+
+    if user.check_password(request.POST["password"]):
         if attachment.delete():
-            messages.success('Attachment deleted succussfully...')
-            return redirect('attachment-manager')
+            messages.success("Attachment deleted succussfully...")
+            return redirect("attachment-manager")
         else:
-            messages.error('Something went wrong during delete the attachment...')
-            return render (request, 'attachment/view.html', {'patient': attachment.patient, 'attachment': attachment})
+            messages.error("Something went wrong during delete the attachment...")
+            return render(
+                request,
+                "attachment/view.html",
+                {"patient": attachment.patient, "attachment": attachment},
+            )
     else:
-        messages.error(request, 'Wrong password, please try again with correct password')
-        return render (request, 'attachment/view.html', {'patient': attachment.patient, 'attachment': attachment})
+        messages.error(
+            request, "Wrong password, please try again with correct password"
+        )
+        return render(
+            request,
+            "attachment/view.html",
+            {"patient": attachment.patient, "attachment": attachment},
+        )
+
 
 # Functions for cdic assessments
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def cdic_assessment_add(request, pid):
     selected_patient = Patient.objects.get(pk=pid)
     cdic_assemnt_form = CDICRecordForm()
 
-    if request.method == 'POST':
+    if request.method == "POST":
         cdic_assemnt_form_data = CDICRecordForm(request.POST)
         if cdic_assemnt_form_data.is_valid():
             cdic_record = cdic_assemnt_form_data.save(commit=False)
             cdic_record.patient = selected_patient
             cdic_record.created_by = request.user
             cdic_record.save()
-            messages.success(request, 'New CDIC record addes successfully...')
-            return redirect('cdic-assessment-view', cdic_record.id)
+            messages.success(request, "New CDIC record addes successfully...")
+            return redirect("cdic-assessment-view", cdic_record.id)
     else:
-        return render (request, 'cdic_record/add.html', {'patient' : selected_patient, 'cdic_assemnt_form' : cdic_assemnt_form})
+        return render(
+            request,
+            "cdic_record/add.html",
+            {"patient": selected_patient, "cdic_assemnt_form": cdic_assemnt_form},
+        )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def cdic_assessment_edit(request, aid):
     srecord = CDICRecord.objects.get(id=aid)
     spt = srecord.patient
-    
+
     cdicr_form = CDICRecordForm(instance=srecord)
-    
-    if request.method == 'POST':
+
+    if request.method == "POST":
         cdicr_form_data = CDICRecordForm(request.POST, instance=srecord)
         if cdicr_form_data.is_valid():
             cdicr = cdicr_form_data.save(commit=False)
@@ -1390,63 +1396,99 @@ def cdic_assessment_edit(request, aid):
             cdicr.edit_by = request.user
             cdicr.edit_on = getCurrentDateTime()
             cdicr.save()
-            
-            messages.success(request, 'CDIC record updated succesfully...')
-            return redirect('cdic-assessment-view', cdicr.id)
+
+            messages.success(request, "CDIC record updated succesfully...")
+            return redirect("cdic-assessment-view", cdicr.id)
         else:
             messages.success(request, cdicr_form_data.errors)
-            return render (request, 'cdic_record/edit.html', {'cdic_assemnt_form' : cdicr_form_data, 'patient' : spt})
-    return render (request, 'cdic_record/edit.html', {'cdic_assemnt_form' : cdicr_form, 'cdic_record' : srecord, 'patient' : spt})
+            return render(
+                request,
+                "cdic_record/edit.html",
+                {"cdic_assemnt_form": cdicr_form_data, "patient": spt},
+            )
+    return render(
+        request,
+        "cdic_record/edit.html",
+        {"cdic_assemnt_form": cdicr_form, "cdic_record": srecord, "patient": spt},
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def cdic_assessment_view(request, cdic_id):
     selected_cdic_record = CDICRecord.objects.get(pk=cdic_id)
-    return render (request, 'cdic_record/view.html', {'CDICRecord' : selected_cdic_record})
+    return render(
+        request, "cdic_record/view.html", {"CDICRecord": selected_cdic_record}
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def cdic_assessment_manager(request):
-    var_cdic_list = CDICRecord.objects.all().order_by('-id')
+    var_cdic_list = CDICRecord.objects.all().order_by("-id")
     paginator = Paginator(var_cdic_list, 10)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     cdic_record_list = paginator.get_page(page_number)
-    return render (request, 'cdic_record/manager.html', {'cdic_record_list': cdic_record_list})
+    return render(
+        request, "cdic_record/manager.html", {"cdic_record_list": cdic_record_list}
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def cdic_assessment_manager_by_patients(request, pid):
     sp = Patient.objects.get(pk=pid)
-    var_cdic_list = CDICRecord.objects.filter(patient=sp.id).order_by('-id')
+    var_cdic_list = CDICRecord.objects.filter(patient=sp.id).order_by("-id")
     paginator = Paginator(var_cdic_list, 10)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     cdic_record_list = paginator.get_page(page_number)
-    return render (request, 'cdic_record/manager.html', {'patient' : sp, 'cdic_record_list': cdic_record_list})
+    return render(
+        request,
+        "cdic_record/manager.html",
+        {"patient": sp, "cdic_record_list": cdic_record_list},
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def cdic_assessment_delete_start(request, aid):
     srecord = CDICRecord.objects.get(id=aid)
-    return render (request, 'cdic_record/delete-confirm.html', {'patient' : srecord.patient, 'cdic_record': srecord})
+    return render(
+        request,
+        "cdic_record/delete-confirm.html",
+        {"patient": srecord.patient, "cdic_record": srecord},
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def cdic_assessment_delete(request, aid):
     user = request.user
     srecord = CDICRecord.objects.get(pk=aid)
-    
-    if user.check_password(request.POST['password']):
+
+    if user.check_password(request.POST["password"]):
         if srecord.delete():
-            messages.success(request, 'Record deleted succussfully...')
-            return redirect('cdic-assessment-manager')
+            messages.success(request, "Record deleted succussfully...")
+            return redirect("cdic-assessment-manager")
         else:
-            messages.error(request, 'Something went wrong during delete the record...')
-            return render (request, 'cdic_record/view.html', {'patient': srecord.patient, 'CDICRecord': srecord})
+            messages.error(request, "Something went wrong during delete the record...")
+            return render(
+                request,
+                "cdic_record/view.html",
+                {"patient": srecord.patient, "CDICRecord": srecord},
+            )
     else:
-        messages.error(request, 'Wrong password, please try again with correct password')
-        return render (request, 'cdic_record/view.html', {'patient': srecord.patient, 'CDICRecord': srecord})
+        messages.error(
+            request, "Wrong password, please try again with correct password"
+        )
+        return render(
+            request,
+            "cdic_record/view.html",
+            {"patient": srecord.patient, "CDICRecord": srecord},
+        )
+
 
 # Functions for HINE assessments
-@login_required(login_url='user-login')
+@login_required(login_url="user-login")
 def hine_assessment_add(request, pid):
     sp = Patient.objects.get(pk=pid)
     hine_form = HINEAssessmentForm()
-    if request.method == 'POST':
+    if request.method == "POST":
         hine_form_data = HINEAssessmentForm(request.POST)
         if hine_form_data.is_valid():
             hine_record = hine_form_data.save(commit=False)
@@ -1454,157 +1496,237 @@ def hine_assessment_add(request, pid):
             hine_record.added_by = request.user
             hine_record.added_on = getCurrentDateTime()
             hine_record.save()
-            messages.success(request, 'New HINE record created successfully...')
-            return redirect('hine-assessment-view', hine_record.id)
+            messages.success(request, "New HINE record created successfully...")
+            return redirect("hine-assessment-view", hine_record.id)
         else:
             messages.error(request, hine_form_data.errors)
-            return render (request, 'hine/add.html', {'patient': sp, 'hine_form': hine_form_data})
+            return render(
+                request, "hine/add.html", {"patient": sp, "hine_form": hine_form_data}
+            )
     else:
-        return render (request, 'hine/add.html', {'patient': sp, 'hine_form': hine_form})
+        return render(request, "hine/add.html", {"patient": sp, "hine_form": hine_form})
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def hine_assessment_edit(request, hine_id):
     shr = HINEAssessment.objects.get(pk=hine_id)
     sp = shr.patient
     hine_form = HINEAssessmentForm(instance=shr)
-    if request.method == 'POST':
+    if request.method == "POST":
         hine_form_data = HINEAssessmentForm(request.POST, instance=shr)
         if hine_form_data.is_valid():
             hine_record = hine_form_data.save(commit=False)
             hine_record.patient = sp
             hine_record.last_edit_by = request.user
             hine_record.save()
-            messages.success(request, 'New HINE record created successfully...')
-            return redirect('hine-assessment-view', hine_record.id)
+            messages.success(request, "New HINE record created successfully...")
+            return redirect("hine-assessment-view", hine_record.id)
         else:
             messages.error(request, hine_form_data.errors)
-            return render (request, 'hine/edit.html', {'patient': sp, 'shr': shr, 'hine_form': hine_form_data})
+            return render(
+                request,
+                "hine/edit.html",
+                {"patient": sp, "shr": shr, "hine_form": hine_form_data},
+            )
     else:
-        return render (request, 'hine/edit.html', {'patient': sp, 'shr': shr, 'hine_form': hine_form})
+        return render(
+            request,
+            "hine/edit.html",
+            {"patient": sp, "shr": shr, "hine_form": hine_form},
+        )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def hine_assessment_view(request, hine_id):
     sh = HINEAssessment.objects.get(pk=hine_id)
-    return render (request, 'hine/view.html', {'patient': sh.patient, 'HINERecord': sh})
+    return render(request, "hine/view.html", {"patient": sh.patient, "HINERecord": sh})
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def hine_assessment_manager(request):
-    var_hine_list = HINEAssessment.objects.all().order_by('-id')
+    var_hine_list = HINEAssessment.objects.all().order_by("-id")
     paginator = Paginator(var_hine_list, 10)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     hine_record_list = paginator.get_page(page_number)
-    return render (request, 'hine/manager.html', {'patient' : '', 'hine_record_list': hine_record_list})
+    return render(
+        request,
+        "hine/manager.html",
+        {"patient": "", "hine_record_list": hine_record_list},
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def hine_assessment_manager_by_patients(request, pid):
     sp = Patient.objects.get(pk=pid)
-    var_hine_list = HINEAssessment.objects.filter(patient=sp.id).order_by('-id')
+    var_hine_list = HINEAssessment.objects.filter(patient=sp.id).order_by("-id")
     paginator = Paginator(var_hine_list, 10)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     hine_record_list = paginator.get_page(page_number)
-    return render (request, 'hine/manager.html', {'patient' : sp, 'hine_record_list': hine_record_list})
+    return render(
+        request,
+        "hine/manager.html",
+        {"patient": sp, "hine_record_list": hine_record_list},
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def hine_assessment_delete_start(request, hine_id):
     shr = HINEAssessment.objects.get(id=hine_id)
-    return render (request, 'hine/delete-confirm.html', {'patient' : shr.patient, 'hine_record': shr})
+    return render(
+        request,
+        "hine/delete-confirm.html",
+        {"patient": shr.patient, "hine_record": shr},
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def hine_assessment_delete(request, hine_id):
     user = request.user
     shr = HINEAssessment.objects.get(id=hine_id)
-    
-    if user.check_password(request.POST['password']):
+
+    if user.check_password(request.POST["password"]):
         if shr.delete():
-            messages.success(request, 'Record deleted succussfully...')
-            return redirect('hine-assessment-manager')
+            messages.success(request, "Record deleted succussfully...")
+            return redirect("hine-assessment-manager")
         else:
-            messages.error(request, 'Something went wrong during delete the record...')
-            return render (request, 'hine/view.html', {'patient': shr.patient, 'HINERecord': shr})
+            messages.error(request, "Something went wrong during delete the record...")
+            return render(
+                request, "hine/view.html", {"patient": shr.patient, "HINERecord": shr}
+            )
     else:
-        messages.error(request, 'Wrong password, please try again with correct password')
-        return render (request, 'hine/view.html', {'patient': shr.patient, 'HINERecord': shr})
+        messages.error(
+            request, "Wrong password, please try again with correct password"
+        )
+        return render(
+            request, "hine/view.html", {"patient": shr.patient, "HINERecord": shr}
+        )
+
 
 # Functions for Developmental assessments
-@login_required(login_url='user-login')
+@login_required(login_url="user-login")
 def da_assessment_add(request, pid):
     sp = Patient.objects.get(pk=pid)
     da_form = DevelopmentalAssessmentForm()
-    if request.method == 'POST':
+    if request.method == "POST":
         da_form_data = DevelopmentalAssessmentForm(request.POST)
         if da_form_data.is_valid():
             da_record = da_form_data.save(commit=False)
             da_record.patient = sp
             da_record.added_by = request.user
             da_record.save()
-            messages.success(request, 'New developmental assessment record created successfully...')
-            return redirect('da-assessment-view', da_record.id)
+            messages.success(
+                request, "New developmental assessment record created successfully..."
+            )
+            return redirect("da-assessment-view", da_record.id)
         else:
             messages.error(request, da_form_data.errors)
-            return render (request, 'develop_assemnt/add.html', {'patient': sp, 'da_form': da_form_data})
+            return render(
+                request,
+                "develop_assemnt/add.html",
+                {"patient": sp, "da_form": da_form_data},
+            )
     else:
-        return render (request, 'develop_assemnt/add.html', {'patient': sp, 'da_form': da_form})
+        return render(
+            request, "develop_assemnt/add.html", {"patient": sp, "da_form": da_form}
+        )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def da_assessment_edit(request, da_id):
     dar = DevelopmentalAssessment.objects.get(id=da_id)
     assessment_form = DevelopmentalAssessmentForm(instance=dar)
-    if request.method == 'POST':
+    if request.method == "POST":
         assessment_form_data = DevelopmentalAssessmentForm(request.POST, instance=dar)
         if assessment_form_data.is_valid():
             da_record = assessment_form_data.save(commit=False)
             da_record.last_edit_by = request.user
             da_record.save()
-            messages.success(request, 'Developmental assessment details are updated succesfully...')
-            return redirect('da-assessment-view', dar.id)
+            messages.success(
+                request, "Developmental assessment details are updated succesfully..."
+            )
+            return redirect("da-assessment-view", dar.id)
         else:
             messages.success(request, assessment_form_data.errors)
-            return render (request, 'develop_assemnt/edit.html', {'da_form' : assessment_form_data, 'dar' : dar})
-    return render (request, 'develop_assemnt/edit.html', {'da_form' : assessment_form, 'dar' : dar})
+            return render(
+                request,
+                "develop_assemnt/edit.html",
+                {"da_form": assessment_form_data, "dar": dar},
+            )
+    return render(
+        request, "develop_assemnt/edit.html", {"da_form": assessment_form, "dar": dar}
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def da_assessment_view(request, da_id):
     sdar = DevelopmentalAssessment.objects.get(pk=da_id)
-    return render (request, 'develop_assemnt/view.html', {'DARecord': sdar})
+    return render(request, "develop_assemnt/view.html", {"DARecord": sdar})
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def da_assessment_manager(request):
-    var_da_list = DevelopmentalAssessment.objects.all().order_by('-id')
+    var_da_list = DevelopmentalAssessment.objects.all().order_by("-id")
     paginator = Paginator(var_da_list, 10)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     da_record_list = paginator.get_page(page_number)
-    return render (request, 'develop_assemnt/manager.html', {'patient' : '', 'da_record_list': da_record_list})
+    return render(
+        request,
+        "develop_assemnt/manager.html",
+        {"patient": "", "da_record_list": da_record_list},
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def da_assessment_manager_by_patients(request, pid):
     sp = Patient.objects.get(pk=pid)
-    var_da_list = DevelopmentalAssessment.objects.filter(patient=sp.id).order_by('-id')
+    var_da_list = DevelopmentalAssessment.objects.filter(patient=sp.id).order_by("-id")
     paginator = Paginator(var_da_list, 10)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     da_record_list = paginator.get_page(page_number)
-    return render (request, 'develop_assemnt/manager.html', {'patient' : sp, 'da_record_list': da_record_list})
+    return render(
+        request,
+        "develop_assemnt/manager.html",
+        {"patient": sp, "da_record_list": da_record_list},
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def da_assessment_delete_start(request, da_id):
     sdr = DevelopmentalAssessment.objects.get(id=da_id)
-    return render (request, 'develop_assemnt/delete-confirm.html', {'patient' : sdr.patient, 'da_record': sdr})
+    return render(
+        request,
+        "develop_assemnt/delete-confirm.html",
+        {"patient": sdr.patient, "da_record": sdr},
+    )
 
-@login_required(login_url='user-login')
+
+@login_required(login_url="user-login")
 def da_assessment_delete(request, da_id):
     user = request.user
     sdar = DevelopmentalAssessment.objects.get(id=da_id)
-    
-    if user.check_password(request.POST['password']):
-        if sdar.delete():
-            messages.success(request, 'Record deleted succussfully...')
-            return redirect('da-assessment-manager')
-        else:
-            messages.error(request, 'Something went wrong during delete the record...')
-            return render (request, 'develop_assemnt/view.html', {'patient': sdar.patient, 'DARecord': sdar})
-    else:
-        messages.error(request, 'Wrong password, please try again with correct password')
-        return render (request, 'develop_assemnt/view.html', {'patient': sdar.patient, 'DARecord': sdar})
 
-@login_required(login_url='user-login')
+    if user.check_password(request.POST["password"]):
+        if sdar.delete():
+            messages.success(request, "Record deleted succussfully...")
+            return redirect("da-assessment-manager")
+        else:
+            messages.error(request, "Something went wrong during delete the record...")
+            return render(
+                request,
+                "develop_assemnt/view.html",
+                {"patient": sdar.patient, "DARecord": sdar},
+            )
+    else:
+        messages.error(
+            request, "Wrong password, please try again with correct password"
+        )
+        return render(
+            request,
+            "develop_assemnt/view.html",
+            {"patient": sdar.patient, "DARecord": sdar},
+        )
+
+
+@login_required(login_url="user-login")
 def print(request):
     pass

@@ -242,17 +242,35 @@ REDIS_PORT = int(os.environ.get('REDIS_PORT', '6379'))
 REDIS_DB = int(os.environ.get('REDIS_DB', '0'))
 
 # Cache Configuration
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}',
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        },
-        'KEY_PREFIX': 'ndas',
-        'TIMEOUT': 300,  # 5 minutes default timeout
+# Use local memory cache for development when Redis is not available
+try:
+    import redis
+    redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
+    redis_client.ping()
+    # Redis is available, use it
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}',
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            },
+            'KEY_PREFIX': 'ndas',
+            'TIMEOUT': 300,  # 5 minutes default timeout
+        }
     }
-}
+except (redis.ConnectionError, redis.RedisError, ImportError):
+    # Fallback to local memory cache for development
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'unique-snowflake',
+            'TIMEOUT': 300,
+            'OPTIONS': {
+                'MAX_ENTRIES': 1000,
+            }
+        }
+    }
 
 # Session Configuration
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
