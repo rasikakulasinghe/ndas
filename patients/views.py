@@ -1011,9 +1011,6 @@ def assessment_manager_by_patients(request, pk):
     )
 
 
-# Help/ tutorials
-
-
 @login_required(login_url="user-login")
 def help_home(request):
     articles = Help.objects.filter(is_active=True).order_by("display_order", "title")
@@ -1354,9 +1351,6 @@ def attachment_delete(request, pk):
             "attachment/view.html",
             {"patient": attachment.patient, "attachment": attachment},
         )
-
-
-# Functions for cdic assessments
 
 
 @login_required(login_url="user-login")

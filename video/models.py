@@ -234,6 +234,13 @@ class Video(TimeStampedModel, UserTrackingMixin):
         verbose_name=_("Description"),
         help_text=_("Detailed description of the video content"),
     )
+    
+    tags = models.CharField(
+        max_length=500,
+        blank=True,
+        verbose_name=_("Tags"),
+        help_text=_("Comma-separated tags for easy searching"),
+    )
 
     class Meta:
         verbose_name = _("Video")
@@ -319,8 +326,8 @@ class Video(TimeStampedModel, UserTrackingMixin):
     @property
     def age_on_recording(self):
         """Get patient age when video was recorded"""
-        if self.recorded_on and self.patient.dob:
-            age_days = (self.recorded_on.date() - self.patient.dob).days
+        if self.recorded_on and self.patient.dob_tob:
+            age_days = (self.recorded_on.date() - self.patient.dob_tob.date()).days
             return f"{age_days} days"
         return "Unknown"
 

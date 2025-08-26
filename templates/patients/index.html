@@ -191,7 +191,11 @@
                   <ul class="nav flex-column">
                       {% for Videos in new_videos %}
                       <li class="nav-item">
+                      {% if Videos.id %}
                       <a href="{% url 'video:view' Videos.id %}" target="_blank" class="nav-link">{{Videos.caption}} &nbsp; <small class="badge badge-danger">New</small><span class="float-right"><i class="far fa-clock"></i>&nbsp;&nbsp; {{Videos.uploaded_on|timesince}} ago</span></a>
+                      {% else %}
+                      <span class="nav-link text-muted">{{Videos.caption}} (Invalid record)</span>
+                      {% endif %}
                       </li>
                       {% endfor %}
                   </ul>

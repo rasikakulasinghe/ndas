@@ -99,3 +99,49 @@ html, body {
     overflow-y: auto !important;
 }
 
+/* Video Upload Page Layout Fixes */
+.content .container-fluid {
+    padding: 0 15px;
+}
+
+.content .row {
+    margin-left: -15px;
+    margin-right: -15px;
+}
+
+.content .col-md-6 {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Ensure cards have proper spacing */
+.card {
+    margin-bottom: 20px;
+}
+
+/* Fix form layout in video upload */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+/* Ensure proper button alignment */
+.float-right {
+    float: right !important;
+}
+
+/* Video upload specific improvements */
+.video-upload-container .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+}
+
+.video-upload-container .card {
+    height: 100%;
+}
+
+.video-upload-container .card-body {
+    display: flex;
+    flex-direction: column;
+}
+

@@ -286,7 +286,8 @@ CELERY_TIMEZONE = TIME_ZONE
 CELERY_ENABLE_UTC = True
 
 # Celery Task Configuration
-CELERY_TASK_ALWAYS_EAGER = os.environ.get('CELERY_TASK_ALWAYS_EAGER', 'False').lower() == 'true'  # For testing
+# Temporarily enable synchronous processing when Redis is not available
+CELERY_TASK_ALWAYS_EAGER = os.environ.get('CELERY_TASK_ALWAYS_EAGER', 'True').lower() == 'true'  # For testing without Redis
 CELERY_TASK_EAGER_PROPAGATES = True
 CELERY_TASK_ROUTES = {
     'video.tasks.process_video_task': {'queue': 'video_processing'},
