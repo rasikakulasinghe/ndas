@@ -1,0 +1,42 @@
+/**
+ * Manager.css - Stylesheet for patient manager pages
+ * Part of NDAS (Neonatal Development Assessment System)
+ */
+
+/* Fix for nested dropdown menus */
+.submenu {
+  left: 100%;
+  top: 0;
+  margin-top: -1px;
+  border-radius: 0 0.25rem 0.25rem 0.25rem;
+}
+
+.submenu.show {
+  display: block;
+}
+
+.dropdown-item.dropdown-toggle::after {
+  border-top: 0.3em solid transparent;
+  border-right: 0;
+  border-bottom: 0.3em solid transparent;
+  border-left: 0.3em solid;
+  margin-left: auto;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 991.98px) {
+  .submenu {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    margin-left: 1rem;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+  }
+  
+  .submenu .dropdown-item {
+    padding-left: 1.5rem;
+    font-size: 0.9rem;
+  }
+}
