@@ -2,10 +2,7 @@
 {% load static %}
 {% block title %}Video - Add{% endblock %}
 {% block main_content %}
-
-</br>
-
-<div class="container">
+<div class="container-fluid">
 
 <!-- Page header -->
 <div class="card bg-info"><div class="card-header"><h3 class="card-title">Add New Video</h3></div></div>
@@ -72,7 +69,7 @@
               <div class="row justify-content-end">
                 <div class="col-auto"><button style="display:none;" id="btn_view"type="button" class="btn btn-primary" onclick="location.href=''">View</button></div>
                 <div class="col-auto"><button style="display:none;" id="btn_edit"type="button" class="btn btn-primary" onclick="location.href=''">Edit</button></div>
-                <div class="col-auto"><button style="display:none;" id="btn_add_another"type="button" class="btn btn-primary" onclick="location.href='{% url 'file-add' patient.id %}'">Add New</button></div>
+                <div class="col-auto"><button style="display:none;" id="btn_add_another"type="button" class="btn btn-primary" onclick="location.href='{% url 'video:add' patient.id %}'">Add New</button></div>
                 <div class="col-auto"><button id="btn_add" type="submit" class="btn btn-primary">Upload</button></div>
               </div>
 
@@ -125,7 +122,7 @@
       var btn_add_another = document.getElementById("btn_add_another")
 
       var xhr=new XMLHttpRequest();
-      xhr.open("POST",'{% url 'file-add' patient.id %}',true);
+  xhr.open("POST",'{% url 'video:add' patient.id %}',true);
 
       xhr.upload.addEventListener("progress",function (ev) {
          if(ev.lengthComputable){

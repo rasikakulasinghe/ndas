@@ -2,16 +2,24 @@
 {% block title %}User Profile - {{custom_user.first_name}} {{custom_user.last_name}}{% endblock %}
 
 {% block content_header %}
-<div class="row mb-2">
-  <div class="col-sm-6">
-    <h1 class="m-0">User Profile</h1>
-  </div>
-  <div class="col-sm-6">
-    <ol class="breadcrumb float-sm-right">
-      <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
-      <li class="breadcrumb-item"><a href="{% url 'admin-user-list' %}">Users</a></li>
-      <li class="breadcrumb-item active">{{custom_user.first_name}} {{custom_user.last_name}}</li>
-    </ol>
+<div class="content-header bg-gradient-light py-3 mb-4 rounded shadow-sm">
+  <div class="container-fluid">
+    <div class="row align-items-center">
+      <div class="col-sm-6">
+        <h1 class="m-0 text-dark font-weight-bold">
+          <i class="fas fa-user-circle mr-2 text-primary"></i>
+          User Profile
+        </h1>
+        <p class="text-muted mb-0 mt-1">Detailed information for {{custom_user.first_name}} {{custom_user.last_name}}</p>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right bg-transparent mb-0">
+          <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none"><i class="fas fa-home mr-1"></i>Home</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'admin-user-list' %}" class="text-decoration-none"><i class="fas fa-users mr-1"></i>Users</a></li>
+          <li class="breadcrumb-item active text-primary font-weight-medium">{{custom_user.first_name}} {{custom_user.last_name}}</li>
+        </ol>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock content_header %}
@@ -20,212 +28,460 @@
 <div class="row">
   <!-- Profile Overview Card -->
   <div class="col-md-4">
-    <div class="card card-primary card-outline">
-      <div class="card-body box-profile">
-        <div class="text-center">
-          {% if custom_user.profile_picture_url %}
-          <img class="profile-user-img img-fluid img-circle" 
-               src="{{custom_user.profile_picture_url}}" 
-               alt="User profile picture"
-               style="width: 150px; height: 150px; object-fit: cover;">
-          {% else %}
-          <div class="profile-user-img img-fluid img-circle d-flex align-items-center justify-content-center bg-secondary mx-auto" 
-               style="width: 150px; height: 150px; color: white;">
-            <i class="fas fa-user fa-4x"></i>
-          </div>
-          {% endif %}
+    <div class="card card-widget widget-user shadow-lg border-0">
+      <!-- Profile header with gradient background -->
+      <div class="widget-user-header text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <h3 class="widget-user-username text-right">{{custom_user.first_name}} {{custom_user.last_name}}</h3>
+        <h5 class="widget-user-desc text-right">{{custom_user.position|default:"Staff Member"}}</h5>
+      </div>
+      
+      <!-- Profile picture -->
+      <div class="widget-user-image">
+        {% if custom_user.profile_picture_url %}
+        <img class="img-circle elevation-3" 
+             src="{{custom_user.profile_picture_url}}" 
+             alt="User profile picture"
+             style="width: 90px; height: 90px; object-fit: cover; border: 4px solid #fff;">
+        {% else %}
+        <div class="img-circle elevation-3 d-flex align-items-center justify-content-center bg-gradient-primary" 
+             style="width: 90px; height: 90px; border: 4px solid #fff; margin: 0 auto;">
+          <i class="fas fa-user fa-2x text-white"></i>
         </div>
+        {% endif %}
+      </div>
+      
+      <!-- Profile stats -->
+      <div class="card-footer p-0">
+        <div class="row">
+          <div class="col-sm-4 border-right">
+            <div class="description-block p-3">
+              <span class="description-header text-{{ custom_user.is_active|yesno:'success,danger' }}">
+                <i class="fas fa-{{ custom_user.is_active|yesno:'check-circle,times-circle' }}"></i>
+              </span>
+              <span class="description-text font-weight-bold">STATUS</span>
+            </div>
+          </div>
+          <div class="col-sm-4 border-right">
+            <div class="description-block p-3">
+              <span class="description-header text-{{ custom_user.is_email_verified|yesno:'primary,warning' }}">
+                <i class="fas fa-{{ custom_user.is_email_verified|yesno:'envelope-check,envelope' }}"></i>
+              </span>
+              <span class="description-text font-weight-bold">EMAIL</span>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="description-block p-3">
+              <span class="description-header text-info">
+                <i class="fas fa-calendar-alt"></i>
+              </span>
+              <span class="description-text font-weight-bold">JOINED</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Quick Info Card -->
+    <div class="card shadow-sm border-0 mt-3">
+      <div class="card-header bg-gradient-light border-0">
+        <h3 class="card-title font-weight-bold"><i class="fas fa-info-circle mr-2 text-info"></i>Quick Information</h3>
+      </div>
+      <div class="card-body p-0">
 
-        <h3 class="profile-username text-center">{{custom_user.first_name}} {{custom_user.last_name}}</h3>
-        <p class="text-muted text-center">{{custom_user.position}}</p>
-
-        <ul class="list-group list-group-unbordered mb-3">
-          <li class="list-group-item">
-            <b>Email Verified</b> 
-            <span class="float-right">
+        <div class="list-group list-group-flush">
+          <div class="list-group-item border-0 px-3 py-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="text-muted"><i class="fas fa-envelope-open mr-2"></i>Email Verified</span>
               {% if custom_user.is_email_verified %}
-                <span class="badge badge-success">Yes</span>
+                <span class="badge badge-success badge-pill px-3"><i class="fas fa-check mr-1"></i>Verified</span>
               {% else %}
-                <span class="badge badge-warning">No</span>
+                <span class="badge badge-warning badge-pill px-3"><i class="fas fa-clock mr-1"></i>Pending</span>
               {% endif %}
-            </span>
-          </li>
-          <li class="list-group-item">
-            <b>Account Status</b> 
-            <span class="float-right">
+            </div>
+          </div>
+          <div class="list-group-item border-0 px-3 py-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="text-muted"><i class="fas fa-user-check mr-2"></i>Account Status</span>
               {% if custom_user.is_active %}
-                <span class="badge badge-success">Active</span>
+                <span class="badge badge-success badge-pill px-3"><i class="fas fa-circle mr-1"></i>Active</span>
               {% else %}
-                <span class="badge badge-danger">Inactive</span>
+                <span class="badge badge-danger badge-pill px-3"><i class="fas fa-pause mr-1"></i>Inactive</span>
               {% endif %}
-            </span>
-          </li>
-          <li class="list-group-item">
-            <b>Last Login</b> 
-            <span class="float-right text-muted">
-              {% if custom_user.last_login %}
-                {{custom_user.last_login|date:"M d, Y H:i"}}
-              {% else %}
-                Never
-              {% endif %}
-            </span>
-          </li>
-        </ul>
+            </div>
+          </div>
+          <div class="list-group-item border-0 px-3 py-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="text-muted"><i class="fas fa-clock mr-2"></i>Last Login</span>
+              <span class="text-dark font-weight-medium">
+                {% if custom_user.last_login %}
+                  {{custom_user.last_login|date:"M d, Y H:i"}}
+                {% else %}
+                  <span class="text-muted">Never</span>
+                {% endif %}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Detailed Information Card -->
   <div class="col-md-8">
-    <div class="card">
-      <div class="card-header p-2">
-        <ul class="nav nav-pills">
-          <li class="nav-item"><a class="nav-link active" href="#personal" data-toggle="tab">Personal Information</a></li>
-          <li class="nav-item"><a class="nav-link" href="#contact" data-toggle="tab">Contact Details</a></li>
-          <li class="nav-item"><a class="nav-link" href="#system" data-toggle="tab">System Information</a></li>
+    <div class="card shadow-lg border-0">
+      <div class="card-header bg-gradient-light border-0 p-3">
+        <ul class="nav nav-pills nav-justified card-header-pills">
+          <li class="nav-item">
+            <a class="nav-link active rounded-pill font-weight-bold" href="#personal" data-toggle="tab">
+              <i class="fas fa-user mr-2"></i>Personal Information
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link rounded-pill font-weight-bold" href="#contact" data-toggle="tab">
+              <i class="fas fa-address-book mr-2"></i>Contact Details
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link rounded-pill font-weight-bold" href="#system" data-toggle="tab">
+              <i class="fas fa-cog mr-2"></i>System Information
+            </a>
+          </li>
         </ul>
       </div>
-      <div class="card-body">
+      <div class="card-body p-4">
         <div class="tab-content">
           <!-- Personal Information Tab -->
-          <div class="active tab-pane" id="personal">
+          <div class="active tab-pane fade show" id="personal">
             <div class="row">
               <div class="col-12">
-                <dl class="row">
-                  <dt class="col-sm-4">Username:</dt>
-                  <dd class="col-sm-8"><code>{{custom_user.username}}</code></dd>
-
-                  <dt class="col-sm-4">First Name:</dt>
-                  <dd class="col-sm-8">{{custom_user.first_name}}</dd>
-
-                  <dt class="col-sm-4">Last Name:</dt>
-                  <dd class="col-sm-8">{{custom_user.last_name}}</dd>
-
-                  <dt class="col-sm-4">Position:</dt>
-                  <dd class="col-sm-8">
-                    <span class="badge badge-info">{{custom_user.position}}</span>
-                  </dd>
-
-                  <dt class="col-sm-4">Additional Notes:</dt>
-                  <dd class="col-sm-8">
-                    {% if custom_user.additional_notes %}
-                      {{custom_user.additional_notes}}
-                    {% else %}
-                      <span class="text-muted">No additional notes</span>
-                    {% endif %}
-                  </dd>
-                </dl>
+                <div class="info-box-group">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="info-box bg-light rounded p-3 mb-3 border-left border-primary border-width-3">
+                        <div class="info-box-icon bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                          <i class="fas fa-id-badge text-white"></i>
+                        </div>
+                        <div class="info-box-content ml-3">
+                          <span class="info-box-text text-muted font-weight-bold">Username</span>
+                          <span class="info-box-number text-dark"><code class="bg-light px-2 py-1 rounded">{{custom_user.username}}</code></span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="info-box bg-light rounded p-3 mb-3 border-left border-success border-width-3">
+                        <div class="info-box-icon bg-success rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                          <i class="fas fa-user text-white"></i>
+                        </div>
+                        <div class="info-box-content ml-3">
+                          <span class="info-box-text text-muted font-weight-bold">Full Name</span>
+                          <span class="info-box-number text-dark">{{custom_user.first_name}} {{custom_user.last_name}}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="info-box bg-light rounded p-3 mb-3 border-left border-info border-width-3">
+                        <div class="info-box-icon bg-info rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                          <i class="fas fa-briefcase text-white"></i>
+                        </div>
+                        <div class="info-box-content ml-3">
+                          <span class="info-box-text text-muted font-weight-bold">Position</span>
+                          <span class="info-box-number">
+                            <span class="badge badge-info badge-lg px-3 py-2">{{custom_user.position|default:"Not specified"}}</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="info-box bg-light rounded p-3 mb-3 border-left border-warning border-width-3">
+                        <div class="info-box-icon bg-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                          <i class="fas fa-sticky-note text-white"></i>
+                        </div>
+                        <div class="info-box-content ml-3">
+                          <span class="info-box-text text-muted font-weight-bold">Additional Notes</span>
+                          <span class="info-box-number text-dark">
+                            {% if custom_user.additional_notes %}
+                              {{custom_user.additional_notes|truncatewords:10}}
+                            {% else %}
+                              <span class="text-muted font-italic">No additional notes</span>
+                            {% endif %}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Contact Details Tab -->
-          <div class="tab-pane" id="contact">
+          <div class="tab-pane fade" id="contact">
             <div class="row">
-              <div class="col-12">
-                <dl class="row">
-                  <dt class="col-sm-4">Email:</dt>
-                  <dd class="col-sm-8">
-                    <a href="mailto:{{custom_user.email}}">{{custom_user.email}}</a>
-                    {% if custom_user.is_email_verified %}
-                      <i class="fas fa-check-circle text-success ml-1" title="Verified"></i>
-                    {% else %}
-                      <i class="fas fa-exclamation-circle text-warning ml-1" title="Not verified"></i>
-                    {% endif %}
-                  </dd>
+              <div class="col-md-6">
+                <!-- Email and Digital Contact -->
+                <div class="card bg-gradient-light border-0 mb-4">
+                  <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="font-weight-bold text-primary">
+                      <i class="fas fa-envelope mr-2"></i>Digital Contact
+                    </h5>
+                  </div>
+                  <div class="card-body pt-2">
+                    <div class="contact-item d-flex align-items-center mb-3 p-3 bg-white rounded shadow-sm">
+                      <div class="contact-icon bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px;">
+                        <i class="fas fa-at"></i>
+                      </div>
+                      <div class="contact-details">
+                        <small class="text-muted font-weight-bold d-block">Email Address</small>
+                        <div class="d-flex align-items-center">
+                          <a href="mailto:{{custom_user.email}}" class="text-dark font-weight-medium">{{custom_user.email}}</a>
+                          {% if custom_user.is_email_verified %}
+                            <i class="fas fa-check-circle text-success ml-2" title="Verified"></i>
+                          {% else %}
+                            <i class="fas fa-exclamation-circle text-warning ml-2" title="Not verified"></i>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-                  <dt class="col-sm-4">Primary Mobile:</dt>
-                  <dd class="col-sm-8">
-                    {% if custom_user.mobile_primary %}
-                      <a href="tel:{{custom_user.mobile_primary}}">{{custom_user.mobile_primary}}</a>
-                    {% else %}
-                      <span class="text-muted">Not provided</span>
-                    {% endif %}
-                  </dd>
+                <!-- Phone Numbers -->
+                <div class="card bg-gradient-light border-0">
+                  <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="font-weight-bold text-success">
+                      <i class="fas fa-phone mr-2"></i>Phone Numbers
+                    </h5>
+                  </div>
+                  <div class="card-body pt-2">
+                    <!-- Primary Mobile -->
+                    <div class="contact-item d-flex align-items-center mb-3 p-3 bg-white rounded shadow-sm">
+                      <div class="contact-icon bg-success text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px;">
+                        <i class="fas fa-mobile-alt"></i>
+                      </div>
+                      <div class="contact-details">
+                        <small class="text-muted font-weight-bold d-block">Primary Mobile</small>
+                        {% if custom_user.mobile_primary %}
+                          <a href="tel:{{custom_user.mobile_primary}}" class="text-dark font-weight-medium">{{custom_user.mobile_primary}}</a>
+                        {% else %}
+                          <span class="text-muted font-italic">Not provided</span>
+                        {% endif %}
+                      </div>
+                    </div>
 
-                  <dt class="col-sm-4">Secondary Mobile:</dt>
-                  <dd class="col-sm-8">
-                    {% if custom_user.mobile_secondary %}
-                      <a href="tel:{{custom_user.mobile_secondary}}">{{custom_user.mobile_secondary}}</a>
-                    {% else %}
-                      <span class="text-muted">Not provided</span>
-                    {% endif %}
-                  </dd>
+                    <!-- Secondary Mobile -->
+                    <div class="contact-item d-flex align-items-center mb-3 p-3 bg-white rounded shadow-sm">
+                      <div class="contact-icon bg-info text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px;">
+                        <i class="fas fa-mobile-alt"></i>
+                      </div>
+                      <div class="contact-details">
+                        <small class="text-muted font-weight-bold d-block">Secondary Mobile</small>
+                        {% if custom_user.mobile_secondary %}
+                          <a href="tel:{{custom_user.mobile_secondary}}" class="text-dark font-weight-medium">{{custom_user.mobile_secondary}}</a>
+                        {% else %}
+                          <span class="text-muted font-italic">Not provided</span>
+                        {% endif %}
+                      </div>
+                    </div>
 
-                  <dt class="col-sm-4">Primary Landline:</dt>
-                  <dd class="col-sm-8">
-                    {% if custom_user.landline_primary %}
-                      <a href="tel:{{custom_user.landline_primary}}">{{custom_user.landline_primary}}</a>
-                    {% else %}
-                      <span class="text-muted">Not provided</span>
-                    {% endif %}
-                  </dd>
+                    <!-- Primary Landline -->
+                    <div class="contact-item d-flex align-items-center mb-3 p-3 bg-white rounded shadow-sm">
+                      <div class="contact-icon bg-warning text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px;">
+                        <i class="fas fa-phone"></i>
+                      </div>
+                      <div class="contact-details">
+                        <small class="text-muted font-weight-bold d-block">Primary Landline</small>
+                        {% if custom_user.landline_primary %}
+                          <a href="tel:{{custom_user.landline_primary}}" class="text-dark font-weight-medium">{{custom_user.landline_primary}}</a>
+                        {% else %}
+                          <span class="text-muted font-italic">Not provided</span>
+                        {% endif %}
+                      </div>
+                    </div>
 
-                  <dt class="col-sm-4">Secondary Landline:</dt>
-                  <dd class="col-sm-8">
-                    {% if custom_user.landline_secondary %}
-                      <a href="tel:{{custom_user.landline_secondary}}">{{custom_user.landline_secondary}}</a>
-                    {% else %}
-                      <span class="text-muted">Not provided</span>
-                    {% endif %}
-                  </dd>
+                    <!-- Secondary Landline -->
+                    <div class="contact-item d-flex align-items-center p-3 bg-white rounded shadow-sm">
+                      <div class="contact-icon bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px;">
+                        <i class="fas fa-phone"></i>
+                      </div>
+                      <div class="contact-details">
+                        <small class="text-muted font-weight-bold d-block">Secondary Landline</small>
+                        {% if custom_user.landline_secondary %}
+                          <a href="tel:{{custom_user.landline_secondary}}" class="text-dark font-weight-medium">{{custom_user.landline_secondary}}</a>
+                        {% else %}
+                          <span class="text-muted font-italic">Not provided</span>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-                  <dt class="col-sm-4">Home Address:</dt>
-                  <dd class="col-sm-8">
-                    {% if custom_user.home_address %}
-                      {{custom_user.home_address}}
-                    {% else %}
-                      <span class="text-muted">Not provided</span>
-                    {% endif %}
-                  </dd>
+              <div class="col-md-6">
+                <!-- Addresses -->
+                <div class="card bg-gradient-light border-0">
+                  <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="font-weight-bold text-danger">
+                      <i class="fas fa-map-marker-alt mr-2"></i>Addresses
+                    </h5>
+                  </div>
+                  <div class="card-body pt-2">
+                    <!-- Home Address -->
+                    <div class="contact-item d-flex align-items-start mb-3 p-3 bg-white rounded shadow-sm">
+                      <div class="contact-icon bg-danger text-white rounded-circle d-flex align-items-center justify-content-center mr-3 mt-1" style="width: 40px; height: 40px; min-width: 40px;">
+                        <i class="fas fa-home"></i>
+                      </div>
+                      <div class="contact-details">
+                        <small class="text-muted font-weight-bold d-block mb-1">Home Address</small>
+                        {% if custom_user.home_address %}
+                          <span class="text-dark">{{custom_user.home_address}}</span>
+                        {% else %}
+                          <span class="text-muted font-italic">Not provided</span>
+                        {% endif %}
+                      </div>
+                    </div>
 
-                  <dt class="col-sm-4">Station Address:</dt>
-                  <dd class="col-sm-8">
-                    {% if custom_user.station_address %}
-                      {{custom_user.station_address}}
-                    {% else %}
-                      <span class="text-muted">Not provided</span>
-                    {% endif %}
-                  </dd>
-                </dl>
+                    <!-- Station Address -->
+                    <div class="contact-item d-flex align-items-start p-3 bg-white rounded shadow-sm">
+                      <div class="contact-icon bg-dark text-white rounded-circle d-flex align-items-center justify-content-center mr-3 mt-1" style="width: 40px; height: 40px; min-width: 40px;">
+                        <i class="fas fa-building"></i>
+                      </div>
+                      <div class="contact-details">
+                        <small class="text-muted font-weight-bold d-block mb-1">Station Address</small>
+                        {% if custom_user.station_address %}
+                          <span class="text-dark">{{custom_user.station_address}}</span>
+                        {% else %}
+                          <span class="text-muted font-italic">Not provided</span>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- System Information Tab -->
-          <div class="tab-pane" id="system">
+          <div class="tab-pane fade" id="system">
             <div class="row">
-              <div class="col-12">
-                <dl class="row">
-                  <dt class="col-sm-4">Date Joined:</dt>
-                  <dd class="col-sm-8">{{custom_user.date_joined|date:"F d, Y H:i"}}</dd>
+              <div class="col-md-6">
+                <!-- Account Timeline -->
+                <div class="card bg-gradient-light border-0 mb-4">
+                  <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="font-weight-bold text-info">
+                      <i class="fas fa-history mr-2"></i>Account Timeline
+                    </h5>
+                  </div>
+                  <div class="card-body pt-2">
+                    <div class="timeline">
+                      <!-- Account Created -->
+                      <div class="timeline-item d-flex mb-4">
+                        <div class="timeline-marker bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px; min-width: 40px;">
+                          <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="timeline-content p-3 bg-white rounded shadow-sm flex-grow-1">
+                          <h6 class="timeline-title font-weight-bold mb-1">Account Created</h6>
+                          <p class="timeline-text text-muted mb-0">{{custom_user.created_at|date:"F d, Y H:i"}}</p>
+                        </div>
+                      </div>
 
-                  <dt class="col-sm-4">Email Verified At:</dt>
-                  <dd class="col-sm-8">
-                    {% if custom_user.email_verified_at %}
-                      {{custom_user.email_verified_at|date:"F d, Y H:i"}}
-                    {% else %}
-                      <span class="text-muted">Not verified</span>
-                    {% endif %}
-                  </dd>
+                      <!-- Date Joined -->
+                      <div class="timeline-item d-flex mb-4">
+                        <div class="timeline-marker bg-success text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px; min-width: 40px;">
+                          <i class="fas fa-sign-in-alt"></i>
+                        </div>
+                        <div class="timeline-content p-3 bg-white rounded shadow-sm flex-grow-1">
+                          <h6 class="timeline-title font-weight-bold mb-1">Date Joined</h6>
+                          <p class="timeline-text text-muted mb-0">{{custom_user.date_joined|date:"F d, Y H:i"}}</p>
+                        </div>
+                      </div>
 
-                  <dt class="col-sm-4">Created At:</dt>
-                  <dd class="col-sm-8">{{custom_user.created_at|date:"F d, Y H:i"}}</dd>
+                      <!-- Email Verification -->
+                      <div class="timeline-item d-flex mb-4">
+                        <div class="timeline-marker bg-{{ custom_user.is_email_verified|yesno:'warning,secondary' }} text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px; min-width: 40px;">
+                          <i class="fas fa-envelope-check"></i>
+                        </div>
+                        <div class="timeline-content p-3 bg-white rounded shadow-sm flex-grow-1">
+                          <h6 class="timeline-title font-weight-bold mb-1">Email Verification</h6>
+                          {% if custom_user.email_verified_at %}
+                            <p class="timeline-text text-muted mb-0">Verified on {{custom_user.email_verified_at|date:"F d, Y H:i"}}</p>
+                          {% else %}
+                            <p class="timeline-text text-warning mb-0">Not yet verified</p>
+                          {% endif %}
+                        </div>
+                      </div>
 
-                  <dt class="col-sm-4">Updated At:</dt>
-                  <dd class="col-sm-8">{{custom_user.updated_at|date:"F d, Y H:i"}}</dd>
+                      <!-- Last Update -->
+                      <div class="timeline-item d-flex">
+                        <div class="timeline-marker bg-info text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px; min-width: 40px;">
+                          <i class="fas fa-edit"></i>
+                        </div>
+                        <div class="timeline-content p-3 bg-white rounded shadow-sm flex-grow-1">
+                          <h6 class="timeline-title font-weight-bold mb-1">Last Updated</h6>
+                          <p class="timeline-text text-muted mb-0">{{custom_user.updated_at|date:"F d, Y H:i"}}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-                  <dt class="col-sm-4">Last Login Device:</dt>
-                  <dd class="col-sm-8">
-                    {% if custom_user.last_login_device %}
-                      <span class="badge badge-secondary" data-toggle="tooltip" title="{{custom_user.last_login_device}}">
-                        <i class="fas fa-desktop mr-1"></i>Device Info
-                      </span>
-                    {% else %}
-                      <span class="text-muted">Unknown</span>
-                    {% endif %}
-                  </dd>
-                </dl>
+              <div class="col-md-6">
+                <!-- System Info -->
+                <div class="card bg-gradient-light border-0">
+                  <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="font-weight-bold text-secondary">
+                      <i class="fas fa-server mr-2"></i>System Information
+                    </h5>
+                  </div>
+                  <div class="card-body pt-2">
+                    <!-- Last Login Device -->
+                    <div class="system-item d-flex align-items-center p-3 bg-white rounded shadow-sm mb-3">
+                      <div class="system-icon bg-dark text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px;">
+                        <i class="fas fa-desktop"></i>
+                      </div>
+                      <div class="system-details">
+                        <small class="text-muted font-weight-bold d-block">Last Login Device</small>
+                        {% if custom_user.last_login_device %}
+                          <span class="text-dark font-weight-medium" data-toggle="tooltip" title="{{custom_user.last_login_device}}">
+                            Device Information Available
+                          </span>
+                        {% else %}
+                          <span class="text-muted font-italic">Unknown device</span>
+                        {% endif %}
+                      </div>
+                    </div>
+
+                    <!-- User ID -->
+                    <div class="system-item d-flex align-items-center p-3 bg-white rounded shadow-sm mb-3">
+                      <div class="system-icon bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px;">
+                        <i class="fas fa-hashtag"></i>
+                      </div>
+                      <div class="system-details">
+                        <small class="text-muted font-weight-bold d-block">User ID</small>
+                        <code class="bg-light px-2 py-1 rounded text-dark">{{custom_user.id}}</code>
+                      </div>
+                    </div>
+
+                    <!-- Account Status -->
+                    <div class="system-item d-flex align-items-center p-3 bg-white rounded shadow-sm">
+                      <div class="system-icon bg-{{ custom_user.is_active|yesno:'success,danger' }} text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px;">
+                        <i class="fas fa-{{ custom_user.is_active|yesno:'check,times' }}"></i>
+                      </div>
+                      <div class="system-details">
+                        <small class="text-muted font-weight-bold d-block">System Status</small>
+                        <span class="badge badge-{{ custom_user.is_active|yesno:'success,danger' }} badge-lg px-3 py-2">
+                          {% if custom_user.is_active %}
+                            <i class="fas fa-circle mr-1"></i>Active Account
+                          {% else %}
+                            <i class="fas fa-pause mr-1"></i>Inactive Account
+                          {% endif %}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -236,35 +492,52 @@
 </div>
 
 <!-- Action Buttons Row -->
-<div class="row">
+<div class="row mt-4">
   <div class="col-12">
-    <div class="card">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center flex-wrap">
-          <div class="btn-group mb-2" role="group" aria-label="User Actions">
-            {% if user.username == custom_user.username %}
-              <a href="{% url 'user-edit' custom_user.id %}" class="btn btn-primary">
-                <i class="fas fa-edit mr-2"></i>Edit My Profile
+    <div class="card shadow-lg border-0">
+      <div class="card-header bg-gradient-primary text-white border-0">
+        <h5 class="card-title mb-0 font-weight-bold">
+          <i class="fas fa-cogs mr-2"></i>Available Actions
+        </h5>
+      </div>
+      <div class="card-body p-4">
+        <div class="row">
+          <!-- User Actions -->
+          <div class="col-md-6">
+            <h6 class="text-muted font-weight-bold mb-3">
+              <i class="fas fa-user mr-2"></i>User Actions
+            </h6>
+            <div class="d-flex flex-column">
+              {% if user.username == custom_user.username %}
+                <a href="{% url 'user-edit' custom_user.id %}" class="btn btn-primary btn-lg mb-3 rounded-pill shadow-sm">
+                  <i class="fas fa-user-edit mr-3"></i>Edit My Profile
+                </a>
+              {% endif %}
+              <a href="#" class="btn btn-outline-danger btn-lg logout-confirm rounded-pill shadow-sm">
+                <i class="fas fa-sign-out-alt mr-3"></i>Log Out
               </a>
-            {% endif %}
-            <a href="#" class="btn btn-outline-danger logout-confirm">
-              <i class="fas fa-sign-out-alt mr-2"></i>Log Out
-            </a>
+            </div>
           </div>
           
+          <!-- Admin Actions -->
           {% if user.is_staff and user.username != custom_user.username %}
-            <div class="btn-group mb-2" role="group" aria-label="Admin Actions">
-              <a href="{% url 'user-edit' custom_user.id %}" class="btn btn-warning">
-                <i class="fas fa-user-edit mr-2"></i>Edit User
-              </a>
-              <button type="button" class="btn btn-outline-{{ custom_user.is_active|yesno:'warning,success' }}" 
-                      onclick="toggleUserStatus('{{ custom_user.id }}')">
-                {% if custom_user.is_active %}
-                  <i class="fas fa-user-times mr-2"></i>Deactivate User
-                {% else %}
-                  <i class="fas fa-user-check mr-2"></i>Activate User
-                {% endif %}
-              </button>
+            <div class="col-md-6">
+              <h6 class="text-muted font-weight-bold mb-3">
+                <i class="fas fa-shield-alt mr-2"></i>Admin Actions
+              </h6>
+              <div class="d-flex flex-column">
+                <a href="{% url 'user-edit' custom_user.id %}" class="btn btn-warning btn-lg mb-3 rounded-pill shadow-sm">
+                  <i class="fas fa-user-cog mr-3"></i>Edit User Profile
+                </a>
+                <button type="button" class="btn btn-outline-{{ custom_user.is_active|yesno:'warning,success' }} btn-lg rounded-pill shadow-sm" 
+                        onclick="toggleUserStatus('{{ custom_user.id }}')">
+                  {% if custom_user.is_active %}
+                    <i class="fas fa-user-times mr-3"></i>Deactivate User
+                  {% else %}
+                    <i class="fas fa-user-check mr-3"></i>Activate User
+                  {% endif %}
+                </button>
+              </div>
             </div>
           {% endif %}
         </div>
@@ -352,6 +625,31 @@ $(document).ready(function(){
     $('.nav-pills a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
         $(e.target.getAttribute('href')).addClass('fadeIn');
     });
+    
+    // Add hover effects to info boxes and contact items
+    $('.info-box, .contact-item, .system-item, .timeline-item').hover(
+        function() {
+            $(this).addClass('shadow-lg').removeClass('shadow-sm');
+        },
+        function() {
+            $(this).addClass('shadow-sm').removeClass('shadow-lg');
+        }
+    );
+    
+    // Add loading animation to profile picture if it's an image
+    $('img.img-circle').on('load', function() {
+        $(this).addClass('animated fadeIn');
+    });
+    
+    // Enhance button interactions
+    $('a.btn, button.btn').hover(
+        function() {
+            $(this).addClass('shadow-lg transform-scale-105');
+        },
+        function() {
+            $(this).removeClass('shadow-lg transform-scale-105');
+        }
+    );
 });
 </script>
 {% endblock extra_js %}
