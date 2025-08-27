@@ -84,7 +84,7 @@
                   </label>
                   <input type="text" 
                          class="form-control" 
-                         name="title_text" 
+                    name="title" 
                          id="file_title" 
                          placeholder="e.g., {{ patient.bht }}_Assessment_{{ today }}" 
                          maxlength="200"
@@ -105,7 +105,7 @@
                              class="custom-file-input" 
                              name="file" 
                              id="file-upload-input" 
-                             accept="video/mp4,video/mov,video/avi,video/mkv,video/webm"
+                        accept="video/mp4,video/mov,video/avi,video/mkv,video/webm,video/x-flv,video/x-ms-wmv"
                              required>
                       <label class="custom-file-label" for="file-upload-input" id="file-upload-label">
                         Choose video file...
@@ -374,7 +374,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function validateFileType(file) {
     const validTypes = ['video/mp4', 'video/mov', 'video/quicktime', 'video/avi', 'video/x-msvideo', 'video/mkv', 'video/webm'];
-    const validExtensions = ['.mp4', '.mov', '.avi', '.mkv', '.webm'];
+  const validExtensions = ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.flv', '.wmv'];
     
     const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
     
@@ -521,7 +521,7 @@ function showUploadSuccess(response) {
         if (response.needs_compression) {
             // Redirect to processing page for large files
             setTimeout(() => {
-                window.location.href = response.redirect_url || `/video/processing/${response.f_id}/`;
+          window.location.href = response.redirect_url || `/video/process/${response.f_id}/`;
             }, 2000);
             
             // Update success message for compression case
