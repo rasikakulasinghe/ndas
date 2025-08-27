@@ -9,7 +9,7 @@
 {% block main_content %}
 
 {% comment %} <div class="container"> {% endcomment %}
-<div class="container-fluid">
+{% comment %} <div class="container-fluid"> {% endcomment %}
 
   <div class="card">
     <div class="card-header bg-info">
@@ -199,7 +199,7 @@
   </nav>
   {% endif %}
 
-</div>
+{% comment %} </div> {% endcomment %}
 
 {% block extra_js %}
 <script src="{% static 'js/manager.js' %}"></script>

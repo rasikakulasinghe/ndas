@@ -15,8 +15,8 @@ class VideoForm(forms.ModelForm):
         max_length=200,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Enter a descriptive title for the video',
-            'id': 'file_title'
+            'placeholder': 'Enter a descriptive title for the video (e.g., BHT-20240827-Assessment)',
+            'autocomplete': 'off'
         }),
         help_text='Descriptive title for the video (max 200 characters)'
     )
@@ -24,8 +24,7 @@ class VideoForm(forms.ModelForm):
     recorded_on = forms.DateTimeField(
         widget=forms.DateTimeInput(attrs={
             'class': 'form-control',
-            'type': 'datetime-local',
-            'id': 'id_recorded_on'
+            'type': 'datetime-local'
         }),
         help_text='Date and time when the video was recorded',
         initial=timezone.now
@@ -36,20 +35,18 @@ class VideoForm(forms.ModelForm):
         required=False,
         widget=forms.Textarea(attrs={
             'class': 'form-control',
-            'rows': 3,
-            'placeholder': 'Detailed description of the video content, assessment notes, etc.',
-            'id': 'description'
+            'rows': 4,
+            'placeholder': 'Optional: Add detailed description, assessment notes, or observations about this video...'
         }),
         help_text='Optional description (max 2000 characters)'
     )
 
     video_file = forms.FileField(
         widget=forms.FileInput(attrs={
-            'class': 'form-control-file',
-            'accept': 'video/*',
-            'id': 'video_file'
+            'class': 'custom-file-input',
+            'accept': 'video/mp4,video/avi,video/mov,video/wmv,video/mkv,video/webm'
         }),
-        help_text='Upload video file (supported formats: MP4, AVI, MOV, WMV)',
+        help_text='Upload video file (supported formats: MP4, AVI, MOV, WMV, MKV, WEBM - max 500MB)',
         required=True
     )
 

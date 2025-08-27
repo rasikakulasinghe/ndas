@@ -2,105 +2,88 @@
 
 <!-- Main Sidebar Container -->
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
-  {% comment %} <!-- Brand Logo -->
-  <a href="{% url 'home' %}" class="brand-link">
-    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23007bff'%3E%3Cpath d='M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2M21 9V7L15 1H5C3.9 1 3 1.9 3 3V21C3 22.1 3.9 23 5 23H19C20.1 23 21 22.1 21 21V9M19 9H14V4H19V9Z'/%3E%3C/svg%3E" alt="NDAS Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
-    <span class="brand-text font-weight-light">NDAS</span>
-  </a> {% endcomment %}
-
   <!-- Sidebar -->
   <div class="sidebar">
-    <!-- Sidebar user panel (optional) -->
+    <!-- User Panel -->
     <div class="user-panel mt-3 pb-3 mb-3 d-flex">
       <div class="image">
         {% if user.profile_picture_url %}
-          <img src="{{user.profile_picture_url}}" class="img-circle elevation-2" alt="User Image">
+        <img
+          src="{{user.profile_picture_url}}"
+          class="img-circle elevation-2"
+          alt="User Image"
+        />
         {% else %}
-          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23adb5bd'%3E%3Cpath d='M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z'/%3E%3C/svg%3E" class="img-circle elevation-2" alt="User Image">
+        <i class="fas fa-user-circle fa-2x text-light"></i>
         {% endif %}
       </div>
       <div class="info">
-        <a href="{% url 'user-view' user.id %}" class="d-block">{{user.get_full_name|default:user.username}}</a>
-        <small class="text-muted">{{user.get_position_display|default:"User"}}</small>
+        <a href="{% url 'user-view' user.id %}" class="d-block"
+          >{{user.get_full_name|default:user.username}}</a
+        >
+        <small class="text-muted"
+          >{{user.get_position_display|default:"User"}}</small
+        >
       </div>
     </div>
 
-    {% comment %} <!-- SidebarSearch Form -->
-    <div class="form-inline">
-      <div class="input-group" data-widget="sidebar-search">
-        <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
-        <div class="input-group-append">
-          <button class="btn btn-sidebar">
-            <i class="fas fa-search fa-fw"></i>
-          </button>
-        </div>
-      </div>
-    </div> {% endcomment %}
-
     <!-- Sidebar Menu -->
     <nav class="mt-2">
-      <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-        <!-- Navigation Menu Items -->
+      <ul
+        class="nav nav-pills nav-sidebar flex-column"
+        data-widget="treeview"
+        role="menu"
+        data-accordion="false"
+      >
         <!-- Dashboard -->
         <li class="nav-item">
-          <a href="{% url 'home' %}" class="nav-link" id="nav-home">
+          <a
+            href="{% url 'home' %}"
+            class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}"
+          >
             <i class="nav-icon fas fa-tachometer-alt"></i>
             <p>Dashboard</p>
           </a>
         </li>
 
-        <!-- Quick Actions -->
         <li class="nav-item">
-          <a href="{% url 'add-patient' %}" class="nav-link" id="nav-add-patient">
+          <a
+            href="{% url 'add-patient' %}"
+            class="nav-link {% if request.resolver_match.url_name == 'add-patient' %}active{% endif %}"
+          >
             <i class="nav-icon fas fa-user-plus"></i>
-            <p>Add New Patient</p>
+            <p>Add Patient</p>
           </a>
         </li>
-        
+
         <li class="nav-item">
-          <a href="{% url 'search-start' %}" class="nav-link" id="nav-search">
+          <a
+            href="{% url 'search-start' %}"
+            class="nav-link {% if request.resolver_match.url_name == 'search-start' %}active{% endif %}"
+          >
             <i class="nav-icon fas fa-search"></i>
-            <p>Advanced Search</p>
+            <p>Search</p>
           </a>
         </li>
 
-        <!-- Separator -->
-        <li class="nav-header">PATIENT RECORDS</li>
-
-        <!-- Patient Management -->
         <li class="nav-item">
-          <a href="#" class="nav-link">
-            <i class="nav-icon fas fa-folder-open"></i>
-            <p>
-              Patient Records
-              <i class="fas fa-angle-left right"></i>
-            </p>
+          <a
+            href="{% url 'manage-patients' %}"
+            class="nav-link {% if request.resolver_match.url_name == 'manage-patients' %}active{% endif %}"
+          >
+            <i class="nav-icon fas fa-users"></i>
+            <p>Patient Manager</p>
           </a>
-          <ul class="nav nav-treeview">
-            <li class="nav-item">
-              <a href="{% url 'manage-patients' %}" class="nav-link" id="nav-patient-manager">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Patient Manager</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="{% url 'manage-patients-new' %}" class="nav-link" id="nav-patients-new">
-                <i class="far fa-circle nav-icon"></i>
-                <p>New Patients</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="{% url 'manage-patients-discharged' %}" class="nav-link" id="nav-patients-discharged">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Discharged Patients</p>
-              </a>
-            </li>
-          </ul>
         </li>
 
         <!-- Assessments -->
-        <li class="nav-item">
-          <a href="#" class="nav-link">
+        <li
+          class="nav-item {% if 'assessment' in request.resolver_match.url_name %}menu-open{% endif %}"
+        >
+          <a
+            href="#"
+            class="nav-link {% if 'assessment' in request.resolver_match.url_name %}active{% endif %}"
+          >
             <i class="nav-icon fas fa-clipboard-list"></i>
             <p>
               Assessments
@@ -109,25 +92,37 @@
           </a>
           <ul class="nav nav-treeview">
             <li class="nav-item">
-              <a href="{% url 'assessment-manager' %}" class="nav-link" id="nav-gm-assessment">
+              <a
+                href="{% url 'assessment-manager' %}"
+                class="nav-link {% if 'gm' in request.resolver_match.url_name and 'assessment' in request.resolver_match.url_name %}active{% endif %}"
+              >
                 <i class="far fa-circle nav-icon"></i>
                 <p>GM Assessment</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{% url 'hine-assessment-manager' %}" class="nav-link" id="nav-hine-assessment">
+              <a
+                href="{% url 'hine-assessment-manager' %}"
+                class="nav-link {% if 'hine-assessment' in request.resolver_match.url_name %}active{% endif %}"
+              >
                 <i class="far fa-circle nav-icon"></i>
                 <p>HINE Assessment</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{% url 'da-assessment-manager' %}" class="nav-link" id="nav-da-assessment">
+              <a
+                href="{% url 'da-assessment-manager' %}"
+                class="nav-link {% if 'da-assessment' in request.resolver_match.url_name %}active{% endif %}"
+              >
                 <i class="far fa-circle nav-icon"></i>
                 <p>DA Assessment</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{% url 'cdic-assessment-manager' %}" class="nav-link" id="nav-cdic-assessment">
+              <a
+                href="{% url 'cdic-assessment-manager' %}"
+                class="nav-link {% if 'cdic-assessment' in request.resolver_match.url_name %}active{% endif %}"
+              >
                 <i class="far fa-circle nav-icon"></i>
                 <p>CDIC Assessment</p>
               </a>
@@ -135,71 +130,98 @@
           </ul>
         </li>
 
-        <!-- Media & Files -->
-        <li class="nav-item">
-          <a href="#" class="nav-link">
-            <i class="nav-icon fas fa-photo-video"></i>
+        <li
+          class="nav-item {% if 'video' in request.resolver_match.url_name or 'attachment' in request.resolver_match.url_name or 'bookmark' in request.resolver_match.url_name %}menu-open{% endif %}"
+        >
+          <a
+            href="#"
+            class="nav-link {% if 'video' in request.resolver_match.url_name or 'attachment' in request.resolver_match.url_name or 'bookmark' in request.resolver_match.url_name %}active{% endif %}"
+          >
+            <i class="nav-icon fas fa-folder"></i>
             <p>
-              Media & Files
+              Files & Media
               <i class="fas fa-angle-left right"></i>
             </p>
           </a>
           <ul class="nav nav-treeview">
             <li class="nav-item">
-              <a href="{% url 'video:manager' %}" class="nav-link" id="nav-video-manager">
+              <a
+                href="{% url 'video:manager' %}"
+                class="nav-link {% if 'video' in request.resolver_match.url_name %}active{% endif %}"
+              >
                 <i class="far fa-circle nav-icon"></i>
-                <p>Video Manager</p>
+                <p>Videos</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{% url 'attachment-manager' %}" class="nav-link" id="nav-attachment-manager">
+              <a
+                href="{% url 'attachment-manager' %}"
+                class="nav-link {% if 'attachment-manager' in request.resolver_match.url_name %}active{% endif %}"
+              >
                 <i class="far fa-circle nav-icon"></i>
-                <p>Attachment Manager</p>
+                <p>Attachments</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{% url 'bookmark-manager' %}" class="nav-link" id="nav-bookmark-manager">
+              <a
+                href="{% url 'bookmark-manager' %}"
+                class="nav-link {% if 'bookmark-manager' in request.resolver_match.url_name %}active{% endif %}"
+              >
                 <i class="far fa-circle nav-icon"></i>
-                <p>Bookmark Manager</p>
+                <p>Bookmarks</p>
               </a>
             </li>
           </ul>
         </li>
 
         {% if user.is_staff or user.is_superuser %}
-        <!-- Separator -->
-        <li class="nav-header">ADMINISTRATION</li>
 
-        <!-- User Management -->
-        <li class="nav-item">
-          <a href="#" class="nav-link">
-            <i class="nav-icon fas fa-users-cog"></i>
+        <li
+          class="nav-item {% if 'admin' in request.resolver_match.url_name %}menu-open{% endif %}"
+        >
+          <a
+            href="#"
+            class="nav-link {% if 'admin' in request.resolver_match.url_name %}active{% endif %}"
+          >
+            <i class="nav-icon fas fa-shield-alt"></i>
             <p>
-              User Management
+              Administration
               <i class="fas fa-angle-left right"></i>
             </p>
           </a>
           <ul class="nav nav-treeview">
             <li class="nav-item">
-              <a href="{% url 'admin-dashboard' %}" class="nav-link" id="nav-admin-dashboard">
+              <a
+                href="{% url 'admin-dashboard' %}"
+                class="nav-link {% if request.resolver_match.url_name == 'admin-dashboard' %}active{% endif %}"
+              >
                 <i class="far fa-circle nav-icon"></i>
-                <p>Admin Dashboard</p>
+                <p>Dashboard</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{% url 'admin-user-list' %}" class="nav-link" id="nav-manage-users">
+              <a
+                href="{% url 'admin-user-list' %}"
+                class="nav-link {% if request.resolver_match.url_name == 'admin-user-list' %}active{% endif %}"
+              >
                 <i class="far fa-circle nav-icon"></i>
-                <p>Manage Users</p>
+                <p>Users</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{% url 'admin-user-add' %}" class="nav-link" id="nav-add-user">
+              <a
+                href="{% url 'admin-user-add' %}"
+                class="nav-link {% if request.resolver_match.url_name == 'admin-user-add' %}active{% endif %}"
+              >
                 <i class="far fa-circle nav-icon"></i>
-                <p>Add New User</p>
+                <p>Add User</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{% url 'admin-activity-logs' %}" class="nav-link" id="nav-activity-logs">
+              <a
+                href="{% url 'admin-activity-logs' %}"
+                class="nav-link {% if request.resolver_match.url_name == 'admin-activity-logs' %}active{% endif %}"
+              >
                 <i class="far fa-circle nav-icon"></i>
                 <p>Activity Logs</p>
               </a>
@@ -208,20 +230,13 @@
         </li>
         {% endif %}
 
-        <!-- Separator -->
-        <li class="nav-header">USER SETTINGS</li>
-
-        <!-- User Profile -->
-        <li class="nav-item">
-          <a href="{% url 'user-view' user.id %}" class="nav-link" id="nav-profile">
-            <i class="nav-icon fas fa-user-circle"></i>
-            <p>My Profile</p>
-          </a>
-        </li>
-
-        <!-- Settings -->
-        <li class="nav-item">
-          <a href="#" class="nav-link">
+        <li
+          class="nav-item {% if 'user-edit' in request.resolver_match.url_name or 'user-change-password' in request.resolver_match.url_name or 'user-activity' in request.resolver_match.url_name %}menu-open{% endif %}"
+        >
+          <a
+            href="#"
+            class="nav-link {% if 'user-edit' in request.resolver_match.url_name or 'user-change-password' in request.resolver_match.url_name or 'user-activity' in request.resolver_match.url_name %}active{% endif %}"
+          >
             <i class="nav-icon fas fa-cog"></i>
             <p>
               Settings
@@ -230,62 +245,83 @@
           </a>
           <ul class="nav nav-treeview">
             <li class="nav-item">
-              <a href="{% url 'user-edit' user.id %}" class="nav-link" id="nav-edit-profile">
+              <a
+                href="{% url 'user-edit' user.id %}"
+                class="nav-link {% if request.resolver_match.url_name == 'user-edit' %}active{% endif %}"
+              >
                 <i class="far fa-circle nav-icon"></i>
                 <p>Edit Profile</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{% url 'user-change-password' %}" class="nav-link" id="nav-change-password">
+              <a
+                href="{% url 'user-change-password' %}"
+                class="nav-link {% if request.resolver_match.url_name == 'user-change-password' %}active{% endif %}"
+              >
                 <i class="far fa-circle nav-icon"></i>
-                <p>Change Password</p>
+                <p>Password</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{% url 'user-activity' %}" class="nav-link" id="nav-my-activity">
+              <a
+                href="{% url 'user-activity' %}"
+                class="nav-link {% if request.resolver_match.url_name == 'user-activity' %}active{% endif %}"
+              >
                 <i class="far fa-circle nav-icon"></i>
-                <p>My Activity</p>
+                <p>Activity</p>
               </a>
             </li>
           </ul>
         </li>
 
-        <!-- Support & Help -->
-        <li class="nav-item">
-          <a href="#" class="nav-link">
-            <i class="nav-icon fas fa-question-circle"></i>
+        <!-- Support -->
+        <li
+          class="nav-item {% if 'help' in request.resolver_match.url_name or 'developer-contact' in request.resolver_match.url_name %}menu-open{% endif %}"
+        >
+          <a
+            href="#"
+            class="nav-link {% if 'help' in request.resolver_match.url_name or 'developer-contact' in request.resolver_match.url_name %}active{% endif %}"
+          >
+            <i class="nav-icon fas fa-life-ring"></i>
             <p>
-              Support & Help
+              Support
               <i class="fas fa-angle-left right"></i>
             </p>
           </a>
           <ul class="nav nav-treeview">
             <li class="nav-item">
-              <a href="{% url 'help-home' %}" class="nav-link" id="nav-help">
+              <a
+                href="{% url 'help-home' %}"
+                class="nav-link {% if request.resolver_match.url_name == 'help-home' %}active{% endif %}"
+              >
                 <i class="far fa-circle nav-icon"></i>
                 <p>Help Center</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="{% url 'developer-contact' %}" class="nav-link" id="nav-contact">
+              <a
+                href="{% url 'developer-contact' %}"
+                class="nav-link {% if request.resolver_match.url_name == 'developer-contact' %}active{% endif %}"
+              >
                 <i class="far fa-circle nav-icon"></i>
-                <p>Contact Support</p>
+                <p>Contact</p>
               </a>
             </li>
           </ul>
         </li>
 
-        <!-- Separator -->
-        <li class="nav-header">SESSION</li>
-
         <!-- Logout -->
-        <li class="nav-item">
-          <a href="#" class="nav-link logout-confirm" id="nav-logout">
-            <i class="nav-icon fas fa-sign-out-alt text-danger"></i>
-            <p class="text-danger">Logout</p>
+        <li class="nav-item mt-3">
+          <a
+            href="#"
+            class="nav-link text-danger"
+            data-toggle="modal"
+            data-target="#logoutModal"
+          >
+            <i class="nav-icon fas fa-sign-out-alt"></i>
+            <p>Logout</p>
           </a>
         </li>
-
       </ul>
     </nav>
     <!-- /.sidebar-menu -->

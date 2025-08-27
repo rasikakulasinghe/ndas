@@ -376,6 +376,10 @@ class PatientForm(forms.ModelForm):
         """Validate date and time of birth"""
         dob_tob = self.cleaned_data.get("dob_tob")
         if dob_tob:
+            # Make datetime timezone-aware if it's naive
+            if timezone.is_naive(dob_tob):
+                dob_tob = timezone.make_aware(dob_tob)
+            
             # Check if date is not in the future
             if dob_tob > timezone.now():
                 raise ValidationError(_("Date of birth cannot be in the future."))
@@ -529,6 +533,13 @@ class GMAssessmentForm(forms.ModelForm):
     diagnosis_conclusion = forms.ChoiceField(
         choices=DX_CONCLUTION, widget=forms.Select(attrs={"class": "form-control"})
     )
+    
+    def clean_date_of_assessment(self):
+        """Validate and make timezone-aware the assessment date"""
+        date_of_assessment = self.cleaned_data.get("date_of_assessment")
+        if date_of_assessment and timezone.is_naive(date_of_assessment):
+            date_of_assessment = timezone.make_aware(date_of_assessment)
+        return date_of_assessment
 
     class Meta:
         model = GMAssessment
@@ -618,6 +629,14 @@ class AttachmentkForm(forms.ModelForm):
 
 
 class CDICRecordForm(forms.ModelForm):
+    
+    def clean_next_appointment_date(self):
+        """Validate and make timezone-aware the next appointment date"""
+        next_appointment_date = self.cleaned_data.get("next_appointment_date")
+        if next_appointment_date and timezone.is_naive(next_appointment_date):
+            next_appointment_date = timezone.make_aware(next_appointment_date)
+        return next_appointment_date
+    
     class Meta:
         model = CDICRecord
         fields = [
@@ -704,6 +723,14 @@ class CDICRecordForm(forms.ModelForm):
 
 
 class HINEAssessmentForm(forms.ModelForm):
+    
+    def clean_date_of_assessment(self):
+        """Validate and make timezone-aware the assessment date"""
+        date_of_assessment = self.cleaned_data.get("date_of_assessment")
+        if date_of_assessment and timezone.is_naive(date_of_assessment):
+            date_of_assessment = timezone.make_aware(date_of_assessment)
+        return date_of_assessment
+    
     class Meta:
         model = HINEAssessment
         fields = ["date_of_assessment", "score", "assessment_done_by", "comment"]
@@ -741,6 +768,14 @@ class HINEAssessmentForm(forms.ModelForm):
 
 
 class DevelopmentalAssessmentForm(forms.ModelForm):
+    
+    def clean_date_of_assessment(self):
+        """Validate and make timezone-aware the assessment date"""
+        date_of_assessment = self.cleaned_data.get("date_of_assessment")
+        if date_of_assessment and timezone.is_naive(date_of_assessment):
+            date_of_assessment = timezone.make_aware(date_of_assessment)
+        return date_of_assessment
+    
     class Meta:
         model = DevelopmentalAssessment
         fields = [

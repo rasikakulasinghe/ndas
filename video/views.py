@@ -37,36 +37,57 @@ def video_add(request, patient_id):
                 video = form.save(commit=False)
                 video.patient = patient
                 video.added_by = request.user
+                
+                # Additional validation now that patient is assigned
+                if video.recorded_on and hasattr(patient, 'dob_tob') and patient.dob_tob:
+                    if video.recorded_on.date() < patient.dob_tob.date():
+                        form.add_error('recorded_on', 'Recording date cannot be before patient birth date.')
+                        raise ValidationError('Recording date cannot be before patient birth date.')
+                
                 video.save()
 
-                # Determine if compression is needed
-                needs_compression = (
-                    video.file_size_bytes and video.file_size_bytes > 25 * 1024 * 1024
-                )
+                logger.info(f"Video uploaded successfully: {video.id} by user {request.user.id}")
 
+                # Prepare response data
                 response_data = {
                     "success": True,
                     "msg": "Video uploaded successfully!",
                     "f_id": video.id,
-                    "needs_compression": needs_compression,
-                    "redirect_url": reverse(
-                        "video:view", kwargs={"video_id": video.id}
-                    ),
+                    "video_title": video.title,
+                    "file_size": video.file_size_mb,
+                    "redirect_url": reverse("video:view", kwargs={"video_id": video.id}),
                 }
 
+                # For AJAX requests, return JSON response
                 if request.headers.get("X-Requested-With") == "XMLHttpRequest":
                     return JsonResponse(response_data)
                 else:
+                    # For regular form submissions, redirect with success message
                     messages.success(request, response_data["msg"])
                     return redirect("video:view", video_id=video.id)
 
             except ValidationError as e:
-                form.add_error(None, e)
+                logger.error(f"Validation error in video upload: {e}")
+                form.add_error(None, str(e))
+            except Exception as e:
+                logger.error(f"Unexpected error in video upload: {e}")
+                form.add_error(None, "An unexpected error occurred during upload.")
 
         # Form has errors
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            errors = form.errors.as_json()
-            return JsonResponse({"success": False, "errors": errors})
+            # Convert form errors to a more readable format for AJAX
+            errors = {}
+            for field, error_list in form.errors.items():
+                if field == '__all__':
+                    errors['general'] = error_list
+                else:
+                    errors[field] = error_list
+            
+            return JsonResponse({
+                "success": False, 
+                "errors": errors,
+                "msg": "Please correct the errors and try again."
+            })
         else:
             messages.error(request, "Please correct the errors below.")
     else:
@@ -75,8 +96,9 @@ def video_add(request, patient_id):
 
     context = {
         "patient": patient,
-        "today": timezone.now().strftime("%Y%m%d"),
+        "today": timezone.now().strftime("%Y-%m-%d"),
         "video_form": form,
+        "page_title": f"Upload Video - {patient.baby_name}",
     }
     return render(request, "video/add.html", context)
 
@@ -98,10 +120,24 @@ def video_view(request, video_id):
         object_id=video.id, bookmark_type="Video", added_by=request.user
     ).first()
 
+    # Check if video is new (not used in assessments)
+    try:
+        is_new_file = video.is_new_file()
+    except:
+        is_new_file = True
+
     context = {
         "video": video,
+        "file": video,  # For backward compatibility with template
         "patient": video.patient,
         "bookmark": bookmark,
+        "is_new_file": is_new_file,
+        "page_title": f"Video: {video.title}",
+        "breadcrumbs": [
+            {"name": "Dashboard", "url": reverse("home")},
+            {"name": "Patient", "url": reverse("view-patient", args=[video.patient.id])},
+            {"name": "Video", "url": None},
+        ],
     }
 
     return render(request, "video/view.html", context)
@@ -109,7 +145,7 @@ def video_view(request, video_id):
 
 @login_required(login_url="user-login")
 def video_edit(request, video_id):
-    """Edit video details"""
+    """Edit video details with enhanced validation and error handling"""
     video = get_object_or_404(Video, id=video_id)
 
     # Check permissions
@@ -123,23 +159,69 @@ def video_edit(request, video_id):
         if form.is_valid():
             try:
                 updated_video = form.save(commit=False)
-                updated_video.updated_by = request.user
+                updated_video.last_edit_by = request.user
+                
+                # Additional validation for recording date with patient
+                if updated_video.recorded_on and hasattr(video.patient, 'dob_tob') and video.patient.dob_tob:
+                    if updated_video.recorded_on.date() < video.patient.dob_tob.date():
+                        form.add_error('recorded_on', 'Recording date cannot be before patient birth date.')
+                        raise ValidationError('Recording date cannot be before patient birth date.')
+                
                 updated_video.save()
 
+                logger.info(f"Video updated successfully: {video.id} by user {request.user.id}")
                 messages.success(request, "Video information updated successfully.")
+                
+                # Return JSON for AJAX requests
+                if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                    return JsonResponse({
+                        "success": True,
+                        "msg": "Video updated successfully!",
+                        "redirect_url": reverse("video:view", kwargs={"video_id": video.id}),
+                    })
+                
                 return redirect("video:view", video_id=video.id)
+                
             except ValidationError as e:
-                form.add_error(None, e)
+                logger.error(f"Validation error in video edit: {e}")
+                form.add_error(None, str(e))
                 messages.error(request, "Please correct the errors below.")
+            except Exception as e:
+                logger.error(f"Unexpected error in video edit: {e}")
+                form.add_error(None, "An unexpected error occurred during update.")
+                messages.error(request, "An unexpected error occurred. Please try again.")
         else:
             messages.error(request, "Please correct the errors below.")
+            
+        # Return JSON errors for AJAX requests
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            errors = {}
+            for field, error_list in form.errors.items():
+                if field == '__all__':
+                    errors['general'] = error_list
+                else:
+                    errors[field] = error_list
+            
+            return JsonResponse({
+                "success": False, 
+                "errors": errors,
+                "msg": "Please correct the errors and try again."
+            })
     else:
         form = VideoForm(instance=video)
 
     context = {
         "video": video,
+        "file": video,  # For backward compatibility
         "patient": video.patient,
         "video_form": form,
+        "page_title": f"Edit Video - {video.title}",
+        "breadcrumbs": [
+            {"name": "Dashboard", "url": reverse("home")},
+            {"name": "Patient", "url": reverse("view-patient", args=[video.patient.id])},
+            {"name": "Video", "url": reverse("video:view", args=[video.id])},
+            {"name": "Edit", "url": None},
+        ],
     }
 
     return render(request, "video/edit.html", context)

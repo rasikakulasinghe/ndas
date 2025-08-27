@@ -1,203 +1,433 @@
 {% extends 'src/base.html' %}
 {% load static %}
-{% block title %}Video - Add{% endblock %}
+{% block title %}Upload Video - {{ patient.baby_name }}{% endblock %}
+
 {% block main_content %}
 <div class="container-fluid">
-
-<!-- Page header -->
-<div class="card bg-info"><div class="card-header"><h3 class="card-title">Add New Video</h3></div></div>
-
-<div class="row">
-  <div class="col-md-6">
-    <div class="card card-body">
-      <div class="row align-items-center"><label class="col-form-label col-sm-4">BHT : </label><div class="col-sm">{{patient.bht}}</div></div>
-      <div class="row align-items-center"><label class="col-form-label col-sm-4">PHN : </label><div class="col-sm">{{patient.pin}}</div></div>
-      <div class="row align-items-center"><label class="col-form-label col-sm-4">NNC No : </label><div class="col-sm">{{patient.clinic_no}}</div></div>
-      <div class="row align-items-center"><label class="col-form-label col-sm-4">Name of Baby : </label><div class="col-sm">{{patient.baby_name}}</div></div>
-      <div class="row align-items-center"><label class="col-form-label col-sm-4">Name of Mother : </label><div class="col-sm">{{patient.mother_name}}</div></div>
-      <div class="row align-items-center"><label class="col-form-label col-sm-4">Gender : </label><div class="col-sm">{{patient.gender}}</div></div>
-      <div class="row align-items-center"><label class="col-form-label col-sm-4">Current Age : </label><div class="col-sm">{{patient.getCurrentAge}}</div></div>
-      <div class="row align-items-center"><label class="col-form-label col-sm-4">Corrected Age : </label><div class="col-sm">{{patient.getCorrectedAge}}</div></div>
-      <div class="row align-items-center"><label class="col-form-label col-sm-4">Corrected Gest. Age : </label><div class="col-sm">{{patient.getCorrectedGestationalAge}}</div></div>
-    </div> <!-- /.card body -->
+  <!-- Content Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0">Upload Video</h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'view-patient' patient.id %}">{{ patient.baby_name }}</a></li>
+            <li class="breadcrumb-item active">Upload Video</li>
+          </ol>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="col-md-6">
-    <div class="card card-body">
-      <form id="file-upload-form" enctype="multipart/form-data" onsubmit="onFormSubmit(event)">
-        {% csrf_token %}
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Patient Information -->
+        <div class="col-lg-4 col-md-6">
+          <div class="card card-primary">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-user mr-2"></i>Patient Information
+              </h3>
+            </div>
+            <div class="card-body">
+              <dl class="row">
+                <dt class="col-sm-5">BHT:</dt>
+                <dd class="col-sm-7">{{ patient.bht|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">PHN:</dt>
+                <dd class="col-sm-7">{{ patient.pin|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">NNC No:</dt>
+                <dd class="col-sm-7">{{ patient.nnc_no|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Baby Name:</dt>
+                <dd class="col-sm-7">{{ patient.baby_name|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Mother Name:</dt>
+                <dd class="col-sm-7">{{ patient.mother_name|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Gender:</dt>
+                <dd class="col-sm-7">{{ patient.gender|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Current Age:</dt>
+                <dd class="col-sm-7">{{ patient.getCurrentAge|default:"N/A" }}</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
 
-              <div class="form-group row align-items-center">
-                <label class="col-form-label col-sm-3">Title : </label>
-                <div class="col-sm">
-                  <input type="text" class="form-control" name="title_text" id="file_title" placeholder="Add a title for the file..." required>
+        <!-- Upload Form -->
+        <div class="col-lg-8 col-md-6">
+          <div class="card card-success">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-cloud-upload-alt mr-2"></i>Video Upload
+              </h3>
+            </div>
+            <form id="video-upload-form" method="post" enctype="multipart/form-data">
+              {% csrf_token %}
+
+              <div class="card-body">
+                <!-- Video Title -->
+                <div class="form-group">
+                  <label for="{{ video_form.title.id_for_label }}">
+                    <i class="fas fa-tag mr-2"></i>{{ video_form.title.label }}
+                  </label>
+                  {{ video_form.title }}
+                  <small class="form-text text-muted">{{ video_form.title.help_text }}</small>
+                  {% if video_form.title.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in video_form.title.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
                 </div>
-                <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Name for the video, example : BHT + Recorded date time ect..."></span></a>
-              </div>
 
-              <div class="form-group row align-items-center">
-                <label class="col-form-label col-sm-3">Video File : </label>
-                <div class="col-sm">
+                <!-- Video File Upload -->
+                <div class="form-group">
+                  <label for="{{ video_form.video_file.id_for_label }}">
+                    <i class="fas fa-video mr-2"></i>{{ video_form.video_file.label }}
+                  </label>
                   <div class="custom-file">
-                    <input type="file" class="custom-file-input" name="file" id="file-upload-input" onchange="javascript:updateList()" required>
-                    <label id="file-upload-lable" class="custom-file-label" for="file">Select a file... (Video, Image, PDF)</label>
-                    <div class="invalid-feedback">Example invalid custom file feedback</div>
+                    {{ video_form.video_file }}
+                    <label class="custom-file-label" for="{{ video_form.video_file.id_for_label }}">
+                      Choose video file...
+                    </label>
+                  </div>
+                  <small class="form-text text-muted">{{ video_form.video_file.help_text }}</small>
+                  {% if video_form.video_file.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in video_form.video_file.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Recording Date -->
+                <div class="form-group">
+                  <label for="{{ video_form.recorded_on.id_for_label }}">
+                    <i class="fas fa-calendar mr-2"></i>{{ video_form.recorded_on.label }}
+                  </label>
+                  {{ video_form.recorded_on }}
+                  <small class="form-text text-muted">{{ video_form.recorded_on.help_text }}</small>
+                  {% if video_form.recorded_on.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in video_form.recorded_on.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Description -->
+                <div class="form-group">
+                  <label for="{{ video_form.description.id_for_label }}">
+                    <i class="fas fa-comment-alt mr-2"></i>{{ video_form.description.label }}
+                  </label>
+                  {{ video_form.description }}
+                  <small class="form-text text-muted">{{ video_form.description.help_text }}</small>
+                  {% if video_form.description.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in video_form.description.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Upload Progress -->
+                <div id="upload-progress" class="d-none">
+                  <div class="form-group">
+                    <label>Upload Progress:</label>
+                    <div class="progress">
+                      <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                           id="progress-bar" 
+                           role="progressbar" 
+                           style="width: 0%">
+                        0%
+                      </div>
+                    </div>
+                    <small id="progress-text" class="form-text text-muted">Preparing upload...</small>
                   </div>
                 </div>
-                <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="You can upload video in .mp4 or .mov file format and each file should less than 1000Mb (1Gb). If file size more than 30mb, it will take longer time till upload and convert. So, better if you can upload file size less than 30mb."></span></a>
-              </div>
 
-              <div class="form-group row align-items-center">
-                <label class="col-form-label col-sm-3">Recorded On : </label>
-                <div class="col-sm">
-                  <input type="date" name="recorded_on" class="form-control" id="id_recorded_on" required>
-                </div>
-                <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Please select a date, recording was done..."></span></a>
-              </div>
-
-              <div class="form-group row align-items-center">
-                <label class="col-form-label col-sm-3">Description : </label>
-                <div class="col-sm">
-                  {% comment %} <input type="text" class="form-control" name="descreption" id="descreption" placeholder="Add a description for the file..."> {% endcomment %}
-                  <textarea type="text" class="form-control" name="descreption" id="descreption" placeholder="Add a description for the file..."> </textarea>
-                </div>
-                <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="You can add descreption for this file. It's not mandadory..."></span></a>
-              </div>
-
-            </br>
-
-              <div class="row justify-content-end">
-                <div class="col-auto"><button style="display:none;" id="btn_view"type="button" class="btn btn-primary" onclick="location.href=''">View</button></div>
-                <div class="col-auto"><button style="display:none;" id="btn_edit"type="button" class="btn btn-primary" onclick="location.href=''">Edit</button></div>
-                <div class="col-auto"><button style="display:none;" id="btn_add_another"type="button" class="btn btn-primary" onclick="location.href='{% url 'video:add' patient.id %}'">Add New</button></div>
-                <div class="col-auto"><button id="btn_add" type="submit" class="btn btn-primary">Upload</button></div>
-              </div>
-
-            </br>
-
-              <div class="form-group row" style="display:none;" id="progress_div">
-                <div class="progress"><div class="progress-bar" id="progress_bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div></div>
-              </div>
-
-              <div class="form-group row"><p id="progress_text"></p></div>
-              
-              <div class="row card" style="display:none;" id="progress_convert_div">
-                <div class="row align-items-center">
-                  <div class="col-auto"><img style="width: 50px; height: 50px;" src="{% static 'dist/img/gif/converting.gif' %}" class="img-circle" alt="Converting...."/></div>
-                  <div class="col">Converting video....</div>
+                <!-- Processing Status -->
+                <div id="processing-status" class="alert alert-info d-none">
+                  <div class="d-flex align-items-center">
+                    <div class="spinner-border spinner-border-sm mr-2" role="status">
+                      <span class="sr-only">Processing...</span>
+                    </div>
+                    <span>Processing video... Please wait.</span>
+                  </div>
                 </div>
               </div>
-        
-        </form>
-    </div> <!-- /.card body-->
-  </div>
+
+              <div class="card-footer">
+                <div class="row">
+                  <div class="col-sm-6">
+                    <button type="button" id="cancel-upload" class="btn btn-outline-danger d-none">
+                      <i class="fas fa-times mr-2"></i>Cancel Upload
+                    </button>
+                  </div>
+                  <div class="col-sm-6 text-right">
+                    <button type="button" class="btn btn-secondary mr-2" onclick="window.history.back()">
+                      <i class="fas fa-arrow-left mr-2"></i>Back
+                    </button>
+                    <button type="submit" id="upload-btn" class="btn btn-success">
+                      <i class="fas fa-cloud-upload-alt mr-2"></i>Upload Video
+                    </button>
+                    <button type="button" id="view-btn" class="btn btn-primary d-none">
+                      <i class="fas fa-eye mr-2"></i>View Video
+                    </button>
+                    <button type="button" id="add-another-btn" class="btn btn-outline-primary d-none">
+                      <i class="fas fa-plus mr-2"></i>Add Another
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>
 
 <script>
-
-  const fileInput = document.querySelector('input[type="file"]');
-  const label = document.getElementById('file-upload-lable');
-
-  fileInput.addEventListener('change', function() {
-    const fileName = this.value.split("\\").pop();
-    label.textContent = fileName;
-  });
-
-  function onFormSubmit(event) {
-      event.preventDefault();
-
-      {% comment %} var p_id = '';
-      var f_id = ''; {% endcomment %}
-
-      var formData = new FormData();
-      formData.append("file_title", document.getElementById("file_title").value);
-      {% comment %} formData.append("file_type", document.getElementById("file_type").value); {% endcomment %}
-      formData.append("file",document.getElementById("file-upload-input").files[0]);
-      formData.append("recorded_on",document.getElementById("id_recorded_on").value);
-      formData.append("descreption",document.getElementById("descreption").value);
-      
-      var btn_view = document.getElementById("btn_view")
-      var btn_edit = document.getElementById("btn_edit")
-      var btn_add = document.getElementById("btn_add")
-      var btn_add_another = document.getElementById("btn_add_another")
-
-      var xhr=new XMLHttpRequest();
-  xhr.open("POST",'{% url 'video:add' patient.id %}',true);
-
-      xhr.upload.addEventListener("progress",function (ev) {
-         if(ev.lengthComputable){
-            var percentage=(ev.loaded/ev.total*100|0);
-            document.getElementById("progress_bar").style["width"]=""+percentage+"%";
-            document.getElementById("progress_bar").innerHTML=""+percentage+"%";
-            document.getElementById("progress_text").innerHTML="Uploading... : "+parseInt(ev.loaded/1000000)+"/"+parseInt(ev.total/1000000)+" MB";
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('video-upload-form');
+    const fileInput = form.querySelector('input[type="file"]');
+    const fileLabel = form.querySelector('.custom-file-label');
+    const uploadBtn = document.getElementById('upload-btn');
+    const cancelBtn = document.getElementById('cancel-upload');
+    const viewBtn = document.getElementById('view-btn');
+    const addAnotherBtn = document.getElementById('add-another-btn');
+    const progressDiv = document.getElementById('upload-progress');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    const processingStatus = document.getElementById('processing-status');
+    
+    let currentXHR = null;
+    
+    // Update file label when file is selected
+    fileInput.addEventListener('change', function() {
+        const fileName = this.files[0] ? this.files[0].name : 'Choose video file...';
+        fileLabel.textContent = fileName;
+        
+        // Basic client-side validation
+        if (this.files[0]) {
+            const file = this.files[0];
+            const maxSize = 500 * 1024 * 1024; // 500MB
             
-            if (percentage == 100){
-              document.getElementById("progress_convert_div").style["display"]="block";
-            } else {
-              document.getElementById("progress_convert_div").style["display"]="none";
+            if (file.size > maxSize) {
+                showAlert('File size too large. Maximum allowed size is 500MB.', 'danger');
+                this.value = '';
+                fileLabel.textContent = 'Choose video file...';
+                return;
             }
-
-         }
-      });
-
-      xhr.addEventListener("loadstart", function(e) {
-        document.getElementById("progress_div").style["display"]="block";
-        btn_add.disabled = true;
-          }, false);
-
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState == XMLHttpRequest.DONE) {
-            var response = JSON.parse(xhr.responseText);
-            var success = response.success;
-
-            document.getElementById("progress_convert_div").style["display"]="none";
-
-            if (this.readyState == 4 && this.status == 200 && success == true) {
-
-              document.getElementById("progress_div").style["display"]="none";
-              document.getElementById("progress_text").innerHTML="File uploaded successfully... (100%)";
-
-              btn_add_another.style.display = "block";
-              btn_view.style.display = "block";
-              btn_edit.style.display = "block";
-              btn_add.style.display = "none";
-
-              var url_view = "/video/view/"+ response.f_id;
-              btn_view.addEventListener('click', () => {
-                window.location.href = url_view;
-              });
-
-              var url_edit = "/video/edit/"+ response.f_id;
-              btn_edit.addEventListener('click', () => {
-                window.location.href = url_edit;
-              });
-
-              } else {
-                document.getElementById("progress_div").style["display"]="none";
-                document.getElementById("progress_text").innerHTML=response.msg;
-              }
+            
+            // Check file type
+            const allowedTypes = ['video/mp4', 'video/avi', 'video/mov', 'video/wmv', 'video/mkv', 'video/webm'];
+            if (!allowedTypes.includes(file.type) && !file.name.match(/\.(mp4|avi|mov|wmv|mkv|webm)$/i)) {
+                showAlert('Invalid file type. Please upload MP4, AVI, MOV, WMV, MKV, or WEBM files only.', 'danger');
+                this.value = '';
+                fileLabel.textContent = 'Choose video file...';
+                return;
+            }
         }
-      }
-
-      xhr.addEventListener("loadend", function(e) {
- 
-      }, false);
-
-      xhr.addEventListener("error", function(e) {
-        document.getElementById("progress_div").style["display"]="none";
-        document.getElementById("progress_text").innerHTML=e;
-        btn_add_another.style.display = "block";
-        btn_add.style.display = "none";
-        btn_view.style.display = "none";
-        btn_edit.style.display = "none";
-        btn_add.style.display = "none";
-        document.getElementById("progress_convert_div").style["display"]="none";
-        }, false);
-
-      xhr.send(formData);
-  }
-
+    });
+    
+    // Handle form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!validateForm()) {
+            return;
+        }
+        
+        const formData = new FormData(form);
+        uploadVideo(formData);
+    });
+    
+    // Handle upload cancellation
+    cancelBtn.addEventListener('click', function() {
+        if (currentXHR) {
+            currentXHR.abort();
+            resetUploadState();
+            showAlert('Upload cancelled by user.', 'warning');
+        }
+    });
+    
+    function validateForm() {
+        const title = form.querySelector('[name="title"]').value.trim();
+        const videoFile = fileInput.files[0];
+        const recordedOn = form.querySelector('[name="recorded_on"]').value;
+        
+        if (!title) {
+            showAlert('Please enter a video title.', 'danger');
+            return false;
+        }
+        
+        if (!videoFile) {
+            showAlert('Please select a video file.', 'danger');
+            return false;
+        }
+        
+        if (!recordedOn) {
+            showAlert('Please select the recording date.', 'danger');
+            return false;
+        }
+        
+        return true;
+    }
+    
+    function uploadVideo(formData) {
+        currentXHR = new XMLHttpRequest();
+        
+        // Show progress bar and hide upload button
+        progressDiv.classList.remove('d-none');
+        uploadBtn.classList.add('d-none');
+        cancelBtn.classList.remove('d-none');
+        
+        // Upload progress tracking
+        currentXHR.upload.addEventListener('progress', function(e) {
+            if (e.lengthComputable) {
+                const percentComplete = Math.round((e.loaded / e.total) * 100);
+                progressBar.style.width = percentComplete + '%';
+                progressBar.textContent = percentComplete + '%';
+                
+                const loadedMB = Math.round(e.loaded / 1024 / 1024);
+                const totalMB = Math.round(e.total / 1024 / 1024);
+                progressText.textContent = `Uploading: ${loadedMB}MB / ${totalMB}MB (${percentComplete}%)`;
+                
+                if (percentComplete === 100) {
+                    progressText.textContent = 'Upload complete. Processing video...';
+                    processingStatus.classList.remove('d-none');
+                }
+            }
+        });
+        
+        // Handle successful response
+        currentXHR.addEventListener('load', function() {
+            processingStatus.classList.add('d-none');
+            
+            if (currentXHR.status === 200) {
+                try {
+                    const response = JSON.parse(currentXHR.responseText);
+                    
+                    if (response.success) {
+                        handleUploadSuccess(response);
+                    } else {
+                        handleUploadError(response.errors || 'Upload failed');
+                    }
+                } catch (e) {
+                    console.error('Error parsing response:', e);
+                    handleUploadError('Invalid server response');
+                }
+            } else {
+                handleUploadError('Server error: ' + currentXHR.status);
+            }
+        });
+        
+        // Handle upload errors
+        currentXHR.addEventListener('error', function() {
+            processingStatus.classList.add('d-none');
+            handleUploadError('Network error occurred during upload');
+        });
+        
+        // Handle upload abortion
+        currentXHR.addEventListener('abort', function() {
+            processingStatus.classList.add('d-none');
+            // Upload was cancelled - handled in cancel button click
+        });
+        
+        // Start upload
+        currentXHR.open('POST', '{% url "video:add" patient.id %}');
+        currentXHR.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        currentXHR.send(formData);
+    }
+    
+    function handleUploadSuccess(response) {
+        progressBar.classList.remove('progress-bar-animated');
+        progressBar.classList.add('bg-success');
+        progressText.textContent = 'Video uploaded successfully!';
+        
+        // Show success buttons
+        cancelBtn.classList.add('d-none');
+        viewBtn.classList.remove('d-none');
+        addAnotherBtn.classList.remove('d-none');
+        
+        // Set up view button
+        viewBtn.onclick = function() {
+            if (response.redirect_url) {
+                window.location.href = response.redirect_url;
+            } else {
+                window.location.href = `/video/view/${response.f_id}/`;
+            }
+        };
+        
+        // Set up add another button
+        addAnotherBtn.onclick = function() {
+            window.location.reload();
+        };
+        
+        showAlert('Video uploaded successfully!', 'success');
+    }
+    
+    function handleUploadError(errors) {
+        resetUploadState();
+        
+        let errorMessage = 'Upload failed. ';
+        if (typeof errors === 'object') {
+            errorMessage += Object.values(errors).flat().join(' ');
+        } else {
+            errorMessage += errors;
+        }
+        
+        showAlert(errorMessage, 'danger');
+    }
+    
+    function resetUploadState() {
+        progressDiv.classList.add('d-none');
+        processingStatus.classList.add('d-none');
+        uploadBtn.classList.remove('d-none');
+        cancelBtn.classList.add('d-none');
+        progressBar.style.width = '0%';
+        progressBar.textContent = '0%';
+        progressBar.classList.add('progress-bar-animated');
+        progressBar.classList.remove('bg-success');
+        progressText.textContent = 'Preparing upload...';
+        currentXHR = null;
+    }
+    
+    function showAlert(message, type) {
+        // Remove any existing alerts
+        const existingAlerts = document.querySelectorAll('.upload-alert');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        // Create new alert
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible upload-alert`;
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        `;
+        
+        // Insert alert at the top of the form
+        const cardBody = form.querySelector('.card-body');
+        cardBody.insertBefore(alert, cardBody.firstChild);
+        
+        // Auto-dismiss after 5 seconds for success messages
+        if (type === 'success') {
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+    }
+});
 </script>
 
-</div> <!-- /.main container -->
 {% endblock main_content %}

@@ -148,12 +148,18 @@ class Video(TimeStampedModel, UserTrackingMixin):
         """Custom model validation."""
         super().clean()
         
-        # Validate recording date is not in future
-        if self.recorded_on and hasattr(self.patient, 'dob_tob'):
-            if self.recorded_on.date() < self.patient.dob_tob.date():
-                raise ValidationError({
-                    'recorded_on': _('Recording date cannot be before patient birth date.')
-                })
+        # Validate recording date is not in future - only if patient is already assigned
+        if self.recorded_on and self.patient_id and hasattr(self, 'patient'):
+            try:
+                if hasattr(self.patient, 'dob_tob') and self.patient.dob_tob:
+                    if self.recorded_on.date() < self.patient.dob_tob.date():
+                        raise ValidationError({
+                            'recorded_on': _('Recording date cannot be before patient birth date.')
+                        })
+            except (AttributeError, ValueError):
+                # Patient not fully loaded yet, skip this validation
+                # It will be validated later when patient is assigned
+                pass
     
     def save(self, *args, **kwargs):
         """Override save to populate metadata if missing."""

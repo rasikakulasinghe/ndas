@@ -1,162 +1,493 @@
 {% extends 'src/base.html' %}
-{% block title %}Assessment - Add{% endblock %}
+{% load static %}
+{% block title %}Create Assessment - {{ patient.baby_name }}{% endblock %}
 
 {% block main_content %}
-
-</br>
-{% include 'src/form_error.html' %}
-
-<div class="container-sm">
-  <div class="card">
-  <div class="card-header bg-info"><h3 class="card-title">Add New GM Assessment</h3></div>
-
-  <form action="{% url 'assessment-add' patient.id file.id %}" method="POST">
-    {% csrf_token %}
-
-    <div class="card-body">
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Patient : </label>
-        <div class="col-sm">{{patient.baby_name}}</div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Title : </label>
-        <div class="col-sm">{{file.caption}}</div>
-      </div>
-
-      <div class="form-group row d-flex align-items-center">
-        <label class="col-form-label col-sm-2">Current Age : </label>
-        <div class="col-sm-10">{{file.patient.getCurrentAge}}</div>
-      </div>
-
-      <div class="form-group row d-flex align-items-center">
-        <label class="col-form-label col-sm-2">Corrected Age : </label>
-        <div class="col-sm-10">{{file.patient.getCorrectedAge}}</div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Date of Assessment : </label>
-        <div class="col-sm">
-          <div class=" d-flex align-items-center">
-            <div>{{form.date_of_assessment}}</div>
-            &nbsp; &nbsp; <div><a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Next assessment date if planing to follow up ..."></span></a></div>
-            </div>
+<div class="container-fluid">
+  <!-- Content Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0">Create GM Assessment</h1>
+          <small class="text-muted">Patient: {{ patient.baby_name }}</small>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'view-patient' patient.id %}">{{ patient.baby_name }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'video:view' file.id %}">{{ file.title }}</a></li>
+            <li class="breadcrumb-item active">New Assessment</li>
+          </ol>
         </div>
       </div>
-
-      <div class="form-group row align-items-top">
-        <label class="col-form-label col-sm-2">Diagnosis : </label>
-        <div class="col-sm">
-        <div id="accordion">
-          <div class="card">
-          <div class="card-header">
-          <h4 class="card-title w-100">
-          <a class="d-block w-100" data-toggle="collapse" href="#collapseOne" aria-expanded="true">
-            <i class="fas fa-eye" style="color: #00328a;"></i> &nbsp; &nbsp; Click here to see diagnosis list...
-          </a>
-          </h4>
-          </div>
-          <div id="collapseOne" class="collapse hide" data-parent="#accordion" style="">
-          <div class="card-body">
-            <div class="col-sm">{{form.diagnosis}}
-            </div>
-            <div class="col-sm"><input type="checkbox" id="checkbox_dx" name="checkbox_dx" onchange="toggleDiagnosis()"><label for="checkbox"> Other</label></div>
-            
-          </div>
-          </div>
-          </div>
-          </div>
-          </div>
-      </div>
-
-      <div id="container_dx" style="display: none;">
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Diagnosis Other : </label>
-        <div class="col-sm">{{form.diagnosis_other}}</div>
-      </div>
-      </div>
-
-      <div id="container_dx">
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Diagnosis Conclusion : </label>
-        <div class="col-sm">{{form.diagnosis_conclusion}}</div>
-      </div>
-      </div>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Next Assessment Date : </label>
-        <div class="col-sm">
-          <div class=" d-flex align-items-center">
-            <div>{{form.next_assessment_date}}</div>
-            &nbsp; &nbsp; <div><a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Select next assessment date if plan to follow up further..."></span></a></div>
-            </div>
-        </div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Managment Plan : </label>
-        <div class="col-sm">{{form.managment_plan}}</div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Parent Infomed : </label>
-        <div class="col-sm">{{form.parant_informed}}</div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-sm-2 col-form-label"></label>
-        <div class="col-sm"><button type="submit" class="btn btn-primary float-right">Add Assessment</button></div>
-      </div>
-
-      </br>
     </div>
-
-  </form>
-
-  <!-- /.card-body -->
   </div>
-  <!-- /.card -->
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Patient & Video Information -->
+        <div class="col-lg-4 col-md-6">
+          <!-- Patient Info -->
+          <div class="card card-primary">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-user mr-2"></i>Patient Information
+              </h3>
+            </div>
+            <div class="card-body">
+              <dl class="row">
+                <dt class="col-sm-5">Baby Name:</dt>
+                <dd class="col-sm-7">{{ patient.baby_name|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Mother Name:</dt>
+                <dd class="col-sm-7">{{ patient.mother_name|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Gender:</dt>
+                <dd class="col-sm-7">{{ patient.gender|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Current Age:</dt>
+                <dd class="col-sm-7">{{ patient.getCurrentAge|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Corrected Age:</dt>
+                <dd class="col-sm-7">{{ patient.getCorrectedAge|default:"N/A" }}</dd>
+              </dl>
+            </div>
+          </div>
+
+          <!-- Video Info -->
+          <div class="card card-info">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-video mr-2"></i>Video Information
+              </h3>
+            </div>
+            <div class="card-body">
+              <dl class="row">
+                <dt class="col-sm-5">Title:</dt>
+                <dd class="col-sm-7">{{ file.title|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Recorded On:</dt>
+                <dd class="col-sm-7">{{ file.recorded_on|date:"M d, Y"|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Age at Recording:</dt>
+                <dd class="col-sm-7">{{ file.age_on_recording|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Duration:</dt>
+                <dd class="col-sm-7">{{ file.duration_formatted|default:"N/A" }}</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+
+        <!-- Assessment Form -->
+        <div class="col-lg-8 col-md-6">
+          <div class="card card-success">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-stethoscope mr-2"></i>GM Assessment Form
+              </h3>
+            </div>
+            <form id="assessment-form" method="post">
+              {% csrf_token %}
+              
+              <div class="card-body">
+                <!-- Assessment Date -->
+                <div class="form-group">
+                  <label for="{{ form.date_of_assessment.id_for_label }}">
+                    <i class="fas fa-calendar mr-2"></i>{{ form.date_of_assessment.label }}
+                  </label>
+                  {{ form.date_of_assessment }}
+                  <small class="form-text text-muted">{{ form.date_of_assessment.help_text|default:"Date and time when this assessment was performed" }}</small>
+                  {% if form.date_of_assessment.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in form.date_of_assessment.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Diagnosis Section -->
+                <div class="form-group">
+                  <label>
+                    <i class="fas fa-diagnoses mr-2"></i>{{ form.diagnosis.label }}
+                  </label>
+                  <div class="card">
+                    <div class="card-header" id="diagnosisHeader">
+                      <button class="btn btn-link btn-block text-left collapsed" type="button" 
+                              data-toggle="collapse" data-target="#diagnosisCollapse" 
+                              aria-expanded="false" aria-controls="diagnosisCollapse">
+                        <i class="fas fa-chevron-down mr-2"></i>
+                        Click to select diagnoses from list
+                      </button>
+                    </div>
+                    <div id="diagnosisCollapse" class="collapse" data-parent="#diagnosisAccordion">
+                      <div class="card-body">
+                        {{ form.diagnosis }}
+                        {% if form.diagnosis.errors %}
+                          <div class="invalid-feedback d-block">
+                            {% for error in form.diagnosis.errors %}{{ error }}{% endfor %}
+                          </div>
+                        {% endif %}
+                        
+                        <!-- Other Diagnosis Toggle -->
+                        <div class="form-check mt-3">
+                          <input class="form-check-input" type="checkbox" id="otherDiagnosisToggle">
+                          <label class="form-check-label" for="otherDiagnosisToggle">
+                            Other (specify below)
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Other Diagnosis -->
+                <div class="form-group" id="otherDiagnosisGroup" style="display: none;">
+                  <label for="{{ form.diagnosis_other.id_for_label }}">
+                    <i class="fas fa-edit mr-2"></i>{{ form.diagnosis_other.label }}
+                  </label>
+                  {{ form.diagnosis_other }}
+                  <small class="form-text text-muted">{{ form.diagnosis_other.help_text|default:"Additional diagnosis notes not covered by standard list" }}</small>
+                  {% if form.diagnosis_other.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in form.diagnosis_other.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Diagnosis Conclusion -->
+                <div class="form-group">
+                  <label for="{{ form.diagnosis_conclusion.id_for_label }}">
+                    <i class="fas fa-clipboard-check mr-2"></i>{{ form.diagnosis_conclusion.label }}
+                  </label>
+                  {{ form.diagnosis_conclusion }}
+                  <small class="form-text text-muted">{{ form.diagnosis_conclusion.help_text|default:"Overall assessment conclusion" }}</small>
+                  {% if form.diagnosis_conclusion.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in form.diagnosis_conclusion.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Management Plan -->
+                <div class="form-group">
+                  <label for="{{ form.management_plan.id_for_label }}">
+                    <i class="fas fa-tasks mr-2"></i>{{ form.management_plan.label }}
+                  </label>
+                  {{ form.management_plan }}
+                  <small class="form-text text-muted">{{ form.management_plan.help_text|default:"Recommended treatment and intervention plan" }}</small>
+                  {% if form.management_plan.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in form.management_plan.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Next Assessment Date -->
+                <div class="form-group">
+                  <label for="{{ form.next_assessment_date.id_for_label }}">
+                    <i class="fas fa-calendar-plus mr-2"></i>{{ form.next_assessment_date.label }}
+                  </label>
+                  {{ form.next_assessment_date }}
+                  <small class="form-text text-muted">{{ form.next_assessment_date.help_text|default:"Scheduled date for follow-up assessment (optional)" }}</small>
+                  {% if form.next_assessment_date.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in form.next_assessment_date.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Parent Informed -->
+                <div class="form-group">
+                  <div class="form-check">
+                    {{ form.parent_informed }}
+                    <label class="form-check-label" for="{{ form.parent_informed.id_for_label }}">
+                      <i class="fas fa-info-circle mr-2"></i>{{ form.parent_informed.label }}
+                    </label>
+                  </div>
+                  <small class="form-text text-muted">{{ form.parent_informed.help_text|default:"Check if the parent has been informed of the assessment results" }}</small>
+                  {% if form.parent_informed.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in form.parent_informed.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Progress indicator (hidden initially) -->
+                <div id="save-progress" class="d-none">
+                  <div class="form-group">
+                    <label>Saving Assessment:</label>
+                    <div class="progress">
+                      <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                           id="progress-bar" 
+                           role="progressbar" 
+                           style="width: 0%">
+                        0%
+                      </div>
+                    </div>
+                    <small id="progress-text" class="form-text text-muted">Processing assessment...</small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card-footer">
+                <div class="row">
+                  <div class="col-sm-6">
+                    <button type="button" class="btn btn-secondary" onclick="window.history.back()">
+                      <i class="fas fa-arrow-left mr-2"></i>Back
+                    </button>
+                  </div>
+                  <div class="col-sm-6 text-right">
+                    <button type="submit" id="save-btn" class="btn btn-success">
+                      <i class="fas fa-save mr-2"></i>Create Assessment
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>
 
-
-<!-- JavaScript code -->
 <script>
-
-  function toggleis_assessment_completed() {
-    var checkbox = document.getElementById("is_assessment_completed");
-    var textboxContainer = document.getElementById("container_ass_complt");
-
-    if (checkbox.checked) {
-      textboxContainer.style.display = "block";
-    } else {
-      textboxContainer.style.display = "none";
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('assessment-form');
+    const saveBtn = document.getElementById('save-btn');
+    const progressDiv = document.getElementById('save-progress');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    const otherDiagnosisToggle = document.getElementById('otherDiagnosisToggle');
+    const otherDiagnosisGroup = document.getElementById('otherDiagnosisGroup');
+    
+    let currentXHR = null;
+    
+    // Toggle other diagnosis field
+    if (otherDiagnosisToggle && otherDiagnosisGroup) {
+        otherDiagnosisToggle.addEventListener('change', function() {
+            if (this.checked) {
+                otherDiagnosisGroup.style.display = 'block';
+                otherDiagnosisGroup.querySelector('textarea').focus();
+            } else {
+                otherDiagnosisGroup.style.display = 'none';
+                otherDiagnosisGroup.querySelector('textarea').value = '';
+            }
+        });
     }
-  }
-
-  function toggleis_discharged() {
-    var checkbox = document.getElementById("is_discharged");
-    var textboxContainer = document.getElementById("container_discharge");
-
-    if (checkbox.checked) {
-      textboxContainer.style.display = "block";
-    } else {
-      textboxContainer.style.display = "none";
+    
+    // Handle form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!validateForm()) {
+            return;
+        }
+        
+        const formData = new FormData(form);
+        saveAssessment(formData);
+    });
+    
+    function validateForm() {
+        const assessmentDate = form.querySelector('[name="date_of_assessment"]').value;
+        
+        if (!assessmentDate) {
+            showAlert('Please select the assessment date.', 'danger');
+            return false;
+        }
+        
+        // Check if assessment date is not in the future
+        const now = new Date();
+        const selectedDate = new Date(assessmentDate);
+        if (selectedDate > now) {
+            showAlert('Assessment date cannot be in the future.', 'danger');
+            return false;
+        }
+        
+        return true;
     }
-  }
-
-  function toggleDiagnosis() {
-    var checkbox = document.getElementById("checkbox_dx");
-    var textboxContainer = document.getElementById("container_dx");
-
-    if (checkbox.checked) {
-      textboxContainer.style.display = "block";
-    } else {
-      textboxContainer.style.display = "none";
+    
+    function saveAssessment(formData) {
+        currentXHR = new XMLHttpRequest();
+        
+        // Show progress and disable form
+        progressDiv.classList.remove('d-none');
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating...';
+        
+        // Simulate progress
+        progressBar.style.width = '25%';
+        progressBar.textContent = '25%';
+        progressText.textContent = 'Validating assessment data...';
+        
+        // Handle successful response
+        currentXHR.addEventListener('load', function() {
+            progressBar.style.width = '100%';
+            progressBar.textContent = '100%';
+            progressText.textContent = 'Processing complete...';
+            
+            if (currentXHR.status === 200) {
+                try {
+                    const response = JSON.parse(currentXHR.responseText);
+                    
+                    if (response.success) {
+                        handleSaveSuccess(response);
+                    } else {
+                        handleSaveError(response.errors || response.msg || 'Save failed');
+                    }
+                } catch (e) {
+                    // Handle non-AJAX responses (regular form submission success)
+                    if (currentXHR.responseText.includes('<!DOCTYPE html>')) {
+                        // Redirect happened, parse for redirect URL or reload
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = currentXHR.responseText;
+                        const successMessage = tempDiv.querySelector('.alert-success');
+                        if (successMessage) {
+                            showAlert('Assessment created successfully!', 'success');
+                            setTimeout(() => {
+                                window.location.href = '{% url "assessment-view" pk=999 %}'.replace('999', 'PLACEHOLDER');
+                            }, 1500);
+                            return;
+                        }
+                    }
+                    console.error('Error parsing response:', e);
+                    handleSaveError('Invalid server response');
+                }
+            } else {
+                handleSaveError('Server error: ' + currentXHR.status);
+            }
+        });
+        
+        // Handle save errors
+        currentXHR.addEventListener('error', function() {
+            handleSaveError('Network error occurred during save');
+        });
+        
+        // Progress simulation
+        setTimeout(() => {
+            progressBar.style.width = '50%';
+            progressBar.textContent = '50%';
+            progressText.textContent = 'Saving assessment...';
+        }, 500);
+        
+        setTimeout(() => {
+            progressBar.style.width = '75%';
+            progressBar.textContent = '75%';
+            progressText.textContent = 'Finalizing...';
+        }, 1000);
+        
+        // Start save
+        currentXHR.open('POST', form.action || window.location.pathname);
+        currentXHR.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        currentXHR.send(formData);
     }
-  }
-
+    
+    function handleSaveSuccess(response) {
+        progressBar.classList.remove('progress-bar-animated');
+        progressBar.classList.add('bg-success');
+        progressText.textContent = 'Assessment created successfully!';
+        
+        showAlert('Assessment created successfully!', 'success');
+        
+        // Redirect after a short delay
+        setTimeout(() => {
+            if (response.redirect_url) {
+                window.location.href = response.redirect_url;
+            } else {
+                window.location.href = '/assessment/view/' + response.assessment_id + '/';
+            }
+        }, 1500);
+    }
+    
+    function handleSaveError(errors) {
+        resetSaveState();
+        
+        let errorMessage = 'Failed to create assessment. ';
+        if (typeof errors === 'object') {
+            // Handle field-specific errors
+            for (const [field, errorList] of Object.entries(errors)) {
+                if (field !== 'general') {
+                    const fieldElement = form.querySelector(`[name="${field}"]`);
+                    if (fieldElement) {
+                        fieldElement.classList.add('is-invalid');
+                    }
+                }
+                errorMessage += errorList.join(' ');
+            }
+        } else {
+            errorMessage += errors;
+        }
+        
+        showAlert(errorMessage, 'danger');
+    }
+    
+    function resetSaveState() {
+        progressDiv.classList.add('d-none');
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Create Assessment';
+        progressBar.style.width = '0%';
+        progressBar.textContent = '0%';
+        progressBar.classList.add('progress-bar-animated');
+        progressBar.classList.remove('bg-success');
+        progressText.textContent = 'Processing assessment...';
+        currentXHR = null;
+        
+        // Clear form validation states
+        form.querySelectorAll('.is-invalid').forEach(element => {
+            element.classList.remove('is-invalid');
+        });
+    }
+    
+    function showAlert(message, type) {
+        // Remove any existing alerts
+        const existingAlerts = document.querySelectorAll('.assessment-alert');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        // Create new alert
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible assessment-alert`;
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        `;
+        
+        // Insert alert at the top of the form
+        const cardBody = form.querySelector('.card-body');
+        cardBody.insertBefore(alert, cardBody.firstChild);
+        
+        // Auto-dismiss after 5 seconds for success messages
+        if (type === 'success') {
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+    }
+    
+    // Initialize tooltips if available
+    if (typeof $().tooltip === 'function') {
+        $('[data-toggle="tooltip"]').tooltip();
+    }
+    
+    // Set default assessment date to now
+    const assessmentDateInput = form.querySelector('[name="date_of_assessment"]');
+    if (assessmentDateInput && !assessmentDateInput.value) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        
+        assessmentDateInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+});
 </script>
-
 
 {% endblock main_content %}

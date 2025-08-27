@@ -408,7 +408,7 @@ def patient_view(request, pk):
     bm = (
         Bookmark.objects.filter(bookmark_type="Patient")
         .filter(object_id=selected_patient.id)
-        .first
+        .first()
     )
 
     context = {
@@ -820,83 +820,190 @@ def search_results(request):
 # methods for assessment operations ------------------------------------------------------------------------------
 @login_required(login_url="user-login")
 def assessment_add(request, ptid, fid):
-    patient = Patient.objects.get(pk=ptid)
-    assessment_form = GMAssessmentForm()
-    file = Video.objects.get(pk=fid)
+    """Enhanced assessment creation with proper validation and error handling"""
+    from django.http import JsonResponse
+    from django.core.exceptions import ValidationError
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    try:
+        patient = Patient.objects.get(pk=ptid)
+        video_file = Video.objects.get(pk=fid)
+    except (Patient.DoesNotExist, Video.DoesNotExist) as e:
+        messages.error(request, "Patient or video file not found.")
+        return redirect("manage-patients")
+
+    # Check if assessment already exists for this video
+    existing_assessment = GMAssessment.objects.filter(video_file=video_file).first()
+    if existing_assessment:
+        messages.warning(request, "An assessment already exists for this video.")
+        return redirect("assessment-view", pk=existing_assessment.id)
 
     if request.method == "POST":
-
-        assessment_form_data = GMAssessmentForm(request.POST)
-        if assessment_form_data.is_valid():
-
-            date = assessment_form_data.cleaned_data["date_of_assessment"]
-            diagnosis = assessment_form_data.cleaned_data["diagnosis"]
-            diagnosis_other = assessment_form_data.cleaned_data["diagnosis_other"]
-            management_plan = assessment_form_data.cleaned_data["management_plan"]
-            next_assessment_date = assessment_form_data.cleaned_data[
-                "next_assessment_date"
-            ]
-            parent_informed = assessment_form_data.cleaned_data["parent_informed"]
-
-            # check assessment already added to this file
-            if GMAssessment.objects.filter(video_file=file).exists() == False:
-
-                prep_assessment = GMAssessment.objects.create(
-                    patient=patient,
-                    video_file=file,
-                    date_of_assessment=date,
-                    diagnosis_other=diagnosis_other,
-                    management_plan=management_plan,
-                    next_assessment_date=next_assessment_date,
-                    parent_informed=parent_informed,
-                    added_by=request.user,
-                    last_edit_by=None,
-                )
-
-                prep_assessment.diagnosis.set(diagnosis)
-                prep_assessment.save()
-
-                messages.success(request, "New assessment added succusfully")
-                return redirect("assessment-view", pk=prep_assessment.id)
-            else:
-                previous_assmnt = GMAssessment.objects.get(video_file=file)
-                messages.warning(
-                    request, "One assessment already there for this file..."
-                )
-                return redirect("assessment-view", pk=previous_assmnt.id)
-        else:
-            messages.error(request, assessment_form_data.errors)
-            return render(
-                request,
-                "assessment/add.html",
-                {"form": assessment_form_data, "patient": patient, "file": file},
-            )
+        assessment_form = GMAssessmentForm(request.POST)
+        
+        if assessment_form.is_valid():
+            try:
+                # Create assessment with proper validation
+                assessment = assessment_form.save(commit=False)
+                assessment.patient = patient
+                assessment.video_file = video_file
+                assessment.added_by = request.user
+                
+                # Additional validation
+                if assessment.next_assessment_date and assessment.date_of_assessment:
+                    if assessment.next_assessment_date <= assessment.date_of_assessment.date():
+                        assessment_form.add_error('next_assessment_date', 
+                            'Next assessment date must be after the current assessment date.')
+                        raise ValidationError('Invalid next assessment date.')
+                
+                assessment.save()
+                
+                # Handle many-to-many relationship for diagnosis
+                diagnosis_list = assessment_form.cleaned_data.get('diagnosis', [])
+                if diagnosis_list:
+                    assessment.diagnosis.set(diagnosis_list)
+                
+                logger.info(f"Assessment created successfully: {assessment.id} by user {request.user.id}")
+                messages.success(request, "Assessment added successfully!")
+                
+                # Return JSON for AJAX requests
+                if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                    return JsonResponse({
+                        "success": True,
+                        "msg": "Assessment added successfully!",
+                        "assessment_id": assessment.id,
+                        "redirect_url": reverse("assessment-view", kwargs={"pk": assessment.id}),
+                    })
+                
+                return redirect("assessment-view", pk=assessment.id)
+                
+            except ValidationError as e:
+                logger.error(f"Validation error in assessment creation: {e}")
+                messages.error(request, "Please correct the errors below.")
+            except Exception as e:
+                logger.error(f"Unexpected error in assessment creation: {e}")
+                assessment_form.add_error(None, "An unexpected error occurred. Please try again.")
+                messages.error(request, "An unexpected error occurred. Please try again.")
+        
+        # Form has errors - return for both AJAX and regular requests
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            errors = {}
+            for field, error_list in assessment_form.errors.items():
+                if field == '__all__':
+                    errors['general'] = error_list
+                else:
+                    errors[field] = error_list
+            
+            return JsonResponse({
+                "success": False, 
+                "errors": errors,
+                "msg": "Please correct the errors and try again."
+            })
+        
+        # For regular form submissions, show errors in template
+        messages.error(request, "Please correct the errors below.")
+        
     else:
-        return render(
-            request,
-            "assessment/add.html",
-            {"form": assessment_form, "patient": patient, "file": file},
-        )
+        # GET request - create new form
+        assessment_form = GMAssessmentForm()
+
+    context = {
+        "form": assessment_form,
+        "patient": patient,
+        "file": video_file,  # For backward compatibility
+        "video": video_file,
+        "page_title": f"Create Assessment - {patient.baby_name}",
+        "breadcrumbs": [
+            {"name": "Dashboard", "url": reverse("home")},
+            {"name": "Patient", "url": reverse("view-patient", args=[patient.id])},
+            {"name": "Video", "url": reverse("video:view", args=[video_file.id])},
+            {"name": "New Assessment", "url": None},
+        ],
+    }
+    
+    return render(request, "assessment/add.html", context)
 
 
 @login_required(login_url="user-login")
 def assessment_view(request, pk):
-    assmnt = GMAssessment.objects.get(id=pk)
-    # check bookmark
-    bm = (
-        Bookmark.objects.filter(bookmark_type="Assessment")
-        .filter(object_id=assmnt.id)
-        .first
-    )
-    return render(
-        request, "assessment/view.html", {"assessment": assmnt, "bookmark": bm}
-    )
+    """Enhanced assessment view with error handling and logging"""
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # Get assessment with related objects to reduce database queries
+        assessment = GMAssessment.objects.select_related(
+            'patient', 'video_file', 'added_by', 'last_edit_by'
+        ).prefetch_related('diagnosis').get(id=pk)
+        
+        # Check for existing bookmark
+        bookmark = Bookmark.objects.filter(
+            bookmark_type="Assessment",
+            object_id=assessment.id
+        ).first()
+        
+        context = {
+            'assessment': assessment,
+            'bookmark': bookmark,
+            'page_title': f"Assessment - {assessment.patient.baby_name}",
+        }
+        
+        logger.info(f"User {request.user.username} viewed assessment {assessment.id} for patient {assessment.patient.baby_name}")
+        
+        return render(request, "assessment/view.html", context)
+        
+    except GMAssessment.DoesNotExist:
+        logger.warning(f"User {request.user.username} attempted to view non-existent assessment {pk}")
+        messages.error(request, 'Assessment not found.')
+        return redirect('assessment-manager')
+        
+    except Exception as e:
+        logger.error(f"Error viewing assessment {pk}: {str(e)}")
+        messages.error(request, 'An error occurred while loading the assessment.')
+        return redirect('assessment-manager')
 
 
 @login_required(login_url="user-login")
 def assessment_view_by_fileid(request, file_id):
-    assmnt = GMAssessment.objects.get(video_file=file_id)
-    return render(request, "assessment/view.html", {"assessment": assmnt})
+    """Enhanced assessment view by file ID with error handling"""
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # Get assessment by video file ID with related objects
+        assessment = GMAssessment.objects.select_related(
+            'patient', 'video_file', 'added_by', 'last_edit_by'
+        ).prefetch_related('diagnosis').get(video_file=file_id)
+        
+        # Check for existing bookmark
+        bookmark = Bookmark.objects.filter(
+            bookmark_type="Assessment",
+            object_id=assessment.id
+        ).first()
+        
+        context = {
+            'assessment': assessment,
+            'bookmark': bookmark,
+            'page_title': f"Assessment - {assessment.patient.baby_name}",
+        }
+        
+        logger.info(f"User {request.user.username} viewed assessment by file ID {file_id} for patient {assessment.patient.baby_name}")
+        
+        return render(request, "assessment/view.html", context)
+        
+    except GMAssessment.DoesNotExist:
+        logger.warning(f"User {request.user.username} attempted to view assessment for non-existent file {file_id}")
+        messages.error(request, 'Assessment not found for this video file.')
+        return redirect('video:view', file_id)
+        
+    except Exception as e:
+        logger.error(f"Error viewing assessment by file ID {file_id}: {str(e)}")
+        messages.error(request, 'An error occurred while loading the assessment.')
+        return redirect('home')
 
 
 @login_required(login_url="user-login")

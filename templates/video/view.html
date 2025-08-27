@@ -1,127 +1,294 @@
 {% extends 'src/base.html' %}
 {% load static %}
-{% block title %}Video - View{% endblock %}
+{% block title %}{{ video.title }} - {{ patient.baby_name }}{% endblock %}
+
 {% block main_content %}
+<div class="container-fluid">
+  <!-- Content Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0">{{ video.title }}</h1>
+          <small class="text-muted">Patient: {{ patient.baby_name }}</small>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'view-patient' patient.id %}">{{ patient.baby_name }}</a></li>
+            <li class="breadcrumb-item active">{{ video.title }}</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
 
-</br>
-{% include 'src/form_error.html' %}
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Video Player -->
+        <div class="col-lg-8">
+          <div class="card card-primary">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-play mr-2"></i>Video Player
+                {% if video.is_new_file %}
+                  <span class="badge badge-warning ml-2">New</span>
+                {% else %}
+                  <span class="badge badge-success ml-2">Assessed</span>
+                {% endif %}
+              </h3>
+              <div class="card-tools">
+                <span class="badge badge-info">{{ video.duration_formatted }}</span>
+                <span class="badge badge-secondary">{{ video.file_size_mb }} MB</span>
+                <span class="badge badge-primary">{{ video.resolution }}</span>
+              </div>
+            </div>
+            <div class="card-body p-0">
+              <video
+                id="video-player"
+                class="w-100"
+                controls
+                preload="metadata"
+                poster=""
+                style="max-height: 500px;">
+                <source src="{{ video.video_file.url }}" type="video/mp4">
+                <source src="{{ video.video_file.url }}" type="video/webm">
+                <p class="text-center mt-4">
+                  <i class="fas fa-exclamation-triangle text-warning"></i>
+                  Your browser does not support the video tag or this video format.
+                  <br>
+                  <a href="{{ video.video_file.url }}" class="btn btn-primary btn-sm mt-2" download>
+                    <i class="fas fa-download mr-2"></i>Download Video
+                  </a>
+                </p>
+              </video>
+            </div>
+            <div class="card-footer">
+              <div class="row">
+                <div class="col-sm-6">
+                  <small class="text-muted">
+                    <i class="fas fa-calendar mr-1"></i>Recorded: {{ video.recorded_on|date:"M d, Y H:i" }}
+                  </small>
+                </div>
+                <div class="col-sm-6 text-right">
+                  <small class="text-muted">
+                    <i class="fas fa-user mr-1"></i>By: {{ video.added_by.get_full_name|default:video.added_by.username }}
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-<div class="container">
+        <!-- Video Details Sidebar -->
+        <div class="col-lg-4">
+          <!-- Video Information -->
+          <div class="card card-success">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-info-circle mr-2"></i>Video Information
+              </h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                  <i class="fas fa-minus"></i>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <dl class="row">
+                <dt class="col-sm-5">Title:</dt>
+                <dd class="col-sm-7">{{ video.title }}</dd>
+                
+                <dt class="col-sm-5">Recorded On:</dt>
+                <dd class="col-sm-7">{{ video.recorded_on|date:"M d, Y H:i" }}</dd>
+                
+                <dt class="col-sm-5">Age on Record:</dt>
+                <dd class="col-sm-7">{{ video.age_on_recording|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Status:</dt>
+                <dd class="col-sm-7">
+                  {% if video.is_new_file %}
+                    <span class="badge badge-warning">Awaiting Assessment</span>
+                  {% else %}
+                    <span class="badge badge-success">Assessment Complete</span>
+                  {% endif %}
+                </dd>
+                
+                <dt class="col-sm-5">Processing:</dt>
+                <dd class="col-sm-7">
+                  {% if video.processing_status == 'completed' %}
+                    <span class="badge badge-success">Ready</span>
+                  {% elif video.processing_status == 'processing' %}
+                    <span class="badge badge-warning">Processing</span>
+                  {% elif video.processing_status == 'failed' %}
+                    <span class="badge badge-danger">Failed</span>
+                  {% else %}
+                    <span class="badge badge-info">Pending</span>
+                  {% endif %}
+                </dd>
+                
+                {% if video.description %}
+                <dt class="col-sm-5">Description:</dt>
+                <dd class="col-sm-7">{{ video.description }}</dd>
+                {% endif %}
+                
+                <dt class="col-sm-5">Uploaded By:</dt>
+                <dd class="col-sm-7">{{ video.added_by.get_full_name|default:video.added_by.username }}</dd>
+                
+                <dt class="col-sm-5">Uploaded On:</dt>
+                <dd class="col-sm-7">{{ video.created_at|date:"M d, Y H:i" }}</dd>
+                
+                {% if video.last_edit_by %}
+                <dt class="col-sm-5">Last Modified:</dt>
+                <dd class="col-sm-7">
+                  {{ video.updated_at|date:"M d, Y H:i" }}<br>
+                  <small class="text-muted">by {{ video.last_edit_by.get_full_name|default:video.last_edit_by.username }}</small>
+                </dd>
+                {% endif %}
+              </dl>
+            </div>
+          </div>
 
-<!-- Page header -->
-<div class="card bg-info"><div class="card-header"><h3 class="card-title">View Video</h3></div>
+          <!-- Actions -->
+          <div class="card card-info">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-cogs mr-2"></i>Actions
+              </h3>
+            </div>
+            <div class="card-body">
+              <div class="btn-group-vertical w-100">
+                <!-- Edit Video -->
+                <a href="{% url 'video:edit' video.id %}" class="btn btn-outline-primary mb-2">
+                  <i class="fas fa-edit mr-2"></i>Edit Video Details
+                </a>
+                
+                <!-- Assessment Actions -->
+                {% if video.is_new_file %}
+                  <a href="{% url 'assessment-add' video.patient.id video.id %}" class="btn btn-success mb-2">
+                    <i class="fas fa-plus mr-2"></i>Create Assessment
+                  </a>
+                {% else %}
+                  <a href="{% url 'assessment-view-by-file-id' video.id %}" class="btn btn-outline-success mb-2">
+                    <i class="fas fa-eye mr-2"></i>View Assessment
+                  </a>
+                  <a href="{% url 'assessment-edit-by-file-id' video.id %}" class="btn btn-outline-warning mb-2">
+                    <i class="fas fa-edit mr-2"></i>Edit Assessment
+                  </a>
+                {% endif %}
+                
+                <!-- Bookmark Actions -->
+                {% if bookmark %}
+                  <a href="{% url 'bookmark-view' bookmark.id %}" class="btn btn-outline-info mb-2">
+                    <i class="fas fa-bookmark mr-2"></i>View Bookmark
+                  </a>
+                {% else %}
+                  <a href="{% url 'bookmark-add' video.id 'Video' %}" class="btn btn-outline-secondary mb-2">
+                    <i class="fas fa-bookmark mr-2"></i>Add to Bookmarks
+                  </a>
+                {% endif %}
+                
+                <!-- Download -->
+                <a href="{{ video.video_file.url }}" class="btn btn-outline-dark mb-2" download>
+                  <i class="fas fa-download mr-2"></i>Download Video
+                </a>
+                
+                <!-- Delete -->
+                <a href="{% url 'video:delete-confirm' video.id %}" class="btn btn-outline-danger">
+                  <i class="fas fa-trash mr-2"></i>Delete Video
+                </a>
+              </div>
+            </div>
+          </div>
 
-{% if file.isNewFile %}
-<div class="ribbon-wrapper ribbon-xl"><div class="ribbon bg-warning text-lg">New</div></div>
-{% else %}
-<div class="ribbon-wrapper ribbon-xl"><div class="ribbon bg-success text-lg">Completed</div></div>
-{% endif %}
-
+          <!-- Patient Details -->
+          <div class="card card-warning collapsed-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-user mr-2"></i>Patient Details
+              </h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
+            </div>
+            <div class="card-body" style="display: none;">
+              <dl class="row">
+                <dt class="col-sm-4">BHT:</dt>
+                <dd class="col-sm-8">{{ patient.bht|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-4">PHN:</dt>
+                <dd class="col-sm-8">{{ patient.pin|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-4">NNC No:</dt>
+                <dd class="col-sm-8">{{ patient.nnc_no|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-4">Baby Name:</dt>
+                <dd class="col-sm-8">{{ patient.baby_name|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-4">Mother:</dt>
+                <dd class="col-sm-8">{{ patient.mother_name|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-4">Gender:</dt>
+                <dd class="col-sm-8">{{ patient.gender|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-4">Current Age:</dt>
+                <dd class="col-sm-8">{{ patient.getCurrentAge|default:"N/A" }}</dd>
+              </dl>
+              
+              <div class="text-center">
+                <a href="{% url 'view-patient' patient.id %}" class="btn btn-primary">
+                  <i class="fas fa-external-link-alt mr-2"></i>View Full Patient Details
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>
 
-<div class="row">
-  <div class="col-md-7">
-    <div class="card card-body">
-
-      <video
-        id="videoPlayer"
-        class="video-js"
-        controls
-        preload="auto"
-        data-setup='{"fluid": true}'>
-        <source src="{{file.video.url}}" type="video/mp4"></source>
-        <source src="{{file.video.url}}" type="video/mov"></source>
-        <p>Video Playback Not Supported<br/>Your browser does not support the video tag.</p>
-      </video>
-
-      </div> <!-- /.card body-->
-  </div>
-
-  <div class="col-md-5">
-
-    <div id="accordion">
-      <div class="card card-secondary">
-      <div class="card-header">
-      <h4 class="card-title w-100">
-      <a class="d-block w-100" data-toggle="collapse" href="#collapseOne" aria-expanded="true">
-        <i class="fas fa-eye" style="color: #ffffff;"></i> &nbsp; &nbsp; Document Details
-      </a>
-      </h4>
-      </div>
-      <div id="collapseOne" class="collapse show" data-parent="#accordion" style="">
-      <div class="card-body">
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Title : </label><div class="col-sm">{{file.caption}}</div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Recorded On : </label><div class="col-sm">{{file.recorded_on}}</div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Age on Recorded : </label><div class="col-sm">{{file.getAgeOnRecord}}</div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Analayze State : </label><div class="col-sm">
-          {% if file.isNewFile %}
-          Assessments Not Yet Created
-          {% else %}
-          Assessment Completed
-          {% endif %}
-        </div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Description : </label><div class="col-sm">{{file.description}}</div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Uploaded By : </label><div class="col-sm">{{file.uploaded_by}}</div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Uploaded On : </label><div class="col-sm">{{file.uploaded_on}}</div></div>
-        {% if file.last_edit_by %}
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Last Edited By : </label><div class="col-sm">{{file.last_edit_by}}</div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Last Edited On : </label><div class="col-sm">{{file.last_edit_on}}</div></div>
-        {% endif %}
-        <hr>
-
-  {% if file.id %}
-    <a href="{% url 'video:edit' file.id %}" class="btn btn-link"><i class="fas fa-pencil-alt"></i>  Update or Delete this file)</a>
-  {% endif %}
-        {% if file.isNewFile %}
-        <a href="{% url 'assessment-add' file.patient.id file.id %}" class="btn btn-link"><i class="fas fa-circle fa-plus"></i>  Create New Assessment</a>
-        {% else %}
-        {% if file.id %}
-          <a href="{% url 'assessment-view-by-file-id' file.id %}" class="btn btn-link"><i class="fas fa-eye"></i>  View Assessment</a>
-          <a href="{% url 'assessment-edit-by-file-id' file.id %}" class="btn btn-link"><i class="fas fa-pencil-alt"></i>  Edit Assessment</a>
-        {% endif %}
-        {% endif %}
-
-        {% if bookmark %}
-        <a class="btn btn-link" href="{% url 'bookmark-view' bookmark.id %}" type="button"><i class="fas fa-eye"></i> View Bookmark</a>
-        {% else %}
-        {% if file.id %}
-          <a class="btn btn-link" href="{% url 'bookmark-add' file.id 'Video' %}" type="button"><i class="fas fa-circle fa-plus"></i>  Add to Bookmark</a>
-        {% endif %}
-        {% endif %}
-
-      </div>
-      </div>
-      </div>
-      </div>
-
-      <div class="card card-secondary">
-      <div class="card-header">
-      <h4 class="card-title w-100">
-      <a class="d-block w-100 collapsed" data-toggle="collapse" href="#collapseTwo" aria-expanded="false">
-        <i class="fas fa-eye" style="color: #ffffff;"></i> &nbsp; &nbsp; Patient Details
-      </a>
-      </h4>
-      </div>
-      <div id="collapseTwo" class="collapse" data-parent="#accordion" style="">
-      <div class="card-body">
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">BHT : </label><div class="col-sm">{{patient.bht}}</div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">PHN : </label><div class="col-sm">{{patient.pin}}</div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">NNC No : </label><div class="col-sm">{{patient.nnc_no|default_if_none:"---"}}</div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Name of Baby : </label><div class="col-sm">{{patient.baby_name}}</div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Name of Mother : </label><div class="col-sm">{{patient.mother_name}}</div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Gender : </label><div class="col-sm">{{patient.gender}}</div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Age : </label><div class="col-sm">{{patient.mother_name}}</div></div>
-        <hr>
-        {% if bookmark %}
-{% else %}
-{% endif %}
-
-        <a href="{% url 'view-patient' patient.id %}" class="btn btn-link"><i class="fas fa-eye"></i>  View patients' full details...</a></div>
-      </div>
-      </div>
-      </div>
-  </div>
-
-</div> <!-- /.main container -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Video player enhancements
+    const video = document.getElementById('video-player');
+    
+    if (video) {
+        // Show loading indicator when video is loading
+        video.addEventListener('loadstart', function() {
+            console.log('Video loading started');
+        });
+        
+        // Handle video load errors gracefully
+        video.addEventListener('error', function(e) {
+            console.error('Video loading error:', e);
+            const errorMsg = video.parentNode.querySelector('.video-error-msg') || 
+                           document.createElement('div');
+            errorMsg.className = 'alert alert-warning mt-3 video-error-msg';
+            errorMsg.innerHTML = `
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                <strong>Video Playback Error</strong><br>
+                Unable to load the video. Please try downloading the file instead.
+                <br><br>
+                <a href="{{ video.video_file.url }}" class="btn btn-primary btn-sm" download>
+                    <i class="fas fa-download mr-2"></i>Download Video
+                </a>
+            `;
+            if (!video.parentNode.querySelector('.video-error-msg')) {
+                video.parentNode.appendChild(errorMsg);
+            }
+        });
+        
+        // Update video poster if needed
+        video.addEventListener('loadeddata', function() {
+            console.log('Video loaded successfully');
+        });
+    }
+});
+</script>
 
 {% endblock main_content %}

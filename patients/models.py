@@ -831,7 +831,7 @@ class GMAssessment(TimeStampedModel, UserTrackingMixin):
     def assessment_age(self):
         """Get the age at time of assessment"""
         if self.video_file:
-            return self.video_file.getAgeOnRecord
+            return self.video_file.age_on_recording
         return "Unknown"
 
     @property

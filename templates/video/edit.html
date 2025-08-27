@@ -1,70 +1,455 @@
 {% extends 'src/base.html' %}
 {% load static %}
-{% block title %}Videos - Edit{% endblock %}
+{% block title %}Edit Video - {{ video.title }}{% endblock %}
+
 {% block main_content %}
-
-</br>
-{% include 'src/form_error.html' %}
-
-<div class="container">
-
-<!-- Page header -->
-<div class="card bg-info"><div class="card-header"><h3 class="card-title">Edit Video Infomations</h3></div></div>
-
-<div class="row">
-  <div class="col-md">
-    <div class="card card-body">
-
-  <form action="{% url 'video:edit' file.id %}" method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-  
-          <div class="form-group row align-items-center">
-            <label class="col-form-label col-sm-2">File ID : </label>
-            <div class="col-sm">
-              <div>{{file.id}}</div>
-            </div>
-          </div>
-  
-          <div class="form-group row align-items-center">
-            <label class="col-form-label col-sm-2">Title : </label>
-            <div class="col-sm">{{video_form.caption}}</div>
-            <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Name for the video, example : BHT + Recorded date time ect..."></span></a>
-            
-          </div>
-  
-          <div class="form-group row align-items-center">
-            <label class="col-form-label col-sm-2">Video File : </label>
-            <div class="col-sm">
-              <div class="custom-file">{{video_form.video}}</div>
-            </div>
-            <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="You can upload video, image, PDF. Size of the each file should less than 100Mb"></span></a>
-          </div>
-  
-          <div class="form-group row align-items-center">
-            <label class="col-form-label col-sm-2">Recorded On : </label>
-            <div class="col-sm">{{video_form.recorded_on}}</div>
-            <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Please select a date, recording was done..."></span></a>
-          </div>
-  
-          <div class="form-group row align-items-center">
-            <label class="col-form-label col-sm-2">Description : </label>
-            <div class="col-sm">{{video_form.description}}</div>
-            <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Name for the video, example : BHT + Recorded date time ect..."></span></a>
-          </div>
-        
-          </br>
-          
-          <div class="row justify-content-end">
-            <div class="col-auto"><button type="button" class="btn btn-primary" onclick="location.href='{% url 'file-delete_start' file.id %}'">Delete</button></div>
-            <div class="col-auto"><button type="button" class="btn btn-primary" onclick="location.href='{% url 'file-view' file.id %}'">View</button></div>
-            <div class="col-auto"><button type="submit" class="btn btn-primary">Update</button></div>
-          </div>
-  
-        </form>
-
-    </div> <!-- /.card body -->
+<div class="container-fluid">
+  <!-- Content Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0">Edit Video</h1>
+          <small class="text-muted">{{ video.title }}</small>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'view-patient' patient.id %}">{{ patient.baby_name }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'video:view' video.id %}">{{ video.title }}</a></li>
+            <li class="breadcrumb-item active">Edit</li>
+          </ol>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Patient Information -->
+        <div class="col-lg-4 col-md-6">
+          <div class="card card-primary">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-user mr-2"></i>Patient Information
+              </h3>
+            </div>
+            <div class="card-body">
+              <dl class="row">
+                <dt class="col-sm-5">BHT:</dt>
+                <dd class="col-sm-7">{{ patient.bht|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">PHN:</dt>
+                <dd class="col-sm-7">{{ patient.pin|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">NNC No:</dt>
+                <dd class="col-sm-7">{{ patient.nnc_no|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Baby Name:</dt>
+                <dd class="col-sm-7">{{ patient.baby_name|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Mother Name:</dt>
+                <dd class="col-sm-7">{{ patient.mother_name|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Gender:</dt>
+                <dd class="col-sm-7">{{ patient.gender|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Current Age:</dt>
+                <dd class="col-sm-7">{{ patient.getCurrentAge|default:"N/A" }}</dd>
+              </dl>
+            </div>
+          </div>
+
+          <!-- Current Video Info -->
+          <div class="card card-info">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-video mr-2"></i>Current Video
+              </h3>
+            </div>
+            <div class="card-body">
+              <dl class="row">
+                <dt class="col-sm-5">Video ID:</dt>
+                <dd class="col-sm-7">#{{ video.id }}</dd>
+                
+                <dt class="col-sm-5">File Size:</dt>
+                <dd class="col-sm-7">{{ video.file_size_mb }} MB</dd>
+                
+                <dt class="col-sm-5">Duration:</dt>
+                <dd class="col-sm-7">{{ video.duration_formatted }}</dd>
+                
+                <dt class="col-sm-5">Resolution:</dt>
+                <dd class="col-sm-7">{{ video.resolution }}</dd>
+                
+                <dt class="col-sm-5">Status:</dt>
+                <dd class="col-sm-7">
+                  {% if video.processing_status == 'completed' %}
+                    <span class="badge badge-success">Ready</span>
+                  {% elif video.processing_status == 'processing' %}
+                    <span class="badge badge-warning">Processing</span>
+                  {% elif video.processing_status == 'failed' %}
+                    <span class="badge badge-danger">Failed</span>
+                  {% else %}
+                    <span class="badge badge-info">Pending</span>
+                  {% endif %}
+                </dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+
+        <!-- Edit Form -->
+        <div class="col-lg-8 col-md-6">
+          <div class="card card-warning">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-edit mr-2"></i>Edit Video Details
+              </h3>
+            </div>
+            <form id="video-edit-form" method="post" enctype="multipart/form-data">
+              {% csrf_token %}
+              
+              <div class="card-body">
+                <!-- Video Title -->
+                <div class="form-group">
+                  <label for="{{ video_form.title.id_for_label }}">
+                    <i class="fas fa-tag mr-2"></i>{{ video_form.title.label }}
+                  </label>
+                  {{ video_form.title }}
+                  <small class="form-text text-muted">{{ video_form.title.help_text }}</small>
+                  {% if video_form.title.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in video_form.title.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Video File Upload (Optional for Edit) -->
+                <div class="form-group">
+                  <label for="{{ video_form.video_file.id_for_label }}">
+                    <i class="fas fa-video mr-2"></i>{{ video_form.video_file.label }} 
+                    <span class="badge badge-info">Optional</span>
+                  </label>
+                  <div class="custom-file">
+                    {{ video_form.video_file }}
+                    <label class="custom-file-label" for="{{ video_form.video_file.id_for_label }}">
+                      Replace video file (optional)...
+                    </label>
+                  </div>
+                  <small class="form-text text-muted">
+                    Leave empty to keep current video file. {{ video_form.video_file.help_text }}
+                  </small>
+                  {% if video_form.video_file.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in video_form.video_file.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Recording Date -->
+                <div class="form-group">
+                  <label for="{{ video_form.recorded_on.id_for_label }}">
+                    <i class="fas fa-calendar mr-2"></i>{{ video_form.recorded_on.label }}
+                  </label>
+                  {{ video_form.recorded_on }}
+                  <small class="form-text text-muted">{{ video_form.recorded_on.help_text }}</small>
+                  {% if video_form.recorded_on.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in video_form.recorded_on.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Description -->
+                <div class="form-group">
+                  <label for="{{ video_form.description.id_for_label }}">
+                    <i class="fas fa-comment-alt mr-2"></i>{{ video_form.description.label }}
+                  </label>
+                  {{ video_form.description }}
+                  <small class="form-text text-muted">{{ video_form.description.help_text }}</small>
+                  {% if video_form.description.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in video_form.description.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Update Progress (Hidden initially) -->
+                <div id="update-progress" class="d-none">
+                  <div class="form-group">
+                    <label>Update Progress:</label>
+                    <div class="progress">
+                      <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                           id="progress-bar" 
+                           role="progressbar" 
+                           style="width: 0%">
+                        0%
+                      </div>
+                    </div>
+                    <small id="progress-text" class="form-text text-muted">Processing update...</small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card-footer">
+                <div class="row">
+                  <div class="col-sm-6">
+                    <button type="button" class="btn btn-secondary mr-2" onclick="window.location.href='{% url 'video:view' video.id %}'">
+                      <i class="fas fa-arrow-left mr-2"></i>Back to Video
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" onclick="window.location.href='{% url 'video:delete-confirm' video.id %}'">
+                      <i class="fas fa-trash mr-2"></i>Delete
+                    </button>
+                  </div>
+                  <div class="col-sm-6 text-right">
+                    <button type="submit" id="update-btn" class="btn btn-warning">
+                      <i class="fas fa-save mr-2"></i>Update Video
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>
 
-</div> <!-- /.main container -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('video-edit-form');
+    const fileInput = form.querySelector('input[type="file"]');
+    const fileLabel = form.querySelector('.custom-file-label');
+    const updateBtn = document.getElementById('update-btn');
+    const progressDiv = document.getElementById('update-progress');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    
+    let currentXHR = null;
+    
+    // Update file label when file is selected
+    if (fileInput && fileLabel) {
+        fileInput.addEventListener('change', function() {
+            const fileName = this.files[0] ? this.files[0].name : 'Replace video file (optional)...';
+            fileLabel.textContent = fileName;
+            
+            // Basic client-side validation for new file
+            if (this.files[0]) {
+                const file = this.files[0];
+                const maxSize = 500 * 1024 * 1024; // 500MB
+                
+                if (file.size > maxSize) {
+                    showAlert('File size too large. Maximum allowed size is 500MB.', 'danger');
+                    this.value = '';
+                    fileLabel.textContent = 'Replace video file (optional)...';
+                    return;
+                }
+                
+                // Check file type
+                const allowedTypes = ['video/mp4', 'video/avi', 'video/mov', 'video/wmv', 'video/mkv', 'video/webm'];
+                if (!allowedTypes.includes(file.type) && !file.name.match(/\.(mp4|avi|mov|wmv|mkv|webm)$/i)) {
+                    showAlert('Invalid file type. Please upload MP4, AVI, MOV, WMV, MKV, or WEBM files only.', 'danger');
+                    this.value = '';
+                    fileLabel.textContent = 'Replace video file (optional)...';
+                    return;
+                }
+            }
+        });
+    }
+    
+    // Handle form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!validateForm()) {
+            return;
+        }
+        
+        const formData = new FormData(form);
+        updateVideo(formData);
+    });
+    
+    function validateForm() {
+        const title = form.querySelector('[name="title"]').value.trim();
+        const recordedOn = form.querySelector('[name="recorded_on"]').value;
+        
+        if (!title) {
+            showAlert('Please enter a video title.', 'danger');
+            return false;
+        }
+        
+        if (!recordedOn) {
+            showAlert('Please select the recording date.', 'danger');
+            return false;
+        }
+        
+        return true;
+    }
+    
+    function updateVideo(formData) {
+        currentXHR = new XMLHttpRequest();
+        
+        // Show progress and disable form
+        progressDiv.classList.remove('d-none');
+        updateBtn.disabled = true;
+        updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Updating...';
+        
+        // Handle progress for file uploads
+        if (fileInput && fileInput.files[0]) {
+            currentXHR.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = Math.round((e.loaded / e.total) * 100);
+                    progressBar.style.width = percentComplete + '%';
+                    progressBar.textContent = percentComplete + '%';
+                    
+                    const loadedMB = Math.round(e.loaded / 1024 / 1024);
+                    const totalMB = Math.round(e.total / 1024 / 1024);
+                    progressText.textContent = `Uploading: ${loadedMB}MB / ${totalMB}MB (${percentComplete}%)`;
+                    
+                    if (percentComplete === 100) {
+                        progressText.textContent = 'Processing update...';
+                    }
+                }
+            });
+        } else {
+            // For metadata-only updates
+            progressBar.style.width = '50%';
+            progressBar.textContent = '50%';
+            progressText.textContent = 'Processing update...';
+        }
+        
+        // Handle successful response
+        currentXHR.addEventListener('load', function() {
+            if (currentXHR.status === 200) {
+                try {
+                    const response = JSON.parse(currentXHR.responseText);
+                    
+                    if (response.success) {
+                        handleUpdateSuccess(response);
+                    } else {
+                        handleUpdateError(response.errors || response.msg || 'Update failed');
+                    }
+                } catch (e) {
+                    // Handle non-AJAX responses (regular form submission success)
+                    if (currentXHR.responseText.includes('<!DOCTYPE html>')) {
+                        // Redirect happened, reload the page
+                        window.location.href = '{% url "video:view" video.id %}';
+                        return;
+                    }
+                    console.error('Error parsing response:', e);
+                    handleUpdateError('Invalid server response');
+                }
+            } else {
+                handleUpdateError('Server error: ' + currentXHR.status);
+            }
+        });
+        
+        // Handle update errors
+        currentXHR.addEventListener('error', function() {
+            handleUpdateError('Network error occurred during update');
+        });
+        
+        // Start update
+        currentXHR.open('POST', form.action || window.location.pathname);
+        currentXHR.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        currentXHR.send(formData);
+    }
+    
+    function handleUpdateSuccess(response) {
+        progressBar.classList.remove('progress-bar-animated');
+        progressBar.classList.add('bg-success');
+        progressBar.style.width = '100%';
+        progressBar.textContent = '100%';
+        progressText.textContent = 'Video updated successfully!';
+        
+        showAlert('Video updated successfully!', 'success');
+        
+        // Redirect after a short delay
+        setTimeout(() => {
+            if (response.redirect_url) {
+                window.location.href = response.redirect_url;
+            } else {
+                window.location.href = '{% url "video:view" video.id %}';
+            }
+        }, 1500);
+    }
+    
+    function handleUpdateError(errors) {
+        resetUpdateState();
+        
+        let errorMessage = 'Update failed. ';
+        if (typeof errors === 'object') {
+            // Handle field-specific errors
+            for (const [field, errorList] of Object.entries(errors)) {
+                if (field !== 'general') {
+                    const fieldElement = form.querySelector(`[name="${field}"]`);
+                    if (fieldElement) {
+                        fieldElement.classList.add('is-invalid');
+                    }
+                }
+                errorMessage += errorList.join(' ');
+            }
+        } else {
+            errorMessage += errors;
+        }
+        
+        showAlert(errorMessage, 'danger');
+    }
+    
+    function resetUpdateState() {
+        progressDiv.classList.add('d-none');
+        updateBtn.disabled = false;
+        updateBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Update Video';
+        progressBar.style.width = '0%';
+        progressBar.textContent = '0%';
+        progressBar.classList.add('progress-bar-animated');
+        progressBar.classList.remove('bg-success');
+        progressText.textContent = 'Processing update...';
+        currentXHR = null;
+        
+        // Clear form validation states
+        form.querySelectorAll('.is-invalid').forEach(element => {
+            element.classList.remove('is-invalid');
+        });
+    }
+    
+    function showAlert(message, type) {
+        // Remove any existing alerts
+        const existingAlerts = document.querySelectorAll('.update-alert');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        // Create new alert
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible update-alert`;
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        `;
+        
+        // Insert alert at the top of the form
+        const cardBody = form.querySelector('.card-body');
+        cardBody.insertBefore(alert, cardBody.firstChild);
+        
+        // Auto-dismiss after 5 seconds for success messages
+        if (type === 'success') {
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+    }
+    
+    // Initialize tooltips if available
+    if (typeof $().tooltip === 'function') {
+        $('[data-toggle="tooltip"]').tooltip();
+    }
+});
+</script>
+
 {% endblock main_content %}
