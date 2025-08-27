@@ -79,7 +79,7 @@ def dashboard(request):
     var_da_assessments = DevelopmentalAssessment.objects.all()
     var_cdic_records = CDICRecord.objects.all()
 
-    var_new_Patients = var_patients.filter(video_files__isnull=True).distinct()
+    var_new_Patients = var_patients.filter(videos__isnull=True).distinct()
     Patients_new_list_10 = var_new_Patients[:5]
     patients_new_count = getCountZeroIfNone(var_new_Patients)
     patients_total_count = getCountZeroIfNone(var_patients)
@@ -260,7 +260,7 @@ def patient_manager_discharged_only(request):
 
 @login_required(login_url="user-login")
 def patient_manager_new_only(request):
-    patients_list = Patient.objects.filter(video_files__isnull=True).order_by("-id")
+    patients_list = Patient.objects.filter(videos__isnull=True).order_by("-id")
     paginator = Paginator(patients_list, 10)
     page_number = request.GET.get("page")
     paginated_pt_list = paginator.get_page(page_number)
@@ -859,7 +859,7 @@ def assessment_add(request, ptid, fid):
                 messages.success(request, "New assessment added succusfully")
                 return redirect("assessment-view", pk=prep_assessment.id)
             else:
-                previous_assmnt = GMAssessment.objects.get(files=file)
+                previous_assmnt = GMAssessment.objects.get(video_file=file)
                 messages.warning(
                     request, "One assessment already there for this file..."
                 )
@@ -923,7 +923,7 @@ def assessment_edit(request, pk):
 
 @login_required(login_url="user-login")
 def assessment_edit_by_fileid(request, pk):
-    assmnt = GMAssessment.objects.get(files=pk)
+    assmnt = GMAssessment.objects.get(video_file=pk)
     assessment_form = GMAssessmentForm(instance=assmnt)
     if request.method == "POST":
         assessment_form_data = GMAssessmentForm(request.POST, instance=assmnt)

@@ -218,9 +218,6 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 # Video Upload and Processing Settings
 VIDEO_MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024  # 2GB
 VIDEO_ALLOWED_FORMATS = ['mp4', 'mov', 'avi', 'mkv', 'webm']
-VIDEO_COMPRESSION_ENABLED = True
-VIDEO_THUMBNAIL_GENERATION = True
-VIDEO_DEFAULT_QUALITY = 'medium'
 
 # File Upload Security
 DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100MB
@@ -230,148 +227,23 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000
 # Media file organization
 MEDIA_SUBDIRECTORIES = {
     'videos': 'videos/',
-    'video_thumbnails': 'videos/thumbnails/',
-    'video_compressed': 'videos/compressed/',
     'attachments': 'attachments/',
     'profile_pictures': 'profile_pictures/',
 }
 
-# Redis Configuration
-REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
-REDIS_PORT = int(os.environ.get('REDIS_PORT', '6379'))
-REDIS_DB = int(os.environ.get('REDIS_DB', '0'))
-
 # Cache Configuration
-# Use local memory cache for development when Redis is not available
-try:
-    import redis
-    redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
-    redis_client.ping()
-    # Redis is available, use it
-    CACHES = {
-        'default': {
-            'BACKEND': 'django_redis.cache.RedisCache',
-            'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}',
-            'OPTIONS': {
-                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            },
-            'KEY_PREFIX': 'ndas',
-            'TIMEOUT': 300,  # 5 minutes default timeout
+# Use local memory cache for development
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 300,
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
         }
     }
-except (redis.ConnectionError, redis.RedisError, ImportError):
-    # Fallback to local memory cache for development
-    CACHES = {
-        'default': {
-            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-            'LOCATION': 'unique-snowflake',
-            'TIMEOUT': 300,
-            'OPTIONS': {
-                'MAX_ENTRIES': 1000,
-            }
-        }
-    }
+}
 
 # Session Configuration
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
-
-# Celery Configuration
-CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
-CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = TIME_ZONE
-CELERY_ENABLE_UTC = True
-
-# Celery Task Configuration
-# Temporarily enable synchronous processing when Redis is not available
-CELERY_TASK_ALWAYS_EAGER = os.environ.get('CELERY_TASK_ALWAYS_EAGER', 'True').lower() == 'true'  # For testing without Redis
-CELERY_TASK_EAGER_PROPAGATES = True
-CELERY_TASK_ROUTES = {
-    'video.tasks.process_video_task': {'queue': 'video_processing'},
-    'video.tasks.extract_video_metadata_task': {'queue': 'video_processing'},
-    'video.tasks.generate_thumbnail_task': {'queue': 'video_processing'},
-    'video.tasks.compress_video_task': {'queue': 'video_processing'},
-    'video.tasks.batch_process_videos': {'queue': 'video_processing'},
-}
-
-# Celery Worker Configuration
-CELERY_WORKER_CONCURRENCY = int(os.environ.get('CELERY_WORKER_CONCURRENCY', '2'))
-CELERY_WORKER_MAX_MEMORY_PER_CHILD = 512000  # 512MB
-CELERY_TASK_SOFT_TIME_LIMIT = 1800  # 30 minutes
-CELERY_TASK_TIME_LIMIT = 3600  # 1 hour
-CELERY_TASK_DEFAULT_RETRY_DELAY = 60
-CELERY_TASK_MAX_RETRIES = 3
-
-# Video Processing Configuration
-FFMPEG_BINARY = os.environ.get('FFMPEG_BINARY', 'ffmpeg')
-FFPROBE_BINARY = os.environ.get('FFPROBE_BINARY', 'ffprobe')
-
-# Video processing limits
-MAX_VIDEO_SIZE = 2 * 1024 * 1024 * 1024  # 2GB
-MAX_VIDEO_DURATION = 3600  # 1 hour in seconds
-MAX_CONCURRENT_PROCESSING = 3
-
-# Supported video formats for processing
-SUPPORTED_VIDEO_INPUTS = ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.flv', '.wmv', '.m4v']
-VIDEO_OUTPUT_FORMAT = 'mp4'
-VIDEO_OUTPUT_CODEC = 'libx264'
-AUDIO_OUTPUT_CODEC = 'aac'
-
-# Quality presets for video compression
-VIDEO_QUALITY_PRESETS = {
-    'original': {
-        'description': 'Original Quality (no compression)',
-        'width': None,
-        'height': None,
-        'video_bitrate': None,
-        'audio_bitrate': '128k',
-        'crf': None,
-    },
-    'high': {
-        'description': 'High Quality (1080p)',
-        'width': 1920,
-        'height': 1080,
-        'video_bitrate': '4000k',
-        'audio_bitrate': '128k',
-        'crf': 20,
-    },
-    'medium': {
-        'description': 'Medium Quality (720p)',
-        'width': 1280,
-        'height': 720,
-        'video_bitrate': '2500k',
-        'audio_bitrate': '128k',
-        'crf': 23,
-    },
-    'low': {
-        'description': 'Low Quality (480p)',
-        'width': 854,
-        'height': 480,
-        'video_bitrate': '1000k',
-        'audio_bitrate': '96k',
-        'crf': 26,
-    },
-    'mobile': {
-        'description': 'Mobile Quality (360p)',
-        'width': 640,
-        'height': 360,
-        'video_bitrate': '500k',
-        'audio_bitrate': '64k',
-        'crf': 28,
-    },
-}
-
-# Monitoring and Logging
-CELERY_SEND_TASK_EVENTS = True
-CELERY_TASK_SEND_SENT_EVENT = True
-
-# Periodic tasks (requires django-celery-beat)
-# CELERY_BEAT_SCHEDULE = {
-#     'cleanup-temp-files': {
-#         'task': 'video.tasks.cleanup_temp_files',
-#         'schedule': 3600.0,  # Every hour
-#     },
-# }

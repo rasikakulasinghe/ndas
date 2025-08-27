@@ -15,7 +15,7 @@
   <div class="col-md">
     <div class="card card-body">
 
-      <form action="{% url 'video:edit' file.id %}" method="POST" enctype="multipart/form-data">
+      <form action="{% url 'file-edit' file.id %}" method="POST" enctype="multipart/form-data">
         {% csrf_token %}
   
           <div class="form-group row align-items-center">
@@ -55,8 +55,8 @@
           </br>
           
           <div class="row justify-content-end">
-            <div class="col-auto"><button type="button" class="btn btn-primary" onclick="location.href='{% url 'video:delete-confirm' file.id %}'">Delete</button></div>
-            <div class="col-auto"><button type="button" class="btn btn-primary" onclick="location.href='{% url 'video:view' file.id %}'">View</button></div>
+            <div class="col-auto"><button type="button" class="btn btn-primary" onclick="location.href='{% url 'file-delete_start' file.id %}'">Delete</button></div>
+            <div class="col-auto"><button type="button" class="btn btn-primary" onclick="location.href='{% url 'file-view' file.id %}'">View</button></div>
             <div class="col-auto"><button type="submit" class="btn btn-primary">Update</button></div>
           </div>
   
