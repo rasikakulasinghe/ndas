@@ -69,18 +69,24 @@
         {% endif %}
         <hr>
 
-        <a href="{% url 'file-edit' file.id %}" class="btn btn-link"><i class="fas fa-pencil-alt"></i>  Update or Delete this file)</a>
+  {% if file.id %}
+    <a href="{% url 'video:edit' file.id %}" class="btn btn-link"><i class="fas fa-pencil-alt"></i>  Update or Delete this file)</a>
+  {% endif %}
         {% if file.isNewFile %}
         <a href="{% url 'assessment-add' file.patient.id file.id %}" class="btn btn-link"><i class="fas fa-circle fa-plus"></i>  Create New Assessment</a>
         {% else %}
-        <a href="{% url 'assessment-view-by-file-id' file.id %}" class="btn btn-link"><i class="fas fa-eye"></i>  View Assessment</a>
-        <a href="{% url 'assessment-edit-by-file-id' file.id %}" class="btn btn-link"><i class="fas fa-pencil-alt"></i>  Edit Assessment</a>
+        {% if file.id %}
+          <a href="{% url 'assessment-view-by-file-id' file.id %}" class="btn btn-link"><i class="fas fa-eye"></i>  View Assessment</a>
+          <a href="{% url 'assessment-edit-by-file-id' file.id %}" class="btn btn-link"><i class="fas fa-pencil-alt"></i>  Edit Assessment</a>
+        {% endif %}
         {% endif %}
 
         {% if bookmark %}
         <a class="btn btn-link" href="{% url 'bookmark-view' bookmark.id %}" type="button"><i class="fas fa-eye"></i> View Bookmark</a>
         {% else %}
-        <a class="btn btn-link" href="{% url 'bookmark-add' file.id 'Video' %}" type="button"><i class="fas fa-circle fa-plus"></i>  Add to Bookmark</a>
+        {% if file.id %}
+          <a class="btn btn-link" href="{% url 'bookmark-add' file.id 'Video' %}" type="button"><i class="fas fa-circle fa-plus"></i>  Add to Bookmark</a>
+        {% endif %}
         {% endif %}
 
       </div>

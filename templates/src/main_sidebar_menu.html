@@ -2,11 +2,11 @@
 
 <!-- Main Sidebar Container -->
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
-  {% comment %} <!-- Brand Logo -->
+  <!-- Brand Logo -->
   <a href="{% url 'home' %}" class="brand-link">
     <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23007bff'%3E%3Cpath d='M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2M21 9V7L15 1H5C3.9 1 3 1.9 3 3V21C3 22.1 3.9 23 5 23H19C20.1 23 21 22.1 21 21V9M19 9H14V4H19V9Z'/%3E%3C/svg%3E" alt="NDAS Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
     <span class="brand-text font-weight-light">NDAS</span>
-  </a> {% endcomment %}
+  </a>
 
   <!-- Sidebar -->
   <div class="sidebar">
@@ -25,7 +25,7 @@
       </div>
     </div>
 
-    {% comment %} <!-- SidebarSearch Form -->
+    <!-- SidebarSearch Form -->
     <div class="form-inline">
       <div class="input-group" data-widget="sidebar-search">
         <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
@@ -35,14 +35,12 @@
           </button>
         </div>
       </div>
-    </div> {% endcomment %}
+    </div>
 
     <!-- Sidebar Menu -->
     <nav class="mt-2">
       <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-        <!-- Add icons to the links using the .nav-icon class
-             with font-awesome or any other icon font library -->
-        
+        <!-- Navigation Menu Items -->
         <!-- Dashboard -->
         <li class="nav-item">
           <a href="{% url 'home' %}" class="nav-link" id="nav-home">
@@ -58,7 +56,7 @@
             <p>Add New Patient</p>
           </a>
         </li>
-
+        
         <li class="nav-item">
           <a href="{% url 'search-start' %}" class="nav-link" id="nav-search">
             <i class="nav-icon fas fa-search"></i>
@@ -75,7 +73,7 @@
             <i class="nav-icon fas fa-folder-open"></i>
             <p>
               Patient Records
-              <i class="right fas fa-angle-left"></i>
+              <i class="fas fa-angle-left right"></i>
             </p>
           </a>
           <ul class="nav nav-treeview">
@@ -106,7 +104,7 @@
             <i class="nav-icon fas fa-clipboard-list"></i>
             <p>
               Assessments
-              <i class="right fas fa-angle-left"></i>
+              <i class="fas fa-angle-left right"></i>
             </p>
           </a>
           <ul class="nav nav-treeview">
@@ -143,14 +141,14 @@
             <i class="nav-icon fas fa-photo-video"></i>
             <p>
               Media & Files
-              <i class="right fas fa-angle-left"></i>
+              <i class="fas fa-angle-left right"></i>
             </p>
           </a>
           <ul class="nav nav-treeview">
             <li class="nav-item">
-              <a href="{% url 'video-manager' %}" class="nav-link" id="nav-video-manager">
+              <a href="{% url 'video:manager' %}" class="nav-link" id="nav-video-manager">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Video Manager afsdfsfsd</p>
+                <p>Video Manager</p>
               </a>
             </li>
             <li class="nav-item">
@@ -172,13 +170,13 @@
         <!-- Separator -->
         <li class="nav-header">ADMINISTRATION</li>
 
-        <!-- Admin User Management Section -->
+        <!-- User Management -->
         <li class="nav-item">
           <a href="#" class="nav-link">
             <i class="nav-icon fas fa-users-cog"></i>
             <p>
               User Management
-              <i class="right fas fa-angle-left"></i>
+              <i class="fas fa-angle-left right"></i>
             </p>
           </a>
           <ul class="nav nav-treeview">
@@ -221,13 +219,13 @@
           </a>
         </li>
 
-        <!-- Settings Section -->
+        <!-- Settings -->
         <li class="nav-item">
           <a href="#" class="nav-link">
             <i class="nav-icon fas fa-cog"></i>
             <p>
               Settings
-              <i class="right fas fa-angle-left"></i>
+              <i class="fas fa-angle-left right"></i>
             </p>
           </a>
           <ul class="nav nav-treeview">
@@ -258,7 +256,7 @@
             <i class="nav-icon fas fa-question-circle"></i>
             <p>
               Support & Help
-              <i class="right fas fa-angle-left"></i>
+              <i class="fas fa-angle-left right"></i>
             </p>
           </a>
           <ul class="nav nav-treeview">

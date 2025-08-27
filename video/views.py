@@ -82,109 +82,6 @@ def video_add(request, patient_id):
 
 
 @login_required(login_url="user-login")
-def video_processing_progress(request, video_id):
-    """Display video processing progress page"""
-    try:
-        video = get_object_or_404(Video, id=video_id)
-
-        # Check basic access permissions
-        if not request.user.is_staff and video.added_by != request.user:
-            messages.error(request, "You don't have permission to access this video.")
-            return redirect("manage-patients")
-
-        context = {
-            "video": video,
-            "patient": video.patient,
-            "processing_status": video.processing_status,
-            "task_id": getattr(video, "task_id", None),
-        }
-
-        return render(request, "video/processing_progress.html", context)
-
-    except Video.DoesNotExist:
-        messages.error(request, "Video not found.")
-        return redirect("manage-patients")
-    except Exception as e:
-        logger.error(f"Error in video_processing_progress: {str(e)}")
-        messages.error(
-            request, "An error occurred while loading the processing status."
-        )
-        return redirect("manage-patients")
-
-
-@login_required(login_url="user-login")
-@csrf_exempt
-@require_http_methods(["GET"])
-def video_processing_status_api(request, video_id):
-    """API endpoint to check video processing status"""
-    try:
-        video = get_object_or_404(Video, id=video_id)
-
-        # Get task status if task_id exists
-        task_status = None
-        task_result = None
-
-        if hasattr(video, "task_id") and video.task_id:
-            try:
-                from celery.result import AsyncResult
-
-                task = AsyncResult(video.task_id)
-                task_status = task.status
-                task_result = task.result if task.ready() else None
-            except Exception as e:
-                logger.error(f"Error getting task status: {e}")
-
-        # Calculate progress based on processing status
-        progress_mapping = {
-            "pending": 0,
-            "processing": 30,
-            "extracting_metadata": 20,
-            "generating_thumbnails": 40,
-            "compressing": 60,
-            "finalizing": 90,
-            "completed": 100,
-            "failed": 0,
-        }
-
-        progress = progress_mapping.get(video.processing_status, 0)
-
-        # If task is running and has progress info
-        if task_result and isinstance(task_result, dict):
-            if "current" in task_result:
-                progress = task_result["current"]
-
-        response_data = {
-            "video_id": video.id,
-            "status": video.processing_status,
-            "progress": progress,
-            "task_id": getattr(video, "task_id", None),
-            "task_status": task_status,
-            "error_message": getattr(video, "processing_error", None),
-            "is_complete": video.processing_status == "completed",
-            "is_failed": video.processing_status == "failed",
-            "metadata": {
-                "duration": getattr(video, "duration_seconds", None),
-                "resolution": getattr(video, "original_resolution", None),
-                "codec": getattr(video, "original_codec", None),
-                "file_size": getattr(video, "file_size_bytes", None),
-            },
-        }
-
-        # If processing is complete, add completion details
-        if video.processing_status == "completed":
-            response_data["redirect_url"] = f"/video/view/{video.id}/"
-            response_data["processing_complete"] = True
-
-        return JsonResponse(response_data)
-
-    except Video.DoesNotExist:
-        return JsonResponse({"error": "Video not found"}, status=404)
-    except Exception as e:
-        logger.error(f"Error in video_processing_status_api: {str(e)}")
-        return JsonResponse({"error": "Server error"}, status=500)
-
-
-@login_required(login_url="user-login")
 def video_view(request, video_id):
     """View video details and player"""
     video = get_object_or_404(Video, id=video_id)
@@ -249,139 +146,209 @@ def video_edit(request, video_id):
 
 
 @login_required(login_url="user-login")
-@csrf_exempt
-@require_http_methods(["POST"])
-def trigger_video_processing(request, video_id):
-    """Manually trigger video processing"""
-    try:
-        video = get_object_or_404(Video, id=video_id)
-
-        # Check permissions
-        if not request.user.is_staff and video.added_by != request.user:
-            return JsonResponse({"error": "Permission denied"}, status=403)
-
-        # Check if already processing
-        if video.processing_status == "processing":
-            return JsonResponse(
-                {"error": "Video is already being processed"}, status=400
-            )
-
-        # Start processing
-        try:
-            video.processing_status = "pending"
-            video.save(update_fields=["processing_status"])
-
-            return JsonResponse(
-                {"success": True, "message": "Video processing started successfully"}
-            )
-        except Exception as e:
-            logger.error(f"Failed to start video processing: {e}")
-            return JsonResponse({"error": "Failed to start processing"}, status=500)
-
-    except Video.DoesNotExist:
-        return JsonResponse({"error": "Video not found"}, status=404)
-
-
-@login_required(login_url="user-login")
 def video_manager(request):
-    """Enhanced video manager with filtering, search, and pagination"""
-    try:
-        # Get search and filter parameters
-        search_query = request.GET.get("search", "").strip()
-        status_filter = request.GET.get("status", "")
-        patient_filter = request.GET.get("patient", "")
-        date_from = request.GET.get("date_from", "")
-        date_to = request.GET.get("date_to", "")
+    """Enhanced video manager with filtering, search, and pagination following Django best practices"""
+    # Get search and filter parameters with proper defaults
+    search_query = request.GET.get("search", "").strip()
+    status_filter = request.GET.get("status", "")
+    patient_filter = request.GET.get("patient", "")
+    date_from = request.GET.get("date_from", "")
+    date_to = request.GET.get("date_to", "")
+    page_number = request.GET.get("page", 1)
 
-        # Base queryset with related data
-        videos = Video.objects.select_related(
-            "patient", "added_by", "updated_by"
-        ).order_by("-recorded_on", "-created_at")
+    # Base queryset with optimized related data loading
+    queryset = (
+        Video.objects.select_related("patient", "added_by", "last_edit_by")
+        .order_by("-recorded_on", "-created_at")
+    )
 
-        # Apply search filter
-        if search_query:
-            videos = videos.filter(
-                Q(title__icontains=search_query)
-                | Q(patient__baby_name__icontains=search_query)
-                | Q(patient__file_no__icontains=search_query)
-                | Q(description__icontains=search_query)
-            )
-
-        # Apply status filter
-        if status_filter:
-            videos = videos.filter(processing_status=status_filter)
-
-        # Apply patient filter
-        if patient_filter:
-            try:
-                patient_id = int(patient_filter)
-                videos = videos.filter(patient_id=patient_id)
-            except (ValueError, TypeError):
-                pass
-
-        # Apply date range filter
-        if date_from:
-            try:
-                from datetime import datetime
-
-                date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d").date()
-                videos = videos.filter(recorded_on__date__gte=date_from_parsed)
-            except ValueError:
-                pass
-
-        if date_to:
-            try:
-                from datetime import datetime
-
-                date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d").date()
-                videos = videos.filter(recorded_on__date__lte=date_to_parsed)
-            except ValueError:
-                pass
-
-        # Pagination
-        paginator = Paginator(videos, 25)  # Show 25 videos per page
-        page_number = request.GET.get("page")
-        page_obj = paginator.get_page(page_number)
-
-        # Get unique patients for filter dropdown
-        patients = (
-            Patient.objects.filter(videos__isnull=False)
-            .distinct()
-            .order_by("baby_name")
+    # Apply search filter using Q objects for complex queries
+    if search_query:
+        queryset = queryset.filter(
+            Q(title__icontains=search_query)
+            | Q(patient__baby_name__icontains=search_query)
+                | Q(patient__disk_no__icontains=search_query)
+            | Q(description__icontains=search_query)
         )
 
-        # Get processing status choices for filter dropdown
-        status_choices = PROCESSING_STATUS
+    # Apply status filter
+    if status_filter:
+        queryset = queryset.filter(processing_status=status_filter)
 
-        context = {
-            "file_list": page_obj,  # Keep the same variable name as template expects
-            "videos": page_obj,
-            "search_query": search_query,
-            "status_filter": status_filter,
-            "patient_filter": patient_filter,
-            "date_from": date_from,
-            "date_to": date_to,
-            "patients": patients,
-            "status_choices": status_choices,
-            "total_count": videos.count(),
-        }
+    # Apply patient filter with proper error handling
+    if patient_filter:
+        try:
+            patient_id = int(patient_filter)
+            queryset = queryset.filter(patient_id=patient_id)
+        except (ValueError, TypeError) as e:
+            logger.warning(f"Invalid patient filter value: {patient_filter}")
+            messages.warning(request, "Invalid patient filter. Showing all patients.")
 
-        return render(request, "video/manager.html", context)
+    # Apply date range filters with proper error handling
+    if date_from:
+        try:
+            from datetime import datetime
 
+            date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d").date()
+            queryset = queryset.filter(recorded_on__date__gte=date_from_parsed)
+        except ValueError as e:
+            logger.warning(f"Invalid date_from format: {date_from}")
+            messages.warning(
+                request, "Invalid 'from' date format. Please use YYYY-MM-DD format."
+            )
+
+    if date_to:
+        try:
+            from datetime import datetime
+
+            date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d").date()
+            queryset = queryset.filter(recorded_on__date__lte=date_to_parsed)
+        except ValueError as e:
+            logger.warning(f"Invalid date_to format: {date_to}")
+            messages.warning(
+                request, "Invalid 'to' date format. Please use YYYY-MM-DD format."
+            )
+
+    # Get total count before pagination
+    total_count = queryset.count()
+
+    # Pagination with proper error handling
+    paginator = Paginator(queryset, 25)  # Show 25 videos per page
+    try:
+        page_obj = paginator.get_page(page_number)
     except Exception as e:
-        logger.error(f"Error in video_manager: {str(e)}")
-        messages.error(request, "An error occurred while loading the video manager.")
-        return render(request, "video/manager.html", {"file_list": []})
+        logger.error(f"Pagination error: {str(e)}")
+        page_obj = paginator.get_page(1)
+
+    # Get unique patients for filter dropdown (optimized query)
+    patients = (
+        Patient.objects.filter(videos__isnull=False)
+        .distinct()
+        .only("id", "baby_name")
+        .order_by("baby_name")
+    )
+
+    # Get processing status choices for filter dropdown
+    status_choices = PROCESSING_STATUS
+
+    # Build context dictionary
+    context = {
+        "file_list": page_obj,  # Keep for template compatibility
+        "videos": page_obj,
+        "search_query": search_query,
+        "status_filter": status_filter,
+        "patient_filter": patient_filter,
+        "date_from": date_from,
+        "date_to": date_to,
+        "patients": patients,
+        "status_choices": status_choices,
+        "total_count": total_count,
+        "page_title": "Video Manager",
+        "breadcrumbs": [
+            {"name": "Dashboard", "url": reverse("home")},
+            {"name": "Video Manager", "url": None},
+        ],
+    }
+
+    return render(request, "video/manager.html", context)
 
 
 @login_required(login_url="user-login")
 def video_manager_new_only(request):
-    pass
+    """Video manager showing only new videos (not used in assessments)"""
+    # Base queryset for new videos only
+    queryset = (
+        Video.objects.select_related("patient", "added_by", "last_edit_by")
+        .filter(is_new_file=True)
+        .order_by("-recorded_on", "-created_at")
+    )
+
+    # Get total count
+    total_count = queryset.count()
+
+    # Pagination
+    paginator = Paginator(queryset, 25)
+    page_number = request.GET.get("page", 1)
+    page_obj = paginator.get_page(page_number)
+
+    # Get processing status choices for filter dropdown
+    status_choices = PROCESSING_STATUS
+
+    context = {
+        "file_list": page_obj,
+        "videos": page_obj,
+        "status_choices": status_choices,
+        "total_count": total_count,
+        "page_title": "New Videos Manager",
+        "subtitle": "Videos not yet used in assessments",
+        "breadcrumbs": [
+            {"name": "Dashboard", "url": reverse("home")},
+            {"name": "Video Manager", "url": reverse("video:manager")},
+            {"name": "New Videos", "url": None},
+        ],
+    }
+
+    return render(request, "video/manager.html", context)
 
 
 @login_required(login_url="user-login")
 def video_manager_by_patient(request, patient_id):
-    pass
+    """Video manager filtered by specific patient"""
+    # Get patient object or 404
+    patient = get_object_or_404(Patient, id=patient_id)
+
+    # Base queryset for specific patient
+    queryset = (
+        Video.objects.select_related("patient", "added_by", "last_edit_by")
+        .filter(patient_id=patient_id)
+        .order_by("-recorded_on", "-created_at")
+    )
+
+    # Get search parameter
+    search_query = request.GET.get("search", "").strip()
+    if search_query:
+        queryset = queryset.filter(
+            Q(title__icontains=search_query) | Q(description__icontains=search_query)
+        )
+
+    # Get status filter
+    status_filter = request.GET.get("status", "")
+    if status_filter:
+        queryset = queryset.filter(processing_status=status_filter)
+
+    # Get total count
+    total_count = queryset.count()
+
+    # Pagination
+    paginator = Paginator(queryset, 25)
+    page_number = request.GET.get("page", 1)
+    page_obj = paginator.get_page(page_number)
+
+    # Get processing status choices for filter dropdown
+    status_choices = PROCESSING_STATUS
+
+    context = {
+        "file_list": page_obj,
+        "videos": page_obj,
+        "patient": patient,
+        "search_query": search_query,
+        "status_filter": status_filter,
+        "status_choices": status_choices,
+        "total_count": total_count,
+        "page_title": f"Videos for {patient.baby_name}",
+        "subtitle": f"File No: {patient.file_no or 'N/A'}",
+        "breadcrumbs": [
+            {"name": "Dashboard", "url": reverse("home")},
+            {"name": "Patient Manager", "url": reverse("manage-patients")},
+            {
+                "name": patient.baby_name,
+                "url": reverse("view-patient", args=[patient.id]),
+            },
+            {"name": "Videos", "url": None},
+        ],
+    }
+
+    return render(request, "video/manager.html", context)
 
 
 @login_required(login_url="user-login")

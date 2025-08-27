@@ -1,20 +1,44 @@
 {% extends 'src/base.html' %}
 {% load static %}
-{% block title %}Video - Manager{% endblock %}
+{% block title %}{{ page_title|default:"Video Manager" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/manager.css' %}">
+{% endblock extra_css %}
+
 {% block main_content %}
-
-<br>
-
-<div class="container">
+<!-- Main content wrapper -->
+<div class="container-fluid">
   
   <!-- Search and Filter Section -->
   <div class="card mb-4">
-    <div class="card-header bg-primary text-white">
-      <h4 class="card-title mb-0">
-        <i class="fas fa-video"></i> Video Manager 
-        {% if patient %} :: {{patient.baby_name}}{% endif %}
-        {% if total_count %}<span class="badge badge-light ml-2">{{total_count}} videos</span>{% endif %}
-      </h4>
+    <div class="card-header bg-info">
+      <div class="d-flex justify-content-between align-items-center">
+        <h3 class="card-title mb-0">
+          <i class="fas fa-video"></i> 
+          {% if patient %}
+            Videos for {{ patient.baby_name }}
+          {% else %}
+            Video Manager
+          {% endif %}
+          {% if total_count %}
+            <span class="badge badge-light ml-2">{{ total_count }} video{{ total_count|pluralize }}</span>
+          {% endif %}
+        </h3>
+        <!-- Quick Actions Dropdown -->
+        <div class="btn-group" role="group">
+          <i style="cursor: pointer;" class="fas fa-cog dropdown-toggle" id="btnGroupDrop1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></i>
+          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
+            <a class="dropdown-item" href="{% url 'video:manager' %}"><i class="fas fa-video"></i> All Videos</a>
+            <a class="dropdown-item" href="{% url 'video:manager-new-only' %}"><i class="fas fa-plus-circle"></i> New Videos Only</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="{% url 'add-patient' %}"><i class="fas fa-user-plus"></i> Add New Patient</a>
+            {% if patient %}
+              <a class="dropdown-item" href="{% url 'video:add' patient.id %}"><i class="fas fa-upload"></i> Upload Video</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
     </div>
     <div class="card-body">
       <form method="get" class="row">
@@ -54,20 +78,27 @@
 
   {% if file_list %}
 
-  <!-- Identification Details -->
+  <!-- Patient Identification Details (if viewing patient-specific videos) -->
   {% if patient %}{% include 'patients/partials/patient_identification_details.html' %}{% endif %}
 
+  <!-- Video List Card -->
   <div class="card">
-    <div class="card-header bg-info">
-      <h5 class="card-title mb-0">
-        <i class="fas fa-list"></i> Video List
-        <small class="text-muted">(Page {{file_list.number}} of {{file_list.paginator.num_pages}})</small>
-      </h5>
+    <div class="card-header bg-secondary">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">
+          <i class="fas fa-list"></i> Video List
+        </h5>
+        <small class="text-muted">
+          Page {{ file_list.number }} of {{ file_list.paginator.num_pages }}
+          ({{ file_list.start_index }} - {{ file_list.end_index }} of {{ total_count }})
+        </small>
+      </div>
     </div>
 
-<div class="table-responsive">
-<table class="table table-hover table-striped">
-  <thead class="thead-dark">
+    <!-- Responsive Table Wrapper -->
+    <div class="table-responsive">
+      <table class="table table-hover text-nowrap">
+        <thead class="thead-dark">
     <tr>
       <th scope="col" style="width: 5%">ID</th>
       <th scope="col" style="width: 10%">Status</th>
@@ -209,16 +240,15 @@
       </td>
     </tr>
     {% endfor %}
-  </tbody>
-</table>
-</div>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-</div>
-
-      <!-- Pagination -->
-      {% if file_list.paginator.num_pages > 1 %}
-      <nav aria-label="Video pagination" class="mt-4">
-        <ul class="pagination justify-content-center">
+  <!-- Pagination Section -->
+  {% if file_list.paginator.num_pages > 1 %}
+  <nav aria-label="Video pagination" class="mt-4">
+    <ul class="pagination justify-content-center">
           {% if file_list.has_previous %}
             <li class="page-item">
               <a class="page-link" href="?page=1{% if search_query %}&search={{search_query}}{% endif %}{% if status_filter %}&status={{status_filter}}{% endif %}{% if patient_filter %}&patient={{patient_filter}}{% endif %}{% if date_from %}&date_from={{date_from}}{% endif %}{% if date_to %}&date_to={{date_to}}{% endif %}">&laquo; First</a>
@@ -256,20 +286,67 @@
               <span class="page-link">Last &raquo;</span>
             </li>
           {% endif %}
-        </ul>
-      </nav>
-      {% endif %}
-
-{% else %}
-<div class="alert alert-info text-center" role="alert">
-  <i class="fas fa-info-circle"></i> No videos found
-  {% if search_query or status_filter or patient_filter or date_from or date_to %}
-    matching your search criteria. <a href="{% url 'video:manager' %}" class="alert-link">Clear filters</a>
+    </ul>
+  </nav>
   {% endif %}
+
+  {% else %}
+  <!-- No Videos Found -->
+  <div class="card">
+    <div class="card-body text-center py-5">
+      <div class="alert alert-info" role="alert">
+        <i class="fas fa-info-circle fa-2x mb-3"></i>
+        <h5>No videos found</h5>
+        <p class="mb-0">
+          {% if search_query or status_filter or patient_filter or date_from or date_to %}
+            No videos match your search criteria.
+            <br>
+            <a href="{% if patient %}{% url 'video:manager-by-patient' patient.id %}{% else %}{% url 'video:manager' %}{% endif %}" class="btn btn-outline-info btn-sm mt-2">
+              <i class="fas fa-times"></i> Clear filters
+            </a>
+          {% else %}
+            {% if patient %}
+              This patient has no videos yet.
+              <br>
+              <a href="{% url 'video:add' patient.id %}" class="btn btn-primary btn-sm mt-2">
+                <i class="fas fa-upload"></i> Upload First Video
+              </a>
+            {% else %}
+              No videos have been uploaded to the system yet.
+              <br>
+              <a href="{% url 'add-patient' %}" class="btn btn-primary btn-sm mt-2">
+                <i class="fas fa-user-plus"></i> Add Patient & Upload Video
+              </a>
+            {% endif %}
+          {% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
 </div>
 
-{% endif %}
+{% block extra_js %}
+<script src="{% static 'js/manager.js' %}"></script>
+<script>
+// Initialize tooltips
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip();
+});
 
-</div>
+// Auto-submit search form on Enter key
+$('form input[name="search"]').on('keypress', function(e) {
+  if (e.which === 13) {
+    $(this).closest('form').submit();
+  }
+});
+
+// Auto-submit form when filters change
+$('form select').on('change', function() {
+  $(this).closest('form').submit();
+});
+</script>
+{% endblock extra_js %}
 
 {% endblock main_content %}
