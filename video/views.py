@@ -418,7 +418,7 @@ def video_manager_by_patient(request, patient_id):
         "status_choices": status_choices,
         "total_count": total_count,
         "page_title": f"Videos for {patient.baby_name}",
-        "subtitle": f"File No: {patient.file_no or 'N/A'}",
+        "subtitle": f"Disk No: {patient.disk_no or 'N/A'}",
         "breadcrumbs": [
             {"name": "Dashboard", "url": reverse("home")},
             {"name": "Patient Manager", "url": reverse("manage-patients")},

@@ -7,202 +7,460 @@
 {% endblock extra_css %}
 
 {% block main_content %}
-
-{% comment %} <div class="container"> {% endcomment %}
-{% comment %} <div class="container-fluid"> {% endcomment %}
-
-  <div class="card">
-    <div class="card-header bg-info">
-    <div class="d-flex justify-content-between align-items-center">
-    <h3 class="card-title align-self-center">Patients Manager
-      {% if type == 'DX_NORMAL' %}
-      -::- Diagnosis Normal
-      {% elif type == 'DIAGNOSED' %}
-      :: Diagnosed by any assessment
-      {% elif type == 'DX_GMA_NORMAL' %}
-      :: Normal GMA
-      {% elif type == 'DX_GMA_ABNORMAL' %}
-      :: Abnormal GMA
-      {% elif type == 'DISCHARGED' %}
-      :: Discharged
-      {% elif type == 'NEW' %}
-      :: New
-      {% elif type == 'DX_DA_NORMAL' %}
-      :: Developmental assessment normal
-      {% elif type == 'DX_DA_ABNORMAL' %}
-      :: Developmental assessment abnormal
-      {% elif type == 'DX_HINE' %}
-      :: Diagnosed by HINE
-      {% endif %}
-    </h3>
-    
-    <div>
-      <div class=" btn-group" role="group">
-        <i style="cursor: pointer;" class="fas fa-cog" class="link" id="btnGroupDrop1" class="dropdown-toggle dropdown-menu-right" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></i>
-        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
-            <a class="dropdown-item" href="{% url 'manage-patients' %}">All</a>
-            <a class="dropdown-item" href="{% url 'manage-patients-new' %}">New</a>
-            <a class="dropdown-item" href="{% url 'manage-patients-diagnosis-normal' %}">Normal</a>
-            <a class="dropdown-item" href="{% url 'manage-patients-diagnosed-any' %}">Diagnosed</a>
-            <a class="dropdown-item" href="{% url 'manage-patients-diagnosed-gma-normal' %}">Normal GMA</a>
-            <a class="dropdown-item" href="{% url 'manage-patients-diagnosed-gma-abnormal' %}">Abnormal GMA</a>
-            <a class="dropdown-item" href="{% url 'manage-patients-diagnosed-da-abnormal' %}">Developmentally Abnormal</a>
-            <a class="dropdown-item" href="{% url 'manage-patients-diagnosed-da-normal' %}">Developmentally Normal</a>
-            <a class="dropdown-item" href="{% url 'manage-patients-diagnosed-hine' %}">Diagnosed by HINE</a>
-            <a class="dropdown-item" href="{% url 'manage-patients-discharged' %}">Discharged</a>
+<!-- Content Header -->
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">Patients Manager
+          {% if type == 'DX_NORMAL' %}
+            <small class="text-muted">- Normal Diagnosis</small>
+          {% elif type == 'DIAGNOSED' %}
+            <small class="text-muted">- Diagnosed Patients</small>
+          {% elif type == 'DX_GMA_NORMAL' %}
+            <small class="text-muted">- Normal GMA</small>
+          {% elif type == 'DX_GMA_ABNORMAL' %}
+            <small class="text-muted">- Abnormal GMA</small>
+          {% elif type == 'DISCHARGED' %}
+            <small class="text-muted">- Discharged</small>
+          {% elif type == 'NEW' %}
+            <small class="text-muted">- New Patients</small>
+          {% elif type == 'DX_DA_NORMAL' %}
+            <small class="text-muted">- Normal DA</small>
+          {% elif type == 'DX_DA_ABNORMAL' %}
+            <small class="text-muted">- Abnormal DA</small>
+          {% elif type == 'DX_HINE' %}
+            <small class="text-muted">- HINE Diagnosed</small>
+          {% endif %}
+        </h1>
+      </div>
+      <div class="col-sm-6">
+        <div class="dropdown float-sm-right">
+          <button class="btn btn-info dropdown-toggle" type="button" id="filterDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="fas fa-filter mr-1"></i> Filter Patients
+          </button>
+          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="filterDropdown">
+            <h6 class="dropdown-header">Filter Options</h6>
+            <a class="dropdown-item{% if not type %} active{% endif %}" href="{% url 'manage-patients' %}">
+              <i class="fas fa-users mr-2"></i>All Patients
+            </a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item{% if type == 'NEW' %} active{% endif %}" href="{% url 'manage-patients-new' %}">
+              <i class="fas fa-user-plus mr-2"></i>New Patients
+            </a>
+            <a class="dropdown-item{% if type == 'DIAGNOSED' %} active{% endif %}" href="{% url 'manage-patients-diagnosed-any' %}">
+              <i class="fas fa-user-check mr-2"></i>Diagnosed
+            </a>
+            <div class="dropdown-divider"></div>
+            <h6 class="dropdown-header">By Assessment Type</h6>
+            <a class="dropdown-item{% if type == 'DX_NORMAL' %} active{% endif %}" href="{% url 'manage-patients-diagnosis-normal' %}">
+              <i class="fas fa-circle text-success mr-2"></i>Normal
+            </a>
+            <a class="dropdown-item{% if type == 'DX_GMA_NORMAL' %} active{% endif %}" href="{% url 'manage-patients-diagnosed-gma-normal' %}">
+              <i class="fas fa-circle text-success mr-2"></i>GMA Normal
+            </a>
+            <a class="dropdown-item{% if type == 'DX_GMA_ABNORMAL' %} active{% endif %}" href="{% url 'manage-patients-diagnosed-gma-abnormal' %}">
+              <i class="fas fa-circle text-warning mr-2"></i>GMA Abnormal
+            </a>
+            <a class="dropdown-item{% if type == 'DX_DA_NORMAL' %} active{% endif %}" href="{% url 'manage-patients-diagnosed-da-normal' %}">
+              <i class="fas fa-circle text-success mr-2"></i>DA Normal
+            </a>
+            <a class="dropdown-item{% if type == 'DX_DA_ABNORMAL' %} active{% endif %}" href="{% url 'manage-patients-diagnosed-da-abnormal' %}">
+              <i class="fas fa-circle text-warning mr-2"></i>DA Abnormal
+            </a>
+            <a class="dropdown-item{% if type == 'DX_HINE' %} active{% endif %}" href="{% url 'manage-patients-diagnosed-hine' %}">
+              <i class="fas fa-stethoscope mr-2"></i>HINE Diagnosed
+            </a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item{% if type == 'DISCHARGED' %} active{% endif %}" href="{% url 'manage-patients-discharged' %}">
+              <i class="fas fa-sign-out-alt mr-2"></i>Discharged
+            </a>
+          </div>
         </div>
       </div>
     </div>
-
-    </div>
-    </div>
-
-    {% if patients_page_obj %}
-
-    <table class="table table-hover text-nowrap">
-    <thead>
-    <tr>
-    <th>Index</th>
-    <th>Status</th>
-    <th>BHT</th>
-    <th>NNC No</th>
-    <th>Babys Name</th>
-    <th>Gender</th>
-    <th>Date of birth</th>
-    <th>Created</th>
-    <th>Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-
-      {% for Patient in patients_page_obj %}
-    <tr>
-      <td>{{ Patient.id }}</td>
-      <td>
-        <div class="d-flex align-items-left">
-        {% if Patient.isBookmarked %}<div class="d-inline-block"><a href="{% url 'bookmark-view' Patient.isBookmarked.id %}" data-toggle="tooltip" data-placement="top" title="Bookmarked" class="far fa-bookmark" style="color: #3d7deb;"></a></div>{% endif %}
-        {% if Patient.isNewPatient %}&nbsp;<div class="d-inline-block"><span class="right badge badge-danger">New</span></div>{% else %}
-        {% if Patient.isDischarged %}
-        &nbsp;<div class="d-inline-block"><a data-toggle="tooltip" data-placement="top" title="Discharged" class="fas fa-circle" style="color: #000000"></a></div>
-        {% else %}
-        &nbsp;<div class="d-inline-block"><a data-toggle="tooltip" data-placement="top" title="Not Discharged" class="fas fa-circle" style="color:#00d10e;"></a></div>{% endif %}
-        {% if Patient.isScreeningPositive %}
-        &nbsp;<div class="d-inline-block"><a data-toggle="tooltip" data-placement="top" title="GMA : {{Patient.getDiagnosisList.0}} &nbsp; HINE : {{Patient.getDiagnosisList.1}} &nbsp; DA : {{Patient.getDiagnosisList.2}}" class="fas fa-disease" style="color: #11ff00;"></a></div>
-        {% else %}
-        &nbsp;<div class="d-inline-block"><a data-toggle="tooltip" data-placement="top" title="Diagnosis - Normal" class="fas fa-disease" style="color: #ff0000;"></a></div>
-        {% endif %}
-        {% endif %}
-        </div>
-      </td>
-
-      <td>{{ Patient.bht }}</td>
-
-      <td>{{ Patient.nnc_no }}</td>
-      <td>{{ Patient.baby_name }}</td>
-      <td>{{ Patient.gender }}</td>
-      <td>{{ Patient.dob_tob|date }}</td>
-      <td><div style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="Added by : {{ Patient.added_by }} on {{ Patient.added_on }}" class="fas fa-info-circle" style="color: #3d7deb;"></i></div></td>
-
-      <td>
-          <div class="btn-group">
-            <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              <i class="fas fa-cogs"></i>  Actions
-            </button>
-            <div class="dropdown-menu dropleft" aria-labelledby="btnGroupDrop1">
-              
-            <li><a class="dropdown-item" href="{% url 'view-patient' Patient.id %}"><i class="fas fa-eye"></i>&nbsp; View Patient</a></li>
-            <li><a class="dropdown-item" href="{% url 'edit-patient' Patient.id %}"><i class="fas fa-pencil-alt"></i>&nbsp; Modify Infomations</a></li>
-            <li><a class="dropdown-item" href="{% url 'delete-confirm-patient' Patient.id %}"><i class="far fa-trash-alt"></i>&nbsp; Delete This Patient</a></li>
-            
-            <div class="dropdown-divider"></div>
-
-            <li><a class="dropdown-item dropdown-toggle" href="#">&nbsp; Add New Record </a>
-              <ul class="submenu dropdown-menu">
-                <li><a class="dropdown-item" href="{% url 'video:add' Patient.id %}"><i class="fas fa-plus-circle"></i>&nbsp; GMA Video</a></li>
-                <li><a class="dropdown-item" href="{% url 'cdic-assessment-add' Patient.id %}"><i class="fas fa-plus-circle"></i>&nbsp; CDIC Record</a></li>
-                <li><a class="dropdown-item" href="{% url 'da-assessment-add' Patient.id %}"><i class="fas fa-plus-circle"></i>&nbsp; Developmental Assessment</a></li>
-                <li><a class="dropdown-item" href="{% url 'hine-assessment-add' Patient.id %}"><i class="fas fa-plus-circle"></i>&nbsp; HINE Assessment</a></li>
-                <li><a class="dropdown-item" href="{% url 'attachment-add' Patient.id %}"><i class="fas fa-plus-circle"></i>&nbsp; Attachment</a></li>
-             </ul>
-            </li>
-
-            <div class="dropdown-divider"></div>
-            <li><a class="dropdown-item dropdown-toggle" href="#">&nbsp; View</a>
-              <ul class="submenu dropdown-menu">
-                {% if Patient.isNewPatient != True %}
-                <li><a class="dropdown-item" href="{% url 'video:manager-by-patient' Patient.id %}"><i class="fas fa-eye"></i>&nbsp; All Videos</a></li>
-                <li><a class="dropdown-item" href="{% url 'assessment-manager-patient' Patient.id %}"><i class="fas fa-eye"></i>&nbsp; All GM Assessments</a></li>
-                <li><a class="dropdown-item" href="{% url 'da-assessment-manager-patient' Patient.id %}"><i class="fas fa-eye"></i>&nbsp; All Developmental Assessments</a></li>
-                <li><a class="dropdown-item" href="{% url 'cdic-assessment-manager-patient' Patient.id %}"><i class="fas fa-eye"></i>&nbsp; All CDIC Records</a></li>
-                <li><a class="dropdown-item" href="{% url 'attachment-manager-patient' Patient.id %}"><i class="fas fa-eye"></i>&nbsp; All Attachments</a></li>
-                {% endif %}
-                {% if Patient.added_by and Patient.added_by.username %}
-                <li><a class="dropdown-item" href="{% url 'user-view-by-username' Patient.added_by.username %}"><i class="fas fa-eye"></i>&nbsp; View Created User</a></li>
-                {% endif %}
-             </ul>
-            </li>
-
-            <div class="dropdown-divider"></div>
-            {% if Patient.isBookmarked %}
-            <a class="dropdown-item" href="{% url 'bookmark-view' Patient.isBookmarked.id %}"><i class="fas fa-eye"></i> View Bookmark</a>
-            {% else %}
-            <a class="dropdown-item" href="{% url 'bookmark-add' Patient.id 'Patient' %}"><i class="fas fa-plus-circle"></i> Add Bookmark</a>
-            {% endif %}
-
-            </div>
-    </tr>
-    </tbody>
-
-    {% endfor %}
-
-    </table>
-
-  {% else %} 
-    </br>
-    </br>
-    <div class="container w-75">
-      <div class="alert alert-secondary" role="alert">No records found</div>
-    </div>
-    </br>
-    </br>
-  {% endif %}
-
+  </div>
 </div>
 
-</br>
+<!-- Main content -->
+<div class="content">
+  <div class="container-fluid">
+    <div class="card card-outline card-info">
+      <div class="card-header">
+        <h3 class="card-title">
+          <i class="fas fa-users mr-2"></i>Patient Records
+          {% if patients_page_obj %}
+            <span class="badge badge-info ml-2">{{ patients_page_obj.paginator.count }} total</span>
+          {% endif %}
+        </h3>
+      </div>
 
-{% if patients_page_obj %}
+      <div class="card-body p-0">
+        {% if patients_page_obj %}
+        <div class="table-responsive">
+          <table class="table table-hover table-striped mb-0">
+            <thead class="thead-light">
+              <tr>
+                <th class="text-center">#</th>
+                <th>Status</th>
+                <th>BHT</th>
+                <th class="d-none d-md-table-cell">NNC No</th>
+                <th>Patient Name</th>
+                <th class="d-none d-lg-table-cell">Gender</th>
+                <th class="d-none d-lg-table-cell">DOB</th>
+                <th class="d-none d-sm-table-cell">Created</th>
+                <th class="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
 
-<nav aria-label="Page navigation example">
-  <ul class="pagination justify-content-center">
-  <li>
-    {% if patients_page_obj.has_previous %}
-      <li class="page-item"> <a class="page-link" href="?page=1" tabindex="-1">&laquo; First</a>
-      <li class="page-item"> <a class="page-link" href="?page={{ patients_page_obj.previous_page_number }}" tabindex="-1">Previous</a></li>
-    {% else %}
-      <li class="page-item disabled"> <a class="page-link" href="#" tabindex="-1">&laquo; First</a>
-      <li class="page-item disabled"> <a class="page-link" href="#" tabindex="-1">Previous</a> </li>
-    {% endif %}
-  
-    <li class="page-item"><a class="page-link">Page {{ patients_page_obj.number }} of {{ patients_page_obj.paginator.num_pages }}</a></li>
-  
-    {% if patients_page_obj.has_next %}
-      <li class="page-item"><a class="page-link" href="?page={{ patients_page_obj.next_page_number }}">Next</a></li>
-      <li class="page-item"><a class="page-link" href="?page={{ patients_page_obj.paginator.num_pages }}">Last &raquo;</a></li>
-    {% else %}
-      <li class="page-item disabled"><a class="page-link" href="#">Next</a></li>
-      <li class="page-item disabled"><a class="page-link" href="#">Last &raquo;</a></li>
-    {% endif %}
-  
-  </li>
-  </ul>
-  </nav>
-  {% endif %}
+              {% for Patient in patients_page_obj %}
+              <tr>
+                <td class="text-center align-middle">
+                  <small class="text-muted">#{{ Patient.id }}</small>
+                </td>
+                <td class="align-middle">
+                  <div class="d-flex flex-wrap align-items-center">
+                    {% if Patient.isBookmarked %}
+                      <a href="{% url 'bookmark-view' Patient.isBookmarked.id %}" 
+                         class="text-primary mr-1" 
+                         data-toggle="tooltip" 
+                         title="Bookmarked">
+                        <i class="fas fa-bookmark"></i>
+                      </a>
+                    {% endif %}
+                    
+                    {% if Patient.isNewPatient %}
+                      <span class="badge badge-danger badge-sm mr-1">New</span>
+                    {% else %}
+                      {% if Patient.isDischarged %}
+                        <i class="fas fa-circle text-dark mr-1" 
+                           data-toggle="tooltip" 
+                           title="Discharged"></i>
+                      {% else %}
+                        <i class="fas fa-circle text-success mr-1" 
+                           data-toggle="tooltip" 
+                           title="Active"></i>
+                      {% endif %}
+                      
+                      {% if Patient.isScreeningPositive %}
+                        <i class="fas fa-exclamation-triangle text-warning" 
+                           data-toggle="tooltip" 
+                           title="GMA: {{Patient.getDiagnosisList.0}} | HINE: {{Patient.getDiagnosisList.1}} | DA: {{Patient.getDiagnosisList.2}}"></i>
+                      {% else %}
+                        <i class="fas fa-check-circle text-success" 
+                           data-toggle="tooltip" 
+                           title="Normal Diagnosis"></i>
+                      {% endif %}
+                    {% endif %}
+                  </div>
+                </td>
+                
+                <td class="align-middle">
+                  <span class="font-weight-medium">{{ Patient.bht|default:"-" }}</span>
+                </td>
+                
+                <td class="d-none d-md-table-cell align-middle">
+                  <small class="text-muted">{{ Patient.nnc_no|default:"-" }}</small>
+                </td>
+                
+                <td class="align-middle">
+                  <div>
+                    <strong>{{ Patient.baby_name|default:"Unnamed" }}</strong>
+                    <small class="d-block d-lg-none text-muted">
+                      {{ Patient.gender|default:"-" }} • {{ Patient.dob_tob|date:"M d, Y"|default:"-" }}
+                    </small>
+                  </div>
+                </td>
+                
+                <td class="d-none d-lg-table-cell align-middle">
+                  <span class="badge badge-secondary">{{ Patient.gender|default:"-" }}</span>
+                </td>
+                
+                <td class="d-none d-lg-table-cell align-middle">
+                  <small>{{ Patient.dob_tob|date:"M d, Y"|default:"-" }}</small>
+                </td>
+                
+                <td class="d-none d-sm-table-cell align-middle">
+                  <i class="fas fa-info-circle text-info" 
+                     data-toggle="tooltip" 
+                     data-html="true"
+                     title="<strong>Added by:</strong> {{ Patient.added_by|default:'Unknown' }}<br><strong>Date:</strong> {{ Patient.added_on|date:'M d, Y H:i'|default:'-' }}"
+                     style="cursor: pointer;"></i>
+                </td>
 
-{% comment %} </div> {% endcomment %}
+                <td class="text-center align-middle">
+                  <!-- Quick Action Buttons for Desktop -->
+                  <div class="action-buttons d-none d-md-flex">
+                    <a href="{% url 'view-patient' Patient.id %}" 
+                       class="btn btn-sm btn-outline-info" 
+                       data-toggle="tooltip" 
+                       title="View Patient">
+                      <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="{% url 'edit-patient' Patient.id %}" 
+                       class="btn btn-sm btn-outline-warning" 
+                       data-toggle="tooltip" 
+                       title="Edit Patient">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <div class="dropdown">
+                      <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-ellipsis-v"></i>
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-right">
+                        <h6 class="dropdown-header">Patient Actions</h6>
+                        <a class="dropdown-item" href="{% url 'view-patient' Patient.id %}">
+                          <i class="fas fa-eye mr-2 text-info"></i>View Details
+                        </a>
+                        <a class="dropdown-item" href="{% url 'edit-patient' Patient.id %}">
+                          <i class="fas fa-edit mr-2 text-warning"></i>Edit Information
+                        </a>
+                        <a class="dropdown-item text-danger" href="{% url 'delete-confirm-patient' Patient.id %}" onclick="return confirm('Are you sure you want to delete {{ Patient.baby_name|default:"this patient" }}?')">
+                          <i class="fas fa-trash mr-2"></i>Delete Patient
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <h6 class="dropdown-header">Add Records</h6>
+                        <a class="dropdown-item" href="{% url 'video:add' Patient.id %}">
+                          <i class="fas fa-video mr-2 text-primary"></i>GMA Video
+                        </a>
+                        <a class="dropdown-item" href="{% url 'cdic-assessment-add' Patient.id %}">
+                          <i class="fas fa-clipboard-list mr-2 text-success"></i>CDIC Record
+                        </a>
+                        <a class="dropdown-item" href="{% url 'da-assessment-add' Patient.id %}">
+                          <i class="fas fa-baby mr-2 text-info"></i>Developmental Assessment
+                        </a>
+                        <a class="dropdown-item" href="{% url 'hine-assessment-add' Patient.id %}">
+                          <i class="fas fa-stethoscope mr-2 text-primary"></i>HINE Assessment
+                        </a>
+                        <a class="dropdown-item" href="{% url 'attachment-add' Patient.id %}">
+                          <i class="fas fa-paperclip mr-2 text-secondary"></i>Attachment
+                        </a>
+                        {% if Patient.isNewPatient != True %}
+                        <div class="dropdown-divider"></div>
+                        <h6 class="dropdown-header">View Records</h6>
+                        <a class="dropdown-item" href="{% url 'video:manager-by-patient' Patient.id %}">
+                          <i class="fas fa-film mr-2 text-dark"></i>All Videos
+                        </a>
+                        <a class="dropdown-item" href="{% url 'assessment-manager-patient' Patient.id %}">
+                          <i class="fas fa-chart-bar mr-2 text-info"></i>GM Assessments
+                        </a>
+                        <a class="dropdown-item" href="{% url 'da-assessment-manager-patient' Patient.id %}">
+                          <i class="fas fa-baby mr-2 text-info"></i>DA Assessments
+                        </a>
+                        <a class="dropdown-item" href="{% url 'cdic-assessment-manager-patient' Patient.id %}">
+                          <i class="fas fa-file-alt mr-2 text-success"></i>CDIC Records
+                        </a>
+                        <a class="dropdown-item" href="{% url 'attachment-manager-patient' Patient.id %}">
+                          <i class="fas fa-paperclip mr-2 text-secondary"></i>Attachments
+                        </a>
+                        {% endif %}
+                        <div class="dropdown-divider"></div>
+                        <h6 class="dropdown-header">Other</h6>
+                        {% if Patient.added_by and Patient.added_by.username %}
+                        <a class="dropdown-item" href="#" onclick="alert('View user: {{ Patient.added_by.username }}'); return false;">
+                          <i class="fas fa-user mr-2 text-secondary"></i>View Created User
+                        </a>
+                        {% endif %}
+                        {% if Patient.isBookmarked %}
+                        <a class="dropdown-item" href="#" onclick="alert('View bookmark feature needs implementation'); return false;">
+                          <i class="fas fa-bookmark mr-2 text-warning"></i>View Bookmark
+                        </a>
+                        {% else %}
+                        <a class="dropdown-item" href="{% url 'bookmark-add' Patient.id 'Patient' %}">
+                          <i class="fas fa-star mr-2 text-warning"></i>Add Bookmark
+                        </a>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Mobile Action Select -->
+                  <div class="action-buttons d-md-none">
+                    <select class="patient-actions-select patient-actions-mobile" data-patient-id="{{ Patient.id }}" data-patient-name="{{ Patient.baby_name|default:'Unknown' }}" data-is-new="{{ Patient.isNewPatient|yesno:'true,false' }}" data-is-bookmarked="{{ Patient.isBookmarked|yesno:'true,false' }}">
+                      <option value="">Actions</option>
+                      <option value="view">👁️ View</option>
+                      <option value="edit">✏️ Edit</option>
+                      <option value="add-video">🎥 Add Video</option>
+                      <option value="add-cdic">📋 Add CDIC</option>
+                      {% if not Patient.isBookmarked %}
+                      <option value="add-bookmark">⭐ Bookmark</option>
+                      {% endif %}
+                    </select>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+
+          </table>
+        </div>
+        
+        {% else %}
+        <div class="card-body text-center py-5">
+          <div class="empty-state">
+            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">No Patients Found</h4>
+            <p class="text-muted mb-4">No patients match your current filter criteria.</p>
+            <a href="{% url 'manage-patients' %}" class="btn btn-info">
+              <i class="fas fa-users mr-1"></i>View All Patients
+            </a>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      
+      <!-- Pagination -->
+      {% if patients_page_obj %}
+      <div class="card-footer clearfix">
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <small class="text-muted">
+              Showing {{ patients_page_obj.start_index }} to {{ patients_page_obj.end_index }} 
+              of {{ patients_page_obj.paginator.count }} entries
+            </small>
+          </div>
+          <div class="col-md-6">
+            <ul class="pagination pagination-sm float-right mb-0">
+              {% if patients_page_obj.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?page=1">
+                    <i class="fas fa-angle-double-left"></i>
+                  </a>
+                </li>
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ patients_page_obj.previous_page_number }}">
+                    <i class="fas fa-angle-left"></i>
+                  </a>
+                </li>
+              {% else %}
+                <li class="page-item disabled">
+                  <span class="page-link">
+                    <i class="fas fa-angle-double-left"></i>
+                  </span>
+                </li>
+                <li class="page-item disabled">
+                  <span class="page-link">
+                    <i class="fas fa-angle-left"></i>
+                  </span>
+                </li>
+              {% endif %}
+              
+              <li class="page-item active">
+                <span class="page-link">
+                  {{ patients_page_obj.number }} of {{ patients_page_obj.paginator.num_pages }}
+                </span>
+              </li>
+              
+              {% if patients_page_obj.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ patients_page_obj.next_page_number }}">
+                    <i class="fas fa-angle-right"></i>
+                  </a>
+                </li>
+                <li class="page-item">
+                  <a class="page-link" href="?page={{ patients_page_obj.paginator.num_pages }}">
+                    <i class="fas fa-angle-double-right"></i>
+                  </a>
+                </li>
+              {% else %}
+                <li class="page-item disabled">
+                  <span class="page-link">
+                    <i class="fas fa-angle-right"></i>
+                  </span>
+                </li>
+                <li class="page-item disabled">
+                  <span class="page-link">
+                    <i class="fas fa-angle-double-right"></i>
+                  </span>
+                </li>
+              {% endif %}
+            </ul>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
 
 {% block extra_js %}
 <script src="{% static 'js/manager.js' %}"></script>
+<script>
+$(document).ready(function() {
+    console.log('🔧 Patient manager initialized with professional dropdown menus');
+    
+    // Fix dropdown positioning to escape table clipping
+    $('.table .dropdown-toggle').on('show.bs.dropdown', function() {
+        const $toggle = $(this);
+        const $dropdown = $toggle.siblings('.dropdown-menu');
+        const toggleRect = this.getBoundingClientRect();
+        
+        // Calculate positioning
+        let top = toggleRect.bottom + window.scrollY + 5;
+        let left = toggleRect.right - 280; // Position dropdown to the right edge of button, extending left
+        
+        // Adjust if dropdown would go off the left edge
+        if (left < 10) {
+            left = toggleRect.left + window.scrollX;
+        }
+        
+        // Adjust if dropdown would go off the right edge
+        if (left + 280 > window.innerWidth) {
+            left = window.innerWidth - 290;
+        }
+        
+        // Adjust if dropdown would go below viewport
+        if (top + 400 > window.innerHeight + window.scrollY) {
+            top = toggleRect.top + window.scrollY - 400;
+        }
+        
+        console.log('🔧 Positioning dropdown at:', { top, left });
+        
+        // Apply fixed positioning
+        $dropdown.css({
+            'position': 'fixed',
+            'top': top + 'px',
+            'left': left + 'px',
+            'z-index': '9999',
+            'display': 'block'
+        });
+    });
+    
+    // Reset positioning when dropdown hides
+    $('.table .dropdown-toggle').on('hide.bs.dropdown', function() {
+        const $dropdown = $(this).siblings('.dropdown-menu');
+        $dropdown.css({
+            'position': '',
+            'top': '',
+            'left': '',
+            'display': ''
+        });
+    });
+    
+    // Add loading states to dropdown items
+    $('.dropdown-item[href]').on('click', function() {
+        const $item = $(this);
+        const originalText = $item.html();
+        
+        // Skip confirmation dialogs
+        if ($item.attr('onclick') && $item.attr('onclick').includes('confirm')) {
+            return;
+        }
+        
+        // Add loading state
+        $item.html('<i class="fas fa-spinner fa-spin mr-2"></i>Loading...');
+        
+        // Restore after timeout (fallback)
+        setTimeout(function() {
+            $item.html(originalText);
+        }, 3000);
+    });
+    
+    console.log('✅ Professional dropdown menus with fixed positioning initialized');
+});
+</script>
 {% endblock extra_js %}
 
 {% endblock main_content %}

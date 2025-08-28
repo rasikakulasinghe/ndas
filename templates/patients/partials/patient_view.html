@@ -1,55 +1,85 @@
-<!-- Page header -->
-<div class="card bg-info"><div class="card-header"><h3 class="card-title">Patient Details</h3></div>
-
-{% if patient.isNewPatient %}
-<div class="ribbon-wrapper ribbon-xl"><div class="ribbon bg-warning text-lg">New</div></div>
-{% else %}
-
-{% if patient.isDischarged %}
-<div class="ribbon-wrapper ribbon-xl"><div class="ribbon bg-warning text-lg">Discharged</div></div>
-{% else %}{% endif %}
-
-{% endif %}
+<!-- Enhanced Page Header -->
+<div class="card bg-gradient-primary shadow-sm patient-status-ribbon">
+  
+  {% if patient.isNewPatient %}
+    <div class="ribbon bg-warning">New</div>
+  {% elif patient.isDischarged %}
+    <div class="ribbon bg-secondary">Discharged</div>
+  {% endif %}
 </div>
 
 <!-- Identification Details -->
 {% include 'patients/partials/patient_identification_details.html' %}
 
-          <!-- Details summary -->
-          <div class="card card-primary card-outline card-outline-tabs">
+          <!-- Enhanced Details Summary -->
+          <div class="card shadow-sm">
             <div class="card-header p-0 border-bottom-0">
-            <ul class="nav nav-tabs" id="custom-tabs-four-tab" role="tablist">
+            <ul class="nav nav-tabs professional-tabs" id="custom-tabs-four-tab" role="tablist">
             <li class="nav-item">
-            <a class="nav-link active" id="custom-tabs-four-summary-tab" data-toggle="pill" href="#summary" role="tab" aria-controls="custom-tabs-four-summary" aria-selected="true">Summary</a>
+              <a class="nav-link active" id="custom-tabs-four-summary-tab" data-toggle="pill" href="#summary" role="tab" aria-controls="custom-tabs-four-summary" aria-selected="true">
+                <i class="fas fa-chart-pie mr-2"></i>
+                <span class="d-none d-md-inline">Summary</span>
+              </a>
             </li>
             <li class="nav-item">
-            <a class="nav-link" id="custom-tabs-four-birth-tab" data-toggle="pill" href="#birth" role="tab" aria-controls="custom-tabs-four-birth" aria-selected="false">Birth History</a>
+              <a class="nav-link" id="custom-tabs-four-birth-tab" data-toggle="pill" href="#birth" role="tab" aria-controls="custom-tabs-four-birth" aria-selected="false">
+                <i class="fas fa-baby mr-2"></i>
+                <span class="d-none d-md-inline">Birth History</span>
+              </a>
             </li>
             <li class="nav-item">
-            <a class="nav-link" id="custom-tabs-four-contact-tab" data-toggle="pill" href="#contact" role="tab" aria-controls="custom-tabs-four-contact" aria-selected="false">Contacts</a>
+              <a class="nav-link" id="custom-tabs-four-contact-tab" data-toggle="pill" href="#contact" role="tab" aria-controls="custom-tabs-four-contact" aria-selected="false">
+                <i class="fas fa-address-book mr-2"></i>
+                <span class="d-none d-md-inline">Contacts</span>
+              </a>
             </li>
             <li class="nav-item">
-            <a class="nav-link" id="custom-tabs-four-medical-tab" data-toggle="pill" href="#medical-history" role="tab" aria-controls="custom-tabs-four-medical" aria-selected="false">Medical History</a>
+              <a class="nav-link" id="custom-tabs-four-medical-tab" data-toggle="pill" href="#medical-history" role="tab" aria-controls="custom-tabs-four-medical" aria-selected="false">
+                <i class="fas fa-notes-medical mr-2"></i>
+                <span class="d-none d-md-inline">Medical History</span>
+              </a>
             </li>
             <li class="nav-item">
-            <a class="nav-link" id="custom-tabs-four-video-tab" data-toggle="pill" href="#video" role="tab" aria-controls="custom-tabs-four-video" aria-selected="false">Videos</a>
+              <a class="nav-link" id="custom-tabs-four-video-tab" data-toggle="pill" href="#video" role="tab" aria-controls="custom-tabs-four-video" aria-selected="false">
+                <i class="fas fa-video mr-2"></i>
+                <span class="d-none d-md-inline">Videos</span>
+                <span class="badge badge-secondary ml-1">{{file_video_count}}</span>
+              </a>
             </li>
             <li class="nav-item">
-            <a class="nav-link" id="custom-tabs-four-gm-tab" data-toggle="pill" href="#assessment-gm" role="tab" aria-controls="custom-tabs-four-gm" aria-selected="false">GMA Record</a>
+              <a class="nav-link" id="custom-tabs-four-gm-tab" data-toggle="pill" href="#assessment-gm" role="tab" aria-controls="custom-tabs-four-gm" aria-selected="false">
+                <i class="fas fa-stethoscope mr-2"></i>
+                <span class="d-none d-md-inline">GMA Record</span>
+                <span class="badge badge-info ml-1">{{gm_assessments_count}}</span>
+              </a>
             </li>
             <li class="nav-item">
-            <a class="nav-link" id="custom-tabs-four-hine-tab" data-toggle="pill" href="#assessment-hine" role="tab" aria-controls="custom-tabs-four-hine" aria-selected="false">HINE Record</a>
+              <a class="nav-link" id="custom-tabs-four-hine-tab" data-toggle="pill" href="#assessment-hine" role="tab" aria-controls="custom-tabs-four-hine" aria-selected="false">
+                <i class="fas fa-brain mr-2"></i>
+                <span class="d-none d-md-inline">HINE Record</span>
+                <span class="badge badge-warning ml-1">{{hine_assessments_count}}</span>
+              </a>
             </li>
             <li class="nav-item">
-            <a class="nav-link" id="custom-tabs-four-da-nd-tab" data-toggle="pill" href="#assessment-da" role="tab" aria-controls="custom-tabs-four-da" aria-selected="false">Developmental Record</a>
+              <a class="nav-link" id="custom-tabs-four-da-nd-tab" data-toggle="pill" href="#assessment-da" role="tab" aria-controls="custom-tabs-four-da" aria-selected="false">
+                <i class="fas fa-child mr-2"></i>
+                <span class="d-none d-md-inline">Developmental</span>
+                <span class="badge badge-success ml-1">{{da_assessments_count}}</span>
+              </a>
             </li>
             <li class="nav-item">
-            <a class="nav-link" id="custom-tabs-four-cdic-tab" data-toggle="pill" href="#interventions-cdic" role="tab" aria-controls="custom-tabs-four-cdic" aria-selected="false">CDIC Records</a>
+              <a class="nav-link" id="custom-tabs-four-cdic-tab" data-toggle="pill" href="#interventions-cdic" role="tab" aria-controls="custom-tabs-four-cdic" aria-selected="false">
+                <i class="fas fa-hands-helping mr-2"></i>
+                <span class="d-none d-md-inline">CDIC Records</span>
+                <span class="badge badge-primary ml-1">{{cdic_record_count}}</span>
+              </a>
             </li>
             <li class="nav-item">
-            <a class="nav-link" id="custom-tabs-four-attachment-tab" data-toggle="pill" href="#attachments" role="tab" aria-controls="custom-tabs-four-attachment" aria-selected="false">Attachments</a>
-
-            {% comment %} <a class="nav-link" id="custom-tabs-four-attachment-tab" data-toggle="pill" href="#attachments" role="tab" aria-controls="custom-tabs-four-attachment" aria-selected="false">Attachments</a> {% endcomment %}
+              <a class="nav-link" id="custom-tabs-four-attachment-tab" data-toggle="pill" href="#attachments" role="tab" aria-controls="custom-tabs-four-attachment" aria-selected="false">
+                <i class="fas fa-paperclip mr-2"></i>
+                <span class="d-none d-md-inline">Attachments</span>
+                <span class="badge badge-dark ml-1">{{file_attachment_count}}</span>
+              </a>
             </li>
             </ul>
           </div>
@@ -58,148 +88,466 @@
             <div class="tab-content" id="custom-tabs-four-tabContent">
 
             <div class="tab-pane fade active show" id="summary" role="tabpanel" aria-labelledby="custom-tabs-four-summary-tab">
-              <!-- Text for summary -->
-
-                <div class="col">
-
-                <div class="info-box">
-                <div class="info-box-content">
-                <span class="info-box-text">Current age : {{patient.getCurrentAge}}</span>
-                <span class="info-box-text">Corrected age : {{patient.getCorrectedAge}}</span>
-                <span class="info-box-text">Corrected getstational age : {{patient.getCorrectedGestationalAge}}</span>
-                <span class="info-box-text">POG : {{patient.getPOG}}</span>
-                <span class="info-box-text">Attachments : &nbsp;
-                  {% if file_attachment_count == 0 %}No Attachments{% else %} <a href="{% url 'attachment-manager-patient' patient.id %}" target="_blank"> <i class="far fa-eye" style="color: #00328a;"></i> &nbsp; View ({{file_attachment_count}})</a>{% endif %}</span>
-                <span class="info-box-text">Videos : &nbsp;
-                  {% if file_video_count == 0 %}No Videos{% else %} <a href="{% url 'video:manager-by-patient' patient.id %}" target="_blank"> <i class="far fa-eye" style="color: #00328a;"></i> &nbsp; View ({{file_video_count}})</a>{% endif %}</span>
-                <span class="info-box-text">Bookmark Status : &nbsp; {% if bookmark %}<a href="{% url 'bookmark-view' bookmark.id %}" target="_blank"> <i class="far fa-bookmark"></i> &nbsp; View</a>{% else %} &nbsp; No Bookmark{% endif %}</span>
-                <span class="info-box-text">Assessment Summary : &nbsp; GMA : {{patient.getDiagnosisList.0}} &nbsp; HINE : {{patient.getDiagnosisList.1}} &nbsp; DA : {{patient.getDiagnosisList.2}}</span>
+              <!-- Enhanced Summary Section -->
+              
+              <!-- Age Information Cards -->
+              <div class="summary-stats mb-4">
+                <div class="stat-card">
+                  <div class="stat-value">{{patient.getCurrentAge}}</div>
+                  <div class="stat-label">Current Age</div>
                 </div>
+                <div class="stat-card">
+                  <div class="stat-value">{{patient.getCorrectedAge}}</div>
+                  <div class="stat-label">Corrected Age</div>
                 </div>
+                <div class="stat-card">
+                  <div class="stat-value">{{patient.getPOG}}</div>
+                  <div class="stat-label">Period of Gestation</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-value">{{patient.getCorrectedGestationalAge}}</div>
+                  <div class="stat-label">Corrected Gestational Age</div>
+                </div>
+              </div>
 
-              {% if patient.getRC %}
-              </br>
-                Recomendations...
-                <div> <hr> </div>
-
-                {% for item in patient.getRC %}
-                  {% if item.display %}
-                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                      {{ item.msg }}
-                      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                      </button>
+              <!-- Quick Access Information -->
+              <div class="enhanced-info-box">
+                <h6 class="mb-3 text-primary">
+                  <i class="fas fa-info-circle mr-2"></i>
+                  Quick Access Information
+                </h6>
+                
+                <div class="info-item">
+                  <div class="info-icon">
+                    <i class="fas fa-paperclip"></i>
+                  </div>
+                  <div class="info-content">
+                    <div class="info-label">Attachments</div>
+                    <div class="info-value">
+                      {% if file_attachment_count == 0 %}
+                        <span class="text-muted">No Attachments</span>
+                      {% else %}
+                        <a href="{% url 'attachment-manager-patient' patient.id %}" target="_blank" class="btn btn-sm btn-outline-primary">
+                          <i class="far fa-eye mr-1"></i> View ({{file_attachment_count}})
+                        </a>
+                      {% endif %}
                     </div>
-                  {% endif %}
-                {% endfor %}
+                  </div>
+                </div>
+
+                <div class="info-item">
+                  <div class="info-icon">
+                    <i class="fas fa-video"></i>
+                  </div>
+                  <div class="info-content">
+                    <div class="info-label">Videos</div>
+                    <div class="info-value">
+                      {% if file_video_count == 0 %}
+                        <span class="text-muted">No Videos</span>
+                      {% else %}
+                        <a href="{% url 'video:manager-by-patient' patient.id %}" target="_blank" class="btn btn-sm btn-outline-primary">
+                          <i class="far fa-eye mr-1"></i> View ({{file_video_count}})
+                        </a>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="info-item">
+                  <div class="info-icon">
+                    <i class="fas fa-bookmark"></i>
+                  </div>
+                  <div class="info-content">
+                    <div class="info-label">Bookmark Status</div>
+                    <div class="info-value">
+                      {% if bookmark %}
+                        <a href="{% url 'bookmark-view' bookmark.id %}" target="_blank" class="btn btn-sm btn-outline-success">
+                          <i class="far fa-bookmark mr-1"></i> View Bookmark
+                        </a>
+                      {% else %}
+                        <span class="text-muted">No Bookmark</span>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="info-item">
+                  <div class="info-icon">
+                    <i class="fas fa-chart-line"></i>
+                  </div>
+                  <div class="info-content">
+                    <div class="info-label">Assessment Summary</div>
+                    <div class="info-value">
+                      <div class="d-flex flex-wrap">
+                        <span class="badge badge-primary mr-2 mb-1">GMA: {{patient.getDiagnosisList.0}}</span>
+                        <span class="badge badge-warning mr-2 mb-1">HINE: {{patient.getDiagnosisList.1}}</span>
+                        <span class="badge badge-success mb-1">DA: {{patient.getDiagnosisList.2}}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Recommendations Section -->
+              {% if patient.getRC %}
+                <div class="card border-warning">
+                  <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                      <i class="fas fa-exclamation-triangle mr-2"></i>
+                      Recommendations
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    {% for item in patient.getRC %}
+                      {% if item.display %}
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                          <i class="fas fa-lightbulb mr-2"></i>
+                          {{ item.msg }}
+                          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                </div>
               {% endif %}
 
-            </div>
-
-              <!-- /end text for summary -->
+              <!-- /end enhanced summary -->
             </div>
 
             <div class="tab-pane fade" id="birth" role="tabpanel" aria-labelledby="custom-tabs-four-birth-tab">
-              <!-- Text for birth -->
-              <dl class="row">
-
-                <dt class="col-sm-2">Gender :</dt>
-                <dd class="col-sm-10">{{patient.gender}}</dd>
+              <!-- Enhanced Birth History -->
+              <div class="enhanced-info-box">
+                <h6 class="mb-3 text-primary">
+                  <i class="fas fa-baby mr-2"></i>
+                  Birth Information
+                </h6>
                 
-                <dt class="col-sm-2">Date and time of birth :</dt>
-                <dd class="col-sm-10">{{patient.dob_tob}}</dd>
-
-                <dt class="col-sm-2">POG :</dt>
-                <dd class="col-sm-10">{{patient.getPOG}}</dd>
-    
-                <dt class="col-sm-2">Mode of Delivery :</dt>
-                <dd class="col-sm-10">{{patient.mo_delivery}}</dd>
-    
-                <dt class="col-sm-2">APGAR :</dt>
-                <dd class="col-sm-10">{{patient.getAPGAR}}</dd>
+                <div class="row">
+                  <div class="col-lg-6">
+                    <div class="info-item">
+                      <div class="info-icon bg-primary">
+                        <i class="fas fa-venus-mars"></i>
+                      </div>
+                      <div class="info-content">
+                        <div class="info-label">Gender</div>
+                        <div class="info-value">{{patient.gender}}</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="col-lg-6">
+                    <div class="info-item">
+                      <div class="info-icon bg-info">
+                        <i class="fas fa-calendar-alt"></i>
+                      </div>
+                      <div class="info-content">
+                        <div class="info-label">Date and Time of Birth</div>
+                        <div class="info-value">{{patient.dob_tob}}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 
-                <dt class="col-sm-2">Ressussitation :</dt>
-                <dd class="col-sm-10">{{patient.getResuscitationState}}</dd>
-
+                <div class="row">
+                  <div class="col-lg-6">
+                    <div class="info-item">
+                      <div class="info-icon bg-success">
+                        <i class="fas fa-clock"></i>
+                      </div>
+                      <div class="info-content">
+                        <div class="info-label">Period of Gestation (POG)</div>
+                        <div class="info-value">{{patient.getPOG}}</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="col-lg-6">
+                    <div class="info-item">
+                      <div class="info-icon bg-warning">
+                        <i class="fas fa-procedures"></i>
+                      </div>
+                      <div class="info-content">
+                        <div class="info-label">Mode of Delivery</div>
+                        <div class="info-value">{{patient.mo_delivery}}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="row">
+                  <div class="col-lg-6">
+                    <div class="info-item">
+                      <div class="info-icon bg-danger">
+                        <i class="fas fa-heartbeat"></i>
+                      </div>
+                      <div class="info-content">
+                        <div class="info-label">APGAR Score</div>
+                        <div class="info-value">{{patient.getAPGAR}}</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="col-lg-6">
+                    <div class="info-item">
+                      <div class="info-icon bg-secondary">
+                        <i class="fas fa-lungs"></i>
+                      </div>
+                      <div class="info-content">
+                        <div class="info-label">Resuscitation Status</div>
+                        <div class="info-value">{{patient.getResuscitationState}}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
                 {% if patient.resuscitated %}
-                <dt class="col-sm-2">Resuscitation Note :</dt>
-                <dd class="col-sm-10">{{patient.resustn_note|default:"---"}}</dd>
+                <div class="info-item">
+                  <div class="info-icon bg-warning">
+                    <i class="fas fa-notes-medical"></i>
+                  </div>
+                  <div class="info-content">
+                    <div class="info-label">Resuscitation Note</div>
+                    <div class="info-value">{{patient.resustn_note|default:"---"}}</div>
+                  </div>
+                </div>
                 {% endif %}
-    
-                <dt class="col-sm-2">Birth weight :</dt>
-                <dd class="col-sm-10">{{patient.birth_weight}} g</dd>
+              </div>
+              
+              <div class="enhanced-info-box">
+                <h6 class="mb-3 text-success">
+                  <i class="fas fa-weight mr-2"></i>
+                  Physical Measurements
+                </h6>
+                
+                <div class="row">
+                  <div class="col-lg-4">
+                    <div class="info-item">
+                      <div class="info-icon bg-primary">
+                        <i class="fas fa-weight"></i>
+                      </div>
+                      <div class="info-content">
+                        <div class="info-label">Birth Weight</div>
+                        <div class="info-value">{{patient.birth_weight}} g</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="col-lg-4">
+                    <div class="info-item">
+                      <div class="info-icon bg-info">
+                        <i class="fas fa-circle"></i>
+                      </div>
+                      <div class="info-content">
+                        <div class="info-label">OFC (Head Circumference)</div>
+                        <div class="info-value">{{patient.ofc}} cm</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="col-lg-4">
+                    <div class="info-item">
+                      <div class="info-icon bg-success">
+                        <i class="fas fa-ruler-vertical"></i>
+                      </div>
+                      <div class="info-content">
+                        <div class="info-label">Length</div>
+                        <div class="info-value">{{patient.length}} cm</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-                <dt class="col-sm-2">OFC :</dt>
-                <dd class="col-sm-10">{{patient.ofc}} cm</dd>
-
-                <dt class="col-sm-2">Length :</dt>
-                <dd class="col-sm-10">{{patient.length}} cm</dd>
-    
-              </dl>
               <!-- /end text for birth -->
             </div>
 
             <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="custom-tabs-four-contact-tab">
-              <!-- Text for contact -->
-              <dl class="row">
-
-                <dt class="col-sm-2">Address :</dt>
-                <dd class="col-sm-10">{{patient.address}}</dd>
+              <!-- Enhanced Contact Information -->
+              <div class="enhanced-info-box">
+                <h6 class="mb-3 text-primary">
+                  <i class="fas fa-address-book mr-2"></i>
+                  Contact Information
+                </h6>
                 
-                <dt class="col-sm-2">Telephone (Mobile) :</dt>
-                <dd class="col-sm-10">{{patient.tp_mobile}}</dd>
-    
-                <dt class="col-sm-2">Telephone (Lan) :</dt>
-                <dd class="col-sm-10">{{patient.tp_lan}}</dd>
-    
-                <dt class="col-sm-2">MOH area :</dt>
-                <dd class="col-sm-10">{{patient.moh_area}}</dd>
-    
-                <dt class="col-sm-2">PHM area :</dt>
-                <dd class="col-sm-10">{{patient.phm_area}}</dd>
-    
-              </dl>
-              <!-- /end text for contact -->
+                <div class="info-item">
+                  <div class="info-icon bg-primary">
+                    <i class="fas fa-home"></i>
+                  </div>
+                  <div class="info-content">
+                    <div class="info-label">Address</div>
+                    <div class="info-value">{{patient.address|default:"Not specified"}}</div>
+                  </div>
+                </div>
+                
+                <div class="row">
+                  <div class="col-lg-6">
+                    <div class="info-item">
+                      <div class="info-icon bg-success">
+                        <i class="fas fa-mobile-alt"></i>
+                      </div>
+                      <div class="info-content">
+                        <div class="info-label">Mobile Phone</div>
+                        <div class="info-value">
+                          {% if patient.tp_mobile %}
+                            <a href="tel:{{patient.tp_mobile}}" class="text-primary">{{patient.tp_mobile}}</a>
+                          {% else %}
+                            Not specified
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="col-lg-6">
+                    <div class="info-item">
+                      <div class="info-icon bg-info">
+                        <i class="fas fa-phone"></i>
+                      </div>
+                      <div class="info-content">
+                        <div class="info-label">Landline Phone</div>
+                        <div class="info-value">
+                          {% if patient.tp_lan %}
+                            <a href="tel:{{patient.tp_lan}}" class="text-primary">{{patient.tp_lan}}</a>
+                          {% else %}
+                            Not specified
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="row">
+                  <div class="col-lg-6">
+                    <div class="info-item">
+                      <div class="info-icon bg-warning">
+                        <i class="fas fa-hospital"></i>
+                      </div>
+                      <div class="info-content">
+                        <div class="info-label">MOH Area</div>
+                        <div class="info-value">{{patient.moh_area|default:"Not specified"}}</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="col-lg-6">
+                    <div class="info-item">
+                      <div class="info-icon bg-secondary">
+                        <i class="fas fa-user-md"></i>
+                      </div>
+                      <div class="info-content">
+                        <div class="info-label">PHM Area</div>
+                        <div class="info-value">{{patient.phm_area|default:"Not specified"}}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- /end enhanced contact -->
             </div>
 
             <div class="tab-pane fade" id="medical-history" role="tabpanel" aria-labelledby="custom-tabs-four-medical-tab">
-              <!-- Medical History -->
-              <dl class="row">
+              <!-- Enhanced Medical History -->
+              <div class="enhanced-info-box">
+                <h6 class="mb-3 text-primary">
+                  <i class="fas fa-notes-medical mr-2"></i>
+                  Current Medical Status
+                </h6>
+                
+                <div class="info-item">
+                  <div class="info-icon bg-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                  </div>
+                  <div class="info-content">
+                    <div class="info-label">Current Problems</div>
+                    <div class="info-value">{{patient.problems|default:"No specific problems noted"}}</div>
+                  </div>
+                </div>
+                
+                <div class="row">
+                  <div class="col-lg-6">
+                    <div class="info-item">
+                      <div class="info-icon bg-success">
+                        <i class="fas fa-calendar-plus"></i>
+                      </div>
+                      <div class="info-content">
+                        <div class="info-label">Date of Admission</div>
+                        <div class="info-value">{{patient.do_admission|default:"Not specified"}}</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="col-lg-6">
+                    <div class="info-item">
+                      <div class="info-icon bg-warning">
+                        <i class="fas fa-calendar-minus"></i>
+                      </div>
+                      <div class="info-content">
+                        <div class="info-label">Date of Discharge</div>
+                        <div class="info-value">{{patient.do_discharge|default:"Not discharged"}}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-                <dt class="col-sm-2">Problems :</dt>
-                <dd class="col-sm-10">{{patient.problems|default:"---"}}</dd>
+              <div class="enhanced-info-box">
+                <h6 class="mb-3 text-success">
+                  <i class="fas fa-history mr-2"></i>
+                  Medical History Timeline
+                </h6>
+                
+                <div class="info-item">
+                  <div class="info-icon bg-primary">
+                    <i class="fas fa-pregnant"></i>
+                  </div>
+                  <div class="info-content">
+                    <div class="info-label">Antenatal History</div>
+                    <div class="info-value">
+                      <div class="text-justify">{{patient.antenatal_hx|default:"No antenatal complications noted"|linebreaks}}</div>
+                    </div>
+                  </div>
+                </div>
 
-                <dt class="col-sm-2">Indications for GMA :</dt>
-                <dd class="col-sm-10">
-                  {% if patient.indecation_for_gma.all %}
-                    {% for indication in patient.indecation_for_gma.all %}
-                      <span class="badge badge-info">{{ indication }}</span>
-                    {% endfor %}
-                  {% else %}
-                    ---
-                  {% endif %}
-                </dd>
+                <div class="info-item">
+                  <div class="info-icon bg-warning">
+                    <i class="fas fa-baby"></i>
+                  </div>
+                  <div class="info-content">
+                    <div class="info-label">Intranatal History</div>
+                    <div class="info-value">
+                      <div class="text-justify">{{patient.intranatal_hx|default:"Normal delivery process"|linebreaks}}</div>
+                    </div>
+                  </div>
+                </div>
 
-                <dt class="col-sm-2">Date of Admission :</dt>
-                <dd class="col-sm-10">{{patient.do_admission|default:"---"}}</dd>
+                <div class="info-item">
+                  <div class="info-icon bg-success">
+                    <i class="fas fa-child"></i>
+                  </div>
+                  <div class="info-content">
+                    <div class="info-label">Postnatal History</div>
+                    <div class="info-value">
+                      <div class="text-justify">{{patient.postnatal_hx|default:"Normal postnatal period"|linebreaks}}</div>
+                    </div>
+                  </div>
+                </div>
 
-                <dt class="col-sm-2">Date of Discharge :</dt>
-                <dd class="col-sm-10">{{patient.do_discharge|default:"---"}}</dd>
-
-                <dt class="col-sm-2">Antenatal History :</dt>
-                <dd class="col-sm-10">{{patient.antenatal_hx|default:"---"}}</dd>
-
-                <dt class="col-sm-2">Intranatal History :</dt>
-                <dd class="col-sm-10">{{patient.intranatal_hx|default:"---"}}</dd>
-
-                <dt class="col-sm-2">Postnatal History :</dt>
-                <dd class="col-sm-10">{{patient.postnatal_hx|default:"---"}}</dd>
-
-                <dt class="col-sm-2">Other Relevant Details :</dt>
-                <dd class="col-sm-10">{{patient.other_relavent_details|default:"---"}}</dd>
-
-              </dl>
-              <!-- /end medical history -->
+                <div class="info-item">
+                  <div class="info-icon bg-secondary">
+                    <i class="fas fa-clipboard-list"></i>
+                  </div>
+                  <div class="info-content">
+                    <div class="info-label">Other Relevant Details</div>
+                    <div class="info-value">
+                      <div class="text-justify">{{patient.other_relavent_details|default:"No additional details noted"|linebreaks}}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- /end enhanced medical history -->
             </div>
           
             <div class="tab-pane fade" id="assessment-gm" role="tabpanel" aria-labelledby="custom-tabs-four-gma-tab">
@@ -220,53 +568,74 @@
                     <div class="col">
 
                         {% if gm_assessments %}
-                  <table class="table table-hover">
-                    <thead>
-                      <tr>
-                        <th>Index</th>
-                        <th>Patient Name</th>
-                        <th>Date of Assessment</th>
-                        <th>Age of Assessment</th>
-                        <th>Diagnosis</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for Assessment in gm_assessments %}
-                    <tr>
-                      <td>{{ Assessment.id }}</td>
-                      <td>{{ Assessment.patient.baby_name }}</td>
-                      <td>{{ Assessment.date_of_assessment }}</td>
-                      <td>{{ Assessment.patient.getCorrectedAge }}</td>
-
-                      <td>{% if Assessment.isDiagnosisNormal %}
-                        <div style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="Normal" class="fas fa-check-circle" style="color: #1ab805;"></i></div>
-                        {% else %}
-                        <div style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="{% for dx in Assessment.diagnosis.all %}{{dx.title}}{% endfor %}" class="fas fa-times-circle" style="color: #ff0000;"></i></div>
-                        {% endif %}</td>
-
-                      <td>
-                        <div class=" btn-group" role="group">
-                          <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
-                          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
-                            <a class="dropdown-item" href="{% url 'assessment-view' Assessment.id %}"><i class="fas fa-eye"></i> View</a>
-                            <a class="dropdown-item" href="{% url 'assessment-edit' Assessment.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
-                            <a class="dropdown-item" href="{% url 'assessment-delete_start' Assessment.id %}"><i class="far fa-trash-alt"></i> Delete</a>
-                            {% if Assessment.video_file and Assessment.video_file.id %}
-                            <a class="dropdown-item" href="{% url 'video:view' Assessment.video_file.id %}"><i class="fas fa-eye"></i> Play Video</a>
-                            {% endif %}
-                            {% if Assessment.added_by and Assessment.added_by.username %}
-                            <a class="dropdown-item" href="{% url 'user-view-by-username' Assessment.added_by.username %}"><i class="fas fa-eye"></i> View Created User</a>
-                            {% endif %}
+                  <div class="table-responsive">
+                    <table class="table table-hover table-striped">
+                      <thead class="thead-light">
+                        <tr>
+                          <th class="text-center">#</th>
+                          <th>Assessment Details</th>
+                          <th class="text-center">Status</th>
+                          <th class="text-center">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for Assessment in gm_assessments %}
+                        <tr>
+                          <td class="text-center align-middle">
+                            <span class="badge badge-primary">{{ Assessment.id }}</span>
+                          </td>
+                          <td class="align-middle">
+                            <div class="assessment-details">
+                              <h6 class="mb-1">{{ Assessment.patient.baby_name }}</h6>
+                              <small class="text-muted d-block">
+                                <i class="fas fa-calendar mr-1"></i>{{ Assessment.date_of_assessment }}
+                              </small>
+                              <small class="text-muted d-block">
+                                <i class="fas fa-clock mr-1"></i>Age: {{ Assessment.patient.getCorrectedAge }}
+                              </small>
                             </div>
-                        </div>
-                      </div>
-                    </td>
-
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                  </table>
+                          </td>
+                          <td class="text-center align-middle">
+                            {% if Assessment.isDiagnosisNormal %}
+                              <span class="badge badge-success" data-toggle="tooltip" title="Normal Assessment">
+                                <i class="fas fa-check-circle"></i> Normal
+                              </span>
+                            {% else %}
+                              <span class="badge badge-danger" data-toggle="tooltip" title="{% for dx in Assessment.diagnosis.all %}{{dx.title}}{% endfor %}">
+                                <i class="fas fa-times-circle"></i> Abnormal
+                              </span>
+                            {% endif %}
+                          </td>
+                          <td class="text-center align-middle">
+                            <div class="action-buttons-horizontal">
+                              <a href="{% url 'assessment-view' Assessment.id %}" class="btn btn-sm btn-outline-info" data-toggle="tooltip" title="View Details">
+                                <i class="fas fa-eye"></i>
+                              </a>
+                              <a href="{% url 'assessment-edit' Assessment.id %}" class="btn btn-sm btn-outline-warning" data-toggle="tooltip" title="Edit Assessment">
+                                <i class="fas fa-edit"></i>
+                              </a>
+                              {% if Assessment.video_file and Assessment.video_file.id %}
+                              <a href="{% url 'video:view' Assessment.video_file.id %}" class="btn btn-sm btn-outline-success" data-toggle="tooltip" title="Play Video">
+                                <i class="fas fa-play"></i>
+                              </a>
+                              {% endif %}
+                              <a href="{% url 'assessment-delete_start' Assessment.id %}" class="btn btn-sm btn-outline-danger" data-toggle="tooltip" title="Delete Assessment">
+                                <i class="fas fa-trash"></i>
+                              </a>
+                            </div>
+                            {% if Assessment.added_by and Assessment.added_by.username %}
+                            <div class="mt-1">
+                              <a href="{% url 'user-view-by-username' Assessment.added_by.username %}" class="btn btn-xs btn-outline-secondary" data-toggle="tooltip" title="View Creator: {{ Assessment.added_by.username }}">
+                                <i class="fas fa-user"></i>
+                              </a>
+                            </div>
+                            {% endif %}
+                          </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
 
                   <div class="text-center">
                   <hr>
@@ -654,60 +1023,119 @@
         <!-- /.card-body -->
 
 
-        <div class="card card-body container-fluid">
-          <div class="row justify-content-end align-items-center">
-            <div class="col-auto m-2">
-              <a class="btn btn-primary" href="{% url 'video:add' patient.id %}" type="button"><i class="right fas fa-circle fa-plus"></i>  New Video</a>
+        <!-- Enhanced Action Panel -->
+        <div class="card shadow-sm">
+          <div class="card-header bg-light">
+            <h6 class="mb-0">
+              <i class="fas fa-tools mr-2"></i>
+              Quick Actions
+            </h6>
+          </div>
+          <div class="card-body patient-actions">
+            
+            <!-- Primary Actions Group -->
+            <div class="row mb-3">
+              <div class="col-12">
+                <h6 class="text-muted mb-2">
+                  <i class="fas fa-plus-circle mr-1"></i>
+                  Add New Records
+                </h6>
+              </div>
+              <div class="col-lg-3 col-md-6 mb-2">
+                <a class="btn btn-success btn-block" href="{% url 'video:add' patient.id %}">
+                  <i class="fas fa-video mr-2"></i>
+                  <span class="d-none d-sm-inline">New Video</span>
+                </a>
+              </div>
+              <div class="col-lg-3 col-md-6 mb-2">
+                <a class="btn btn-info btn-block" href="{% url 'attachment-add' patient.id %}">
+                  <i class="fas fa-child mr-2"></i>
+                  <span class="d-none d-sm-inline">New Assessment</span>
+                </a>
+              </div>
+              <div class="col-lg-3 col-md-6 mb-2">
+                <a class="btn btn-warning btn-block" href="{% url 'attachment-add' patient.id %}">
+                  <i class="fas fa-hands-helping mr-2"></i>
+                  <span class="d-none d-sm-inline">New CDIC Record</span>
+                </a>
+              </div>
+              <div class="col-lg-3 col-md-6 mb-2">
+                <a class="btn btn-secondary btn-block" href="{% url 'attachment-add' patient.id %}">
+                  <i class="fas fa-paperclip mr-2"></i>
+                  <span class="d-none d-sm-inline">New Attachment</span>
+                </a>
+              </div>
             </div>
 
-            <div class="col-auto m-2">
-              <a class="btn btn-primary" href="{% url 'attachment-add' patient.id %}" type="button"><i class="right fas fa-circle fa-plus"></i>  New Developmental Assessment</a>
-            </div>
-            <div class="col-auto m-2">
-              <a class="btn btn-primary" href="{% url 'attachment-add' patient.id %}" type="button"><i class="right fas fa-circle fa-plus"></i>  New CDIC Record</a>
-            </div>
-            <div class="col-auto m-2">
-              <a class="btn btn-primary" href="{% url 'attachment-add' patient.id %}" type="button"><i class="right fas fa-circle fa-plus"></i>  New Attachment</a>
+            <hr class="my-3">
+
+            <!-- View Actions Group -->
+            <div class="row mb-3">
+              <div class="col-12">
+                <h6 class="text-muted mb-2">
+                  <i class="fas fa-eye mr-1"></i>
+                  View Records
+                </h6>
+              </div>
+              {% if file_videos %}
+              <div class="col-lg-4 col-md-6 mb-2">
+                <a class="btn btn-outline-primary btn-block" href="{% url 'video:manager-by-patient' patient.id %}">
+                  <i class="fas fa-video mr-2"></i>
+                  <span class="d-none d-sm-inline">View Videos</span>
+                  <span class="badge badge-primary ml-2">{{file_video_count}}</span>
+                </a>
+              </div>
+              {% endif %}
+              {% if file_attachment %}
+              <div class="col-lg-4 col-md-6 mb-2">
+                <a class="btn btn-outline-secondary btn-block" href="{% url 'attachment-manager-patient' patient.id %}">
+                  <i class="fas fa-paperclip mr-2"></i>
+                  <span class="d-none d-sm-inline">View Attachments</span>
+                  <span class="badge badge-secondary ml-2">{{file_attachment_count}}</span>
+                </a>
+              </div>
+              {% endif %}
+              <div class="col-lg-4 col-md-6 mb-2">
+                {% if bookmark %}
+                <a class="btn btn-outline-success btn-block" href="{% url 'bookmark-view' bookmark.id %}">
+                  <i class="fas fa-bookmark mr-2"></i>
+                  <span class="d-none d-sm-inline">View Bookmark</span>
+                </a>
+                {% else %}
+                <a class="btn btn-outline-success btn-block" href="{% url 'bookmark-add' patient.id 'Patient' %}">
+                  <i class="fas fa-bookmark mr-2"></i>
+                  <span class="d-none d-sm-inline">Add Bookmark</span>
+                </a>
+                {% endif %}
+              </div>
             </div>
 
-            <div class="col-auto m-2">
-              {% if bookmark %}
-              <a class="btn btn-primary" href="{% url 'bookmark-view' bookmark.id %}" type="button"><i class="fas fa-eye"></i> View Bookmark</a>
-              {% else %}
-              <a class="btn btn-primary" href="{% url 'bookmark-add' patient.id 'Patient' %}" type="button"><i class="fas fa-circle fa-plus"></i>  Add Bookmark</a>
+            <hr class="my-3">
+
+            <!-- Management Actions Group -->
+            <div class="row">
+              <div class="col-12">
+                <h6 class="text-muted mb-2">
+                  <i class="fas fa-cog mr-1"></i>
+                  Patient Management
+                </h6>
+              </div>
+              <div class="col-lg-6 col-md-6 mb-2">
+                <a class="btn btn-primary btn-block" href="{% url 'edit-patient' patient.id %}">
+                  <i class="fas fa-edit mr-2"></i>
+                  Update Patient
+                </a>
+              </div>
+              {% if user.is_superuser %}
+              <div class="col-lg-6 col-md-6 mb-2">
+                <button class="btn btn-danger btn-block" onclick="confirmPatientDeletion()" type="button">
+                  <i class="fas fa-trash-alt mr-2"></i>
+                  Delete Patient
+                </button>
+              </div>
               {% endif %}
             </div>
-
-            {% comment %} {% if file_videos %}
-            <div class="col-auto m-2">
-            <a class="btn btn-primary" href="{% url 'file-manager-patient-type' patient.id 'Video' %}" type="button"><i class="right fas fa-eye"></i>  View Videos</a>
-            </div>
-            {% endif %} {% endcomment %}
-
-            {% if file_videos %}
-            <div class="col-auto m-2">
-            <a class="btn btn-primary" href="{% url 'attachment-manager-patient' patient.id%}" type="button"><i class="right fas fa-eye"></i>  View Attachments</a>
-            </div>
-            {% endif %}
-
-            {% comment %} {% if file_assessments %}
-            <div class="col-auto m-2">
-            <a class="btn btn-primary" href="{% url 'file-manager-patient-type' patient.id 'Video' %}" type="button"><i class="right fas fa-eye"></i>  View Assessment</a>
-            </div>
-            {% endif %} {% endcomment %}
-
-            <div class="col-auto m-2">
-              <a class="btn btn-primary" href="{% url 'edit-patient' patient.id %}" type="button"><i class="fas fa-pencil-alt"></i>  Update Patient</a>
-            </div>
             
-            <!-- Delete Patient Button -->
-            {% if user.is_superuser %}
-            <div class="col-auto m-2">
-              <button class="btn btn-danger" onclick="confirmPatientDeletion()" type="button">
-                <i class="fas fa-trash-alt"></i> Delete Patient
-              </button>
-            </div>
-            {% endif %}
           </div>
         </div>
           </div>

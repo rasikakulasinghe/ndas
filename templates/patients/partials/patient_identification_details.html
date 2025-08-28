@@ -1,25 +1,136 @@
-<div class="card">
-  <div class="card-header 
+<!-- Enhanced Patient Identification Card -->
+<div class="card shadow-sm mb-4">
+  <div class="card-header patient-status-header 
+    {% if patient.isNewPatient %}bg-info{% else %}
+      {% if patient.isDischarged %}bg-secondary{% else %}
+        {% if patient.isDiagnosed %}bg-warning{% else %}bg-success{% endif %}
+      {% endif %}
+    {% endif %} text-white">
+    
+    <div class="d-flex align-items-center justify-content-between">
+      <div>
+        <h5 class="mb-0">
+          <i class="fas fa-user-injured mr-2"></i>
+          Patient Identification
+        </h5>
+        <small class="opacity-75">
+          {% if patient.isNewPatient %}New Patient
+          {% elif patient.isDischarged %}Discharged
+          {% elif patient.isDiagnosed %}Under Diagnosis
+          {% else %}Active Patient
+          {% endif %}
+        </small>
+      </div>
+      
+      <div class="patient-status-badge">
+        {% if patient.isNewPatient %}
+          <span class="badge badge-light">
+            <i class="fas fa-plus-circle mr-1"></i>New
+          </span>
+        {% elif patient.isDischarged %}
+          <span class="badge badge-light">
+            <i class="fas fa-sign-out-alt mr-1"></i>Discharged
+          </span>
+        {% elif patient.isDiagnosed %}
+          <span class="badge badge-light">
+            <i class="fas fa-stethoscope mr-1"></i>Diagnosed
+          </span>
+        {% else %}
+          <span class="badge badge-light">
+            <i class="fas fa-heart-rate mr-1"></i>Active
+          </span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
   
-  {% if patient.isNewPatient %}{% else %}
-
-  {% if patient.isDischarged %}alert-dark{% else %}
-  {% if patient.isDiagnosed %}alert-danger{% else %}alert-success{% endif %}
-  {% endif %}
-
-  {% endif %}
-  
-  ">
-    <div class="container">
-      <div class="row">
-        <div class="col-sm">BHT No : <b>{{patient.bht|default_if_none:"---"}}</b></div>
-        <div class="col-sm">NNC No : <b>{{patient.nnc_no|default_if_none:"---"}}</b></div>
-        <div class="col-sm">PIN : <b>{{patient.pin|default_if_none:"---"}}</b></div>
-        <div class="col-sm">PTC No : <b>{{patient.ptc_no|default_if_none:"---"}}</b></div>
-        <div class="col-sm">PC No : <b>{{patient.pc_no|default_if_none:"---"}}</b></div>
-        <div class="col-sm">Disk No : <b>{{patient.disk_no|default_if_none:"---"}}</b></div>
-        <div class="col-sm">Baby : <b>{{patient.baby_name|default_if_none:"---"}}</b></div>
-        <div class="col-sm">Mother : <b>{{patient.mother_name|default_if_none:"---"}}</b></div>
+  <div class="card-body p-3">
+    <!-- Compact Patient Names Section -->
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <div class="d-flex align-items-center border-left-primary pl-3 py-2">
+          <div class="icon-circle-sm bg-primary text-white mr-3">
+            <i class="fas fa-baby"></i>
+          </div>
+          <div>
+            <small class="text-muted font-weight-bold">Baby Name</small>
+            <div class="font-weight-bold text-dark mb-0">{{patient.baby_name|default_if_none:"Not specified"}}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="d-flex align-items-center border-left-info pl-3 py-2">
+          <div class="icon-circle-sm bg-info text-white mr-3">
+            <i class="fas fa-female"></i>
+          </div>
+          <div>
+            <small class="text-muted font-weight-bold">Mother Name</small>
+            <div class="font-weight-bold text-dark mb-0">{{patient.mother_name|default_if_none:"Not specified"}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Compact Medical Record Numbers -->
+    <div class="compact-id-grid">
+      <div class="compact-id-item border-left-primary">
+        <div class="icon-circle-sm bg-primary text-white">
+          <i class="fas fa-id-card"></i>
+        </div>
+        <div class="compact-id-content">
+          <small class="text-muted">BHT No</small>
+          <div class="font-weight-bold text-dark">{{patient.bht|default_if_none:"---"}}</div>
+        </div>
+      </div>
+      
+      <div class="compact-id-item border-left-success">
+        <div class="icon-circle-sm bg-success text-white">
+          <i class="fas fa-hospital"></i>
+        </div>
+        <div class="compact-id-content">
+          <small class="text-muted">NNC No</small>
+          <div class="font-weight-bold text-dark">{{patient.nnc_no|default_if_none:"---"}}</div>
+        </div>
+      </div>
+      
+      <div class="compact-id-item border-left-warning">
+        <div class="icon-circle-sm bg-warning text-white">
+          <i class="fas fa-fingerprint"></i>
+        </div>
+        <div class="compact-id-content">
+          <small class="text-muted">PIN</small>
+          <div class="font-weight-bold text-dark">{{patient.pin|default_if_none:"---"}}</div>
+        </div>
+      </div>
+      
+      <div class="compact-id-item border-left-info">
+        <div class="icon-circle-sm bg-info text-white">
+          <i class="fas fa-clinic-medical"></i>
+        </div>
+        <div class="compact-id-content">
+          <small class="text-muted">PTC No</small>
+          <div class="font-weight-bold text-dark">{{patient.ptc_no|default_if_none:"---"}}</div>
+        </div>
+      </div>
+      
+      <div class="compact-id-item border-left-secondary">
+        <div class="icon-circle-sm bg-secondary text-white">
+          <i class="fas fa-procedures"></i>
+        </div>
+        <div class="compact-id-content">
+          <small class="text-muted">PC No</small>
+          <div class="font-weight-bold text-dark">{{patient.pc_no|default_if_none:"---"}}</div>
+        </div>
+      </div>
+      
+      <div class="compact-id-item border-left-dark">
+        <div class="icon-circle-sm bg-dark text-white">
+          <i class="fas fa-compact-disc"></i>
+        </div>
+        <div class="compact-id-content">
+          <small class="text-muted">Disk No</small>
+          <div class="font-weight-bold text-dark">{{patient.disk_no|default_if_none:"---"}}</div>
+        </div>
       </div>
     </div>
   </div>

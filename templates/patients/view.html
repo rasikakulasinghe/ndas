@@ -1,12 +1,699 @@
 {% extends 'src/base.html' %}
+{% load static %}
 {% block title %}Patient - View | {{patient.baby_name}}{% endblock %}
-{% block main_content %}
-</br>
 
+{% block main_content %}
 <div class="container-fluid">
-<div class="col-sm">
-{% csrf_token %}
-{% include './partials/patient_view.html' %}
+  {% csrf_token %}
+  {% include './partials/patient_view.html' %}
 </div>
+
+<!-- Custom CSS for mobile responsiveness -->
+<style>
+  @media (max-width: 768px) {
+    .nav-tabs .nav-link {
+      font-size: 0.875rem;
+      padding: 0.5rem;
+    }
+    
+    .info-box-content {
+      font-size: 0.875rem;
+    }
+    
+    .table-responsive {
+      font-size: 0.875rem;
+    }
+    
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .btn-group .dropdown-menu {
+      position: static !important;
+      transform: none !important;
+      border: none;
+      box-shadow: none;
+      background: #f8f9fa;
+      margin-top: 0.25rem;
+    }
+    
+    .patient-actions .btn {
+      margin-bottom: 0.5rem;
+      width: 100%;
+    }
+    
+    .nav-tabs {
+      flex-wrap: wrap;
+    }
+    
+    .nav-tabs .nav-item {
+      margin-bottom: 0.25rem;
+    }
+    
+    .dl-horizontal {
+      display: block;
+    }
+    
+    .dl-horizontal dt,
+    .dl-horizontal dd {
+      display: block;
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+    
+    .dl-horizontal dt {
+      font-weight: bold;
+      color: #495057;
+    }
+    
+    .identification-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
+    }
+    
+    .identification-item {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+    }
+  }
+  
+  @media (min-width: 769px) {
+    .identification-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    
+    .compact-id-grid {
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+  }
+  
+  @media (min-width: 992px) {
+    .compact-id-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  .patient-status-ribbon {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .ribbon {
+    position: absolute;
+    top: 15px;
+    right: -30px;
+    background: #ffc107;
+    color: #212529;
+    padding: 8px 40px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    transform: rotate(45deg);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    z-index: 10;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  }
+  
+  .ribbon.bg-warning {
+    background: linear-gradient(135deg, #ffc107, #e0a800);
+    color: #212529;
+  }
+  
+  .ribbon.bg-secondary {
+    background: linear-gradient(135deg, #6c757d, #545b62);
+    color: white;
+  }
+  
+  .bg-gradient-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+  }
+  
+  .summary-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+  }
+  
+  .stat-card:hover {
+    transform: translateY(-2px);
+  }
+  
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  
+  .stat-label {
+    font-size: 0.875rem;
+    opacity: 0.9;
+  }
+  
+  .enhanced-info-box {
+    background: white;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border-left: 4px solid #007bff;
+    margin-bottom: 1rem;
+  }
+  
+  .enhanced-info-box .info-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e9ecef;
+  }
+  
+  .enhanced-info-box .info-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+  
+  .info-icon {
+    background: #007bff;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    flex-shrink: 0;
+    font-size: 14px;
+    box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+  }
+  
+  .icon-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+  }
+  
+  /* Compact Design Elements */
+  .icon-circle-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    flex-shrink: 0;
+  }
+  
+  .compact-id-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .compact-id-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 0.375rem;
+    border-left-width: 4px;
+    border-left-style: solid;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: all 0.2s ease;
+  }
+  
+  .compact-id-item:hover {
+    background: white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+  }
+  
+  .compact-id-content {
+    margin-left: 0.75rem;
+    flex: 1;
+  }
+  
+  .compact-id-content small {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 0.125rem;
+  }
+  
+  .compact-id-content .font-weight-bold {
+    font-size: 0.875rem;
+    line-height: 1.2;
+  }
+  
+  /* Border left colors for cards */
+  .border-left-primary {
+    border-left: 4px solid #007bff !important;
+  }
+  
+  .border-left-success {
+    border-left: 4px solid #28a745 !important;
+  }
+  
+  .border-left-warning {
+    border-left: 4px solid #ffc107 !important;
+  }
+  
+  .border-left-info {
+    border-left: 4px solid #17a2b8 !important;
+  }
+  
+  .border-left-secondary {
+    border-left: 4px solid #6c757d !important;
+  }
+  
+  .border-left-dark {
+    border-left: 4px solid #343a40 !important;
+  }
+  
+  .info-content {
+    flex: 1;
+  }
+  
+  .info-label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .info-value {
+    color: #6c757d;
+  }
+  
+  .professional-tabs {
+    border-bottom: 2px solid #e9ecef;
+    margin-bottom: 2rem;
+    background: #f8f9fa;
+    border-radius: 0.5rem 0.5rem 0 0;
+  }
+  
+  .professional-tabs .nav-link {
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #495057;
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+    transition: all 0.3s ease;
+    border-radius: 0.25rem 0.25rem 0 0;
+    margin: 0 0.25rem;
+    position: relative;
+    background: transparent;
+  }
+  
+  .professional-tabs .nav-link:hover {
+    border-bottom-color: #007bff;
+    color: #007bff;
+    background: rgba(0, 123, 255, 0.05);
+    transform: translateY(-2px);
+  }
+  
+  .professional-tabs .nav-link.active {
+    border-bottom-color: #007bff;
+    color: #007bff;
+    background: white;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+    font-weight: 700;
+  }
+  
+  .professional-tabs .nav-link .badge {
+    font-size: 0.7rem;
+    padding: 0.25em 0.5em;
+    margin-left: 0.5rem;
+  }
+  
+  .professional-tabs .nav-link i {
+    font-size: 1.1rem;
+  }
+  
+  /* Additional Mobile Optimizations */
+  .assessment-details h6 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #495057;
+  }
+  
+  .table-responsive table {
+    min-width: 600px;
+  }
+  
+  @media (max-width: 576px) {
+    .table-responsive table {
+      min-width: 500px;
+      font-size: 0.875rem;
+    }
+    
+    .assessment-details h6 {
+      font-size: 0.875rem;
+    }
+    
+    .badge {
+      font-size: 0.75rem;
+    }
+    
+    .btn-block {
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+    }
+    
+    .stat-card {
+      padding: 1rem;
+    }
+    
+    .stat-value {
+      font-size: 1.5rem;
+    }
+    
+    .identification-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .identification-item .card-body {
+      padding: 0.75rem;
+    }
+    
+    .compact-id-grid {
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
+    }
+    
+    .compact-id-item {
+      padding: 0.5rem;
+    }
+    
+    .compact-id-content {
+      margin-left: 0.5rem;
+    }
+    
+    .compact-id-content small {
+      font-size: 0.7rem;
+    }
+    
+    .compact-id-content .font-weight-bold {
+      font-size: 0.8rem;
+    }
+  }
+  
+  /* Professional Table Styling */
+  .table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 123, 255, 0.05);
+  }
+  
+  .table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+  }
+  
+  /* Enhanced Button Styling */
+  .btn-block:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  }
+  
+  .dropdown-menu {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 0.5rem;
+  }
+  
+  .dropdown-item:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+  
+  /* Card Enhancements */
+  .card {
+    border: none;
+    border-radius: 0.5rem;
+    transition: box-shadow 0.2s ease;
+  }
+  
+  .card:hover {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+  
+  .card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #dee2e6;
+    border-radius: 0.5rem 0.5rem 0 0 !important;
+  }
+  
+  /* Status Badge Enhancements */
+  .badge {
+    font-weight: 500;
+    padding: 0.5em 0.75em;
+    border-radius: 0.375rem;
+  }
+  
+  .badge-primary { background: linear-gradient(135deg, #007bff, #0056b3); }
+  .badge-success { background: linear-gradient(135deg, #28a745, #1e7e34); }
+  .badge-warning { background: linear-gradient(135deg, #ffc107, #e0a800); }
+  .badge-danger { background: linear-gradient(135deg, #dc3545, #bd2130); }
+  .badge-info { background: linear-gradient(135deg, #17a2b8, #117a8b); }
+  .badge-secondary { background: linear-gradient(135deg, #6c757d, #545b62); }
+  
+  /* Loading States */
+  .btn[disabled] {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  
+  /* Tooltip Enhancements */
+  .tooltip {
+    font-size: 0.875rem;
+  }
+  
+  .tooltip-inner {
+    background: #333;
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.75rem;
+  }
+  
+  /* Responsive Grid Enhancements */
+  @media (min-width: 992px) {
+    .patient-actions .row {
+      margin-left: -0.5rem;
+      margin-right: -0.5rem;
+    }
+    
+    .patient-actions .row > [class*="col-"] {
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+    }
+  }
+  
+  /* Focus States for Accessibility */
+  .btn:focus,
+  .nav-link:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    outline: none;
+  }
+  
+  /* Print Optimizations */
+  @media print {
+    .patient-actions,
+    .nav-tabs,
+    .btn,
+    .dropdown {
+      display: none !important;
+    }
+    
+    .tab-content .tab-pane {
+      display: block !important;
+    }
+    
+    .card {
+      box-shadow: none !important;
+      border: 1px solid #dee2e6 !important;
+    }
+  }
+  
+  /* Enhanced Text Colors for Better Contrast */
+  .text-dark {
+    color: #212529 !important;
+    font-weight: 600;
+  }
+  
+  .text-muted {
+    color: #6c757d !important;
+  }
+  
+  /* Patient Status Colors */
+  .patient-status-header.bg-info {
+    background: linear-gradient(135deg, #17a2b8, #117a8b) !important;
+  }
+  
+  .patient-status-header.bg-secondary {
+    background: linear-gradient(135deg, #6c757d, #545b62) !important;
+  }
+  
+  .patient-status-header.bg-warning {
+    background: linear-gradient(135deg, #ffc107, #e0a800) !important;
+    color: #212529 !important;
+  }
+  
+  .patient-status-header.bg-success {
+    background: linear-gradient(135deg, #28a745, #1e7e34) !important;
+  }
+  
+  /* Badge Color Improvements */
+  .badge-light {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    color: #212529 !important;
+    font-weight: 600;
+  }
+  
+  /* Improved Card Shadows */
+  .card.shadow-sm {
+    box-shadow: 0 0.125rem 0.375rem rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  /* Info Box Enhancements */
+  .enhanced-info-box {
+    background: #ffffff;
+    border: 1px solid rgba(0, 123, 255, 0.1);
+  }
+  
+  /* Tab Content Background */
+  .tab-content {
+    background: #ffffff;
+    border-radius: 0 0 0.5rem 0.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  
+  /* Horizontal Action Buttons */
+  .action-buttons-horizontal {
+    display: flex;
+    gap: 0.25rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .action-buttons-horizontal .btn {
+    min-width: 32px;
+    height: 32px;
+    padding: 0.375rem;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .action-buttons-horizontal .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  }
+  
+  .action-buttons-horizontal .btn i {
+    font-size: 0.875rem;
+  }
+  
+  .btn-xs {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1;
+    border-radius: 0.25rem;
+  }
+  
+  /* Mobile Responsiveness for Action Buttons */
+  @media (max-width: 768px) {
+    .action-buttons-horizontal {
+      gap: 0.125rem;
+    }
+    
+    .action-buttons-horizontal .btn {
+      min-width: 28px;
+      height: 28px;
+      padding: 0.25rem;
+    }
+    
+    .action-buttons-horizontal .btn i {
+      font-size: 0.75rem;
+    }
+    
+    .btn-xs {
+      padding: 0.125rem 0.375rem;
+      font-size: 0.7rem;
+    }
+    
+    /* Stack action buttons vertically on very small screens */
+    @media (max-width: 576px) {
+      .action-buttons-horizontal {
+        flex-direction: column;
+        gap: 0.125rem;
+      }
+      
+      .action-buttons-horizontal .btn {
+        width: 100%;
+        max-width: 120px;
+        margin: 0 auto;
+      }
+    }
+  }
+  
+  /* Enhanced button colors for better visibility */
+  .btn-outline-info:hover {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+    color: white;
+  }
+  
+  .btn-outline-warning:hover {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #212529;
+  }
+  
+  .btn-outline-success:hover {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+  }
+  
+  .btn-outline-danger:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+  }
+  
+  .btn-outline-secondary:hover {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+  }
+</style>
 
 {% endblock main_content%}

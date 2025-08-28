@@ -3,111 +3,430 @@
  * Part of NDAS (Neonatal Development Assessment System)
  */
 
-/* Fix for nested dropdown menus */
-.submenu {
-  position: absolute;
-  left: 100%;
-  top: 0;
-  margin-top: -1px;
-  border-radius: 0 0.25rem 0.25rem 0.25rem;
-  display: none;
-  z-index: 1001;
-  min-width: 200px;
+/* AdminLTE-compatible patient manager styles */
+.content-header {
+  background: rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid #dee2e6;
 }
 
-.submenu.show {
-  display: block;
+.content-header h1 {
+  color: #495057;
+  font-weight: 400;
 }
 
-/* Ensure parent dropdown item has relative positioning */
-.dropdown-item.dropdown-toggle {
-  position: relative;
+.content-header h1 small {
+  font-size: 0.6em;
+  color: #6c757d;
 }
 
-.dropdown-item.dropdown-toggle::after {
-  border-top: 0.3em solid transparent;
-  border-right: 0;
-  border-bottom: 0.3em solid transparent;
-  border-left: 0.3em solid;
-  margin-left: auto;
+/* Card improvements */
+.card-outline.card-info {
+  border-top: 3px solid #17a2b8;
 }
 
-/* Create a hover bridge between parent and submenu */
-.dropdown-item.dropdown-toggle:hover + .submenu,
-.submenu:hover {
-  display: block !important;
+.card-header {
+  background: rgba(23, 162, 184, 0.1);
+  border-bottom: 1px solid #dee2e6;
 }
 
-/* Improve hover detection by extending hover area */
-.dropdown-item.dropdown-toggle::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: -5px;
-  width: 5px;
-  height: 100%;
-  background: transparent;
+/* Table enhancements */
+.table-responsive {
+  border-radius: 0.25rem;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
+  /* Fix dropdown overflow issues - critical fix */
+  overflow: visible !important;
 }
 
-/* Additional styling for better submenu appearance */
-.submenu {
+.table-responsive .table {
+  overflow: visible !important;
+}
+
+/* Critical dropdown fixes for table containers */
+.table-responsive {
+  position: static !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+}
+
+.table .dropdown {
+  position: static !important;
+}
+
+.table .dropdown-menu {
+  position: fixed !important;
+  z-index: 9999 !important;
+  will-change: transform;
+}
+
+.table thead th {
+  background-color: #f8f9fa;
+  color: #495057;
+  font-weight: 600;
+  border-bottom: 2px solid #dee2e6;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table td {
+  vertical-align: middle;
+  padding: 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 123, 255, 0.05);
+  transition: background-color 0.15s ease-in-out;
+}
+
+/* Status indicators */
+.badge-sm {
+  font-size: 0.75em;
+  padding: 0.25em 0.5em;
+}
+
+/* Button group improvements */
+.btn-group .btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.btn-outline-info:hover,
+.btn-outline-warning:hover,
+.btn-outline-primary:hover {
+  transform: translateY(-1px);
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  transition: all 0.15s ease-in-out;
 }
 
-/* Ensure submenu doesn't interfere with parent dropdown positioning */
+/* Dropdown improvements - Critical fixes for table dropdowns */
 .dropdown-menu {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 0.5rem 0;
+  background: #fff;
+  border-radius: 0.25rem;
+}
+
+/* CRITICAL: Fix for table dropdown positioning */
+.table-responsive {
+  position: static !important;
+}
+
+.table .btn-group {
+  position: static !important;
+}
+
+.table .dropdown {
+  position: static !important;
+}
+
+.table .dropdown-menu {
+  position: absolute !important;
+  z-index: 9999 !important;
+  top: 100% !important;
+  left: auto !important;
+  right: 0 !important;
+  min-width: 250px;
+  max-width: 350px;
+  margin-top: 0.125rem !important;
+  will-change: transform;
+}
+
+/* Ensure dropdown appears above everything */
+.table .dropdown.show .dropdown-menu {
+  display: block !important;
+  z-index: 9999 !important;
+}
+
+/* Fix Bootstrap's dropdown-menu-right positioning in tables */
+.table .dropdown-menu-right {
+  right: 0 !important;
+  left: auto !important;
+  transform: translate3d(0px, 32px, 0px) !important;
+}
+
+.dropdown-header {
+  color: #6c757d;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0.5rem 1rem 0.25rem;
+}
+
+.dropdown-item {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  transition: all 0.15s ease-in-out;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background-color: rgba(0, 123, 255, 0.1);
+  color: #0056b3;
+}
+
+.dropdown-item.active {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.dropdown-item i {
+  width: 1.25rem;
+  text-align: center;
+}
+
+/* Filter dropdown specific styles */
+#filterDropdown {
+  min-width: 140px;
+}
+
+/* Pagination improvements */
+.pagination-sm .page-link {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #17a2b8;
+  border-color: #17a2b8;
+}
+
+.pagination .page-link {
+  color: #17a2b8;
+  border-color: #dee2e6;
+}
+
+.pagination .page-link:hover {
+  color: #0056b3;
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.empty-state i {
+  color: #6c757d;
+  margin-bottom: 1rem;
+}
+
+/* Card body overflow fix for dropdowns */
+.card-body {
+  overflow: visible !important;
+}
+
+.card {
+  overflow: visible !important;
+}
+
+.content {
+  overflow: visible !important;
+}
+
+/* Force all containers to not clip dropdowns */
+.container-fluid {
+  overflow: visible !important;
+}
+
+/* Additional fixes for dropdown clipping */
+.main-content {
+  overflow: visible !important;
+}
+
+.content-wrapper {
+  overflow: visible !important;
+}
+
+.wrapper {
+  overflow: visible !important;
+}
+
+/* Ensure dropdowns work properly in table cells */
+.table td {
   position: relative;
 }
 
-/* Mobile responsive adjustments */
-@media (max-width: 991.98px) {
-  .submenu {
-    position: static !important;
-    left: auto !important;
-    top: auto !important;
-    margin-left: 1rem;
-    border: none;
+.table .dropdown-toggle::after {
+  vertical-align: middle;
+}
+
+/* Fix for dropdown positioning in last rows */
+.table tbody tr:nth-last-child(-n+3) .dropdown-menu {
+  transform: translateY(-100%);
+  top: auto !important;
+  bottom: 100% !important;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 767.98px) {
+  .content-header .col-sm-6 {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  
+  .content-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .table-responsive {
+    border: 0;
     box-shadow: none;
-    background: transparent;
+    overflow-x: auto;
+    overflow-y: visible;
   }
   
-  .submenu .dropdown-item {
-    padding-left: 1.5rem;
-    font-size: 0.9rem;
+  .btn-group .btn {
+    margin-bottom: 0.25rem;
   }
   
-  /* Disable hover effects on mobile */
-  .dropdown-item.dropdown-toggle::before {
-    display: none;
+  /* Stack filter dropdown on mobile */
+  .dropdown.float-sm-right {
+    float: none !important;
+    width: 100%;
+  }
+  
+  #filterDropdown {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Mobile dropdown fixes */
+  .table .dropdown-menu {
+    position: fixed !important;
+    z-index: 1060;
+    max-width: 90vw;
+    left: 5vw !important;
+    right: 5vw !important;
+    top: auto !important;
+    bottom: auto !important;
+    transform: none !important;
   }
 }
 
-/* Desktop-specific improvements */
-@media (min-width: 992px) {
-  /* Ensure parent menu item creates stacking context */
-  .dropdown-item.dropdown-toggle {
-    overflow: visible;
+@media (max-width: 575.98px) {
+  .content-header h1 {
+    font-size: 1.25rem;
   }
   
-  /* Better positioning for dropdown menu container */
-  .btn-group .dropdown-menu {
-    position: absolute;
-    z-index: 1000;
+  .card-header h3 {
+    font-size: 1rem;
   }
   
-  /* Ensure submenu appears above other elements */
-  .submenu {
-    z-index: 1001;
+  .table td {
+    padding: 0.5rem 0.25rem;
   }
   
-  /* Smooth transition for better UX */
-  .submenu {
-    transition: opacity 0.1s ease-in-out;
-    opacity: 0;
+  .pagination-sm {
+    justify-content: center;
+  }
+}
+
+/* Print styles */
+@media print {
+  .content-header,
+  .btn,
+  .dropdown,
+  .pagination,
+  .card-footer {
+    display: none !important;
   }
   
-  .submenu.show {
-    opacity: 1;
+  .card {
+    border: none !important;
+    box-shadow: none !important;
   }
+  
+  .table {
+    font-size: 0.75rem;
+  }
+}
+
+/* Professional Dropdown Button Styling */
+.dropdown-toggle {
+  border: 1px solid #dee2e6 !important;
+  background: #fff !important;
+  color: #6c757d !important;
+  padding: 0.375rem 0.5rem !important;
+  transition: all 0.15s ease-in-out !important;
+}
+
+.dropdown-toggle:hover {
+  background-color: #f8f9fa !important;
+  border-color: #adb5bd !important;
+  color: #495057 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+.dropdown-toggle:focus,
+.dropdown-toggle.show {
+  background-color: #17a2b8 !important;
+  border-color: #17a2b8 !important;
+  color: #fff !important;
+  box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.25) !important;
+}
+
+/* Hide default Bootstrap dropdown arrow */
+.dropdown-toggle::after {
+  display: none !important;
+}
+
+/* Professional Dropdown Menu */
+.dropdown-menu {
+  min-width: 280px !important;
+  max-width: 320px !important;
+  border: 1px solid #dee2e6 !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  padding: 0.5rem 0 !important;
+  font-size: 0.875rem !important;
+}
+
+.dropdown-header {
+  color: #6c757d !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  padding: 0.75rem 1rem 0.25rem !important;
+  margin: 0 !important;
+}
+
+.dropdown-item {
+  padding: 0.5rem 1rem !important;
+  color: #495057 !important;
+  transition: all 0.15s ease-in-out !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background-color: #f8f9fa !important;
+  color: #16181b !important;
+}
+
+.dropdown-item i {
+  width: 1.25rem !important;
+  text-align: center !important;
+  flex-shrink: 0 !important;
+}
+
+.dropdown-item.text-danger:hover {
+  background-color: #dc3545 !important;
+  color: #fff !important;
+}
+
+.dropdown-item.text-danger:hover i {
+  color: #fff !important;
+}
+
+.dropdown-divider {
+  margin: 0.5rem 0 !important;
+  border-color: #e9ecef !important;
 }
