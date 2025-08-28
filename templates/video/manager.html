@@ -79,7 +79,35 @@
   {% if file_list %}
 
   <!-- Patient Identification Details (if viewing patient-specific videos) -->
-  {% if patient %}{% include 'patients/partials/patient_identification_details.html' %}{% endif %}
+    {% if patient %}
+    <div class="card mb-3 patient-id-card shadow-sm border-0 w-100" style="margin: 0 auto;">
+      <div class="card-body py-3 px-4">
+        <div class="row align-items-center">
+          <div class="col-auto pr-0">
+            <i class="fas fa-user-circle fa-2x text-primary"></i>
+          </div>
+          <div class="col">
+            <h5 class="mb-1 font-weight-bold">{{ patient.baby_name }}</h5>
+            <div class="small text-muted">DOB: {{ patient.dob|date:'M d, Y' }} | Gender: {{ patient.get_gender_display }}</div>
+          </div>
+          <div class="col-auto text-right">
+            <span class="badge badge-dark px-3 py-2" style="font-size: 1rem;">Disk No: {{ patient.disk_no|default:'N/A' }}</span>
+          </div>
+        </div>
+        <div class="row mt-2">
+          <div class="col">
+            <div class="d-flex flex-wrap gap-2">
+              {% if patient.bht_no %}<span class="badge badge-primary">BHT: {{ patient.bht_no }}</span>{% endif %}
+              {% if patient.nnc_no %}<span class="badge badge-success">NNC: {{ patient.nnc_no }}</span>{% endif %}
+              {% if patient.pin %}<span class="badge badge-warning">PIN: {{ patient.pin }}</span>{% endif %}
+              {% if patient.ptc_no %}<span class="badge badge-info">PTC: {{ patient.ptc_no }}</span>{% endif %}
+              {% if patient.pc_no %}<span class="badge badge-secondary">PC: {{ patient.pc_no }}</span>{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
 
   <!-- Video List Card -->
   <div class="card">
