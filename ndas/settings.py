@@ -76,13 +76,33 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'OPTIONS': {
+            'timeout': 120,
+            # 'init_command': (
+            #     'PRAGMA journal_mode=WAL;'
+            #     'PRAGMA synchronous=NORMAL;'
+            #     'PRAGMA cache_size=1000;'
+            #     'PRAGMA temp_store=memory;'
+            #     'PRAGMA mmap_size=268435456;'  # 256MB
+            # ),
+        },
     }
 }
 
+# Database connection pooling for production
+if not DEBUG:
+    DATABASES['default']['CONN_MAX_AGE'] = 300
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'OPTIONS': {'max_similarity': 0.7}
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': 12}
+    },
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
@@ -145,33 +165,80 @@ ADMIN_INDEX_TITLE = "Welcome to NDAs"
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+    },
     'handlers': {
         'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': 'debug.log',
+            'level': 'INFO' if not DEBUG else 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'django.log',
+            'maxBytes': 1024*1024*15,  # 15MB
+            'backupCount': 10,
+            'formatter': 'verbose',
+        },
+        'security_file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'security.log',
+            'maxBytes': 1024*1024*15,  # 15MB
+            'backupCount': 10,
+            'formatter': 'verbose',
+            'filters': ['require_debug_false'],
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['file'],
-            'level': 'DEBUG',
+            'handlers': ['file', 'console'] if DEBUG else ['file'],
+            'level': 'INFO',
             'propagate': True,
+        },
+        'django.security': {
+            'handlers': ['security_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'users.middleware': {
+            'handlers': ['security_file'],
+            'level': 'INFO',
+            'propagate': False,
         },
     },
 }
 
 # Security Headers Configuration
-SECURE_BROWSER_XSS_FILTER = False
-SECURE_CONTENT_TYPE_NOSNIFF = False
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000  # 1 year
-SECURE_HSTS_INCLUDE_SUBDOMAINS = False
-SECURE_HSTS_PRELOAD = False
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=False)
+SECURE_HSTS_PRELOAD = env('SECURE_HSTS_PRELOAD', default=False)
+SECURE_SSL_REDIRECT = env('SECURE_SSL_REDIRECT', default=False)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https') if env('USE_SSL_PROXY', default=False) else None
 X_FRAME_OPTIONS = 'DENY'
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
 
 # Content Security Policy (CSP)
+CSP_INCLUDE_NONCE_IN = ['script-src', 'style-src']
+CSP_EXCLUDE_URL_PREFIXES = ('/admin/',)
+
 if DEBUG:
     CSP_DEFAULT_SRC = ("'self'",)
     CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://vjs.zencdn.net")
@@ -210,10 +277,13 @@ PERMISSIONS_POLICY = {
 # Cookie Security
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
-SESSION_COOKIE_AGE = 3600  # 1 hour session timeout
+SESSION_COOKIE_SECURE = env('SESSION_COOKIE_SECURE', default=False)
+CSRF_COOKIE_SECURE = env('CSRF_COOKIE_SECURE', default=False)
+SESSION_COOKIE_AGE = env('SESSION_COOKIE_AGE', default=3600)  # 1 hour default
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_SAVE_EVERY_REQUEST = True
 
 # Video Upload and Processing Settings
 VIDEO_MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024  # 2GB
@@ -232,18 +302,72 @@ MEDIA_SUBDIRECTORIES = {
 }
 
 # Cache Configuration
-# Use local memory cache for development
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
-        'TIMEOUT': 300,
-        'OPTIONS': {
-            'MAX_ENTRIES': 1000,
+if env('REDIS_URL', default=None):
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': env('REDIS_URL'),
+            'TIMEOUT': 300,
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                'CONNECTION_POOL_KWARGS': {'max_connections': 50},
+                'COMPRESSOR': 'django_redis.compressors.zlib.ZlibCompressor',
+                'IGNORE_EXCEPTIONS': True,
+            }
         }
     }
-}
+else:
+    # Use local memory cache for development
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'unique-snowflake',
+            'TIMEOUT': 300,
+            'OPTIONS': {
+                'MAX_ENTRIES': 1000,
+            }
+        }
+    }
 
 # Session Configuration
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
+
+# Rate Limiting and Brute Force Protection
+RATELIMIT_USE_CACHE = 'default'
+RATELIMIT_ENABLE = env('RATELIMIT_ENABLE', default=True)
+
+# Performance Optimizations
+USE_ETAGS = True
+USE_L10N = True
+
+# File Upload Optimization
+FILE_UPLOAD_HANDLERS = [
+    'django.core.files.uploadhandler.MemoryFileUploadHandler',
+    'django.core.files.uploadhandler.TemporaryFileUploadHandler',
+]
+
+# Database Query Optimization
+DATABASE_ENGINE_OPTIONS = {
+    'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+    'charset': 'utf8mb4',
+    'autocommit': True,
+}
+
+# Static Files Compression
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = DEBUG
+
+# Media Files Security
+MEDIA_URL_EXPIRY = 3600  # 1 hour
+SECURE_FILE_UPLOADS = True
+
+# Additional Security Settings
+SILENCED_SYSTEM_CHECKS = [
+    'security.W019',  # Only if using HTTPS proxy
+] if env('USE_SSL_PROXY', default=False) else []
+
+# Create logs directory if it doesn't exist
+import os
+os.makedirs(BASE_DIR / 'logs', exist_ok=True)

@@ -230,50 +230,6 @@
         </li>
         {% endif %}
 
-        <li
-          class="nav-item {% if 'user-edit' in request.resolver_match.url_name or 'user-change-password' in request.resolver_match.url_name or 'user-activity' in request.resolver_match.url_name %}menu-open{% endif %}"
-        >
-          <a
-            href="#"
-            class="nav-link {% if 'user-edit' in request.resolver_match.url_name or 'user-change-password' in request.resolver_match.url_name or 'user-activity' in request.resolver_match.url_name %}active{% endif %}"
-          >
-            <i class="nav-icon fas fa-cog"></i>
-            <p>
-              Settings
-              <i class="fas fa-angle-left right"></i>
-            </p>
-          </a>
-          <ul class="nav nav-treeview">
-            <li class="nav-item">
-              <a
-                href="{% url 'user-edit' user.id %}"
-                class="nav-link {% if request.resolver_match.url_name == 'user-edit' %}active{% endif %}"
-              >
-                <i class="far fa-circle nav-icon"></i>
-                <p>Edit Profile</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a
-                href="{% url 'user-change-password' %}"
-                class="nav-link {% if request.resolver_match.url_name == 'user-change-password' %}active{% endif %}"
-              >
-                <i class="far fa-circle nav-icon"></i>
-                <p>Password</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a
-                href="{% url 'user-activity' %}"
-                class="nav-link {% if request.resolver_match.url_name == 'user-activity' %}active{% endif %}"
-              >
-                <i class="far fa-circle nav-icon"></i>
-                <p>Activity</p>
-              </a>
-            </li>
-          </ul>
-        </li>
-
         <!-- Support -->
         <li
           class="nav-item {% if 'help' in request.resolver_match.url_name or 'developer-contact' in request.resolver_match.url_name %}menu-open{% endif %}"

@@ -1,5 +1,6 @@
 {% extends 'src/base.html' %}
-{% block title %}User Profile - {{custom_user.first_name}} {{custom_user.last_name}}{% endblock %}
+
+{% block title %}User Profile - {{custom_user.first_name}} {{custom_user.last_name}}{% endblock title %}
 
 {% block content_header %}
 <div class="content-header bg-gradient-light py-3 mb-4 rounded shadow-sm">
@@ -10,13 +11,26 @@
           <i class="fas fa-user-circle mr-2 text-primary"></i>
           User Profile
         </h1>
-        <p class="text-muted mb-0 mt-1">Detailed information for {{custom_user.first_name}} {{custom_user.last_name}}</p>
+        <p class="text-muted mb-0 mt-1">
+          Detailed information for {{custom_user.first_name}}
+          {{custom_user.last_name}}
+        </p>
       </div>
       <div class="col-sm-6">
         <ol class="breadcrumb float-sm-right bg-transparent mb-0">
-          <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none"><i class="fas fa-home mr-1"></i>Home</a></li>
-          <li class="breadcrumb-item"><a href="{% url 'admin-user-list' %}" class="text-decoration-none"><i class="fas fa-users mr-1"></i>Users</a></li>
-          <li class="breadcrumb-item active text-primary font-weight-medium">{{custom_user.first_name}} {{custom_user.last_name}}</li>
+          <li class="breadcrumb-item">
+            <a href="{% url 'home' %}" class="text-decoration-none"
+              ><i class="fas fa-home mr-1"></i>Home</a
+            >
+          </li>
+          <li class="breadcrumb-item">
+            <a href="{% url 'admin-user-list' %}" class="text-decoration-none"
+              ><i class="fas fa-users mr-1"></i>Users</a
+            >
+          </li>
+          <li class="breadcrumb-item active text-primary font-weight-medium">
+            {{custom_user.first_name}} {{custom_user.last_name}}
+          </li>
         </ol>
       </div>
     </div>
@@ -30,41 +44,70 @@
   <div class="col-md-4">
     <div class="card card-widget widget-user shadow-lg border-0">
       <!-- Profile header with gradient background -->
-      <div class="widget-user-header text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-        <h3 class="widget-user-username text-right">{{custom_user.first_name}} {{custom_user.last_name}}</h3>
-        <h5 class="widget-user-desc text-right">{{custom_user.position|default:"Staff Member"}}</h5>
+      <div
+        class="widget-user-header text-white"
+        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+      >
+        <h3 class="widget-user-username text-right">
+          {{custom_user.first_name}} {{custom_user.last_name}}
+        </h3>
+        <h5 class="widget-user-desc text-right">
+          {{custom_user.position|default:"Staff Member"}}
+        </h5>
       </div>
-      
+
       <!-- Profile picture -->
       <div class="widget-user-image">
         {% if custom_user.profile_picture_url %}
-        <img class="img-circle elevation-3" 
-             src="{{custom_user.profile_picture_url}}" 
-             alt="User profile picture"
-             style="width: 90px; height: 90px; object-fit: cover; border: 4px solid #fff;">
+        <img
+          class="img-circle elevation-3"
+          src="{{custom_user.profile_picture_url}}"
+          alt="User profile picture"
+          style="
+            width: 90px;
+            height: 90px;
+            object-fit: cover;
+            border: 4px solid #fff;
+          "
+        />
         {% else %}
-        <div class="img-circle elevation-3 d-flex align-items-center justify-content-center bg-gradient-primary" 
-             style="width: 90px; height: 90px; border: 4px solid #fff; margin: 0 auto;">
+        <div
+          class="img-circle elevation-3 d-flex align-items-center justify-content-center bg-gradient-primary"
+          style="
+            width: 90px;
+            height: 90px;
+            border: 4px solid #fff;
+            margin: 0 auto;
+          "
+        >
           <i class="fas fa-user fa-2x text-white"></i>
         </div>
         {% endif %}
       </div>
-      
+
       <!-- Profile stats -->
       <div class="card-footer p-0">
         <div class="row">
           <div class="col-sm-4 border-right">
             <div class="description-block p-3">
-              <span class="description-header text-{{ custom_user.is_active|yesno:'success,danger' }}">
-                <i class="fas fa-{{ custom_user.is_active|yesno:'check-circle,times-circle' }}"></i>
+              <span
+                class="description-header text-{{ custom_user.is_active|yesno:'success,danger' }}"
+              >
+                <i
+                  class="fas fa-{{ custom_user.is_active|yesno:'check-circle,times-circle' }}"
+                ></i>
               </span>
               <span class="description-text font-weight-bold">STATUS</span>
             </div>
           </div>
           <div class="col-sm-4 border-right">
             <div class="description-block p-3">
-              <span class="description-header text-{{ custom_user.is_email_verified|yesno:'primary,warning' }}">
-                <i class="fas fa-{{ custom_user.is_email_verified|yesno:'envelope-check,envelope' }}"></i>
+              <span
+                class="description-header text-{{ custom_user.is_email_verified|yesno:'primary,warning' }}"
+              >
+                <i
+                  class="fas fa-{{ custom_user.is_email_verified|yesno:'envelope-check,envelope' }}"
+                ></i>
               </span>
               <span class="description-text font-weight-bold">EMAIL</span>
             </div>
@@ -80,43 +123,57 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Quick Info Card -->
     <div class="card shadow-sm border-0 mt-3">
       <div class="card-header bg-gradient-light border-0">
-        <h3 class="card-title font-weight-bold"><i class="fas fa-info-circle mr-2 text-info"></i>Quick Information</h3>
+        <h3 class="card-title font-weight-bold">
+          <i class="fas fa-info-circle mr-2 text-info"></i>Quick Information
+        </h3>
       </div>
       <div class="card-body p-0">
-
         <div class="list-group list-group-flush">
           <div class="list-group-item border-0 px-3 py-3">
             <div class="d-flex justify-content-between align-items-center">
-              <span class="text-muted"><i class="fas fa-envelope-open mr-2"></i>Email Verified</span>
+              <span class="text-muted"
+                ><i class="fas fa-envelope-open mr-2"></i>Email Verified</span
+              >
               {% if custom_user.is_email_verified %}
-                <span class="badge badge-success badge-pill px-3"><i class="fas fa-check mr-1"></i>Verified</span>
+              <span class="badge badge-success badge-pill px-3"
+                ><i class="fas fa-check mr-1"></i>Verified</span
+              >
               {% else %}
-                <span class="badge badge-warning badge-pill px-3"><i class="fas fa-clock mr-1"></i>Pending</span>
+              <span class="badge badge-warning badge-pill px-3"
+                ><i class="fas fa-clock mr-1"></i>Pending</span
+              >
               {% endif %}
             </div>
           </div>
           <div class="list-group-item border-0 px-3 py-3">
             <div class="d-flex justify-content-between align-items-center">
-              <span class="text-muted"><i class="fas fa-user-check mr-2"></i>Account Status</span>
+              <span class="text-muted"
+                ><i class="fas fa-user-check mr-2"></i>Account Status</span
+              >
               {% if custom_user.is_active %}
-                <span class="badge badge-success badge-pill px-3"><i class="fas fa-circle mr-1"></i>Active</span>
+              <span class="badge badge-success badge-pill px-3"
+                ><i class="fas fa-circle mr-1"></i>Active</span
+              >
               {% else %}
-                <span class="badge badge-danger badge-pill px-3"><i class="fas fa-pause mr-1"></i>Inactive</span>
+              <span class="badge badge-danger badge-pill px-3"
+                ><i class="fas fa-pause mr-1"></i>Inactive</span
+              >
               {% endif %}
             </div>
           </div>
           <div class="list-group-item border-0 px-3 py-3">
             <div class="d-flex justify-content-between align-items-center">
-              <span class="text-muted"><i class="fas fa-clock mr-2"></i>Last Login</span>
+              <span class="text-muted"
+                ><i class="fas fa-clock mr-2"></i>Last Login</span
+              >
               <span class="text-dark font-weight-medium">
-                {% if custom_user.last_login %}
-                  {{custom_user.last_login|date:"M d, Y H:i"}}
-                {% else %}
-                  <span class="text-muted">Never</span>
+                {% if custom_user.last_login %} {{custom_user.last_login|date:"M
+                d, Y H:i"}} {% else %}
+                <span class="text-muted">Never</span>
                 {% endif %}
               </span>
             </div>
@@ -132,17 +189,29 @@
       <div class="card-header bg-gradient-light border-0 p-3">
         <ul class="nav nav-pills nav-justified card-header-pills">
           <li class="nav-item">
-            <a class="nav-link active rounded-pill font-weight-bold" href="#personal" data-toggle="tab">
+            <a
+              class="nav-link active rounded-pill font-weight-bold"
+              href="#personal"
+              data-toggle="tab"
+            >
               <i class="fas fa-user mr-2"></i>Personal Information
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link rounded-pill font-weight-bold" href="#contact" data-toggle="tab">
+            <a
+              class="nav-link rounded-pill font-weight-bold"
+              href="#contact"
+              data-toggle="tab"
+            >
               <i class="fas fa-address-book mr-2"></i>Contact Details
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link rounded-pill font-weight-bold" href="#system" data-toggle="tab">
+            <a
+              class="nav-link rounded-pill font-weight-bold"
+              href="#system"
+              data-toggle="tab"
+            >
               <i class="fas fa-cog mr-2"></i>System Information
             </a>
           </li>
@@ -157,54 +226,98 @@
                 <div class="info-box-group">
                   <div class="row">
                     <div class="col-md-6">
-                      <div class="info-box bg-light rounded p-3 mb-3 border-left border-primary border-width-3">
-                        <div class="info-box-icon bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                      <div
+                        class="info-box bg-light rounded p-3 mb-3 border-left border-primary border-width-3"
+                      >
+                        <div
+                          class="info-box-icon bg-primary rounded-circle d-flex align-items-center justify-content-center"
+                          style="width: 50px; height: 50px"
+                        >
                           <i class="fas fa-id-badge text-white"></i>
                         </div>
                         <div class="info-box-content ml-3">
-                          <span class="info-box-text text-muted font-weight-bold">Username</span>
-                          <span class="info-box-number text-dark"><code class="bg-light px-2 py-1 rounded">{{custom_user.username}}</code></span>
+                          <span
+                            class="info-box-text text-muted font-weight-bold"
+                            >Username</span
+                          >
+                          <span class="info-box-number text-dark"
+                            ><code class="bg-light px-2 py-1 rounded"
+                              >{{custom_user.username}}</code
+                            ></span
+                          >
                         </div>
                       </div>
                     </div>
                     <div class="col-md-6">
-                      <div class="info-box bg-light rounded p-3 mb-3 border-left border-success border-width-3">
-                        <div class="info-box-icon bg-success rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                      <div
+                        class="info-box bg-light rounded p-3 mb-3 border-left border-success border-width-3"
+                      >
+                        <div
+                          class="info-box-icon bg-success rounded-circle d-flex align-items-center justify-content-center"
+                          style="width: 50px; height: 50px"
+                        >
                           <i class="fas fa-user text-white"></i>
                         </div>
                         <div class="info-box-content ml-3">
-                          <span class="info-box-text text-muted font-weight-bold">Full Name</span>
-                          <span class="info-box-number text-dark">{{custom_user.first_name}} {{custom_user.last_name}}</span>
+                          <span
+                            class="info-box-text text-muted font-weight-bold"
+                            >Full Name</span
+                          >
+                          <span class="info-box-number text-dark"
+                            >{{custom_user.first_name}}
+                            {{custom_user.last_name}}</span
+                          >
                         </div>
                       </div>
                     </div>
                   </div>
                   <div class="row">
                     <div class="col-md-6">
-                      <div class="info-box bg-light rounded p-3 mb-3 border-left border-info border-width-3">
-                        <div class="info-box-icon bg-info rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                      <div
+                        class="info-box bg-light rounded p-3 mb-3 border-left border-info border-width-3"
+                      >
+                        <div
+                          class="info-box-icon bg-info rounded-circle d-flex align-items-center justify-content-center"
+                          style="width: 50px; height: 50px"
+                        >
                           <i class="fas fa-briefcase text-white"></i>
                         </div>
                         <div class="info-box-content ml-3">
-                          <span class="info-box-text text-muted font-weight-bold">Position</span>
+                          <span
+                            class="info-box-text text-muted font-weight-bold"
+                            >Position</span
+                          >
                           <span class="info-box-number">
-                            <span class="badge badge-info badge-lg px-3 py-2">{{custom_user.position|default:"Not specified"}}</span>
+                            <span class="badge badge-info badge-lg px-3 py-2"
+                              >{{custom_user.position|default:"Not
+                              specified"}}</span
+                            >
                           </span>
                         </div>
                       </div>
                     </div>
                     <div class="col-md-6">
-                      <div class="info-box bg-light rounded p-3 mb-3 border-left border-warning border-width-3">
-                        <div class="info-box-icon bg-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                      <div
+                        class="info-box bg-light rounded p-3 mb-3 border-left border-warning border-width-3"
+                      >
+                        <div
+                          class="info-box-icon bg-warning rounded-circle d-flex align-items-center justify-content-center"
+                          style="width: 50px; height: 50px"
+                        >
                           <i class="fas fa-sticky-note text-white"></i>
                         </div>
                         <div class="info-box-content ml-3">
-                          <span class="info-box-text text-muted font-weight-bold">Additional Notes</span>
+                          <span
+                            class="info-box-text text-muted font-weight-bold"
+                            >Additional Notes</span
+                          >
                           <span class="info-box-number text-dark">
                             {% if custom_user.additional_notes %}
-                              {{custom_user.additional_notes|truncatewords:10}}
-                            {% else %}
-                              <span class="text-muted font-italic">No additional notes</span>
+                            {{custom_user.additional_notes|truncatewords:10}} {%
+                            else %}
+                            <span class="text-muted font-italic"
+                              >No additional notes</span
+                            >
                             {% endif %}
                           </span>
                         </div>
@@ -228,18 +341,35 @@
                     </h5>
                   </div>
                   <div class="card-body pt-2">
-                    <div class="contact-item d-flex align-items-center mb-3 p-3 bg-white rounded shadow-sm">
-                      <div class="contact-icon bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px;">
+                    <div
+                      class="contact-item d-flex align-items-center mb-3 p-3 bg-white rounded shadow-sm"
+                    >
+                      <div
+                        class="contact-icon bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mr-3"
+                        style="width: 40px; height: 40px"
+                      >
                         <i class="fas fa-at"></i>
                       </div>
                       <div class="contact-details">
-                        <small class="text-muted font-weight-bold d-block">Email Address</small>
+                        <small class="text-muted font-weight-bold d-block"
+                          >Email Address</small
+                        >
                         <div class="d-flex align-items-center">
-                          <a href="mailto:{{custom_user.email}}" class="text-dark font-weight-medium">{{custom_user.email}}</a>
+                          <a
+                            href="mailto:{{custom_user.email}}"
+                            class="text-dark font-weight-medium"
+                            >{{custom_user.email}}</a
+                          >
                           {% if custom_user.is_email_verified %}
-                            <i class="fas fa-check-circle text-success ml-2" title="Verified"></i>
+                          <i
+                            class="fas fa-check-circle text-success ml-2"
+                            title="Verified"
+                          ></i>
                           {% else %}
-                            <i class="fas fa-exclamation-circle text-warning ml-2" title="Not verified"></i>
+                          <i
+                            class="fas fa-exclamation-circle text-warning ml-2"
+                            title="Not verified"
+                          ></i>
                           {% endif %}
                         </div>
                       </div>
@@ -256,61 +386,105 @@
                   </div>
                   <div class="card-body pt-2">
                     <!-- Primary Mobile -->
-                    <div class="contact-item d-flex align-items-center mb-3 p-3 bg-white rounded shadow-sm">
-                      <div class="contact-icon bg-success text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px;">
+                    <div
+                      class="contact-item d-flex align-items-center mb-3 p-3 bg-white rounded shadow-sm"
+                    >
+                      <div
+                        class="contact-icon bg-success text-white rounded-circle d-flex align-items-center justify-content-center mr-3"
+                        style="width: 40px; height: 40px"
+                      >
                         <i class="fas fa-mobile-alt"></i>
                       </div>
                       <div class="contact-details">
-                        <small class="text-muted font-weight-bold d-block">Primary Mobile</small>
+                        <small class="text-muted font-weight-bold d-block"
+                          >Primary Mobile</small
+                        >
                         {% if custom_user.mobile_primary %}
-                          <a href="tel:{{custom_user.mobile_primary}}" class="text-dark font-weight-medium">{{custom_user.mobile_primary}}</a>
+                        <a
+                          href="tel:{{custom_user.mobile_primary}}"
+                          class="text-dark font-weight-medium"
+                          >{{custom_user.mobile_primary}}</a
+                        >
                         {% else %}
-                          <span class="text-muted font-italic">Not provided</span>
+                        <span class="text-muted font-italic">Not provided</span>
                         {% endif %}
                       </div>
                     </div>
 
                     <!-- Secondary Mobile -->
-                    <div class="contact-item d-flex align-items-center mb-3 p-3 bg-white rounded shadow-sm">
-                      <div class="contact-icon bg-info text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px;">
+                    <div
+                      class="contact-item d-flex align-items-center mb-3 p-3 bg-white rounded shadow-sm"
+                    >
+                      <div
+                        class="contact-icon bg-info text-white rounded-circle d-flex align-items-center justify-content-center mr-3"
+                        style="width: 40px; height: 40px"
+                      >
                         <i class="fas fa-mobile-alt"></i>
                       </div>
                       <div class="contact-details">
-                        <small class="text-muted font-weight-bold d-block">Secondary Mobile</small>
+                        <small class="text-muted font-weight-bold d-block"
+                          >Secondary Mobile</small
+                        >
                         {% if custom_user.mobile_secondary %}
-                          <a href="tel:{{custom_user.mobile_secondary}}" class="text-dark font-weight-medium">{{custom_user.mobile_secondary}}</a>
+                        <a
+                          href="tel:{{custom_user.mobile_secondary}}"
+                          class="text-dark font-weight-medium"
+                          >{{custom_user.mobile_secondary}}</a
+                        >
                         {% else %}
-                          <span class="text-muted font-italic">Not provided</span>
+                        <span class="text-muted font-italic">Not provided</span>
                         {% endif %}
                       </div>
                     </div>
 
                     <!-- Primary Landline -->
-                    <div class="contact-item d-flex align-items-center mb-3 p-3 bg-white rounded shadow-sm">
-                      <div class="contact-icon bg-warning text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px;">
+                    <div
+                      class="contact-item d-flex align-items-center mb-3 p-3 bg-white rounded shadow-sm"
+                    >
+                      <div
+                        class="contact-icon bg-warning text-white rounded-circle d-flex align-items-center justify-content-center mr-3"
+                        style="width: 40px; height: 40px"
+                      >
                         <i class="fas fa-phone"></i>
                       </div>
                       <div class="contact-details">
-                        <small class="text-muted font-weight-bold d-block">Primary Landline</small>
+                        <small class="text-muted font-weight-bold d-block"
+                          >Primary Landline</small
+                        >
                         {% if custom_user.landline_primary %}
-                          <a href="tel:{{custom_user.landline_primary}}" class="text-dark font-weight-medium">{{custom_user.landline_primary}}</a>
+                        <a
+                          href="tel:{{custom_user.landline_primary}}"
+                          class="text-dark font-weight-medium"
+                          >{{custom_user.landline_primary}}</a
+                        >
                         {% else %}
-                          <span class="text-muted font-italic">Not provided</span>
+                        <span class="text-muted font-italic">Not provided</span>
                         {% endif %}
                       </div>
                     </div>
 
                     <!-- Secondary Landline -->
-                    <div class="contact-item d-flex align-items-center p-3 bg-white rounded shadow-sm">
-                      <div class="contact-icon bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px;">
+                    <div
+                      class="contact-item d-flex align-items-center p-3 bg-white rounded shadow-sm"
+                    >
+                      <div
+                        class="contact-icon bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mr-3"
+                        style="width: 40px; height: 40px"
+                      >
                         <i class="fas fa-phone"></i>
                       </div>
                       <div class="contact-details">
-                        <small class="text-muted font-weight-bold d-block">Secondary Landline</small>
+                        <small class="text-muted font-weight-bold d-block"
+                          >Secondary Landline</small
+                        >
                         {% if custom_user.landline_secondary %}
-                          <a href="tel:{{custom_user.landline_secondary}}" class="text-dark font-weight-medium">{{custom_user.landline_secondary}}</a>
+                        <a
+                          href="tel:{{custom_user.landline_secondary}}"
+                          class="text-dark font-weight-medium"
+                          >{{custom_user.landline_secondary}}</a
+                        >
                         {% else %}
-                          <span class="text-muted font-italic">Not provided</span>
+                        <span class="text-muted font-italic">Not provided</span>
                         {% endif %}
                       </div>
                     </div>
@@ -328,31 +502,49 @@
                   </div>
                   <div class="card-body pt-2">
                     <!-- Home Address -->
-                    <div class="contact-item d-flex align-items-start mb-3 p-3 bg-white rounded shadow-sm">
-                      <div class="contact-icon bg-danger text-white rounded-circle d-flex align-items-center justify-content-center mr-3 mt-1" style="width: 40px; height: 40px; min-width: 40px;">
+                    <div
+                      class="contact-item d-flex align-items-start mb-3 p-3 bg-white rounded shadow-sm"
+                    >
+                      <div
+                        class="contact-icon bg-danger text-white rounded-circle d-flex align-items-center justify-content-center mr-3 mt-1"
+                        style="width: 40px; height: 40px; min-width: 40px"
+                      >
                         <i class="fas fa-home"></i>
                       </div>
                       <div class="contact-details">
-                        <small class="text-muted font-weight-bold d-block mb-1">Home Address</small>
+                        <small class="text-muted font-weight-bold d-block mb-1"
+                          >Home Address</small
+                        >
                         {% if custom_user.home_address %}
-                          <span class="text-dark">{{custom_user.home_address}}</span>
+                        <span class="text-dark"
+                          >{{custom_user.home_address}}</span
+                        >
                         {% else %}
-                          <span class="text-muted font-italic">Not provided</span>
+                        <span class="text-muted font-italic">Not provided</span>
                         {% endif %}
                       </div>
                     </div>
 
                     <!-- Station Address -->
-                    <div class="contact-item d-flex align-items-start p-3 bg-white rounded shadow-sm">
-                      <div class="contact-icon bg-dark text-white rounded-circle d-flex align-items-center justify-content-center mr-3 mt-1" style="width: 40px; height: 40px; min-width: 40px;">
+                    <div
+                      class="contact-item d-flex align-items-start p-3 bg-white rounded shadow-sm"
+                    >
+                      <div
+                        class="contact-icon bg-dark text-white rounded-circle d-flex align-items-center justify-content-center mr-3 mt-1"
+                        style="width: 40px; height: 40px; min-width: 40px"
+                      >
                         <i class="fas fa-building"></i>
                       </div>
                       <div class="contact-details">
-                        <small class="text-muted font-weight-bold d-block mb-1">Station Address</small>
+                        <small class="text-muted font-weight-bold d-block mb-1"
+                          >Station Address</small
+                        >
                         {% if custom_user.station_address %}
-                          <span class="text-dark">{{custom_user.station_address}}</span>
+                        <span class="text-dark"
+                          >{{custom_user.station_address}}</span
+                        >
                         {% else %}
-                          <span class="text-muted font-italic">Not provided</span>
+                        <span class="text-muted font-italic">Not provided</span>
                         {% endif %}
                       </div>
                     </div>
@@ -377,49 +569,88 @@
                     <div class="timeline">
                       <!-- Account Created -->
                       <div class="timeline-item d-flex mb-4">
-                        <div class="timeline-marker bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px; min-width: 40px;">
+                        <div
+                          class="timeline-marker bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mr-3"
+                          style="width: 40px; height: 40px; min-width: 40px"
+                        >
                           <i class="fas fa-user-plus"></i>
                         </div>
-                        <div class="timeline-content p-3 bg-white rounded shadow-sm flex-grow-1">
-                          <h6 class="timeline-title font-weight-bold mb-1">Account Created</h6>
-                          <p class="timeline-text text-muted mb-0">{{custom_user.created_at|date:"F d, Y H:i"}}</p>
+                        <div
+                          class="timeline-content p-3 bg-white rounded shadow-sm flex-grow-1"
+                        >
+                          <h6 class="timeline-title font-weight-bold mb-1">
+                            Account Created
+                          </h6>
+                          <p class="timeline-text text-muted mb-0">
+                            {{custom_user.created_at|date:"F d, Y H:i"}}
+                          </p>
                         </div>
                       </div>
 
                       <!-- Date Joined -->
                       <div class="timeline-item d-flex mb-4">
-                        <div class="timeline-marker bg-success text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px; min-width: 40px;">
+                        <div
+                          class="timeline-marker bg-success text-white rounded-circle d-flex align-items-center justify-content-center mr-3"
+                          style="width: 40px; height: 40px; min-width: 40px"
+                        >
                           <i class="fas fa-sign-in-alt"></i>
                         </div>
-                        <div class="timeline-content p-3 bg-white rounded shadow-sm flex-grow-1">
-                          <h6 class="timeline-title font-weight-bold mb-1">Date Joined</h6>
-                          <p class="timeline-text text-muted mb-0">{{custom_user.date_joined|date:"F d, Y H:i"}}</p>
+                        <div
+                          class="timeline-content p-3 bg-white rounded shadow-sm flex-grow-1"
+                        >
+                          <h6 class="timeline-title font-weight-bold mb-1">
+                            Date Joined
+                          </h6>
+                          <p class="timeline-text text-muted mb-0">
+                            {{custom_user.date_joined|date:"F d, Y H:i"}}
+                          </p>
                         </div>
                       </div>
 
                       <!-- Email Verification -->
                       <div class="timeline-item d-flex mb-4">
-                        <div class="timeline-marker bg-{{ custom_user.is_email_verified|yesno:'warning,secondary' }} text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px; min-width: 40px;">
+                        <div
+                          class="timeline-marker bg-{{ custom_user.is_email_verified|yesno:'warning,secondary' }} text-white rounded-circle d-flex align-items-center justify-content-center mr-3"
+                          style="width: 40px; height: 40px; min-width: 40px"
+                        >
                           <i class="fas fa-envelope-check"></i>
                         </div>
-                        <div class="timeline-content p-3 bg-white rounded shadow-sm flex-grow-1">
-                          <h6 class="timeline-title font-weight-bold mb-1">Email Verification</h6>
+                        <div
+                          class="timeline-content p-3 bg-white rounded shadow-sm flex-grow-1"
+                        >
+                          <h6 class="timeline-title font-weight-bold mb-1">
+                            Email Verification
+                          </h6>
                           {% if custom_user.email_verified_at %}
-                            <p class="timeline-text text-muted mb-0">Verified on {{custom_user.email_verified_at|date:"F d, Y H:i"}}</p>
+                          <p class="timeline-text text-muted mb-0">
+                            Verified on {{custom_user.email_verified_at|date:"F
+                            d, Y H:i"}}
+                          </p>
                           {% else %}
-                            <p class="timeline-text text-warning mb-0">Not yet verified</p>
+                          <p class="timeline-text text-warning mb-0">
+                            Not yet verified
+                          </p>
                           {% endif %}
                         </div>
                       </div>
 
                       <!-- Last Update -->
                       <div class="timeline-item d-flex">
-                        <div class="timeline-marker bg-info text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px; min-width: 40px;">
+                        <div
+                          class="timeline-marker bg-info text-white rounded-circle d-flex align-items-center justify-content-center mr-3"
+                          style="width: 40px; height: 40px; min-width: 40px"
+                        >
                           <i class="fas fa-edit"></i>
                         </div>
-                        <div class="timeline-content p-3 bg-white rounded shadow-sm flex-grow-1">
-                          <h6 class="timeline-title font-weight-bold mb-1">Last Updated</h6>
-                          <p class="timeline-text text-muted mb-0">{{custom_user.updated_at|date:"F d, Y H:i"}}</p>
+                        <div
+                          class="timeline-content p-3 bg-white rounded shadow-sm flex-grow-1"
+                        >
+                          <h6 class="timeline-title font-weight-bold mb-1">
+                            Last Updated
+                          </h6>
+                          <p class="timeline-text text-muted mb-0">
+                            {{custom_user.updated_at|date:"F d, Y H:i"}}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -437,46 +668,78 @@
                   </div>
                   <div class="card-body pt-2">
                     <!-- Last Login Device -->
-                    <div class="system-item d-flex align-items-center p-3 bg-white rounded shadow-sm mb-3">
-                      <div class="system-icon bg-dark text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px;">
+                    <div
+                      class="system-item d-flex align-items-center p-3 bg-white rounded shadow-sm mb-3"
+                    >
+                      <div
+                        class="system-icon bg-dark text-white rounded-circle d-flex align-items-center justify-content-center mr-3"
+                        style="width: 40px; height: 40px"
+                      >
                         <i class="fas fa-desktop"></i>
                       </div>
                       <div class="system-details">
-                        <small class="text-muted font-weight-bold d-block">Last Login Device</small>
+                        <small class="text-muted font-weight-bold d-block"
+                          >Last Login Device</small
+                        >
                         {% if custom_user.last_login_device %}
-                          <span class="text-dark font-weight-medium" data-toggle="tooltip" title="{{custom_user.last_login_device}}">
-                            Device Information Available
-                          </span>
+                        <span
+                          class="text-dark font-weight-medium"
+                          data-toggle="tooltip"
+                          title="{{custom_user.last_login_device}}"
+                        >
+                          Device Information Available
+                        </span>
                         {% else %}
-                          <span class="text-muted font-italic">Unknown device</span>
+                        <span class="text-muted font-italic"
+                          >Unknown device</span
+                        >
                         {% endif %}
                       </div>
                     </div>
 
                     <!-- User ID -->
-                    <div class="system-item d-flex align-items-center p-3 bg-white rounded shadow-sm mb-3">
-                      <div class="system-icon bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px;">
+                    <div
+                      class="system-item d-flex align-items-center p-3 bg-white rounded shadow-sm mb-3"
+                    >
+                      <div
+                        class="system-icon bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mr-3"
+                        style="width: 40px; height: 40px"
+                      >
                         <i class="fas fa-hashtag"></i>
                       </div>
                       <div class="system-details">
-                        <small class="text-muted font-weight-bold d-block">User ID</small>
-                        <code class="bg-light px-2 py-1 rounded text-dark">{{custom_user.id}}</code>
+                        <small class="text-muted font-weight-bold d-block"
+                          >User ID</small
+                        >
+                        <code class="bg-light px-2 py-1 rounded text-dark"
+                          >{{custom_user.id}}</code
+                        >
                       </div>
                     </div>
 
                     <!-- Account Status -->
-                    <div class="system-item d-flex align-items-center p-3 bg-white rounded shadow-sm">
-                      <div class="system-icon bg-{{ custom_user.is_active|yesno:'success,danger' }} text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px;">
-                        <i class="fas fa-{{ custom_user.is_active|yesno:'check,times' }}"></i>
+                    <div
+                      class="system-item d-flex align-items-center p-3 bg-white rounded shadow-sm"
+                    >
+                      <div
+                        class="system-icon bg-{{ custom_user.is_active|yesno:'success,danger' }} text-white rounded-circle d-flex align-items-center justify-content-center mr-3"
+                        style="width: 40px; height: 40px"
+                      >
+                        <i
+                          class="fas fa-{{ custom_user.is_active|yesno:'check,times' }}"
+                        ></i>
                       </div>
                       <div class="system-details">
-                        <small class="text-muted font-weight-bold d-block">System Status</small>
-                        <span class="badge badge-{{ custom_user.is_active|yesno:'success,danger' }} badge-lg px-3 py-2">
+                        <small class="text-muted font-weight-bold d-block"
+                          >System Status</small
+                        >
+                        <span
+                          class="badge badge-{{ custom_user.is_active|yesno:'success,danger' }} badge-lg px-3 py-2"
+                        >
                           {% if custom_user.is_active %}
-                            <i class="fas fa-circle mr-1"></i>Active Account
-                          {% else %}
-                            <i class="fas fa-pause mr-1"></i>Inactive Account
-                          {% endif %}
+                          <i class="fas fa-circle mr-1"></i>Active Account {%
+                          else %} <i class="fas fa-pause mr-1"></i>Inactive
+                          Account {% endif %}
                         </span>
                       </div>
                     </div>
@@ -491,165 +754,269 @@
   </div>
 </div>
 
-<!-- Action Buttons Row -->
-<div class="row mt-4">
-  <div class="col-12">
-    <div class="card shadow-lg border-0">
-      <div class="card-header bg-gradient-primary text-white border-0">
-        <h5 class="card-title mb-0 font-weight-bold">
-          <i class="fas fa-cogs mr-2"></i>Available Actions
-        </h5>
-      </div>
-      <div class="card-body p-4">
-        <div class="row">
-          <!-- User Actions -->
-          <div class="col-md-6">
-            <h6 class="text-muted font-weight-bold mb-3">
-              <i class="fas fa-user mr-2"></i>User Actions
-            </h6>
-            <div class="d-flex flex-column">
-              {% if user.username == custom_user.username %}
-                <a href="{% url 'user-edit' custom_user.id %}" class="btn btn-primary btn-lg mb-3 rounded-pill shadow-sm">
-                  <i class="fas fa-user-edit mr-3"></i>Edit My Profile
-                </a>
-              {% endif %}
-              <a href="#" class="btn btn-outline-danger btn-lg logout-confirm rounded-pill shadow-sm">
-                <i class="fas fa-sign-out-alt mr-3"></i>Log Out
-              </a>
-            </div>
-          </div>
-          
-          <!-- Admin Actions -->
-          {% if user.is_staff and user.username != custom_user.username %}
-            <div class="col-md-6">
-              <h6 class="text-muted font-weight-bold mb-3">
-                <i class="fas fa-shield-alt mr-2"></i>Admin Actions
-              </h6>
-              <div class="d-flex flex-column">
-                <a href="{% url 'user-edit' custom_user.id %}" class="btn btn-warning btn-lg mb-3 rounded-pill shadow-sm">
-                  <i class="fas fa-user-cog mr-3"></i>Edit User Profile
-                </a>
-                <button type="button" class="btn btn-outline-{{ custom_user.is_active|yesno:'warning,success' }} btn-lg rounded-pill shadow-sm" 
-                        onclick="toggleUserStatus('{{ custom_user.id }}')">
-                  {% if custom_user.is_active %}
-                    <i class="fas fa-user-times mr-3"></i>Deactivate User
-                  {% else %}
-                    <i class="fas fa-user-check mr-3"></i>Activate User
-                  {% endif %}
-                </button>
-              </div>
-            </div>
-          {% endif %}
+<!-- Enhanced Action Panel -->
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-gradient-light border-0 py-3">
+    <h5 class="card-title mb-0 font-weight-bold text-dark">
+      <i class="fas fa-tools mr-2 text-primary"></i>
+      Quick Actions
+    </h5>
+    <small class="text-muted">Manage your account and profile settings</small>
+  </div>
+  <div class="card-body p-4">
+    <!-- User Actions Section -->
+    <div class="mb-4">
+      <h6 class="text-muted font-weight-bold mb-3 text-uppercase">
+        <i class="fas fa-user mr-2"></i>User Actions
+      </h6>
+      <div class="row">
+        <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
+          <a
+            class="btn btn-success btn-block btn-lg shadow-sm rounded-pill font-weight-medium"
+            href="{% url 'user-edit' custom_user.id %}"
+          >
+            <i class="fas fa-edit mr-2"></i>
+            Edit Profile
+          </a>
+        </div>
+        <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
+          <a
+            class="btn btn-info btn-block btn-lg shadow-sm rounded-pill font-weight-medium"
+            href="{% url 'user-change-password' %}"
+          >
+            <i class="fas fa-key mr-2"></i>
+            Change Password
+          </a>
+        </div>
+        <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
+          <a 
+            class="btn btn-warning btn-block btn-lg shadow-sm rounded-pill font-weight-medium" 
+            href="{% url 'reset-password' %}"
+          >
+            <i class="fas fa-unlock-alt mr-2"></i>
+            Reset Password
+          </a>
+        </div>
+        <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
+          <a 
+            class="btn btn-secondary btn-block btn-lg shadow-sm rounded-pill font-weight-medium" 
+            href="{% url 'user-activity' %}"
+          >
+            <i class="fas fa-history mr-2"></i>
+            View Activity
+          </a>
         </div>
       </div>
     </div>
+
+    <!-- System Actions Section -->
+    <div class="mb-4">
+      <h6 class="text-muted font-weight-bold mb-3 text-uppercase">
+        <i class="fas fa-cog mr-2"></i>System Actions
+      </h6>
+      <div class="row">
+        <div class="col-xl-3 col-lg-4 col-md-6 mb-3">
+          <button
+            type="button"
+            class="btn btn-danger btn-block btn-lg shadow-sm rounded-pill font-weight-medium logout-confirm"
+            onclick="confirmLogout()"
+          >
+            <i class="fas fa-sign-out-alt mr-2"></i>
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+
+    {% if user.is_staff and user.username != custom_user.username %}
+    <!-- Admin Actions Section -->
+    <hr class="my-4">
+    <div class="admin-actions">
+      <h6 class="text-muted font-weight-bold mb-3 text-uppercase">
+        <i class="fas fa-shield-alt mr-2 text-warning"></i>Administrative Actions
+      </h6>
+      <div class="alert alert-warning border-0 mb-3">
+        <i class="fas fa-exclamation-triangle mr-2"></i>
+        <small>These actions affect another user's account. Use with caution.</small>
+      </div>
+      <div class="row">
+        <div class="col-xl-4 col-lg-6 col-md-6 mb-3">
+          <a
+            href="{% url 'user-edit' custom_user.id %}"
+            class="btn btn-warning btn-block btn-lg shadow-sm rounded-pill font-weight-medium"
+          >
+            <i class="fas fa-user-cog mr-2"></i>Edit User Profile
+          </a>
+        </div>
+        <div class="col-xl-4 col-lg-6 col-md-6 mb-3">
+          <button
+            type="button"
+            class="btn btn-outline-{{ custom_user.is_active|yesno:'danger,success' }} btn-block btn-lg shadow-sm rounded-pill font-weight-medium"
+            onclick="toggleUserStatus('{{ custom_user.id }}')"
+          >
+            {% if custom_user.is_active %}
+            <i class="fas fa-user-times mr-2"></i>Deactivate User
+            {% else %}
+            <i class="fas fa-user-check mr-2"></i>Activate User
+            {% endif %}
+          </button>
+        </div>
+      </div>
+    </div>
+    {% endif %}
   </div>
-</div>
-
-
-{% endblock main_content%}
-
+{% endblock main_content %}
 {% block extra_js %}
-<script>
-function toggleUserStatus(userId) {
-    const confirmMessage = 'Are you sure you want to change this user\'s status?';
-    
-    if (confirm(confirmMessage)) {
-        // Show loading state
-        const button = event.target.closest('button');
-        const originalContent = button.innerHTML;
-        button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
-        button.disabled = true;
+
+
+
+
+    <script>
+      // Function to confirm logout action
+      function confirmLogout() {
+        const confirmMessage = "Are you sure you want to logout?";
         
-        // Add AJAX call to toggle user status
-        fetch(`/users/${userId}/toggle-status/`, {
-            method: 'POST',
+        if (confirm(confirmMessage)) {
+          // Show loading state
+          const button = event.target;
+          const originalContent = button.innerHTML;
+          button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Logging out...';
+          button.disabled = true;
+          
+          // Redirect to logout URL
+          setTimeout(() => {
+            window.location.href = "{% url 'user-logout' %}";
+          }, 500);
+        }
+      }
+
+      // Function to toggle user status (Admin only)
+      function toggleUserStatus(userId) {
+        const confirmMessage =
+          "Are you sure you want to change this user's status?";
+
+        if (confirm(confirmMessage)) {
+          // Show loading state
+          const button = event.target.closest("button");
+          const originalContent = button.innerHTML;
+          button.innerHTML =
+            '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+          button.disabled = true;
+
+          // Add AJAX call to toggle user status
+          fetch(`/users/${userId}/toggle-status/`, {
+            method: "POST",
             headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                'Content-Type': 'application/json',
+              "X-CSRFToken": document.querySelector(
+                "[name=csrfmiddlewaretoken]"
+              ).value,
+              "Content-Type": "application/json",
             },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
                 // Show success message
-                toastr.success('User status updated successfully!');
+                toastr.success("User status updated successfully!");
                 setTimeout(() => {
-                    location.reload();
+                  location.reload();
                 }, 1000);
-            } else {
+              } else {
                 // Show error message
-                toastr.error('Error: ' + (data.message || 'Failed to update user status'));
+                toastr.error(
+                  "Error: " + (data.message || "Failed to update user status")
+                );
                 // Restore button state
                 button.innerHTML = originalContent;
                 button.disabled = false;
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            toastr.error('An error occurred while updating user status.');
-            // Restore button state
-            button.innerHTML = originalContent;
-            button.disabled = false;
-        });
-    }
-}
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              toastr.error("An error occurred while updating user status.");
+              // Restore button state
+              button.innerHTML = originalContent;
+              button.disabled = false;
+            });
+        }
+      }
 
-// Initialize tooltips and other components
-$(document).ready(function(){
-    // Initialize tooltips
-    $('[data-toggle="tooltip"]').tooltip();
-    
-    // Initialize toastr notifications if available
-    if (typeof toastr !== 'undefined') {
-        toastr.options = {
-            "closeButton": true,
-            "debug": false,
-            "newestOnTop": true,
-            "progressBar": true,
-            "positionClass": "toast-top-right",
-            "preventDuplicates": false,
-            "onclick": null,
-            "showDuration": "300",
-            "hideDuration": "1000",
-            "timeOut": "5000",
-            "extendedTimeOut": "1000",
-            "showEasing": "swing",
-            "hideEasing": "linear",
-            "showMethod": "fadeIn",
-            "hideMethod": "fadeOut"
-        };
-    }
-    
-    // Add smooth transitions to tab switching
-    $('.nav-pills a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-        $(e.target.getAttribute('href')).addClass('fadeIn');
-    });
-    
-    // Add hover effects to info boxes and contact items
-    $('.info-box, .contact-item, .system-item, .timeline-item').hover(
-        function() {
-            $(this).addClass('shadow-lg').removeClass('shadow-sm');
-        },
-        function() {
-            $(this).addClass('shadow-sm').removeClass('shadow-lg');
+      // Initialize tooltips and other components
+      $(document).ready(function () {
+        // Initialize tooltips
+        $('[data-toggle="tooltip"]').tooltip();
+
+        // Initialize toastr notifications if available
+        if (typeof toastr !== "undefined") {
+          toastr.options = {
+            closeButton: true,
+            debug: false,
+            newestOnTop: true,
+            progressBar: true,
+            positionClass: "toast-top-right",
+            preventDuplicates: false,
+            onclick: null,
+            showDuration: "300",
+            hideDuration: "1000",
+            timeOut: "5000",
+            extendedTimeOut: "1000",
+            showEasing: "swing",
+            hideEasing: "linear",
+            showMethod: "fadeIn",
+            hideMethod: "fadeOut",
+          };
         }
-    );
-    
-    // Add loading animation to profile picture if it's an image
-    $('img.img-circle').on('load', function() {
-        $(this).addClass('animated fadeIn');
-    });
-    
-    // Enhance button interactions
-    $('a.btn, button.btn').hover(
-        function() {
-            $(this).addClass('shadow-lg transform-scale-105');
-        },
-        function() {
-            $(this).removeClass('shadow-lg transform-scale-105');
-        }
-    );
-});
-</script>
-{% endblock extra_js %}
+
+        // Add smooth transitions to tab switching
+        $('.nav-pills a[data-toggle="tab"]').on("shown.bs.tab", function (e) {
+          $(e.target.getAttribute("href")).addClass("fadeIn");
+        });
+
+        // Add hover effects to info boxes and contact items
+        $(".info-box, .contact-item, .system-item, .timeline-item").hover(
+          function () {
+            $(this).addClass("shadow-lg").removeClass("shadow-sm");
+          },
+          function () {
+            $(this).addClass("shadow-sm").removeClass("shadow-lg");
+          }
+        );
+
+        // Add loading animation to profile picture if it's an image
+        $("img.img-circle").on("load", function () {
+          $(this).addClass("animated fadeIn");
+        });
+
+        // Enhance button interactions with improved animations
+        $("a.btn, button.btn").hover(
+          function () {
+            $(this).addClass("shadow-lg").css("transform", "translateY(-2px)");
+          },
+          function () {
+            $(this).removeClass("shadow-lg").css("transform", "translateY(0)");
+          }
+        );
+
+        // Add click animations to action buttons
+        $(".btn").on("click", function() {
+          const $btn = $(this);
+          if (!$btn.hasClass("logout-confirm") && !$btn.attr("onclick")) {
+            $btn.addClass("animate-pulse");
+            setTimeout(() => {
+              $btn.removeClass("animate-pulse");
+            }, 200);
+          }
+        });
+
+        // Add smooth transitions to admin actions section
+        $(".admin-actions").hover(
+          function() {
+            $(this).find(".alert").addClass("shadow-sm");
+          },
+          function() {
+            $(this).find(".alert").removeClass("shadow-sm");
+          }
+        );
+      });
+    </script>
+  {% endblock extra_js %}

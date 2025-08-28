@@ -1021,7 +1021,7 @@
 
     </div></div>
         <!-- /.card-body -->
-
+ 
 
         <!-- Enhanced Action Panel -->
         <div class="card shadow-sm">
@@ -1144,8 +1144,12 @@
         <div class="card"><div class="card-header">
           <div class="container">
           <dive class="float-right">
-            Created by : {{patient.added_by}}, on {{patient.added_on}}<br> 
-            {% if patient.last_edit_by %}Modified by : {{patient.last_edit_by}}, on {{patient.last_edit_on}} {% endif %}
+              <div style="display: flex; align-items: center; gap: 2em;">
+                <span>Created by : {{patient.added_by.get_full_name|default:patient.added_by.username}} (Administrator), on {{patient.added_on|date:'Y-m-d'}} {{patient.added_on|time:'H:i:s'}}</span>
+                {% if patient.last_edit_by %}
+                  <span>Modified by : {{patient.last_edit_by.get_full_name|default:patient.last_edit_by.username}} (Administrator), on {{patient.last_edit_on|date:'Y-m-d'}} {{patient.last_edit_on|time:'H:i:s'}}</span>
+                {% endif %}
+              </div>
           </div>
         </div>
         </div>
