@@ -1,125 +1,441 @@
 {% extends 'src/base.html' %}
+{% load static %}
 {% block title %}Attachment Manager{% endblock title%}
 
 {% block main_content %}
-<div class="container">
-
-</br>
-
-{% if attachment_page_obj %}
-
-{{attachment_page_obj.User.id}}
-
-  <div class="card">
-    <div class="card-header bg-info">
-    <h3 class="card-title">Attachment Manager</h3>
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0">Attachment Manager</h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item active">Attachment Manager</li>
+          </ol>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <table class="table table-hover text-nowrap">
-    <thead>
-    <tr>
-    <th>Index</th>
-    <th>Type</th>
-    <th>Title</th>
-    <th>Patient Name</th>
-    <th>Description</th>
-    <th>Created</th>
-    <th>Action</th>
-    </tr>
-    </thead>
-    <tbody>
-
-    {% for Attachment in attachment_page_obj %}
-    <tr>
-      <td>{{ Attachment.id }}</td>
-      <td>{% if Attachment.attachment_type == 'Video' %}
-        <i data-toggle="tooltip" data-placement="top" title="Video" class="fas fa-play-circle" style="color: #ff0000;"></i>
-        {% elif Attachment.attachment_type == 'Image' %}
-        <i data-toggle="tooltip" data-placement="top" title="Image" class="far fa-image" style="color: #ff0000;"></i>
-        {% elif Attachment.attachment_type == 'PDF' %}
-        <i data-toggle="tooltip" data-placement="top" title="PDF" class="far fa-file-pdf" style="color: #ff0000;"></i>
-        {% endif %}
-        {% if Attachment.isBookmarked %}&nbsp;<div class="d-inline-block"><a href="{% url 'bookmark-view' Attachment.isBookmarked.id %}" data-toggle="tooltip" data-placement="top" title="Bookmarked" class="far fa-bookmark" style="color: #3d7deb;"></a></div>{% endif %}
-      </td>
-
-      <td>{{ Attachment.title }}</td>
-      <td>{{ Attachment.patient.baby_name }}</td>
-
-      <td>{{ Attachment.description }}</td>
-      <td><div style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="Uploaded on : {{ Attachment.uploaded_on }} by : {{ Attachment.uploaded_by.username }}, {% if Attachment.last_edit_by %} last edited on {{ Attachment.last_edit_on }} by {{ Attachment.last_edit_by.username }}{% endif %}" class="fas fa-info-circle" style="color: #3d7deb;"></i></div></td>
+  <section class="content">
+    <div class="container-fluid">
       
-      <td><div style="cursor: pointer;" class=" btn-group" role="group">
-          <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
-          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
 
-            {% if Attachment.attachment_type == 'Image' %}
-            <a class="dropdown-item" href="{% url 'attachment-view' Attachment.id %}"><i class="fas fa-eye"></i> View Attached Image</a>
-            {% elif Attachment.attachment_type == 'PDF' %}
-            <a class="dropdown-item" href="{% url 'attachment-view' Attachment.id %}"><i class="fas fa-eye"></i> Read Attached PDF</a>
-            {% elif Attachment.attachment_type == 'Video' %}
-            <a class="dropdown-item" href="{% url 'attachment-view' Attachment.id %}"><i class="fas fa-eye"></i> Play Attached Video</a>
-            {% else %}
-            {% endif %}
+      {% if attachment_page_obj %}
+      <!-- Attachments Table -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-list"></i> Attachments List
+          </h3>
+          <div class="card-tools">
+            <div class="btn-group">
+              <button type="button" class="btn btn-tool dropdown-toggle" data-toggle="dropdown">
+                <i class="fas fa-cog"></i>
+              </button>
+              <div class="dropdown-menu dropdown-menu-right">
+                <a class="dropdown-item" href="#" onclick="exportTable('csv')">
+                  <i class="fas fa-file-csv"></i> Export as CSV
+                </a>
+                <a class="dropdown-item" href="#" onclick="exportTable('excel')">
+                  <i class="fas fa-file-excel"></i> Export as Excel
+                </a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="#" onclick="printTable()">
+                  <i class="fas fa-print"></i> Print
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card-body table-responsive p-0">
+          <table class="table table-hover text-nowrap" id="attachments-table">
+            <thead class="bg-light">
+              <tr>
+                <th style="width: 10px">#</th>
+                <th style="width: 60px">Type</th>
+                <th>Title</th>
+                <th>Patient</th>
+                <th>Size</th>
+                <th class="d-none d-lg-table-cell">Description</th>
+                <th style="width: 120px">Upload Date</th>
+                <th class="d-none d-md-table-cell" style="width: 100px">Uploaded By</th>
+                <th class="text-center" style="width: 120px">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for attachment in attachment_page_obj %}
+              <tr>
+                <td>{{ attachment.id }}</td>
+                <td class="text-center">
+                  {% if attachment.attachment_type == 'video' %}
+                    <span class="badge badge-danger" data-toggle="tooltip" title="Video File">
+                      <i class="fas fa-video"></i>
+                    </span>
+                  {% elif attachment.attachment_type == 'image' %}
+                    <span class="badge badge-primary" data-toggle="tooltip" title="Image File">
+                      <i class="fas fa-image"></i>
+                    </span>
+                  {% elif attachment.attachment_type == 'pdf' %}
+                    <span class="badge badge-warning" data-toggle="tooltip" title="PDF Document">
+                      <i class="fas fa-file-pdf"></i>
+                    </span>
+                  {% else %}
+                    <span class="badge badge-secondary" data-toggle="tooltip" title="Other File">
+                      <i class="fas fa-file"></i>
+                    </span>
+                  {% endif %}
+                  
+                  {% if attachment.isBookmarked %}
+                    <div class="mt-1">
+                      <a href="{% url 'bookmark-view' attachment.isBookmarked.id %}" 
+                         class="text-warning" data-toggle="tooltip" title="Bookmarked">
+                        <i class="fas fa-bookmark fa-sm"></i>
+                      </a>
+                    </div>
+                  {% endif %}
+                </td>
+                
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div>
+                      <a href="{% url 'attachment-view' attachment.id %}" class="text-primary font-weight-bold">
+                        {{ attachment.title|truncatechars:30 }}
+                      </a>
+                      {% if attachment.is_sensitive %}
+                        <span class="badge badge-warning badge-sm ml-1" data-toggle="tooltip" title="Sensitive Content">
+                          <i class="fas fa-exclamation-triangle"></i>
+                        </span>
+                      {% endif %}
+                      {% if not attachment.is_safe_to_view %}
+                        <span class="badge badge-danger badge-sm ml-1" data-toggle="tooltip" title="Security Risk">
+                          <i class="fas fa-shield-alt"></i>
+                        </span>
+                      {% endif %}
+                    </div>
+                  </div>
+                </td>
+                
+                <td>
+                  <a href="{% url 'view-patient' attachment.patient.id %}" class="text-info">
+                    {{ attachment.patient.baby_name|truncatechars:25 }}
+                  </a>
+                  {% if attachment.patient.bht %}
+                    <br><small class="text-muted">BHT: {{ attachment.patient.bht }}</small>
+                  {% endif %}
+                </td>
+                
+                <td>
+                  <span class="badge badge-light">{{ attachment.file_size_display|default:"Unknown" }}</span>
+                </td>
+                
+                <td class="d-none d-lg-table-cell">
+                  {% if attachment.description %}
+                    <span data-toggle="tooltip" title="{{ attachment.description }}">
+                      {{ attachment.description|truncatechars:40 }}
+                    </span>
+                  {% else %}
+                    <span class="text-muted">No description</span>
+                  {% endif %}
+                </td>
+                
+                <td>
+                  <small>
+                    {{ attachment.created_at|date:"M d, Y" }}<br>
+                    <span class="text-muted">{{ attachment.created_at|date:"H:i" }}</span>
+                  </small>
+                </td>
+                
+                <td class="d-none d-md-table-cell">
+                  {% if attachment.added_by %}
+                    <a href="{% url 'user-view-by-username' attachment.added_by.username %}" 
+                       class="text-secondary" data-toggle="tooltip" 
+                       title="{{ attachment.added_by.get_full_name|default:attachment.added_by.username }}">
+                      {{ attachment.added_by.username|truncatechars:12 }}
+                    </a>
+                  {% else %}
+                    <span class="text-muted">Unknown</span>
+                  {% endif %}
+                </td>
+                
+                <td class="text-center">
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" 
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      <i class="fas fa-cog"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right">
+                      <!-- View Options -->
+                      <h6 class="dropdown-header">View</h6>
+                      <a class="dropdown-item" href="{% url 'attachment-view' attachment.id %}">
+                        <i class="fas fa-eye text-primary"></i> 
+                        {% if attachment.attachment_type == 'image' %}View Image
+                        {% elif attachment.attachment_type == 'video' %}Play Video
+                        {% elif attachment.attachment_type == 'pdf' %}Read PDF
+                        {% else %}View File{% endif %}
+                      </a>
+                      
+                      <!-- Management Options -->
+                      <div class="dropdown-divider"></div>
+                      <h6 class="dropdown-header">Manage</h6>
+                      <a class="dropdown-item" href="{% url 'attachment-edit' attachment.id %}">
+                        <i class="fas fa-edit text-warning"></i> Edit
+                      </a>
+                      <a class="dropdown-item" href="javascript:void(0)" onclick="openDeleteAttachmentModal({
+                        id: '{{ attachment.id }}',
+                        title: '{{ attachment.title|escapejs }}',
+                        patient_name: '{{ attachment.patient.baby_name|escapejs }}',
+                        patient_bht: '{{ attachment.patient.bht|escapejs }}',
+                        patient_gender: '{{ attachment.patient.get_gender_display|escapejs }}',
+                        attachment_type: '{{ attachment.attachment_type }}',
+                        created_at: '{{ attachment.created_at|date:"M d, Y H:i" }}',
+                        added_by: '{{ attachment.added_by.get_full_name|default:attachment.added_by.username|escapejs }}',
+                        description: '{{ attachment.description|escapejs }}'
+                      })">
+                        <i class="fas fa-trash text-danger"></i> Delete
+                      </a>
+                      
+                      <!-- Related Items -->
+                      <div class="dropdown-divider"></div>
+                      <h6 class="dropdown-header">Related</h6>
+                      <a class="dropdown-item" href="{% url 'view-patient' attachment.patient.id %}">
+                        <i class="fas fa-user text-info"></i> View Patient
+                      </a>
+                      <a class="dropdown-item" href="{% url 'attachment-manager-patient' attachment.patient.id %}">
+                        <i class="fas fa-list text-info"></i> Patient's Attachments
+                      </a>
+                      
+                      <!-- Bookmark Options -->
+                      <div class="dropdown-divider"></div>
+                      {% if attachment.isBookmarked %}
+                        <a class="dropdown-item" href="{% url 'bookmark-view' attachment.isBookmarked.id %}">
+                          <i class="fas fa-bookmark text-success"></i> View Bookmark
+                        </a>
+                      {% else %}
+                        <a class="dropdown-item" href="{% url 'bookmark-add' attachment.id 'Attachment' %}">
+                          <i class="far fa-bookmark text-success"></i> Add Bookmark
+                        </a>
+                      {% endif %}
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
 
-            <div><hr></div>
-            <a class="dropdown-item" href="{% url 'attachment-edit' Attachment.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
-            <a class="dropdown-item" href="{% url 'attachment-delete-confirm' Attachment.id %}"><i class="far fa-trash-alt"></i> Delete</a>
-            <a class="dropdown-item" href="{% url 'view-patient' Attachment.patient.id %}"><i class="fas fas fa-eye"></i> View Patient</a>
-            <a class="dropdown-item" href="{% url 'attachment-manager-patient' Attachment.patient.id %}"><i class="fas fas fa-eye"></i> View Other Attachments</a>
-            <a class="dropdown-item" href="{% url 'user-view-by-username' Attachment.uploaded_by.username %}"><i class="fas fas fa-eye"></i> View Uploaded user</a>
-            <div><hr></div>
-            {% if Attachment.isBookmarked %}
-            <a class="dropdown-item" href="{% url 'bookmark-view' Attachment.isBookmarked.id %}"><i class="fas fas fa-eye"></i> View Bookmark</a>
-            {% else %}
-            <a class="dropdown-item" href="{% url 'bookmark-add' Attachment.id 'Attachment' %}"><i class="fas fa-circle fa-plus"></i> Add Bookmark</a>
-            {% endif %}
-
+        <!-- Pagination -->
+        <div class="card-footer">
+          <div class="row align-items-center">
+            <div class="col-sm-6">
+              <div class="dataTables_info">
+                Showing {{ attachment_page_obj.start_index }} to {{ attachment_page_obj.end_index }} 
+                of {{ attachment_page_obj.paginator.count }} entries
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <nav aria-label="Page navigation">
+                <ul class="pagination pagination-sm justify-content-end mb-0">
+                  {% if attachment_page_obj.has_previous %}
+                    <li class="page-item">
+                      <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">
+                        <i class="fas fa-angle-double-left"></i>
+                      </a>
+                    </li>
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ attachment_page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">
+                        <i class="fas fa-angle-left"></i>
+                      </a>
+                    </li>
+                  {% else %}
+                    <li class="page-item disabled">
+                      <span class="page-link"><i class="fas fa-angle-double-left"></i></span>
+                    </li>
+                    <li class="page-item disabled">
+                      <span class="page-link"><i class="fas fa-angle-left"></i></span>
+                    </li>
+                  {% endif %}
+                  
+                  <!-- Page Numbers -->
+                  {% for page_num in attachment_page_obj.paginator.page_range %}
+                    {% if page_num == attachment_page_obj.number %}
+                      <li class="page-item active">
+                        <span class="page-link">{{ page_num }}</span>
+                      </li>
+                    {% elif page_num >= attachment_page_obj.number|add:'-2' and page_num <= attachment_page_obj.number|add:'2' %}
+                      <li class="page-item">
+                        <a class="page-link" href="?page={{ page_num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">
+                          {{ page_num }}
+                        </a>
+                      </li>
+                    {% endif %}
+                  {% endfor %}
+                  
+                  {% if attachment_page_obj.has_next %}
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ attachment_page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">
+                        <i class="fas fa-angle-right"></i>
+                      </a>
+                    </li>
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ attachment_page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}">
+                        <i class="fas fa-angle-double-right"></i>
+                      </a>
+                    </li>
+                  {% else %}
+                    <li class="page-item disabled">
+                      <span class="page-link"><i class="fas fa-angle-right"></i></span>
+                    </li>
+                    <li class="page-item disabled">
+                      <span class="page-link"><i class="fas fa-angle-double-right"></i></span>
+                    </li>
+                  {% endif %}
+                </ul>
+              </nav>
+            </div>
           </div>
         </div>
       </div>
-    </td>
-
-    </tr>
-    {% endfor %}
-    </tbody>
-
-    </table>
-    </div>
-
-    <div class="card text-center d-flex align-items-center justify-content-center">
-      <div class="card-body">
-
-        <nav aria-label="Page navigation example">
-          <ul class="pagination justify-content-center">
-          <li>
-            {% if attachment_page_obj.has_previous %}
-              <li class="page-item"> <a class="page-link" href="?page=1" tabindex="-1">&laquo; First</a>
-              <li class="page-item"> <a class="page-link" href="?page={{ attachment_page_obj.previous_page_number }}" tabindex="-1">Previous</a></li>
+      
+      {% else %} 
+      <!-- No Results Found -->
+      <div class="card">
+        <div class="card-body text-center py-5">
+          <i class="fas fa-file-medical fa-4x text-muted mb-4"></i>
+          <h4 class="text-muted">No Attachments Found</h4>
+          <p class="text-muted mb-4">
+            {% if request.GET.search or request.GET.type %}
+              No attachments match your search criteria. Try adjusting your filters.
             {% else %}
-              <li class="page-item disabled"> <a class="page-link" href="#" tabindex="-1">&laquo; First</a>
-              <li class="page-item disabled"> <a class="page-link" href="#" tabindex="-1">Previous</a> </li>
+              There are no attachments in the system yet.
             {% endif %}
-          
-            <li class="page-item"><a class="page-link">Page {{ attachment_page_obj.number }} of {{ attachment_page_obj.paginator.num_pages }}</a></li>
-          
-            {% if attachment_page_obj.has_next %}
-              <li class="page-item"><a class="page-link" href="?page={{ attachment_page_obj.next_page_number }}">Next</a></li>
-              <li class="page-item"><a class="page-link" href="?page={{ attachment_page_obj.paginator.num_pages }}">Last &raquo;</a></li>
-            {% else %}
-              <li class="page-item disabled"><a class="page-link" href="#">Next</a></li>
-              <li class="page-item disabled"><a class="page-link" href="#">Last &raquo;</a></li>
-            {% endif %}
-          
-          </li>
-          </ul>
-        </nav>
-
+          </p>
+          {% if request.GET.search or request.GET.type %}
+            <a href="{% url 'attachment-manager' %}" class="btn btn-primary">
+              <i class="fas fa-times"></i> Clear Filters
+            </a>
+          {% endif %}
+        </div>
       </div>
+      {% endif %}
     </div>
+  </section>
 
-{% else %} 
-<div class="alert alert-secondary" role="alert">No records found</div>
-{% endif %}
+<!-- Custom CSS for responsive table -->
+<style>
+@media (max-width: 768px) {
+  .table-responsive table, 
+  .table-responsive thead, 
+  .table-responsive tbody, 
+  .table-responsive th, 
+  .table-responsive td, 
+  .table-responsive tr {
+    display: block;
+  }
+  
+  .table-responsive thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+  
+  .table-responsive tr {
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 5px;
+  }
+  
+  .table-responsive td {
+    border: none;
+    position: relative;
+    padding-left: 50% !important;
+    white-space: normal;
+    text-align: left;
+  }
+  
+  .table-responsive td:before {
+    content: attr(data-label);
+    position: absolute;
+    left: 6px;
+    width: 45%;
+    white-space: nowrap;
+    font-weight: bold;
+    color: #333;
+  }
+}
 
-</div>
+/* Search form responsive */
+@media (max-width: 576px) {
+  .form-inline .input-group,
+  .form-inline .form-control,
+  .form-inline .btn {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  
+  .form-inline {
+    display: block;
+  }
+}
+
+/* Dropdown menu improvements */
+.dropdown-menu {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.dropdown-header {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Badge improvements */
+.badge-sm {
+  font-size: 0.65em;
+}
+
+/* Tooltip improvements */
+.tooltip-inner {
+  max-width: 300px;
+  text-align: left;
+}
+</style>
+
+<!-- JavaScript for enhanced functionality -->
+<script>
+$(document).ready(function() {
+  // Initialize tooltips
+  $('[data-toggle=\"tooltip\"]').tooltip();
+  
+  // Add data labels for responsive table
+  $('#attachments-table tbody tr').each(function() {
+    $(this).find('td').each(function(index) {
+      const headerText = $('#attachments-table thead th').eq(index).text().trim();
+      $(this).attr('data-label', headerText);
+    });
+  });
+  
+  // Search form enhancements
+  $('input[name=\"search\"]').on('keypress', function(e) {
+    if (e.which === 13) { // Enter key
+      $(this).closest('form').submit();
+    }
+  });
+  
+  // Auto-submit on filter change (optional)
+  $('select[name=\"type\"]').on('change', function() {
+    // Uncomment the next line if you want auto-submit on filter change
+    // $(this).closest('form').submit();
+  });
+});
+</script>
+
+<!-- Include Delete Modal -->
+{% include 'attachment/delete-confirm.html' %}
+
 {% endblock main_content %}

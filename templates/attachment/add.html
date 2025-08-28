@@ -1,142 +1,413 @@
 {% extends 'src/base.html' %}
-{% block title %}Attachments - Add{% endblock %}
+{% load static %}
+{% block title %}Add Attachment{% endblock %}
+
+{% block content_header %}
+<div class="row mb-2">
+  <div class="col-sm-6">
+    <h1 class="m-0">Add New Attachment</h1>
+  </div>
+  <div class="col-sm-6">
+    <ol class="breadcrumb float-sm-right">
+      <li class="breadcrumb-item"><a href="{% url 'home' %}">Dashboard</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'view-patient' patient.id %}">Patient</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'attachment-manager-patient' patient.id %}">Attachments</a></li>
+      <li class="breadcrumb-item active">Add</li>
+    </ol>
+  </div>
+</div>
+{% endblock %}
 
 {% block main_content %}
+{% comment %} {% include 'src/form_error.html' %} {% endcomment %}
+      
+      <!-- Patient Information Card -->
+      <div class="row">
+        <div class="col-md-4">
+          <div class="card card-info">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-user"></i> Patient Information</h3>
+            </div>
+            <div class="card-body">
+              <dl class="row">
+                <dt class="col-sm-4">Name:</dt>
+                <dd class="col-sm-8">{{ patient.baby_name }}</dd>
+                <dt class="col-sm-4">BHT:</dt>
+                <dd class="col-sm-8">{{ patient.bht|default:"Not assigned" }}</dd>
+                <dt class="col-sm-4">PIN:</dt>
+                <dd class="col-sm-8">{{ patient.pin|default:"Not assigned" }}</dd>
+              </dl>
+              <a href="{% url 'view-patient' patient.id %}" class="btn btn-sm btn-outline-info">
+                <i class="fas fa-eye"></i> View Patient Details
+              </a>
+            </div>
+          </div>
+        </div>
 
-</br>
-{% include 'src/form_error.html' %}
+        <!-- Upload Form Card -->
+        <div class="col-md-8">
+          <div class="card card-primary">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-upload"></i> Upload Attachment</h3>
+            </div>
+            
+            <form id="file-upload-form" enctype="multipart/form-data" onsubmit="onFormSubmit(event)">
+              {% csrf_token %}
+              <div class="card-body">
+                <!-- File Type Information -->
+                <div class="alert alert-info alert-dismissible">
+                  <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                  <h5><i class="icon fas fa-info"></i> Supported File Types</h5>
+                  <strong>Images:</strong> JPG, JPEG, PNG, GIF, BMP, WebP (Max: 10MB)<br>
+                  <strong>Videos:</strong> MP4, MOV, AVI, MKV, WEBM (Max: 2GB)<br>
+                  <strong>Documents:</strong> PDF, DOC, DOCX, TXT (Max: 100MB)
+                </div>
 
-<div class="container-sm">
-  <div class="card">
-  <div class="card-header bg-info"><h3 class="card-title">Add New Attachment</h3></div>
+                <!-- Title Field -->
+                <div class="form-group">
+                  <label for="id_title">Title <span class="text-danger">*</span></label>
+                  <input type="text" name="title" class="form-control" placeholder="Enter a descriptive title for the attachment" required maxlength="200" id="id_title">
+                  <small class="form-text text-muted">Maximum 200 characters</small>
+                  <div class="invalid-feedback" id="title-error"></div>
+                </div>
 
-  <form id="file-upload-form" enctype="multipart/form-data" onsubmit="onFormSubmit(event)">
-    {% csrf_token %}
+                <!-- File Upload Field -->
+                <div class="form-group">
+                  <label for="id_attachment">Select File <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <div class="custom-file">
+                      <input type="file" name="attachment" class="custom-file-input" id="id_attachment" required accept=".jpg,.jpeg,.png,.gif,.bmp,.webp,.mp4,.mov,.avi,.mkv,.webm,.pdf,.doc,.docx,.txt">
+                      <label class="custom-file-label" for="id_attachment">Choose file...</label>
+                    </div>
+                  </div>
+                  <small class="form-text text-muted">Select a file to upload</small>
+                  <div class="invalid-feedback" id="file-error"></div>
+                </div>
 
-    <div class="card-body">
+                <!-- Description Field -->
+                <div class="form-group">
+                  <label for="id_description">Description</label>
+                  <textarea name="description" class="form-control" id="id_description" rows="4" placeholder="Optional description of the attachment content" maxlength="1000"></textarea>
+                  <small class="form-text text-muted">Maximum 1000 characters</small>
+                </div>
 
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Title : </label>
-        <div class="col-sm">{{attachment_form.title}}</div>
+                <!-- Progress Bar -->
+                <div class="form-group" id="progress_div" style="display: none;">
+                  <label>Upload Progress</label>
+                  <div class="progress progress-lg">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" id="progress_bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                      <span id="progress_text">0%</span>
+                    </div>
+                  </div>
+                  <small class="form-text text-muted" id="progress_details"></small>
+                </div>
+
+                <!-- Status Messages -->
+                <div id="upload-messages"></div>
+              </div>
+              
+              <div class="card-footer">
+                <div class="row">
+                  <div class="col-sm-6">
+                    <button type="button" class="btn btn-secondary" onclick="window.history.back();">
+                      <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                  </div>
+                  <div class="col-sm-6 text-right">
+                    <button id="btn_add" type="submit" class="btn btn-primary">
+                      <i class="fas fa-upload"></i> Upload Attachment
+                    </button>
+                    
+                    <!-- Success Action Buttons (hidden initially) -->
+                    <div id="success-actions" style="display: none;">
+                      <button type="button" id="btn_view" class="btn btn-success">
+                        <i class="fas fa-eye"></i> View
+                      </button>
+                      <button type="button" id="btn_edit" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> Edit
+                      </button>
+                      <button type="button" id="btn_add_another" class="btn btn-info" onclick="window.location.reload();">
+                        <i class="fas fa-plus"></i> Add Another
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Attachment : </label>
-        <div class="col-sm">{{attachment_form.attachment}}</div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Description : </label>
-        <div class="col-sm">{{attachment_form.description}}</div>
-      </div>
-
-      <div class="row justify-content-end">
-        <div class="col-auto"><button style="display:none;" id="btn_view"type="button" class="btn btn-primary" onclick="location.href=''">View</button></div>
-        <div class="col-auto"><button style="display:none;" id="btn_edit"type="button" class="btn btn-primary" onclick="location.href=''">Edit</button></div>
-        <div class="col-auto"><button style="display:none;" id="btn_add_another"type="button" class="btn btn-primary" onclick="location.href='{% url 'video:add' patient.id %}'">Add New</button></div>
-        <div class="col-auto"><button id="btn_add" type="submit" class="btn btn-primary">Upload</button></div>
-      </div>
-
-      </br>
-
-      <div class="form-group row" style="display:none;" id="progress_div">
-        <div class="progress"><div class="progress-bar" id="progress_bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div></div>
-      </div>
-
-      <div class="form-group row"><p id="progress_text"></p></div>
-
-  </form>
-
-    </div>
-    <!-- /.card-body -->
-  </div>
-  <!-- /.card -->
-</div>
 
 
 <script>
+$(document).ready(function() {
+  // Initialize custom file input
+  bsCustomFileInput.init();
+  
+  // File input change handler
+  $('#id_attachment').on('change', function() {
+    const file = this.files[0];
+    if (file) {
+      validateFile(file);
+    }
+  });
+  
+  // Title validation
+  $('#id_title').on('input', function() {
+    validateTitle($(this).val());
+  });
+  
+  // Description character count
+  $('#id_description').on('input', function() {
+    const remaining = 1000 - $(this).val().length;
+    $(this).next('.form-text').text(`${remaining} characters remaining`);
+  });
+});
 
-  function onFormSubmit(event) {
-      event.preventDefault();
-
-      var formData = new FormData();
-      formData.append("title", document.getElementById("title_id").value);
-      formData.append("attachment",document.getElementById("attachment_file_id").files[0]);
-      formData.append("descreption",document.getElementById("discription_id").value);
-      
-      var btn_view = document.getElementById("btn_view")
-      var btn_edit = document.getElementById("btn_edit")
-      var btn_add = document.getElementById("btn_add")
-      var btn_add_another = document.getElementById("btn_add_another")
-
-      var xhr=new XMLHttpRequest();
-      xhr.open("POST",'{% url 'attachment-add' patient.id %}',true);
-
-      xhr.upload.addEventListener("progress",function (ev) {
-         if(ev.lengthComputable){
-            var percentage=(ev.loaded/ev.total*100|0);
-            document.getElementById("progress_bar").style["width"]=""+percentage+"%";
-            document.getElementById("progress_bar").innerHTML=""+percentage+"%";
-            document.getElementById("progress_text").innerHTML="Uploading... : "+parseInt(ev.loaded/1000000)+"/"+parseInt(ev.total/1000000)+" MB";
-         }
-      });
-
-      xhr.addEventListener("loadstart", function(e) {
-        document.getElementById("progress_div").style["display"]="block";
-        btn_add.disabled = true;
-          }, false);
-
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState == XMLHttpRequest.DONE) {
-            var response = JSON.parse(xhr.responseText);
-            var success = response.success;
-
-            if (this.readyState == 4 && this.status == 200 && success == true) {
-
-              document.getElementById("progress_div").style["display"]="none";
-              document.getElementById("progress_text").innerHTML="File uploaded successfully... (100%)";
-
-              btn_add_another.style.display = "block";
-              btn_view.style.display = "block";
-              btn_edit.style.display = "block";
-              btn_add.style.display = "none";
-
-              var url_view = "/attachment/view/"+ response.f_id;
-              btn_view.addEventListener('click', () => {
-                window.location.href = url_view;
-              });
-
-              var url_edit = "/attachment/edit/"+ response.f_id;
-              btn_edit.addEventListener('click', () => {
-                window.location.href = url_edit;
-              });
-
-              } else {
-                document.getElementById("progress_div").style["display"]="none";
-                document.getElementById("progress_text").innerHTML=response.msg;
-
-              }
-        }
-      }
-
-      xhr.addEventListener("loadend", function(e) {
- 
-      }, false);
-
-      xhr.addEventListener("error", function(e) {
-        document.getElementById("progress_div").style["display"]="none";
-        document.getElementById("progress_text").innerHTML=e;
-        btn_add_another.style.display = "block";
-        btn_add.style.display = "none";
-        btn_view.style.display = "none";
-        btn_edit.style.display = "none";
-        btn_add.style.display = "none";
-        }, false);
-
-      xhr.send(formData);
+function validateFile(file) {
+  const fileInput = document.getElementById('id_attachment');
+  const errorDiv = document.getElementById('file-error');
+  
+  // Reset validation state
+  fileInput.classList.remove('is-invalid', 'is-valid');
+  errorDiv.textContent = '';
+  
+  // File size limits (in bytes)
+  const sizeLimits = {
+    image: 10 * 1024 * 1024,  // 10MB
+    video: 2 * 1024 * 1024 * 1024,  // 2GB
+    pdf: 100 * 1024 * 1024,  // 100MB
+    document: 100 * 1024 * 1024,  // 100MB
+    other: 100 * 1024 * 1024   // 100MB
+  };
+  
+  // Allowed extensions - updated to match new choices
+  const allowedExtensions = {
+    image: ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'],
+    video: ['.mp4', '.mov', '.avi', '.mkv', '.webm'],
+    pdf: ['.pdf'],
+    document: ['.doc', '.docx', '.txt', '.rtf', '.odt']
+  };
+  
+  const fileName = file.name.toLowerCase();
+  const fileExt = fileName.substring(fileName.lastIndexOf('.'));
+  
+  // Determine file type
+  let fileType = null;
+  for (const [type, extensions] of Object.entries(allowedExtensions)) {
+    if (extensions.includes(fileExt)) {
+      fileType = type;
+      break;
+    }
   }
+  
+  // Validate file type
+  if (!fileType) {
+    fileInput.classList.add('is-invalid');
+    errorDiv.textContent = 'File type not supported. Please select an image, video, PDF, or document file.';
+    return false;
+  }
+  
+  // Validate file size
+  if (file.size > sizeLimits[fileType]) {
+    fileInput.classList.add('is-invalid');
+    const maxSizeMB = fileType === 'video' ? '2GB' : (sizeLimits[fileType] / (1024 * 1024)) + 'MB';
+    errorDiv.textContent = `File size too large. Maximum allowed size for ${fileType}s is ${maxSizeMB}.`;
+    return false;
+  }
+  
+  // File is valid
+  fileInput.classList.add('is-valid');
+  return true;
+}
 
+function validateTitle(title) {
+  const titleInput = document.getElementById('id_title');
+  const errorDiv = document.getElementById('title-error');
+  
+  // Reset validation state
+  titleInput.classList.remove('is-invalid', 'is-valid');
+  errorDiv.textContent = '';
+  
+  if (title.trim().length === 0) {
+    titleInput.classList.add('is-invalid');
+    errorDiv.textContent = 'Title is required.';
+    return false;
+  }
+  
+  if (title.length > 200) {
+    titleInput.classList.add('is-invalid');
+    errorDiv.textContent = 'Title must be 200 characters or less.';
+    return false;
+  }
+  
+  // Validate title format (only letters, numbers, spaces, and basic punctuation)
+  const titleRegex = /^[a-zA-Z0-9\s\-_\.(),!?]+$/;
+  if (!titleRegex.test(title)) {
+    titleInput.classList.add('is-invalid');
+    errorDiv.textContent = 'Title contains invalid characters. Use only letters, numbers, spaces, and basic punctuation.';
+    return false;
+  }
+  
+  // Title is valid
+  titleInput.classList.add('is-valid');
+  return true;
+}
+
+function showMessage(type, message) {
+  const messagesDiv = document.getElementById('upload-messages');
+  messagesDiv.innerHTML = `
+    <div class="alert alert-${type} alert-dismissible">
+      <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+      <h5><i class="icon fas ${type === 'success' ? 'fa-check' : 'fa-exclamation-triangle'}"></i> ${type === 'success' ? 'Success!' : 'Error!'}</h5>
+      ${message}
+    </div>
+  `;
+}
+
+function onFormSubmit(event) {
+  event.preventDefault();
+  
+  // Get form elements
+  const titleInput = document.getElementById('id_title');
+  const fileInput = document.getElementById('id_attachment');
+  const descriptionInput = document.getElementById('id_description');
+  const btn_add = document.getElementById('btn_add');
+  const progressDiv = document.getElementById('progress_div');
+  const progressBar = document.getElementById('progress_bar');
+  const progressText = document.getElementById('progress_text');
+  const progressDetails = document.getElementById('progress_details');
+  const successActions = document.getElementById('success-actions');
+  const btn_view = document.getElementById('btn_view');
+  const btn_edit = document.getElementById('btn_edit');
+  
+  // Clear previous messages
+  document.getElementById('upload-messages').innerHTML = '';
+  
+  // Validate form
+  const titleValid = validateTitle(titleInput.value);
+  const fileValid = fileInput.files.length > 0 && validateFile(fileInput.files[0]);
+  
+  if (!titleValid || !fileValid) {
+    showMessage('danger', 'Please fix the validation errors before submitting.');
+    return;
+  }
+  
+  // Prepare form data
+  const formData = new FormData();
+  formData.append('title', titleInput.value);
+  formData.append('attachment', fileInput.files[0]);
+  formData.append('description', descriptionInput.value);
+  
+  // Add CSRF token
+  formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+  
+  // Setup AJAX request
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '{% url 'attachment-add' patient.id %}', true);
+  
+  // Upload progress handler
+  xhr.upload.addEventListener('progress', function(ev) {
+    if (ev.lengthComputable) {
+      const percentage = Math.round((ev.loaded / ev.total) * 100);
+      progressBar.style.width = percentage + '%';
+      progressBar.setAttribute('aria-valuenow', percentage);
+      progressText.textContent = percentage + '%';
+      
+      const loadedMB = (ev.loaded / 1048576).toFixed(2);
+      const totalMB = (ev.total / 1048576).toFixed(2);
+      progressDetails.textContent = `Uploading: ${loadedMB}MB / ${totalMB}MB`;
+    }
+  });
+  
+  // Upload start handler
+  xhr.addEventListener('loadstart', function() {
+    btn_add.disabled = true;
+    btn_add.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+    progressDiv.style.display = 'block';
+    progressText.textContent = '0%';
+    progressDetails.textContent = 'Preparing upload...';
+  });
+  
+  // Upload complete handler
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === XMLHttpRequest.DONE) {
+      if (xhr.status === 200) {
+        try {
+          const response = JSON.parse(xhr.responseText);
+          
+          if (response.success) {
+            // Success
+            progressDiv.style.display = 'none';
+            showMessage('success', 'File uploaded successfully! You can now view, edit, or upload another attachment.');
+            
+            // Show success action buttons
+            btn_add.style.display = 'none';
+            successActions.style.display = 'block';
+            
+            // Setup button click handlers
+            const viewUrl = `/attachment/view/${response.f_id}`;
+            const editUrl = `/attachment/edit/${response.f_id}`;
+            
+            btn_view.onclick = function() {
+              window.location.href = viewUrl;
+            };
+            
+            btn_edit.onclick = function() {
+              window.location.href = editUrl;
+            };
+            
+          } else {
+            // Server-side validation error
+            progressDiv.style.display = 'none';
+            showMessage('danger', response.msg || 'Upload failed. Please try again.');
+            btn_add.disabled = false;
+            btn_add.innerHTML = '<i class="fas fa-upload"></i> Upload Attachment';
+          }
+        } catch (e) {
+          // JSON parse error
+          progressDiv.style.display = 'none';
+          showMessage('danger', 'Unexpected server response. Please try again.');
+          btn_add.disabled = false;
+          btn_add.innerHTML = '<i class="fas fa-upload"></i> Upload Attachment';
+        }
+      } else {
+        // HTTP error
+        progressDiv.style.display = 'none';
+        showMessage('danger', `Server error (${xhr.status}). Please try again.`);
+        btn_add.disabled = false;
+        btn_add.innerHTML = '<i class="fas fa-upload"></i> Upload Attachment';
+      }
+    }
+  };
+  
+  // Upload error handler
+  xhr.addEventListener('error', function() {
+    progressDiv.style.display = 'none';
+    showMessage('danger', 'Network error. Please check your connection and try again.');
+    btn_add.disabled = false;
+    btn_add.innerHTML = '<i class="fas fa-upload"></i> Upload Attachment';
+  });
+  
+  // Send the request
+  xhr.send(formData);
+}
 </script>
 
 
+<!-- Additional script for enhanced file input handling -->
+<script>
+// Enhanced file input handling specifically for this form
+$(document).ready(function() {
+  // Ensure file input label updates when file is selected
+  $('#id_attachment').on('change', function(e) {
+    if (this.files && this.files.length > 0) {
+      const fileName = this.files[0].name;
+      $(this).next('.custom-file-label').text(fileName);
+    } else {
+      $(this).next('.custom-file-label').text('Choose file...');
+    }
+  });
+});
+</script>
 {% endblock main_content %}

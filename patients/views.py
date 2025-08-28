@@ -1308,7 +1308,7 @@ def attachment_add(request, pid):
     if request.method == "POST":
         title = request.POST["title"]
         attachment = request.FILES["attachment"]
-        description = request.POST["descreption"]
+        description = request.POST["description"]
 
         if validateAttachmentSize(attachment):
             if validateAttachmentType(attachment):
@@ -1435,29 +1435,62 @@ def attachment_delete_confirm(request, pk):
 
 @login_required(login_url="user-login")
 def attachment_delete(request, pk):
+    from django.http import JsonResponse
+    
     user = request.user
-    attachment = Attachment.objects.get(pk=pk)
+    try:
+        attachment = Attachment.objects.get(pk=pk)
+    except Attachment.DoesNotExist:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'error': 'Attachment not found.'}, status=404)
+        messages.error(request, "Attachment not found.")
+        return redirect("attachment-manager")
 
-    if user.check_password(request.POST["password"]):
-        if attachment.delete():
-            messages.success("Attachment deleted succussfully...")
-            return redirect("attachment-manager")
+    if request.method == 'POST':
+        password = request.POST.get("password", "")
+        
+        if user.check_password(password):
+            try:
+                attachment_patient_id = attachment.patient.id
+                attachment.delete()
+                
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Attachment deleted successfully!',
+                        'redirect_url': f'/patient/view/{attachment_patient_id}/'
+                    })
+                else:
+                    messages.success(request, "Attachment deleted successfully...")
+                    return redirect("view-patient", pk=attachment_patient_id)
+                    
+            except Exception as e:
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({'error': 'Something went wrong during deletion.'}, status=500)
+                else:
+                    messages.error(request, "Something went wrong during delete the attachment...")
+                    return render(
+                        request,
+                        "attachment/view.html",
+                        {"patient": attachment.patient, "attachment": attachment},
+                    )
         else:
-            messages.error("Something went wrong during delete the attachment...")
-            return render(
-                request,
-                "attachment/view.html",
-                {"patient": attachment.patient, "attachment": attachment},
-            )
-    else:
-        messages.error(
-            request, "Wrong password, please try again with correct password"
-        )
-        return render(
-            request,
-            "attachment/view.html",
-            {"patient": attachment.patient, "attachment": attachment},
-        )
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'error': 'Invalid password. Please try again.'}, status=403)
+            else:
+                messages.error(
+                    request, "Wrong password, please try again with correct password"
+                )
+                return render(
+                    request,
+                    "attachment/view.html",
+                    {"patient": attachment.patient, "attachment": attachment},
+                )
+    
+    # Handle GET requests (shouldn't happen with modal, but good to have)
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    return redirect("attachment-manager")
 
 
 @login_required(login_url="user-login")

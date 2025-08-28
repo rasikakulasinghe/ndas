@@ -198,16 +198,20 @@ def get_attachment_path_file_name(instance, filename):
 
 # get attachment type according to file extension
 def getAttachmentType(var_attachment):
+    """Get attachment type based on file extension - updated for new model choices"""
     extension = os.path.splitext(str(var_attachment))[1].lower()
 
-    if extension in ['.jpg', '.jpeg']:
-        return 'Image'
+    # Updated to match ATTACHMENT_TYPE_CHOICES in choice.py
+    if extension in ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']:
+        return 'image'  # lowercase to match new choices
     elif extension in ['.pdf']:
-        return 'PDF'
-    elif extension in ['.mp4', '.mov']:
-        return 'Video'
+        return 'pdf'    # lowercase to match new choices
+    elif extension in ['.mp4', '.mov', '.avi', '.mkv', '.webm']:
+        return 'video'  # lowercase to match new choices
+    elif extension in ['.doc', '.docx', '.txt', '.rtf', '.odt']:
+        return 'document'
     else:
-        return 'Undefined'
+        return 'other'  # matches new choices
     
 # get file size in mega bites
 def getFileSizeInMb(file):

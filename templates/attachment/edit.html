@@ -1,52 +1,336 @@
 {% extends 'src/base.html' %}
-{% block title %}Attachment - Edit{% endblock %}
+{% load static %}
+{% block title %}Edit Attachment{% endblock %}
 
 {% block main_content %}
-
-</br>
-{% include 'src/form_error.html' %}
-
-<div class="container-sm">
-  <div class="card">
-  <div class="card-header bg-info"><h3 class="card-title">Edit Attachment</h3></div>
-
-  <form action="{% url 'attachment-edit' attachment.id %}" method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-
-    <div class="card-body">
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Patient : </label>
-        <div class="col-sm">{{attachment.patient.baby_name}}</div>
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0">Edit Attachment</h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'view-patient' attachment.patient.id %}">Patient</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'attachment-view' attachment.id %}">Attachment</a></li>
+            <li class="breadcrumb-item active">Edit</li>
+          </ol>
+        </div>
       </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Title : </label>
-        <div class="col-sm">{{form.title}}</div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Attachment : </label>
-        <div class="col-sm">{{form.attachment}}</div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Description : </label>
-        <div class="col-sm">{{form.description}}</div>
-      </div>
-
-      <div class="row justify-content-end align-items-center">
-        <div class="col-auto m-2"><button type="submit" class="btn btn-primary float-right">Update Attachment</button></div>
-        <div class="col-auto m-2"><button type="button" class="btn btn-primary float-right">Delete</button></div>
-      </div>
-
-      </br>
-
-  </form>
-
     </div>
-    <!-- /.card-body -->
   </div>
-  <!-- /.card -->
-</div>
+
+  <section class="content">
+    <div class="container-fluid">
+      {% include 'src/form_error.html' %}
+      
+      <div class="row">
+        <!-- Current Attachment Info -->
+        <div class="col-md-4">
+          <div class="card card-info">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-info-circle"></i> Current Attachment</h3>
+            </div>
+            <div class="card-body">
+              <dl class="row">
+                <dt class="col-sm-5">Patient:</dt>
+                <dd class="col-sm-7">{{ attachment.patient.baby_name }}</dd>
+                <dt class="col-sm-5">Type:</dt>
+                <dd class="col-sm-7">
+                  {% if attachment.attachment_type == 'image' %}
+                    <span class="badge badge-primary"><i class="fas fa-image"></i> Image</span>
+                  {% elif attachment.attachment_type == 'video' %}
+                    <span class="badge badge-danger"><i class="fas fa-video"></i> Video</span>
+                  {% elif attachment.attachment_type == 'pdf' %}
+                    <span class="badge badge-warning"><i class="fas fa-file-pdf"></i> PDF</span>
+                  {% else %}
+                    <span class="badge badge-secondary"><i class="fas fa-file"></i> {{ attachment.attachment_type|title }}</span>
+                  {% endif %}
+                </dd>
+                <dt class="col-sm-5">Size:</dt>
+                <dd class="col-sm-7">{{ attachment.file_size_display|default:"Unknown" }}</dd>
+                <dt class="col-sm-5">Uploaded:</dt>
+                <dd class="col-sm-7">{{ attachment.created_at|date:"M d, Y H:i" }}</dd>
+                {% if attachment.last_edit_by %}
+                <dt class="col-sm-5">Last Edit:</dt>
+                <dd class="col-sm-7">{{ attachment.last_edit_on|date:"M d, Y H:i" }}</dd>
+                {% endif %}
+              </dl>
+              
+              <div class="btn-group-vertical w-100">
+                <a href="{% url 'attachment-view' attachment.id %}" class="btn btn-outline-info btn-sm">
+                  <i class="fas fa-eye"></i> View Attachment
+                </a>
+                <a href="{% url 'view-patient' attachment.patient.id %}" class="btn btn-outline-secondary btn-sm">
+                  <i class="fas fa-user"></i> View Patient
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Security Information -->
+          <div class="card card-{{ attachment.is_safe_to_view|yesno:'success,warning' }}">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-shield-alt"></i> Security Status</h3>
+            </div>
+            <div class="card-body">
+              <dl class="row">
+                <dt class="col-sm-6">Scan Status:</dt>
+                <dd class="col-sm-6">
+                  {% if attachment.scan_result == 'clean' %}
+                    <span class="badge badge-success"><i class="fas fa-check"></i> Clean</span>
+                  {% elif attachment.scan_result == 'infected' %}
+                    <span class="badge badge-danger"><i class="fas fa-times"></i> Infected</span>
+                  {% else %}
+                    <span class="badge badge-warning"><i class="fas fa-clock"></i> Pending</span>
+                  {% endif %}
+                </dd>
+                <dt class="col-sm-6">Access Level:</dt>
+                <dd class="col-sm-6">
+                  <span class="badge badge-info">{{ attachment.get_access_level_display }}</span>
+                </dd>
+              </dl>
+              {% if attachment.is_sensitive %}
+                <div class="alert alert-warning alert-sm mb-0">
+                  <i class="fas fa-exclamation-triangle"></i> Contains sensitive content
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Edit Form -->
+        <div class="col-md-8">
+          <div class="card card-warning">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-edit"></i> Edit Attachment Details</h3>
+            </div>
+            
+            <form id="edit-form" action="{% url 'attachment-edit' attachment.id %}" method="POST" enctype="multipart/form-data" novalidate>
+              {% csrf_token %}
+              
+              <div class="card-body">
+                <!-- File Type Information -->
+                <div class="alert alert-info alert-dismissible">
+                  <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                  <h5><i class="icon fas fa-info"></i> File Upload Guidelines</h5>
+                  <strong>Images:</strong> JPG, JPEG, PNG, GIF (Max: 10MB)<br>
+                  <strong>Videos:</strong> MP4, MOV, AVI, MKV, WEBM (Max: 2GB)<br>
+                  <strong>Documents:</strong> PDF (Max: 100MB)<br>
+                  <small class="text-muted">Leave file field empty if you don't want to change the current file.</small>
+                </div>
+
+                <!-- Title Field -->
+                <div class="form-group">
+                  <label for="{{ form.title.id_for_label }}">Title <span class="text-danger">*</span></label>
+                  {{ form.title }}
+                  <small class="form-text text-muted">Maximum 200 characters</small>
+                  {% if form.title.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in form.title.errors %}
+                        {{ error }}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Current File Display -->
+                {% if attachment.attachment %}
+                <div class="form-group">
+                  <label>Current File</label>
+                  <div class="card card-light">
+                    <div class="card-body p-3">
+                      <div class="d-flex align-items-center">
+                        {% if attachment.attachment_type == 'image' %}
+                          <i class="fas fa-image fa-2x text-primary mr-3"></i>
+                        {% elif attachment.attachment_type == 'video' %}
+                          <i class="fas fa-video fa-2x text-danger mr-3"></i>
+                        {% elif attachment.attachment_type == 'pdf' %}
+                          <i class="fas fa-file-pdf fa-2x text-warning mr-3"></i>
+                        {% else %}
+                          <i class="fas fa-file fa-2x text-secondary mr-3"></i>
+                        {% endif %}
+                        <div>
+                          <strong>{{ attachment.original_filename|default:"Unnamed file" }}</strong><br>
+                          <small class="text-muted">{{ attachment.file_size_display }} | Uploaded {{ attachment.created_at|date:"M d, Y" }}</small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {% endif %}
+
+                <!-- File Upload Field -->
+                <div class="form-group">
+                  <label for="{{ form.attachment.id_for_label }}">Replace File (Optional)</label>
+                  <div class="input-group">
+                    <div class="custom-file">
+                      {{ form.attachment }}
+                      <label class="custom-file-label" for="{{ form.attachment.id_for_label }}">Choose new file...</label>
+                    </div>
+                  </div>
+                  <small class="form-text text-muted">Select a file only if you want to replace the current one</small>
+                  {% if form.attachment.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in form.attachment.errors %}
+                        {{ error }}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Description Field -->
+                <div class="form-group">
+                  <label for="{{ form.description.id_for_label }}">Description</label>
+                  {{ form.description }}
+                  <small class="form-text text-muted">Maximum 1000 characters</small>
+                  {% if form.description.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in form.description.errors %}
+                        {{ error }}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Access Control (if user has permission) -->
+                {% if user.is_staff or user == attachment.added_by %}
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>Access Level</label>
+                      <select class="form-control" name="access_level">
+                        {% for value, label in attachment.ACCESS_LEVEL_CHOICES %}
+                          <option value="{{ value }}" {% if attachment.access_level == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <div class="form-check mt-4">
+                        <input class="form-check-input" type="checkbox" name="is_sensitive" id="is_sensitive" {% if attachment.is_sensitive %}checked{% endif %}>
+                        <label class="form-check-label" for="is_sensitive">
+                          Contains sensitive content
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {% endif %}
+              </div>
+              
+              <div class="card-footer">
+                <div class="row">
+                  <div class="col-sm-6">
+                    <a href="{% url 'attachment-view' attachment.id %}" class="btn btn-secondary">
+                      <i class="fas fa-times"></i> Cancel
+                    </a>
+                  </div>
+                  <div class="col-sm-6 text-right">
+                    <button type="submit" class="btn btn-warning">
+                      <i class="fas fa-save"></i> Update Attachment
+                    </button>
+                    <button type="button" class="btn btn-danger ml-2" onclick="openDeleteAttachmentModal({
+                      id: '{{ attachment.id }}',
+                      title: '{{ attachment.title|escapejs }}',
+                      patient_name: '{{ attachment.patient.baby_name|escapejs }}',
+                      patient_bht: '{{ attachment.patient.bht|escapejs }}',
+                      patient_gender: '{{ attachment.patient.get_gender_display|escapejs }}',
+                      attachment_type: '{{ attachment.attachment_type }}',
+                      created_at: '{{ attachment.created_at|date:"M d, Y H:i" }}',
+                      added_by: '{{ attachment.added_by.get_full_name|default:attachment.added_by.username|escapejs }}',
+                      description: '{{ attachment.description|escapejs }}'
+                    })">
+                      <i class="fas fa-trash"></i> Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<script>
+$(document).ready(function() {
+  // Initialize custom file input
+  bsCustomFileInput.init();
+  
+  // Form validation
+  $('#edit-form').on('submit', function(e) {
+    let isValid = true;
+    
+    // Validate title
+    const titleInput = $('input[name="title"]');
+    const titleValue = titleInput.val().trim();
+    
+    if (titleValue === '') {
+      titleInput.addClass('is-invalid');
+      isValid = false;
+    } else if (titleValue.length > 200) {
+      titleInput.addClass('is-invalid');
+      isValid = false;
+    } else {
+      titleInput.removeClass('is-invalid').addClass('is-valid');
+    }
+    
+    // Validate file if selected
+    const fileInput = $('input[type="file"]')[0];
+    if (fileInput && fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+      const fileName = file.name.toLowerCase();
+      const fileExt = fileName.substring(fileName.lastIndexOf('.'));
+      
+      // File size limits (in bytes)
+      const sizeLimits = {
+        '.jpg': 10 * 1024 * 1024, '.jpeg': 10 * 1024 * 1024, '.png': 10 * 1024 * 1024, '.gif': 10 * 1024 * 1024,
+        '.mp4': 2 * 1024 * 1024 * 1024, '.mov': 2 * 1024 * 1024 * 1024, '.avi': 2 * 1024 * 1024 * 1024, '.mkv': 2 * 1024 * 1024 * 1024, '.webm': 2 * 1024 * 1024 * 1024,
+        '.pdf': 100 * 1024 * 1024
+      };
+      
+      const allowedExts = Object.keys(sizeLimits);
+      
+      if (!allowedExts.includes(fileExt)) {
+        $(fileInput).addClass('is-invalid');
+        isValid = false;
+      } else if (file.size > sizeLimits[fileExt]) {
+        $(fileInput).addClass('is-invalid');
+        isValid = false;
+      } else {
+        $(fileInput).removeClass('is-invalid').addClass('is-valid');
+      }
+    }
+    
+    if (!isValid) {
+      e.preventDefault();
+      $('html, body').animate({
+        scrollTop: $('.is-invalid').first().offset().top - 100
+      }, 500);
+    }
+  });
+  
+  // Real-time validation
+  $('input[name="title"]').on('input', function() {
+    const value = $(this).val().trim();
+    if (value === '' || value.length > 200) {
+      $(this).addClass('is-invalid').removeClass('is-valid');
+    } else {
+      $(this).removeClass('is-invalid').addClass('is-valid');
+    }
+  });
+  
+  // Description character counter
+  $('textarea[name="description"]').on('input', function() {
+    const remaining = 1000 - $(this).val().length;
+    $(this).siblings('.form-text').text(`${remaining} characters remaining`);
+  });
+});
+</script>
+
+<!-- Include Delete Modal -->
+{% include 'attachment/delete-confirm.html' %}
 {% endblock main_content %}

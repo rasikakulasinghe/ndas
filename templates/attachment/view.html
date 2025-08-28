@@ -1,108 +1,473 @@
 {% extends 'src/base.html' %}
 {% load static %}
-{% block title %}Attachment - View{% endblock %}
+{% block title %}View Attachment{% endblock %}
+
 {% block main_content %}
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0">{{ attachment.title }}</h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'view-patient' attachment.patient.id %}">Patient</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'attachment-manager-patient' attachment.patient.id %}">Attachments</a></li>
+            <li class="breadcrumb-item active">View</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
 
-</br>
-{% include 'src/form_error.html' %}
-
-<div class="container">
-
-<!-- Page header -->
-<div class="card bg-info"><div class="card-header"><h3 class="card-title">Attachment</h3></div></div>
-
-<div class="row">
-  <div class="col-md-7">
-    <div class="card card-body">
-
-      {% if attachment.attachment_type == 'Video' %}
-      <video
-        id="videoPlayer"
-        class="video-js"
-        controls
-        preload="auto"
-        data-setup='{"fluid": true}'>
-        <source src="{{attachment.attachment.url}}" type="video/mp4"></source>
-        <source src="{{attachment.attachment.url}}" type="video/mov"></source>
-        <p>Video Playback Not Supported<br/>Your browser does not support the video tag.</p>
-      </video>
-      {% elif attachment.attachment_type == 'PDF'%}
-      <p>Open a PDF file in a another window...</br></br>
-      <b>Click here :</b><a href="{{attachment.attachment.url}}" target="_blank"> <i class="far fa-file-pdf" style="color: #00328a;"></i> {{attachment.file}}</a></p>
-      {% elif attachment.attachment_type == 'Image'%}
-        <img src="{{attachment.attachment.url|default_if_none:"#" }}" class="img-thumbnail">
+  <section class="content">
+    <div class="container-fluid">
+      {% include 'src/form_error.html' %}
+      
+      <!-- Security Warning -->
+      {% if not attachment.is_safe_to_view %}
+      <div class="alert alert-danger alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+        <h4><i class="icon fas fa-ban"></i> Security Alert!</h4>
+        This file has not been scanned for viruses or contains suspicious content. View with caution.
+      </div>
       {% endif %}
 
-      </div> <!-- /.card body-->
-  </div>
-
-  <div class="col-md-5">
-
-    <div id="accordion">
-      <div class="card card-secondary">
-      <div class="card-header">
-      <h4 class="card-title w-100">
-      <a class="d-block w-100" data-toggle="collapse" href="#collapseOne" aria-expanded="true">
-        <i class="fas fa-eye" style="color: #ffffff;"></i> &nbsp; &nbsp; Attachment Details
-      </a>
-      </h4>
+      <!-- Sensitive Content Warning -->
+      {% if attachment.is_sensitive %}
+      <div class="alert alert-warning alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+        <h4><i class="icon fas fa-exclamation-triangle"></i> Sensitive Content!</h4>
+        This attachment contains sensitive medical information. Handle according to privacy guidelines.
       </div>
-      <div id="collapseOne" class="collapse show" data-parent="#accordion" style="">
-      <div class="card-body">
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Title : </label><div class="col-sm">{{attachment.title}}</div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Type : </label><div class="col-sm">{{attachment.attachment_type}}</div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Description : </label><div class="col-sm">{{attachment.description}}</div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Uploaded By : </label><div class="col-sm">{{attachment.uploaded_by}}</div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Uploaded On : </label><div class="col-sm">{{attachment.uploaded_on}}</div></div>
-        
-        {% if attachment.last_edit_by %}
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Last Edited By : </label><div class="col-sm">{{attachment.last_edit_by}}</div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Last Edited On : </label><div class="col-sm">{{attachment.last_edit_on}}</div></div>
-        {% endif %}
+      {% endif %}
 
-        <hr>
+      <div class="row">
+        <!-- Main Content Area -->
+        <div class="col-lg-8 col-md-7">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                {% if attachment.attachment_type == 'image' %}
+                  <i class="fas fa-image text-primary"></i> Image Viewer
+                {% elif attachment.attachment_type == 'video' %}
+                  <i class="fas fa-video text-danger"></i> Video Player
+                {% elif attachment.attachment_type == 'pdf' %}
+                  <i class="fas fa-file-pdf text-warning"></i> PDF Document
+                {% else %}
+                  <i class="fas fa-file text-secondary"></i> File Viewer
+                {% endif %}
+              </h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-tool" data-card-widget="maximize">
+                  <i class="fas fa-expand"></i>
+                </button>
+              </div>
+            </div>
+            <div class="card-body p-0">
+              {% if attachment.is_safe_to_view %}
+                {% if attachment.attachment_type == 'video' %}
+                  <div class="embed-responsive embed-responsive-16by9">
+                    <video class="embed-responsive-item" controls preload="metadata">
+                      <source src="{{ attachment.attachment.url }}" type="video/mp4">
+                      <source src="{{ attachment.attachment.url }}" type="video/mov">
+                      <source src="{{ attachment.attachment.url }}" type="video/avi">
+                      <p class="p-3 text-center text-muted">
+                        <i class="fas fa-times-circle fa-2x mb-2"></i><br>
+                        Video playback not supported.<br>
+                        Your browser does not support the video tag.
+                      </p>
+                    </video>
+                  </div>
+                {% elif attachment.attachment_type == 'pdf' %}
+                  <div class="text-center p-5">
+                    <i class="fas fa-file-pdf fa-5x text-warning mb-3"></i>
+                    <h4>PDF Document</h4>
+                    <p class="text-muted mb-4">{{ attachment.original_filename|default:"Document" }}</p>
+                    <div class="btn-group">
+                      <a href="{{ attachment.attachment.url }}" target="_blank" class="btn btn-primary">
+                        <i class="fas fa-external-link-alt"></i> Open in New Tab
+                      </a>
+                      <a href="{{ attachment.attachment.url }}" download class="btn btn-secondary">
+                        <i class="fas fa-download"></i> Download
+                      </a>
+                    </div>
+                  </div>
+                  <!-- Embedded PDF viewer for modern browsers -->
+                  <div class="d-none d-md-block mt-3">
+                    <iframe src="{{ attachment.attachment.url }}" width="100%" height="600" style="border: none;"></iframe>
+                  </div>
+                {% elif attachment.attachment_type == 'image' %}
+                  <div class="text-center p-3">
+                    <img src="{{ attachment.attachment.url }}" alt="{{ attachment.title }}" class="img-fluid" style="max-height: 70vh; width: auto;">
+                  </div>
+                {% else %}
+                  <div class="text-center p-5">
+                    <i class="fas fa-file fa-5x text-secondary mb-3"></i>
+                    <h4>File Attachment</h4>
+                    <p class="text-muted mb-4">{{ attachment.original_filename|default:"Unknown file" }}</p>
+                    <a href="{{ attachment.attachment.url }}" download class="btn btn-primary">
+                      <i class="fas fa-download"></i> Download File
+                    </a>
+                  </div>
+                {% endif %}
+              {% else %}
+                <div class="text-center p-5">
+                  <i class="fas fa-shield-alt fa-5x text-danger mb-3"></i>
+                  <h4>File Not Available</h4>
+                  <p class="text-muted">This file cannot be displayed due to security restrictions.</p>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
 
-        <a href="{% url 'attachment-edit' attachment.id %}" class="btn btn-link"><i class="fas fa-pencil-alt"></i>  Update</a>
-        <a href="{% url 'attachment-manager-patient' attachment.patient.id %}" class="btn btn-link"><i class="fas fa-eye"></i>  View All Attachments</a>
-        <a href="{% url 'view-patient' attachment.patient.id %}" class="btn btn-link"><i class="fas fa-eye"></i>  View Patient</a>
-        {% if attachment.uploaded_by and attachment.uploaded_by.username %}
-        <a class="btn btn-link" href="{% url 'user-view-by-username' attachment.uploaded_by.username %}" type="button"><i class="fas fa-eye"></i> View Uploaded User</a>
-        {% endif %}
-        <a class="btn btn-link" href="{% url 'attachment-delete-confirm' attachment.id %}" type="button"><i class="far fa-trash-alt"></i>  Delete</a>
+        <!-- Sidebar with Details -->
+        <div class="col-lg-4 col-md-5">
+          <!-- Attachment Details -->
+          <div class="card card-primary">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-info-circle"></i> Attachment Details</h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                  <i class="fas fa-minus"></i>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <dl class="row">
+                <dt class="col-sm-5">Title:</dt>
+                <dd class="col-sm-7">{{ attachment.title }}</dd>
+                
+                <dt class="col-sm-5">Type:</dt>
+                <dd class="col-sm-7">
+                  {% if attachment.attachment_type == 'image' %}
+                    <span class="badge badge-primary"><i class="fas fa-image"></i> Image</span>
+                  {% elif attachment.attachment_type == 'video' %}
+                    <span class="badge badge-danger"><i class="fas fa-video"></i> Video</span>
+                  {% elif attachment.attachment_type == 'pdf' %}
+                    <span class="badge badge-warning"><i class="fas fa-file-pdf"></i> PDF</span>
+                  {% else %}
+                    <span class="badge badge-secondary"><i class="fas fa-file"></i> {{ attachment.attachment_type|title }}</span>
+                  {% endif %}
+                </dd>
+                
+                <dt class="col-sm-5">File Size:</dt>
+                <dd class="col-sm-7">{{ attachment.file_size_display|default:"Unknown" }}</dd>
+                
+                <dt class="col-sm-5">Original Name:</dt>
+                <dd class="col-sm-7"><small class="text-muted">{{ attachment.original_filename|default:"Not available" }}</small></dd>
+                
+                {% if attachment.description %}
+                <dt class="col-sm-5">Description:</dt>
+                <dd class="col-sm-7">{{ attachment.description|linebreaksbr }}</dd>
+                {% endif %}
+                
+                <dt class="col-sm-5">Uploaded By:</dt>
+                <dd class="col-sm-7">
+                  {% if attachment.added_by %}
+                    <a href="{% url 'user-view-by-username' attachment.added_by.username %}" class="text-decoration-none">
+                      {{ attachment.added_by.get_full_name|default:attachment.added_by.username }}
+                    </a>
+                  {% else %}
+                    <span class="text-muted">Unknown</span>
+                  {% endif %}
+                </dd>
+                
+                <dt class="col-sm-5">Upload Date:</dt>
+                <dd class="col-sm-7">{{ attachment.created_at|date:"M d, Y H:i" }}</dd>
+                
+                {% if attachment.last_edit_by %}
+                <dt class="col-sm-5">Last Edited:</dt>
+                <dd class="col-sm-7">
+                  {{ attachment.last_edit_by.get_full_name|default:attachment.last_edit_by.username }}<br>
+                  <small class="text-muted">{{ attachment.last_edit_on|date:"M d, Y H:i" }}</small>
+                </dd>
+                {% endif %}
+              </dl>
+              
+              <!-- Security Information -->
+              <div class="mt-3 pt-3 border-top">
+                <h6 class="text-muted">Security Status</h6>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span>Virus Scan:</span>
+                  {% if attachment.scan_result == 'clean' %}
+                    <span class="badge badge-success"><i class="fas fa-check"></i> Clean</span>
+                  {% elif attachment.scan_result == 'infected' %}
+                    <span class="badge badge-danger"><i class="fas fa-times"></i> Infected</span>
+                  {% else %}
+                    <span class="badge badge-warning"><i class="fas fa-clock"></i> Pending</span>
+                  {% endif %}
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <span>Access Level:</span>
+                  <span class="badge badge-info">{{ attachment.get_access_level_display }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer">
+              <!-- Horizontal Action Buttons (Single Row) -->
+              <div class="attachment-actions d-flex flex-wrap justify-content-center">
+                <a href="{% url 'attachment-view' attachment.id %}" class="btn btn-success btn-sm mx-1 mb-1">
+                  <i class="fas fa-eye"></i> <span class="btn-text">View</span>
+                </a>
+                <a href="{% url 'attachment-edit' attachment.id %}" class="btn btn-warning btn-sm mx-1 mb-1">
+                  <i class="fas fa-edit"></i> <span class="btn-text">Edit</span>
+                </a>
+                <a href="{% url 'attachment-add' attachment.patient.id %}" class="btn btn-primary btn-sm mx-1 mb-1">
+                  <i class="fas fa-plus"></i> <span class="btn-text">Add</span>
+                </a>
+                {% if attachment.isBookmarked %}
+                  <a href="{% url 'bookmark-view' attachment.isBookmarked.id %}" class="btn btn-success btn-sm mx-1 mb-1">
+                    <i class="fas fa-bookmark"></i> <span class="btn-text">Saved</span>
+                  </a>
+                {% else %}
+                  <a href="{% url 'bookmark-add' attachment.id 'Attachment' %}" class="btn btn-outline-success btn-sm mx-1 mb-1">
+                    <i class="far fa-bookmark"></i> <span class="btn-text">Save</span>
+                  </a>
+                {% endif %}
+                <button type="button" class="btn btn-danger btn-sm mx-1 mb-1" onclick="openDeleteAttachmentModal({
+                  id: '{{ attachment.id }}',
+                  title: '{{ attachment.title|escapejs }}',
+                  patient_name: '{{ attachment.patient.baby_name|escapejs }}',
+                  patient_bht: '{{ attachment.patient.bht|escapejs }}',
+                  patient_gender: '{{ attachment.patient.get_gender_display|escapejs }}',
+                  attachment_type: '{{ attachment.attachment_type }}',
+                  created_at: '{{ attachment.created_at|date:"M d, Y H:i" }}',
+                  added_by: '{{ attachment.added_by.get_full_name|default:attachment.added_by.username|escapejs }}',
+                  description: '{{ attachment.description|escapejs }}'
+                })">
+                  <i class="fas fa-trash"></i> <span class="btn-text">Delete</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Patient Information -->
+          <div class="card card-info">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-user"></i> Patient Information</h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                  <i class="fas fa-minus"></i>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <dl class="row">
+                <dt class="col-sm-4">Name:</dt>
+                <dd class="col-sm-8">{{ attachment.patient.baby_name }}</dd>
+                
+                <dt class="col-sm-4">Mother:</dt>
+                <dd class="col-sm-8">{{ attachment.patient.mother_name }}</dd>
+                
+                <dt class="col-sm-4">BHT:</dt>
+                <dd class="col-sm-8">{{ attachment.patient.bht|default:"Not assigned" }}</dd>
+                
+                <dt class="col-sm-4">PIN:</dt>
+                <dd class="col-sm-8">{{ attachment.patient.pin|default:"Not assigned" }}</dd>
+                
+                <dt class="col-sm-4">NNC No:</dt>
+                <dd class="col-sm-8">{{ attachment.patient.nnc_no|default:"Not assigned" }}</dd>
+                
+                <dt class="col-sm-4">Gender:</dt>
+                <dd class="col-sm-8">{{ attachment.patient.get_gender_display }}</dd>
+                
+                <dt class="col-sm-4">Age:</dt>
+                <dd class="col-sm-8">{{ attachment.patient.getCurrentAge }}</dd>
+                
+                <dt class="col-sm-4">Birth Date:</dt>
+                <dd class="col-sm-8">{{ attachment.patient.dob_tob|date:"M d, Y H:i" }}</dd>
+              </dl>
+            </div>
+            <div class="card-footer">
+              <a href="{% url 'view-patient' attachment.patient.id %}" class="btn btn-info btn-block">
+                <i class="fas fa-eye"></i> View Patient Details
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-      </div>
-      </div>
-      </div>
-      </div>
+<!-- Custom CSS for better responsive design -->
+<style>
+@media (max-width: 768px) {
+  .embed-responsive {
+    margin: 0 15px;
+  }
+  
+  .card-body img {
+    max-width: calc(100vw - 60px);
+  }
+  
+  .btn-group-vertical .btn {
+    margin-bottom: 5px;
+  }
+}
 
-      <div class="card card-secondary">
-      <div class="card-header">
-      <h4 class="card-title w-100">
-      <a class="d-block w-100 collapsed" data-toggle="collapse" href="#collapseTwo" aria-expanded="false">
-        <i class="fas fa-eye" style="color: #ffffff;"></i> &nbsp; &nbsp; Patient Details
-      </a>
-      </h4>
-      </div>
-      <div id="collapseTwo" class="collapse" data-parent="#accordion" style="">
-      <div class="card-body">
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">BHT : </label><div class="col-sm">{{patient.bht}}</div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">PHN : </label><div class="col-sm">{{patient.pin}}</div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">NNC No : </label><div class="col-sm">{{patient.nnc_no}}</div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Name of Baby : </label><div class="col-sm">{{patient.baby_name}}</div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Name of Mother : </label><div class="col-sm">{{patient.mother_name}}</div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Gender : </label><div class="col-sm">{{patient.gender}}</div></div>
-        <div class="row align-items-center"><label class="col-form-label col-sm-4">Age : </label><div class="col-sm">{{patient.mother_name}}</div></div>
-        <hr>
-        {% if bookmark %}
-{% else %}
-{% endif %}
+@media (max-width: 576px) {
+  .content-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .breadcrumb {
+    font-size: 0.875rem;
+  }
+  
+  .card-tools .btn {
+    padding: 0.25rem 0.5rem;
+  }
+}
 
-        <a href="{% url 'view-patient' patient.id %}" class="btn btn-link"><i class="fas fa-eye"></i>  View patients' full details...</a></div>
-      </div>
-      </div>
-      </div>
-  </div>
+/* Image zoom on hover for better viewing */
+.card-body img:hover {
+  transform: scale(1.02);
+  transition: transform 0.2s ease-in-out;
+  cursor: zoom-in;
+}
 
-</div> <!-- /.main container -->
+/* Video controls styling */
+video {
+  width: 100%;
+  height: auto;
+}
 
+/* PDF iframe responsive */
+iframe {
+  min-height: 400px;
+}
+
+/* Horizontal Action Buttons Styling */
+.attachment-actions .btn {
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 4px;
+  padding: 4px 8px;
+  min-width: 60px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.attachment-actions .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.attachment-actions .btn i {
+  font-size: 0.7rem;
+  margin-right: 3px;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 576px) {
+  .attachment-actions .btn {
+    font-size: 0.7rem;
+    padding: 3px 6px;
+    min-width: 50px;
+  }
+  
+  .attachment-actions .btn i {
+    font-size: 0.65rem;
+    margin-right: 2px;
+  }
+}
+
+/* Extra small screens - icon only */
+@media (max-width: 480px) {
+  .attachment-actions .btn {
+    min-width: 32px;
+    padding: 4px;
+  }
+  
+  .attachment-actions .btn .btn-text {
+    display: none;
+  }
+}
+
+/* Button color enhancements to match screenshot */
+.btn-success {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  border-color: #28a745;
+  color: white;
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, #ffc107, #fd7e14);
+  border-color: #ffc107;
+  color: #212529;
+  font-weight: 600;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  border-color: #007bff;
+  color: white;
+}
+</style>
+
+<!-- JavaScript for enhanced functionality -->
+<script>
+$(document).ready(function() {
+  // Image click to open in modal (for better mobile viewing)
+  $('.card-body img').on('click', function() {
+    const imgSrc = $(this).attr('src');
+    const imgAlt = $(this).attr('alt');
+    
+    // Create modal for image viewing
+    const modal = `
+      <div class="modal fade" id="imageModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">${imgAlt}</h5>
+              <button type="button" class="close" data-dismiss="modal">
+                <span>&times;</span>
+              </button>
+            </div>
+            <div class="modal-body text-center">
+              <img src="${imgSrc}" alt="${imgAlt}" class="img-fluid">
+            </div>
+            <div class="modal-footer">
+              <a href="${imgSrc}" download class="btn btn-primary">
+                <i class="fas fa-download"></i> Download
+              </a>
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    $('body').append(modal);
+    $('#imageModal').modal('show');
+    
+    // Remove modal after hiding
+    $('#imageModal').on('hidden.bs.modal', function() {
+      $(this).remove();
+    });
+  });
+  
+  // Enhanced video player controls
+  $('video').on('loadedmetadata', function() {
+    const video = this;
+    const duration = video.duration;
+    const minutes = Math.floor(duration / 60);
+    const seconds = Math.floor(duration % 60);
+    
+    $(video).attr('title', `Duration: ${minutes}:${seconds.toString().padStart(2, '0')}`);
+  });
+  
+  // File download tracking (optional)
+  $('a[download]').on('click', function() {
+    const fileName = $(this).attr('download') || 'attachment';
+    console.log('Downloaded file:', fileName);
+  });
+});
+</script>
+
+<!-- Include Delete Modal -->
+{% include 'attachment/delete-confirm.html' %}
 {% endblock main_content %}

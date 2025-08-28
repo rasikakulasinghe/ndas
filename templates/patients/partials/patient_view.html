@@ -936,7 +936,17 @@
 
                             <div><hr></div>
                             <a class="dropdown-item" href="{% url 'attachment-edit' Attachment.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
-                            <a class="dropdown-item" href="{% url 'attachment-delete-confirm' Attachment.id %}"><i class="far fa-trash-alt"></i> Delete</a>
+                            <a class="dropdown-item" href="javascript:void(0)" onclick="openDeleteAttachmentModal({
+                              id: '{{ Attachment.id }}',
+                              title: '{{ Attachment.title|escapejs }}',
+                              patient_name: '{{ Attachment.patient.baby_name|escapejs }}',
+                              patient_bht: '{{ Attachment.patient.bht|escapejs }}',
+                              patient_gender: '{{ Attachment.patient.get_gender_display|escapejs }}',
+                              attachment_type: '{{ Attachment.attachment_type }}',
+                              created_at: '{{ Attachment.created_at|date:"M d, Y H:i" }}',
+                              added_by: '{{ Attachment.added_by.get_full_name|default:Attachment.added_by.username|escapejs }}',
+                              description: '{{ Attachment.description|escapejs }}'
+                            })"><i class="far fa-trash-alt"></i> Delete</a>
                             {% if Attachment.uploaded_by and Attachment.uploaded_by.username %}
                             <a class="dropdown-item" href="{% url 'user-view-by-username' Attachment.uploaded_by.username %}"><i class="fas fas fa-eye"></i> View Uploaded user</a>
                             {% endif %}

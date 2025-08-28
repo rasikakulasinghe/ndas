@@ -66,7 +66,7 @@
               </video>
             </div>
             <div class="card-footer">
-              <div class="row">
+              <div class="row mb-3">
                 <div class="col-sm-6">
                   <small class="text-muted">
                     <i class="fas fa-calendar mr-1"></i>Recorded: {{ video.recorded_on|date:"M d, Y H:i" }}
@@ -152,56 +152,66 @@
           </div>
 
           <!-- Actions -->
-          <div class="card card-info">
+            <div class="card card-light collapsed-card">
             <div class="card-header">
               <h3 class="card-title">
-                <i class="fas fa-cogs mr-2"></i>Actions
+              <i class="fas fa-user mr-2"></i>Actions
               </h3>
-            </div>
-            <div class="card-body">
-              <div class="btn-group-vertical w-100">
-                <!-- Edit Video -->
-                <a href="{% url 'video:edit' video.id %}" class="btn btn-outline-primary mb-2">
-                  <i class="fas fa-edit mr-2"></i>Edit Video Details
-                </a>
-                
-                <!-- Assessment Actions -->
-                {% if video.is_new_file %}
-                  <a href="{% url 'assessment-add' video.patient.id video.id %}" class="btn btn-success mb-2">
-                    <i class="fas fa-plus mr-2"></i>Create Assessment
-                  </a>
-                {% else %}
-                  <a href="{% url 'assessment-view-by-file-id' video.id %}" class="btn btn-outline-success mb-2">
-                    <i class="fas fa-eye mr-2"></i>View Assessment
-                  </a>
-                  <a href="{% url 'assessment-edit-by-file-id' video.id %}" class="btn btn-outline-warning mb-2">
-                    <i class="fas fa-edit mr-2"></i>Edit Assessment
-                  </a>
-                {% endif %}
-                
-                <!-- Bookmark Actions -->
-                {% if bookmark %}
-                  <a href="{% url 'bookmark-view' bookmark.id %}" class="btn btn-outline-info mb-2">
-                    <i class="fas fa-bookmark mr-2"></i>View Bookmark
-                  </a>
-                {% else %}
-                  <a href="{% url 'bookmark-add' video.id 'Video' %}" class="btn btn-outline-secondary mb-2">
-                    <i class="fas fa-bookmark mr-2"></i>Add to Bookmarks
-                  </a>
-                {% endif %}
-                
-                <!-- Download -->
-                <a href="{{ video.video_file.url }}" class="btn btn-outline-dark mb-2" download>
-                  <i class="fas fa-download mr-2"></i>Download Video
-                </a>
-                
-                <!-- Delete -->
-                <a href="{% url 'video:delete-confirm' video.id %}" class="btn btn-outline-danger">
-                  <i class="fas fa-trash mr-2"></i>Delete Video
-                </a>
+              <div class="card-tools">
+              <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                <i class="fas fa-plus"></i>
+              </button>
               </div>
             </div>
-          </div>
+            <div class="card-body text-center" style="display: none;">
+               <!-- Assessment Actions -->
+              {% if video.is_new_file %}
+                <a href="{% url 'assessment-add' video.patient.id video.id %}" class="btn btn-outline-info btn-block">
+                <i class="fas fa-plus"></i>
+                <span>Create Assessment</span>
+                </a>
+              {% else %}
+                <a href="{% url 'assessment-view-by-file-id' video.id %}" class="btn btn-outline-info btn-block">
+                <i class="fas fa-eye"></i>
+                <span>View Assessment</span>
+                </a>
+              {% endif %}
+              
+              <!-- Bookmark -->
+              {% if bookmark %}
+                <a href="{% url 'bookmark-view' bookmark.id %}" class="btn btn-outline-info btn-block">
+                <i class="fas fa-bookmark"></i>
+                <span>View Bookmark</span>
+                </a>
+              {% else %}
+                <a href="{% url 'bookmark-add' video.id 'Video' %}" class="btn btn-outline-info btn-block">
+                <i class="far fa-bookmark"></i>
+                <span>Add to Bookmarks</span>
+                </a>
+              {% endif %}
+
+              <a href="{% url 'video:edit' video.id %}" class="btn btn-outline-info btn-block">
+              <i class="fas fa-edit"></i>Edit Video Details
+              </a>
+
+              <a href="{% url 'video:delete' video.id %}" class="btn btn-outline-danger btn-block">
+              <i class="fas fa-trash"></i>Delete Video
+              </a>
+
+              <a href="{% url 'video:manager-by-patient' patient.id %}" class="btn btn-outline-info btn-block">
+              <i class="fas fa-video mr-2"></i>All Patient Videos
+              </a>
+
+              <a href="{{ video.video_file.url }}" class="btn btn-outline-info btn-block" download>
+              <i class="fas fa-download"></i>
+              <span>Download Video</span>
+              </a>
+            </div>
+            </div>
+
+
+
+           
 
           <!-- Patient Details -->
           <div class="card card-warning collapsed-card">
@@ -290,5 +300,132 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<!-- Video Actions Styling -->
+<style>
+/* Actions Card Header */
+.card-header.bg-info {
+  background: linear-gradient(135deg, #17a2b8, #138496) !important;
+  border-bottom: none;
+}
+
+/* Video Actions List */
+.video-actions-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  text-decoration: none;
+  border-bottom: 1px solid #e9ecef;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.action-btn:hover {
+  text-decoration: none;
+  transform: translateX(3px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.action-btn:last-child {
+  border-bottom: none;
+}
+
+.action-btn i {
+  width: 20px;
+  text-align: center;
+  margin-right: 12px;
+  font-size: 0.9rem;
+}
+
+.action-btn span {
+  flex: 1;
+}
+
+/* Action Button Colors */
+.action-btn-primary {
+  color: #007bff;
+  border-left: 4px solid #007bff;
+}
+
+.action-btn-primary:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+  color: #0056b3;
+}
+
+.action-btn-success {
+  color: #28a745;
+  border-left: 4px solid #28a745;
+  background-color: rgba(40, 167, 69, 0.05);
+}
+
+.action-btn-success:hover {
+  background-color: rgba(40, 167, 69, 0.15);
+  color: #1e7e34;
+}
+
+.action-btn-info {
+  color: #17a2b8;
+  border-left: 4px solid #17a2b8;
+}
+
+.action-btn-info:hover {
+  background-color: rgba(23, 162, 184, 0.1);
+  color: #117a8b;
+}
+
+.action-btn-light {
+  color: #6c757d;
+  border-left: 4px solid #f8f9fa;
+}
+
+.action-btn-light:hover {
+  background-color: #f8f9fa;
+  color: #495057;
+  border-left-color: #6c757d;
+}
+
+.action-btn-danger {
+  color: #dc3545;
+  border-left: 4px solid #dc3545;
+}
+
+.action-btn-danger:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #bd2130;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .action-btn {
+    padding: 10px 15px;
+    font-size: 0.85rem;
+  }
+  
+  .action-btn i {
+    width: 18px;
+    margin-right: 10px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .action-btn {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+  
+  .action-btn i {
+    width: 16px;
+    margin-right: 8px;
+    font-size: 0.75rem;
+  }
+}
+</style>
 
 {% endblock main_content %}

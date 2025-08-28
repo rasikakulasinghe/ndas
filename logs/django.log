@@ -784,3 +784,2155 @@ INFO 2025-08-28 13:19:18,451 basehttp 14864 16960 "GET /static/admin/img/tooltag
 INFO 2025-08-28 13:19:18,463 basehttp 14864 12216 "GET /static/admin/img/sorting-icons.svg HTTP/1.1" 200 1097
 INFO 2025-08-28 13:19:25,363 basehttp 14864 12216 "GET /admin/patients/patient/ HTTP/1.1" 200 13939
 INFO 2025-08-28 13:19:25,504 basehttp 14864 12216 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-28 13:20:21,676 basehttp 14864 12216 "GET /patient/view/4/ HTTP/1.1" 200 90717
+INFO 2025-08-28 13:20:31,302 basehttp 14864 12216 "GET /manager/assessment/ HTTP/1.1" 200 30830
+INFO 2025-08-28 13:20:41,964 basehttp 14864 12216 "GET /hine/manager/ HTTP/1.1" 200 27227
+INFO 2025-08-28 13:20:43,398 basehttp 14864 12216 "GET /da/manager/ HTTP/1.1" 200 27243
+INFO 2025-08-28 13:20:44,227 basehttp 14864 12216 "GET /cdic/manager/ HTTP/1.1" 200 27219
+INFO 2025-08-28 13:20:45,753 basehttp 14864 12216 "GET /manager/assessment/ HTTP/1.1" 200 30830
+INFO 2025-08-28 13:21:35,184 basehttp 14864 12216 "GET /manager/patient/ HTTP/1.1" 200 59624
+INFO 2025-08-28 13:21:42,040 basehttp 14864 12216 "GET /attachment/manager/patient/4 HTTP/1.1" 200 27223
+INFO 2025-08-28 13:21:49,585 basehttp 14864 12216 "GET /patient/view/4/ HTTP/1.1" 200 90717
+INFO 2025-08-28 13:21:55,986 basehttp 14864 12216 "GET /attachment/add/4/ HTTP/1.1" 200 32591
+INFO 2025-08-28 13:22:07,161 basehttp 14864 12216 "POST /attachment/add/4/ HTTP/1.1" 200 106
+INFO 2025-08-28 13:22:31,096 basehttp 14864 12216 "GET /attachment/add/4/ HTTP/1.1" 200 32591
+ERROR 2025-08-28 13:22:37,919 log 14864 12216 Internal Server Error: /attachment/add/4/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\views\decorators\csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 1326, in attachment_add
+    temp_file.save()
+    ~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\models.py", line 1371, in save
+    self.full_clean()
+    ~~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\base.py", line 1477, in full_clean
+    raise ValidationError(errors)
+django.core.exceptions.ValidationError: {'attachment_type': ["Value 'PDF' is not a valid choice."]}
+ERROR 2025-08-28 13:22:37,928 basehttp 14864 12216 "POST /attachment/add/4/ HTTP/1.1" 500 106128
+INFO 2025-08-28 13:23:59,311 basehttp 14864 12216 "GET /manager/assessment/ HTTP/1.1" 200 30830
+INFO 2025-08-28 13:24:01,424 basehttp 14864 12216 "GET /hine/manager/ HTTP/1.1" 200 27227
+INFO 2025-08-28 13:24:05,540 basehttp 14864 12216 "GET /attachment/manager/ HTTP/1.1" 200 27223
+INFO 2025-08-28 13:29:11,174 basehttp 14864 11680 "GET /video/manager/ HTTP/1.1" 200 43411
+INFO 2025-08-28 13:29:14,281 basehttp 14864 11680 "GET /attachment/manager/ HTTP/1.1" 200 27223
+INFO 2025-08-28 13:29:15,601 basehttp 14864 11680 "GET /attachment/manager/ HTTP/1.1" 200 27223
+INFO 2025-08-28 13:29:16,426 basehttp 14864 11680 "GET /attachment/manager/ HTTP/1.1" 200 27223
+INFO 2025-08-28 13:33:25,042 basehttp 14864 11680 "GET /video/manager/ HTTP/1.1" 200 43411
+INFO 2025-08-28 13:33:28,943 basehttp 14864 11680 "GET /attachment/manager/ HTTP/1.1" 200 27223
+INFO 2025-08-28 13:33:32,339 basehttp 14864 11680 "GET /manager/patient/ HTTP/1.1" 200 59624
+INFO 2025-08-28 13:33:33,734 basehttp 14864 11680 "GET /patient/view/4/ HTTP/1.1" 200 90717
+ERROR 2025-08-28 13:33:38,791 log 14864 11680 Internal Server Error: /attachment/add/4/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\views\decorators\csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 1356, in attachment_add
+    return render(
+        request,
+        "attachment/add.html",
+        {"patient": selected_patient, "attachment_form": attachment_form},
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 62, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 175, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 322, in render
+    return nodelist.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 472, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\resolvers.py", line 828, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'dashboard' not found. 'dashboard' is not a valid view function or pattern name.
+ERROR 2025-08-28 13:33:38,810 basehttp 14864 11680 "GET /attachment/add/4/ HTTP/1.1" 500 232143
+ERROR 2025-08-28 13:34:44,321 log 14864 11680 Internal Server Error: /attachment/add/4/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\views\decorators\csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 1356, in attachment_add
+    return render(
+        request,
+        "attachment/add.html",
+        {"patient": selected_patient, "attachment_form": attachment_form},
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 62, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 175, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 322, in render
+    return nodelist.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 472, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\resolvers.py", line 828, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'dashboard' not found. 'dashboard' is not a valid view function or pattern name.
+ERROR 2025-08-28 13:34:44,337 basehttp 14864 11680 "GET /attachment/add/4/ HTTP/1.1" 500 232280
+ERROR 2025-08-28 13:34:45,466 log 14864 11680 Internal Server Error: /attachment/add/4/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\views\decorators\csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 1356, in attachment_add
+    return render(
+        request,
+        "attachment/add.html",
+        {"patient": selected_patient, "attachment_form": attachment_form},
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 62, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 175, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 322, in render
+    return nodelist.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 472, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\resolvers.py", line 828, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'dashboard' not found. 'dashboard' is not a valid view function or pattern name.
+ERROR 2025-08-28 13:34:45,482 basehttp 14864 11680 "GET /attachment/add/4/ HTTP/1.1" 500 232280
+ERROR 2025-08-28 13:36:50,183 log 14864 11680 Internal Server Error: /attachment/add/4/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\views\decorators\csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 1356, in attachment_add
+    return render(
+        request,
+        "attachment/add.html",
+        {"patient": selected_patient, "attachment_form": attachment_form},
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 62, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 175, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 322, in render
+    return nodelist.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 472, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\resolvers.py", line 828, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'dashboard' not found. 'dashboard' is not a valid view function or pattern name.
+ERROR 2025-08-28 13:36:50,196 basehttp 14864 11680 "GET /attachment/add/4/ HTTP/1.1" 500 232280
+INFO 2025-08-28 13:36:55,596 basehttp 14864 11680 "GET /admin/patients/patient/ HTTP/1.1" 200 13939
+INFO 2025-08-28 13:36:58,599 basehttp 14864 11680 "GET /admin/patients/attachment/ HTTP/1.1" 200 9921
+INFO 2025-08-28 13:36:58,756 basehttp 14864 11680 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+ERROR 2025-08-28 13:37:01,081 log 14864 11680 Internal Server Error: /admin/patients/attachment/add/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\admin\options.py", line 807, in get_form
+    return modelform_factory(self.model, **defaults)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\forms\models.py", line 648, in modelform_factory
+    return type(form)(class_name, (form,), form_class_attrs)
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\forms\models.py", line 327, in __new__
+    raise FieldError(message)
+django.core.exceptions.FieldError: Unknown field(s) (file) specified for Attachment
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\admin\options.py", line 686, in wrapper
+    return self.admin_site.admin_view(view)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\utils\decorators.py", line 133, in _wrapped_view
+    response = view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\views\decorators\cache.py", line 62, in _wrapped_view_func
+    response = view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\admin\sites.py", line 242, in inner
+    return view(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\admin\options.py", line 1890, in add_view
+    return self.changeform_view(request, None, form_url, extra_context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\utils\decorators.py", line 46, in _wrapper
+    return bound_method(*args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\utils\decorators.py", line 133, in _wrapped_view
+    response = view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\admin\options.py", line 1750, in changeform_view
+    return self._changeform_view(request, object_id, form_url, extra_context)
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\admin\options.py", line 1786, in _changeform_view
+    ModelForm = self.get_form(
+        request, obj, change=not add, fields=flatten_fieldsets(fieldsets)
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\admin\options.py", line 809, in get_form
+    raise FieldError(
+    ...<2 lines>...
+    )
+django.core.exceptions.FieldError: Unknown field(s) (file) specified for Attachment. Check fields/fieldsets/exclude attributes of class AttachmentAdmin.
+ERROR 2025-08-28 13:37:01,092 basehttp 14864 11680 "GET /admin/patients/attachment/add/ HTTP/1.1" 500 153484
+INFO 2025-08-28 13:37:18,091 basehttp 14864 11680 "GET /admin/patients/attachment/ HTTP/1.1" 200 9921
+ERROR 2025-08-28 13:37:21,123 log 14864 11680 Internal Server Error: /attachment/add/4/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\views\decorators\csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 1356, in attachment_add
+    return render(
+        request,
+        "attachment/add.html",
+        {"patient": selected_patient, "attachment_form": attachment_form},
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 62, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 175, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 322, in render
+    return nodelist.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 472, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\resolvers.py", line 828, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'dashboard' not found. 'dashboard' is not a valid view function or pattern name.
+ERROR 2025-08-28 13:37:21,139 basehttp 14864 11680 "GET /attachment/add/4/ HTTP/1.1" 500 232280
+ERROR 2025-08-28 13:37:54,274 log 14864 11680 Internal Server Error: /attachment/add/4/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\views\decorators\csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 1356, in attachment_add
+    return render(
+        request,
+        "attachment/add.html",
+        {"patient": selected_patient, "attachment_form": attachment_form},
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 62, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 175, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 322, in render
+    return nodelist.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 472, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\resolvers.py", line 828, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'dashboard' not found. 'dashboard' is not a valid view function or pattern name.
+ERROR 2025-08-28 13:37:54,288 basehttp 14864 11680 "GET /attachment/add/4/ HTTP/1.1" 500 232280
+ERROR 2025-08-28 13:46:46,559 log 14864 11284 Internal Server Error: /attachment/add/4/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\views\decorators\csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 1356, in attachment_add
+    return render(
+        request,
+        "attachment/add.html",
+        {"patient": selected_patient, "attachment_form": attachment_form},
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 62, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 175, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 322, in render
+    return nodelist.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 472, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\resolvers.py", line 828, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'dashboard' not found. 'dashboard' is not a valid view function or pattern name.
+ERROR 2025-08-28 13:46:46,574 basehttp 14864 11284 "GET /attachment/add/4/ HTTP/1.1" 500 232280
+INFO 2025-08-28 13:46:50,115 basehttp 14864 11284 "GET /patient/view/4/ HTTP/1.1" 200 90717
+INFO 2025-08-28 13:46:51,185 basehttp 14864 11284 "GET /patient/view/4/ HTTP/1.1" 200 90717
+ERROR 2025-08-28 13:46:57,038 log 14864 11284 Internal Server Error: /attachment/manager/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 1283, in attachment_manager
+    return render(
+        request, "attachment/manager.html", {"attachment_page_obj": attachment_list}
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 62, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 175, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 322, in render
+    return nodelist.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 472, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\resolvers.py", line 828, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'dashboard' not found. 'dashboard' is not a valid view function or pattern name.
+ERROR 2025-08-28 13:46:57,064 basehttp 14864 11284 "GET /attachment/manager/ HTTP/1.1" 500 222128
+INFO 2025-08-28 13:51:21,086 basehttp 14864 11284 "GET /attachment/manager/ HTTP/1.1" 200 32908
+INFO 2025-08-28 13:51:28,648 basehttp 14864 11284 "GET /attachment/manager/?search=&type=image HTTP/1.1" 200 33273
+INFO 2025-08-28 13:51:30,751 basehttp 14864 11284 "GET /attachment/manager/ HTTP/1.1" 200 32908
+INFO 2025-08-28 13:51:46,129 basehttp 14864 11284 "GET /manager/patient/ HTTP/1.1" 200 59624
+INFO 2025-08-28 13:51:47,889 basehttp 14864 11284 "GET /patient/view/4/ HTTP/1.1" 200 90717
+INFO 2025-08-28 13:51:54,722 basehttp 14864 11284 "GET /attachment/add/4/ HTTP/1.1" 200 42327
+INFO 2025-08-28 13:51:59,983 basehttp 14864 11284 "GET /patient/view/4/ HTTP/1.1" 200 90717
+INFO 2025-08-28 13:53:17,477 basehttp 14864 11284 "GET /attachment/add/4/ HTTP/1.1" 200 42327
+INFO 2025-08-28 13:54:01,551 basehttp 14864 11284 "GET /attachment/add/4/ HTTP/1.1" 200 42327
+ERROR 2025-08-28 13:54:10,865 log 14864 11284 Internal Server Error: /attachment/add/4/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\views\decorators\csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 1326, in attachment_add
+    temp_file.save()
+    ~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\models.py", line 1371, in save
+    self.full_clean()
+    ~~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\base.py", line 1477, in full_clean
+    raise ValidationError(errors)
+django.core.exceptions.ValidationError: {'attachment_type': ["Value 'PDF' is not a valid choice."]}
+ERROR 2025-08-28 13:54:10,869 basehttp 14864 11284 "POST /attachment/add/4/ HTTP/1.1" 500 106332
+INFO 2025-08-28 13:54:27,882 basehttp 14864 11284 "GET /admin/patients/attachment/ HTTP/1.1" 200 9921
+INFO 2025-08-28 13:54:28,029 basehttp 14864 11284 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-28 13:54:29,150 basehttp 14864 11284 "GET /admin/patients/attachment/ HTTP/1.1" 200 9921
+INFO 2025-08-28 13:54:29,344 basehttp 14864 11284 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+ERROR 2025-08-28 13:54:31,180 log 14864 11284 Internal Server Error: /admin/patients/attachment/add/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\admin\options.py", line 807, in get_form
+    return modelform_factory(self.model, **defaults)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\forms\models.py", line 648, in modelform_factory
+    return type(form)(class_name, (form,), form_class_attrs)
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\forms\models.py", line 327, in __new__
+    raise FieldError(message)
+django.core.exceptions.FieldError: Unknown field(s) (file) specified for Attachment
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\admin\options.py", line 686, in wrapper
+    return self.admin_site.admin_view(view)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\utils\decorators.py", line 133, in _wrapped_view
+    response = view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\views\decorators\cache.py", line 62, in _wrapped_view_func
+    response = view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\admin\sites.py", line 242, in inner
+    return view(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\admin\options.py", line 1890, in add_view
+    return self.changeform_view(request, None, form_url, extra_context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\utils\decorators.py", line 46, in _wrapper
+    return bound_method(*args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\utils\decorators.py", line 133, in _wrapped_view
+    response = view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\admin\options.py", line 1750, in changeform_view
+    return self._changeform_view(request, object_id, form_url, extra_context)
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\admin\options.py", line 1786, in _changeform_view
+    ModelForm = self.get_form(
+        request, obj, change=not add, fields=flatten_fieldsets(fieldsets)
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\admin\options.py", line 809, in get_form
+    raise FieldError(
+    ...<2 lines>...
+    )
+django.core.exceptions.FieldError: Unknown field(s) (file) specified for Attachment. Check fields/fieldsets/exclude attributes of class AttachmentAdmin.
+ERROR 2025-08-28 13:54:31,187 basehttp 14864 11284 "GET /admin/patients/attachment/add/ HTTP/1.1" 500 153484
+INFO 2025-08-28 13:54:33,194 basehttp 14864 11284 "GET /admin/patients/attachment/ HTTP/1.1" 200 9921
+INFO 2025-08-28 13:59:26,510 basehttp 14864 11284 "GET /attachment/manager/ HTTP/1.1" 200 32908
+INFO 2025-08-28 13:59:34,827 basehttp 14864 11284 "GET /attachment/add/4/ HTTP/1.1" 200 42398
+ERROR 2025-08-28 13:59:44,938 log 14864 11284 Internal Server Error: /attachment/add/4/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\views\decorators\csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 1326, in attachment_add
+    temp_file.save()
+    ~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\models.py", line 1371, in save
+    self.full_clean()
+    ~~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\base.py", line 1477, in full_clean
+    raise ValidationError(errors)
+django.core.exceptions.ValidationError: {'attachment_type': ["Value 'PDF' is not a valid choice."]}
+ERROR 2025-08-28 13:59:44,942 basehttp 14864 11284 "POST /attachment/add/4/ HTTP/1.1" 500 106322
+INFO 2025-08-28 14:02:26,040 basehttp 14864 11284 "GET /attachment/add/4/ HTTP/1.1" 200 42398
+ERROR 2025-08-28 14:02:34,554 log 14864 11284 Internal Server Error: /attachment/add/4/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\views\decorators\csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 1326, in attachment_add
+    temp_file.save()
+    ~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\models.py", line 1371, in save
+    self.full_clean()
+    ~~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\base.py", line 1477, in full_clean
+    raise ValidationError(errors)
+django.core.exceptions.ValidationError: {'attachment_type': ["Value 'PDF' is not a valid choice."]}
+ERROR 2025-08-28 14:02:34,558 basehttp 14864 11284 "POST /attachment/add/4/ HTTP/1.1" 500 106323
+INFO 2025-08-28 14:02:46,739 autoreload 11612 19704 Watching for file changes with StatReloader
+INFO 2025-08-28 14:02:50,710 basehttp 11612 13536 "GET /attachment/add/4/ HTTP/1.1" 302 0
+INFO 2025-08-28 14:02:50,744 basehttp 11612 13536 "GET /users/login/?next=/attachment/add/4/ HTTP/1.1" 200 12804
+INFO 2025-08-28 14:02:53,004 basehttp 11612 13536 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-08-28 14:02:53,236 basehttp 11612 13536 "GET / HTTP/1.1" 200 40119
+INFO 2025-08-28 14:02:56,585 basehttp 11612 13536 "GET /manager/patient/ HTTP/1.1" 200 59624
+INFO 2025-08-28 14:02:57,946 basehttp 11612 13536 "GET /patient/view/4/ HTTP/1.1" 200 90717
+INFO 2025-08-28 14:03:01,815 basehttp 11612 13536 "GET /attachment/add/4/ HTTP/1.1" 200 42398
+ERROR 2025-08-28 14:03:11,940 log 11612 13536 Internal Server Error: /attachment/add/4/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\views\decorators\csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 1326, in attachment_add
+    temp_file.save()
+    ~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\models.py", line 1371, in save
+    self.full_clean()
+    ~~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\base.py", line 1477, in full_clean
+    raise ValidationError(errors)
+django.core.exceptions.ValidationError: {'attachment_type': ["Value 'PDF' is not a valid choice."]}
+ERROR 2025-08-28 14:03:11,949 basehttp 11612 13536 "POST /attachment/add/4/ HTTP/1.1" 500 106319
+INFO 2025-08-28 14:07:13,502 autoreload 11612 19704 D:\Projects\Current Projects\NDAS - Project\NDAS\ndas\custom_codes\custom_methods.py changed, reloading.
+INFO 2025-08-28 14:07:14,541 autoreload 8364 8456 Watching for file changes with StatReloader
+INFO 2025-08-28 14:09:19,887 basehttp 8364 11328 "GET /attachment/add/4/ HTTP/1.1" 302 0
+INFO 2025-08-28 14:09:19,914 basehttp 8364 11328 "GET /users/login/?next=/attachment/add/4/ HTTP/1.1" 200 12804
+INFO 2025-08-28 14:09:22,618 basehttp 8364 11328 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-08-28 14:09:22,793 basehttp 8364 11328 "GET / HTTP/1.1" 200 40119
+INFO 2025-08-28 14:09:23,991 basehttp 8364 11328 "GET /manager/patient/ HTTP/1.1" 200 59624
+INFO 2025-08-28 14:09:25,314 basehttp 8364 11328 "GET /patient/view/4/ HTTP/1.1" 200 90717
+INFO 2025-08-28 14:09:27,959 basehttp 8364 11328 "GET /attachment/add/4/ HTTP/1.1" 200 42161
+INFO 2025-08-28 14:09:52,611 basehttp 8364 11328 "POST /attachment/add/4/ HTTP/1.1" 200 52
+INFO 2025-08-28 14:09:57,595 basehttp 8364 11328 "GET /attachment/view/1 HTTP/1.1" 301 0
+INFO 2025-08-28 14:09:57,726 basehttp 8364 11328 "GET /attachment/view/1/ HTTP/1.1" 200 37935
+INFO 2025-08-28 14:10:06,428 basehttp 8364 11328 "GET /attachment/delete/confirm/1/ HTTP/1.1" 200 32953
+INFO 2025-08-28 14:10:58,805 basehttp 8364 11328 "GET /attachment/manager/ HTTP/1.1" 200 40396
+INFO 2025-08-28 14:11:17,985 basehttp 8364 1140 "GET /attachment/manager/?search=&type=image HTTP/1.1" 200 40581
+INFO 2025-08-28 14:11:23,419 basehttp 8364 1140 "GET /attachment/manager/ HTTP/1.1" 200 40396
+INFO 2025-08-28 14:11:26,379 basehttp 8364 1140 "GET /attachment/manager/?search=&type=video HTTP/1.1" 200 40581
+INFO 2025-08-28 14:11:28,445 basehttp 8364 1140 "GET /attachment/manager/ HTTP/1.1" 200 40396
+INFO 2025-08-28 14:11:35,660 basehttp 8364 1140 "GET /attachment/manager/ HTTP/1.1" 200 40396
+INFO 2025-08-28 14:11:37,131 basehttp 8364 1140 "GET /attachment/manager/ HTTP/1.1" 200 40396
+INFO 2025-08-28 14:11:40,705 basehttp 8364 1140 "GET /admin/patients/attachment/ HTTP/1.1" 200 12597
+INFO 2025-08-28 14:11:40,863 basehttp 8364 1140 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+ERROR 2025-08-28 14:11:44,229 log 8364 1140 Internal Server Error: /admin/patients/attachment/add/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\admin\options.py", line 807, in get_form
+    return modelform_factory(self.model, **defaults)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\forms\models.py", line 648, in modelform_factory
+    return type(form)(class_name, (form,), form_class_attrs)
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\forms\models.py", line 327, in __new__
+    raise FieldError(message)
+django.core.exceptions.FieldError: Unknown field(s) (file) specified for Attachment
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\admin\options.py", line 686, in wrapper
+    return self.admin_site.admin_view(view)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\utils\decorators.py", line 133, in _wrapped_view
+    response = view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\views\decorators\cache.py", line 62, in _wrapped_view_func
+    response = view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\admin\sites.py", line 242, in inner
+    return view(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\admin\options.py", line 1890, in add_view
+    return self.changeform_view(request, None, form_url, extra_context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\utils\decorators.py", line 46, in _wrapper
+    return bound_method(*args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\utils\decorators.py", line 133, in _wrapped_view
+    response = view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\admin\options.py", line 1750, in changeform_view
+    return self._changeform_view(request, object_id, form_url, extra_context)
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\admin\options.py", line 1786, in _changeform_view
+    ModelForm = self.get_form(
+        request, obj, change=not add, fields=flatten_fieldsets(fieldsets)
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\admin\options.py", line 809, in get_form
+    raise FieldError(
+    ...<2 lines>...
+    )
+django.core.exceptions.FieldError: Unknown field(s) (file) specified for Attachment. Check fields/fieldsets/exclude attributes of class AttachmentAdmin.
+ERROR 2025-08-28 14:11:44,239 basehttp 8364 1140 "GET /admin/patients/attachment/add/ HTTP/1.1" 500 153484
+INFO 2025-08-28 14:11:47,012 basehttp 8364 1140 "GET /admin/patients/attachment/ HTTP/1.1" 200 12597
+INFO 2025-08-28 14:14:24,458 autoreload 8364 8456 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py changed, reloading.
+INFO 2025-08-28 14:14:25,307 autoreload 9496 21076 Watching for file changes with StatReloader
+INFO 2025-08-28 14:16:16,186 basehttp 9496 15572 "GET /attachment/manager/ HTTP/1.1" 302 0
+INFO 2025-08-28 14:16:16,205 basehttp 9496 15572 "GET /users/login/?next=/attachment/manager/ HTTP/1.1" 200 12804
+INFO 2025-08-28 14:16:18,262 basehttp 9496 15572 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-08-28 14:16:18,424 basehttp 9496 15572 "GET / HTTP/1.1" 200 40202
+INFO 2025-08-28 14:16:20,182 basehttp 9496 15572 "GET /manager/patient/ HTTP/1.1" 200 59624
+INFO 2025-08-28 14:16:21,932 basehttp 9496 15572 "GET /patient/view/4/ HTTP/1.1" 200 92986
+INFO 2025-08-28 14:16:24,990 basehttp 9496 15572 "GET /attachment/add/4/ HTTP/1.1" 200 42855
+INFO 2025-08-28 14:17:11,496 basehttp 9496 15572 "GET /attachment/add/4/ HTTP/1.1" 200 42838
+INFO 2025-08-28 14:17:23,378 basehttp 9496 15572 "POST /attachment/add/4/ HTTP/1.1" 200 52
+INFO 2025-08-28 14:17:25,122 basehttp 9496 15572 "GET /attachment/view/2 HTTP/1.1" 301 0
+INFO 2025-08-28 14:17:25,326 basehttp 9496 15572 "GET /attachment/view/2/ HTTP/1.1" 200 37694
+INFO 2025-08-28 14:17:25,876 basehttp 9496 15572 "GET /media/attachments/asfasfsad_video_Rasika__Administrator_2025-08-28_141721.9002900530.mp4 HTTP/1.1" 200 34974399
+INFO 2025-08-28 14:17:26,021 basehttp 9496 15572 "GET /media/attachments/asfasfsad_video_Rasika__Administrator_2025-08-28_141721.9002900530.mp4 HTTP/1.1" 304 0
+WARNING 2025-08-28 14:17:29,086 log 9496 15572 Not Found: /favicon.ico
+WARNING 2025-08-28 14:17:29,087 basehttp 9496 15572 "GET /favicon.ico HTTP/1.1" 404 15877
+INFO 2025-08-28 14:17:40,959 basehttp 9496 15572 "GET /patient/view/4/ HTTP/1.1" 200 94298
+INFO 2025-08-28 14:17:53,151 basehttp 9496 15572 "GET /bookmarks/add/2/Attachment/ HTTP/1.1" 200 28669
+INFO 2025-08-28 14:17:59,301 basehttp 9496 15572 "GET /attachment/manager/patient/4 HTTP/1.1" 200 44776
+INFO 2025-08-28 14:18:04,686 basehttp 9496 15572 "GET /attachment/edit/2/ HTTP/1.1" 200 38213
+INFO 2025-08-28 14:18:34,155 basehttp 9496 15572 "POST /attachment/edit/2/ HTTP/1.1" 200 39965
+INFO 2025-08-28 14:18:56,103 basehttp 9496 15572 "POST /attachment/edit/2/ HTTP/1.1" 200 39207
+INFO 2025-08-28 14:19:15,649 basehttp 9496 15572 "POST /attachment/edit/2/ HTTP/1.1" 302 0
+INFO 2025-08-28 14:19:15,785 basehttp 9496 15572 "GET /attachment/view/2/ HTTP/1.1" 200 38218
+INFO 2025-08-28 14:19:16,234 basehttp 9496 15572 "GET /media/attachments/aaaaa_video_Rasika__Administrator_2025-08-28_141914.9222250530.mp4 HTTP/1.1" 200 34974399
+INFO 2025-08-28 14:19:16,377 basehttp 9496 15572 "GET /media/attachments/aaaaa_video_Rasika__Administrator_2025-08-28_141914.9222250530.mp4 HTTP/1.1" 304 0
+INFO 2025-08-28 14:19:29,199 basehttp 9496 15572 "GET /attachment/delete/confirm/2/ HTTP/1.1" 200 32948
+INFO 2025-08-28 14:20:17,837 autoreload 13112 18492 Watching for file changes with StatReloader
+INFO 2025-08-28 14:28:53,312 basehttp 13112 9952 "GET /attachment/manager/ HTTP/1.1" 302 0
+INFO 2025-08-28 14:28:53,441 basehttp 13112 9952 "GET /users/login/?next=/attachment/manager/ HTTP/1.1" 200 12804
+INFO 2025-08-28 14:28:55,744 basehttp 13112 9952 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-08-28 14:28:56,106 basehttp 13112 9952 "GET / HTTP/1.1" 200 40202
+INFO 2025-08-28 14:28:58,964 basehttp 13112 9952 "GET /attachment/manager/ HTTP/1.1" 200 44758
+INFO 2025-08-28 14:29:55,619 basehttp 13112 9952 "GET /attachment/view/2/ HTTP/1.1" 200 37881
+INFO 2025-08-28 14:29:56,176 basehttp 13112 9952 "GET /media/attachments/aaaaa_video_Rasika__Administrator_2025-08-28_141914.9222250530.mp4 HTTP/1.1" 200 34974399
+INFO 2025-08-28 14:30:13,043 basehttp 13112 9952 "GET /attachment/edit/2/ HTTP/1.1" 200 38307
+INFO 2025-08-28 14:30:33,269 basehttp 13112 9952 "GET /patient/view/4/ HTTP/1.1" 200 94323
+INFO 2025-08-28 14:30:36,935 basehttp 13112 9952 "GET /attachment/add/4/ HTTP/1.1" 200 42838
+INFO 2025-08-28 14:31:44,909 basehttp 13112 9952 "GET /attachment/manager/ HTTP/1.1" 200 44725
+INFO 2025-08-28 14:31:46,582 basehttp 13112 9952 "GET /attachment/manager/ HTTP/1.1" 200 44725
+INFO 2025-08-28 14:31:55,734 basehttp 13112 9952 "GET /patient/view/4/ HTTP/1.1" 200 94323
+INFO 2025-08-28 14:31:58,983 basehttp 13112 9952 "GET /attachment/add/4/ HTTP/1.1" 200 42838
+INFO 2025-08-28 14:32:09,545 basehttp 13112 9952 "GET /attachment/view/2/ HTTP/1.1" 200 37852
+INFO 2025-08-28 14:34:03,735 basehttp 13112 9952 "GET /attachment/view/2/ HTTP/1.1" 200 37881
+INFO 2025-08-28 14:34:03,906 basehttp 13112 9952 "GET /media/attachments/aaaaa_video_Rasika__Administrator_2025-08-28_141914.9222250530.mp4 HTTP/1.1" 304 0
+INFO 2025-08-28 14:34:07,033 basehttp 13112 9952 "GET /patient/view/4/ HTTP/1.1" 200 94323
+INFO 2025-08-28 14:34:10,940 basehttp 13112 9952 "GET /attachment/add/4/ HTTP/1.1" 200 42838
+INFO 2025-08-28 14:34:54,089 basehttp 13112 9952 "GET /attachment/add/4/ HTTP/1.1" 200 42838
+INFO 2025-08-28 14:35:09,187 basehttp 13112 9952 "GET /attachment/manager/ HTTP/1.1" 200 44758
+INFO 2025-08-28 14:35:21,533 basehttp 13112 9952 "GET /attachment/edit/2/ HTTP/1.1" 200 38270
+INFO 2025-08-28 14:36:26,471 basehttp 13112 9952 "GET /attachment/manager/ HTTP/1.1" 200 44721
+INFO 2025-08-28 14:36:58,829 basehttp 13112 9952 "GET /attachment/manager/?search=asfd&type=pdf HTTP/1.1" 200 44910
+INFO 2025-08-28 14:38:00,577 basehttp 13112 9952 "GET /attachment/manager/?search=asfd&type=pdf HTTP/1.1" 200 42947
+ERROR 2025-08-28 14:38:32,259 log 13112 9952 Internal Server Error: /attachment/manager/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 1283, in attachment_manager
+    return render(
+        request, "attachment/manager.html", {"attachment_page_obj": attachment_list}
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 34, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 175, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 157, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 200, in compile_nodelist
+    return parser.parse()
+           ~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 293, in do_extends
+    nodelist = parser.parse()
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 232, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    self.unclosed_block_tag(parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 581, in unclosed_block_tag
+    raise self.error(token, msg)
+django.template.exceptions.TemplateSyntaxError: Unclosed tag on line 5: 'block'. Looking for one of: endblock.
+ERROR 2025-08-28 14:38:32,284 basehttp 13112 9952 "GET /attachment/manager/?search=asfd&type=pdf HTTP/1.1" 500 201827
+INFO 2025-08-28 14:38:42,021 basehttp 13112 9952 "GET /attachment/manager/?search=asfd&type=pdf HTTP/1.1" 200 42945
+INFO 2025-08-28 14:39:04,892 basehttp 13112 9952 "GET /attachment/manager/?search=asfd&type=pdf HTTP/1.1" 200 42238
+INFO 2025-08-28 14:39:08,272 basehttp 13112 9952 "GET / HTTP/1.1" 200 39878
+INFO 2025-08-28 14:39:15,124 basehttp 13112 9952 "GET /attachment/delete/confirm/2/ HTTP/1.1" 200 32948
+INFO 2025-08-28 14:44:39,707 basehttp 13112 9684 "GET /attachment/manager/?search=asfd&type=pdf HTTP/1.1" 200 51408
+INFO 2025-08-28 14:44:42,217 basehttp 13112 9684 "GET /attachment/manager/?search=asfd&type=pdf HTTP/1.1" 200 51408
+INFO 2025-08-28 14:44:57,783 basehttp 13112 9684 "GET /attachment/view/2/ HTTP/1.1" 200 46431
+INFO 2025-08-28 14:44:57,937 basehttp 13112 9684 "GET /media/attachments/aaaaa_video_Rasika__Administrator_2025-08-28_141914.9222250530.mp4 HTTP/1.1" 304 0
+INFO 2025-08-28 14:45:12,424 autoreload 13112 18492 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py changed, reloading.
+INFO 2025-08-28 14:45:14,172 autoreload 1644 12116 Watching for file changes with StatReloader
+INFO 2025-08-28 14:45:47,479 basehttp 1644 12924 "GET /attachment/view/2/ HTTP/1.1" 302 0
+INFO 2025-08-28 14:45:47,505 basehttp 1644 12924 "GET /users/login/?next=/attachment/view/2/ HTTP/1.1" 200 12804
+INFO 2025-08-28 14:45:49,684 basehttp 1644 12924 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-08-28 14:45:49,872 basehttp 1644 12924 "GET / HTTP/1.1" 200 40202
+INFO 2025-08-28 14:45:52,985 basehttp 1644 12924 "GET /attachment/manager/ HTTP/1.1" 200 51408
+INFO 2025-08-28 14:46:02,765 basehttp 1644 12924 "GET /attachment/view/2/ HTTP/1.1" 200 46431
+INFO 2025-08-28 14:46:03,395 basehttp 1644 12924 "GET /media/attachments/aaaaa_video_Rasika__Administrator_2025-08-28_141914.9222250530.mp4 HTTP/1.1" 200 34974399
+INFO 2025-08-28 14:46:19,216 basehttp 1644 12924 "GET /manager/patient/ HTTP/1.1" 200 59624
+INFO 2025-08-28 14:46:20,746 basehttp 1644 12924 "GET /patient/view/4/ HTTP/1.1" 200 103603
+INFO 2025-08-28 14:48:23,633 basehttp 1644 12924 "GET /attachment/add/4/ HTTP/1.1" 200 42838
+INFO 2025-08-28 14:48:53,144 basehttp 1644 12924 "GET /attachment/edit/2/ HTTP/1.1" 200 48530
+INFO 2025-08-28 14:48:59,195 basehttp 1644 12924 "GET /attachment/view/2/ HTTP/1.1" 200 48101
+INFO 2025-08-28 14:48:59,364 basehttp 1644 12924 "GET /media/attachments/aaaaa_video_Rasika__Administrator_2025-08-28_141914.9222250530.mp4 HTTP/1.1" 304 0
+INFO 2025-08-28 14:50:39,347 basehttp 1644 12924 "GET /attachment/view/2/ HTTP/1.1" 200 49010
+WARNING 2025-08-28 14:51:07,701 log 1644 12924 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-08-28 14:51:07,702 basehttp 1644 12924 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 15988
+INFO 2025-08-28 14:52:25,103 basehttp 1644 12924 "GET /attachment/manager/patient/4 HTTP/1.1" 200 53956
+INFO 2025-08-28 14:52:31,642 basehttp 1644 12924 "GET / HTTP/1.1" 200 39878
+INFO 2025-08-28 14:52:43,321 basehttp 1644 12924 "GET /attachment/view/2/ HTTP/1.1" 200 49010
+INFO 2025-08-28 14:52:43,488 basehttp 1644 12924 "GET /media/attachments/aaaaa_video_Rasika__Administrator_2025-08-28_141914.9222250530.mp4 HTTP/1.1" 304 0
+INFO 2025-08-28 14:53:01,139 basehttp 1644 12924 "POST /attachment/delete/2/ HTTP/1.1" 200 114
+WARNING 2025-08-28 14:53:05,910 log 1644 12924 Not Found: /patient/attachment/manager/4/
+WARNING 2025-08-28 14:53:05,911 basehttp 1644 12924 "GET /patient/attachment/manager/4/ HTTP/1.1" 404 15931
+INFO 2025-08-28 14:54:13,542 basehttp 1644 12924 "GET /attachment/manager/ HTTP/1.1" 200 49115
+INFO 2025-08-28 14:54:13,585 basehttp 1644 12924 "GET /static/dist/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-08-28 14:54:14,782 basehttp 1644 12924 "GET /manager/patient/ HTTP/1.1" 200 59624
+INFO 2025-08-28 14:54:16,172 basehttp 1644 12924 "GET /patient/view/3/ HTTP/1.1" 200 99945
+INFO 2025-08-28 14:54:24,075 basehttp 1644 12924 "GET /attachment/add/3/ HTTP/1.1" 200 42822
+INFO 2025-08-28 14:54:36,822 autoreload 1644 12116 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py changed, reloading.
+INFO 2025-08-28 14:54:37,976 autoreload 6676 11752 Watching for file changes with StatReloader
+INFO 2025-08-28 14:54:38,821 basehttp 6676 4456 "POST /attachment/add/3/ HTTP/1.1" 302 0
+INFO 2025-08-28 14:54:38,828 basehttp 6676 4456 "GET /users/login/?next=/attachment/add/3/ HTTP/1.1" 200 12804
+INFO 2025-08-28 14:54:43,682 autoreload 6676 11752 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py changed, reloading.
+INFO 2025-08-28 14:54:44,542 autoreload 12408 10844 Watching for file changes with StatReloader
+INFO 2025-08-28 14:54:53,856 basehttp 12408 5836 "GET /attachment/add/3/ HTTP/1.1" 302 0
+INFO 2025-08-28 14:54:53,876 basehttp 12408 5836 "GET /users/login/?next=/attachment/add/3/ HTTP/1.1" 200 12804
+INFO 2025-08-28 14:54:56,260 basehttp 12408 5836 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-08-28 14:54:56,422 basehttp 12408 5836 "GET / HTTP/1.1" 200 40202
+INFO 2025-08-28 14:54:58,674 basehttp 12408 5836 "GET /manager/patient/ HTTP/1.1" 200 59624
+INFO 2025-08-28 14:55:00,515 basehttp 12408 5836 "GET /patient/view/3/ HTTP/1.1" 200 99945
+INFO 2025-08-28 14:55:03,505 basehttp 12408 5836 "GET /attachment/add/3/ HTTP/1.1" 200 42822
+INFO 2025-08-28 14:55:14,024 basehttp 12408 5836 "POST /attachment/add/3/ HTTP/1.1" 200 52
+INFO 2025-08-28 14:55:31,512 basehttp 12408 5836 "GET /attachment/manager/ HTTP/1.1" 200 54358
+INFO 2025-08-28 14:55:37,395 basehttp 12408 5836 "GET /attachment/view/3/ HTTP/1.1" 200 49093
+INFO 2025-08-28 14:55:37,932 basehttp 12408 5836 "GET /media/attachments/wqefqwef_video_Rasika__Administrator_2025-08-28_145513.5394690530.mp4 HTTP/1.1" 200 34974399
+INFO 2025-08-28 14:57:34,989 basehttp 12408 5836 "GET /attachment/edit/3/ HTTP/1.1" 200 49701
+INFO 2025-08-28 15:00:37,681 basehttp 12408 5836 "GET /attachment/view/3/ HTTP/1.1" 200 50931
+INFO 2025-08-28 15:00:37,889 basehttp 12408 5836 "GET /media/attachments/wqefqwef_video_Rasika__Administrator_2025-08-28_145513.5394690530.mp4 HTTP/1.1" 304 0
+INFO 2025-08-28 15:03:41,686 basehttp 12408 5836 "GET /attachment/add/3/ HTTP/1.1" 200 42822
+INFO 2025-08-28 15:06:45,917 basehttp 12408 5836 "GET /attachment/view/3/ HTTP/1.1" 200 50801
+INFO 2025-08-28 15:06:46,096 basehttp 12408 5836 "GET /media/attachments/wqefqwef_video_Rasika__Administrator_2025-08-28_145513.5394690530.mp4 HTTP/1.1" 304 0
+INFO 2025-08-28 15:07:26,263 basehttp 12408 5836 "GET /video/manager/ HTTP/1.1" 200 43411
+INFO 2025-08-28 15:07:26,313 basehttp 12408 5836 "GET /static/css/manager.css HTTP/1.1" 304 0
+INFO 2025-08-28 15:07:26,324 basehttp 12408 8940 "GET /static/js/manager.js HTTP/1.1" 304 0
+INFO 2025-08-28 15:07:29,497 basehttp 12408 8940 "GET /video/view/3/ HTTP/1.1" 200 37042
+INFO 2025-08-28 15:07:30,156 basehttp 12408 8940 "GET /media/videos/2025/08/asfsad/asfsad_xzcvx_original_20250826_154744.mp4 HTTP/1.1" 200 34974399
+INFO 2025-08-28 15:09:18,793 basehttp 12408 8940 "GET /media/attachments/wqefqwef_video_Rasika__Administrator_2025-08-28_145513.5394690530.mp4 HTTP/1.1" 304 0
+INFO 2025-08-28 15:09:40,416 basehttp 12408 8940 "GET / HTTP/1.1" 200 39878
+INFO 2025-08-28 15:09:55,683 basehttp 12408 8940 "GET /manager/patient/ HTTP/1.1" 200 59624
+INFO 2025-08-28 15:10:00,651 basehttp 12408 8940 "GET /patient/view/4/ HTTP/1.1" 200 104608
+INFO 2025-08-28 15:10:05,948 basehttp 12408 8940 "GET /video/view/4/ HTTP/1.1" 200 39659
+INFO 2025-08-28 15:10:06,709 basehttp 12408 8940 "GET /media/videos/2025/08/VID-20250714-WA00011.mp4 HTTP/1.1" 200 34974399
+INFO 2025-08-28 15:12:08,614 basehttp 12408 6788 "GET /assessment/edit/file/id/4/ HTTP/1.1" 200 32808
+INFO 2025-08-28 15:13:46,884 basehttp 12408 6788 "GET /video/view/4/ HTTP/1.1" 200 39687
+ERROR 2025-08-28 15:17:41,852 log 12408 6788 Internal Server Error: /video/view/4/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 505, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'else'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\video\views.py", line 143, in video_view
+    return render(request, "video/view.html", context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 34, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 175, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 157, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 200, in compile_nodelist
+    return parser.parse()
+           ~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 293, in do_extends
+    nodelist = parser.parse()
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 232, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 507, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 558, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 41: 'else', expected 'endblock'. Did you forget to register or load this tag?
+ERROR 2025-08-28 15:17:41,870 basehttp 12408 6788 "GET /video/view/4/ HTTP/1.1" 500 269935
+ERROR 2025-08-28 15:18:09,622 log 12408 6788 Internal Server Error: /video/view/4/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 505, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'else'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\video\views.py", line 143, in video_view
+    return render(request, "video/view.html", context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 34, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 175, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 157, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 200, in compile_nodelist
+    return parser.parse()
+           ~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 293, in do_extends
+    nodelist = parser.parse()
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 232, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 507, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 558, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 41: 'else', expected 'endblock'. Did you forget to register or load this tag?
+ERROR 2025-08-28 15:18:09,639 basehttp 12408 6788 "GET /video/view/4/ HTTP/1.1" 500 269935
+ERROR 2025-08-28 15:18:11,982 log 12408 6788 Internal Server Error: /video/view/4/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 505, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'else'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\video\views.py", line 143, in video_view
+    return render(request, "video/view.html", context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 34, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 175, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 157, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 200, in compile_nodelist
+    return parser.parse()
+           ~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 293, in do_extends
+    nodelist = parser.parse()
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 232, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 507, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 558, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 41: 'else', expected 'endblock'. Did you forget to register or load this tag?
+ERROR 2025-08-28 15:18:11,993 basehttp 12408 6788 "GET /video/view/4/ HTTP/1.1" 500 269935
+ERROR 2025-08-28 15:18:13,156 log 12408 6788 Internal Server Error: /video/view/4/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 505, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'else'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\video\views.py", line 143, in video_view
+    return render(request, "video/view.html", context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 34, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 175, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 157, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 200, in compile_nodelist
+    return parser.parse()
+           ~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 293, in do_extends
+    nodelist = parser.parse()
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 232, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 507, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 558, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 41: 'else', expected 'endblock'. Did you forget to register or load this tag?
+ERROR 2025-08-28 15:18:13,168 basehttp 12408 6788 "GET /video/view/4/ HTTP/1.1" 500 269935
+ERROR 2025-08-28 15:18:14,039 log 12408 6788 Internal Server Error: /video/view/4/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 505, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'else'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\video\views.py", line 143, in video_view
+    return render(request, "video/view.html", context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 34, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 175, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 157, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 200, in compile_nodelist
+    return parser.parse()
+           ~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 293, in do_extends
+    nodelist = parser.parse()
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 232, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 507, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 558, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 41: 'else', expected 'endblock'. Did you forget to register or load this tag?
+ERROR 2025-08-28 15:18:14,056 basehttp 12408 6788 "GET /video/view/4/ HTTP/1.1" 500 269935
+INFO 2025-08-28 15:19:27,255 basehttp 12408 6788 "GET /video/view/4/ HTTP/1.1" 200 39687
+ERROR 2025-08-28 15:22:28,587 log 12408 6788 Internal Server Error: /video/view/4/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\video\views.py", line 143, in video_view
+    return render(request, "video/view.html", context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 62, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 175, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 322, in render
+    return nodelist.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 472, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\resolvers.py", line 828, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'list' not found. 'list' is not a valid view function or pattern name.
+ERROR 2025-08-28 15:22:28,606 basehttp 12408 6788 "GET /video/view/4/ HTTP/1.1" 500 252486
+ERROR 2025-08-28 15:22:30,749 log 12408 6788 Internal Server Error: /video/view/4/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\video\views.py", line 143, in video_view
+    return render(request, "video/view.html", context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 62, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 175, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 322, in render
+    return nodelist.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 472, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\resolvers.py", line 828, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'list' not found. 'list' is not a valid view function or pattern name.
+ERROR 2025-08-28 15:22:30,765 basehttp 12408 6788 "GET /video/view/4/ HTTP/1.1" 500 252486
+ERROR 2025-08-28 15:22:32,139 log 12408 6788 Internal Server Error: /video/view/4/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\video\views.py", line 143, in video_view
+    return render(request, "video/view.html", context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 62, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 175, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 322, in render
+    return nodelist.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 472, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\resolvers.py", line 828, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'list' not found. 'list' is not a valid view function or pattern name.
+ERROR 2025-08-28 15:22:32,153 basehttp 12408 6788 "GET /video/view/4/ HTTP/1.1" 500 252486
+ERROR 2025-08-28 15:22:33,113 log 12408 6788 Internal Server Error: /video/view/4/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\video\views.py", line 143, in video_view
+    return render(request, "video/view.html", context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 62, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 175, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 322, in render
+    return nodelist.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 472, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\resolvers.py", line 828, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'list' not found. 'list' is not a valid view function or pattern name.
+ERROR 2025-08-28 15:22:33,132 basehttp 12408 6788 "GET /video/view/4/ HTTP/1.1" 500 252486
+ERROR 2025-08-28 15:24:05,395 log 12408 6788 Internal Server Error: /video/view/4/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\video\views.py", line 143, in video_view
+    return render(request, "video/view.html", context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 62, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 175, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 322, in render
+    return nodelist.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 472, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\resolvers.py", line 828, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'list' not found. 'list' is not a valid view function or pattern name.
+ERROR 2025-08-28 15:24:05,410 basehttp 12408 6788 "GET /video/view/4/ HTTP/1.1" 500 252486
+ERROR 2025-08-28 15:24:06,912 log 12408 6788 Internal Server Error: /video/view/4/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\video\views.py", line 143, in video_view
+    return render(request, "video/view.html", context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 62, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 175, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 157, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 167, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 322, in render
+    return nodelist.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 63, in render
+    result = block.nodelist.render(context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 1005, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 966, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 472, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\urls\resolvers.py", line 828, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'list' not found. 'list' is not a valid view function or pattern name.
+ERROR 2025-08-28 15:24:06,948 basehttp 12408 6788 "GET /video/view/4/ HTTP/1.1" 500 252486
+INFO 2025-08-28 15:24:24,738 basehttp 12408 6788 "GET /video/view/4/ HTTP/1.1" 200 40654
+INFO 2025-08-28 15:24:40,735 basehttp 12408 6788 "GET /video/manager/patient/4/ HTTP/1.1" 200 36182
+INFO 2025-08-28 15:25:12,474 basehttp 12408 6788 "GET /patient/view/4/ HTTP/1.1" 200 104608
+INFO 2025-08-28 15:31:08,863 basehttp 12408 6676 "GET /video/view/4/ HTTP/1.1" 200 40696
+INFO 2025-08-28 15:34:35,160 basehttp 12408 6676 "GET /video/view/4/ HTTP/1.1" 200 41053
+INFO 2025-08-28 15:36:06,464 basehttp 12408 6676 "GET /video/view/4/ HTTP/1.1" 200 41375
+INFO 2025-08-28 15:36:57,330 basehttp 12408 6676 "GET /video/view/4/ HTTP/1.1" 200 41211
+INFO 2025-08-28 15:37:11,737 basehttp 12408 6676 "GET /video/manager/patient/4/ HTTP/1.1" 200 36182
+INFO 2025-08-28 15:38:07,045 basehttp 12408 6676 "GET /video/view/4/ HTTP/1.1" 200 41426
+INFO 2025-08-28 15:38:34,578 basehttp 12408 6676 "GET /video/view/4/ HTTP/1.1" 200 41429
+WARNING 2025-08-28 15:38:50,868 log 12408 6676 Method Not Allowed (GET): /video/delete/4/
+WARNING 2025-08-28 15:38:50,870 basehttp 12408 6676 "GET /video/delete/4/ HTTP/1.1" 405 0
+INFO 2025-08-28 15:38:59,711 basehttp 12408 6676 "GET /video/delete-confirm/4/ HTTP/1.1" 302 0
+INFO 2025-08-28 15:38:59,877 basehttp 12408 6676 "GET /video/manager/ HTTP/1.1" 200 43745
+INFO 2025-08-28 15:39:06,573 basehttp 12408 6676 "GET /video/edit/4/ HTTP/1.1" 200 44335
+INFO 2025-08-28 15:41:33,515 basehttp 12408 19404 "GET /video/view/4/ HTTP/1.1" 200 41456
+INFO 2025-08-28 15:42:41,278 basehttp 12408 19404 "GET /video/view/4/ HTTP/1.1" 200 40043
+INFO 2025-08-28 15:43:07,983 basehttp 12408 19404 "GET /video/view/4/ HTTP/1.1" 200 39873
+INFO 2025-08-28 15:45:10,128 basehttp 12408 19404 "GET /video/view/4/ HTTP/1.1" 200 42397
+INFO 2025-08-28 15:45:50,399 basehttp 12408 19404 "GET /video/view/4/ HTTP/1.1" 200 42397
+INFO 2025-08-28 15:45:50,991 basehttp 12408 19404 "GET /media/videos/2025/08/VID-20250714-WA00011.mp4 HTTP/1.1" 200 34974399
+INFO 2025-08-28 15:47:09,581 basehttp 12408 19404 "GET /video/view/4/ HTTP/1.1" 200 40248
+INFO 2025-08-28 15:47:10,120 basehttp 12408 19404 "GET /media/videos/2025/08/VID-20250714-WA00011.mp4 HTTP/1.1" 200 34974399
+INFO 2025-08-28 15:47:57,106 basehttp 12408 19404 "GET /video/view/4/ HTTP/1.1" 200 40226
+INFO 2025-08-28 15:49:03,177 basehttp 12408 19404 "GET /video/view/4/ HTTP/1.1" 200 39875
+INFO 2025-08-28 15:49:28,183 basehttp 12408 19404 "GET /assessment/view/file/id/4/ HTTP/1.1" 200 37871
+INFO 2025-08-28 15:49:41,026 basehttp 12408 19404 "GET /assessment/edit/file/id/4/ HTTP/1.1" 200 32808
+INFO 2025-08-28 15:50:16,734 basehttp 12408 19404 "GET /video/view/4/ HTTP/1.1" 200 39671
+INFO 2025-08-28 15:50:40,976 basehttp 12408 19404 "GET /video/view/4/ HTTP/1.1" 200 39671
