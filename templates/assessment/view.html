@@ -27,12 +27,83 @@
   <section class="content">
     <div class="container-fluid">
       <div class="row">
-        <!-- Assessment Details -->
-        <div class="col-lg-8">
+        <!-- Patient & Video Information -->
+        <div class="col-lg-4 col-md-6">
+          <!-- Patient Info -->
           <div class="card card-primary">
             <div class="card-header">
               <h3 class="card-title">
-                <i class="fas fa-clipboard-list mr-2"></i>General Movement Assessment
+                <i class="fas fa-user mr-2"></i>Patient Information
+              </h3>
+            </div>
+            <div class="card-body">
+              <dl class="row">
+                <dt class="col-sm-5">Baby Name:</dt>
+                <dd class="col-sm-7">{{ assessment.patient.baby_name|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Mother Name:</dt>
+                <dd class="col-sm-7">{{ assessment.patient.mother_name|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Gender:</dt>
+                <dd class="col-sm-7">{{ assessment.patient.gender|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Current Age:</dt>
+                <dd class="col-sm-7">{{ assessment.patient.getCurrentAge|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Corrected Age:</dt>
+                <dd class="col-sm-7">{{ assessment.patient.getCorrectedAge|default:"N/A" }}</dd>
+              </dl>
+              
+              <div class="text-center border-top pt-3">
+                <a href="{% url 'view-patient' assessment.patient.id %}" class="btn btn-primary btn-sm">
+                  <i class="fas fa-external-link-alt mr-2"></i>Full Patient Profile
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Video Info -->
+          <div class="card card-info">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-video mr-2"></i>Video Information
+              </h3>
+            </div>
+            <div class="card-body">
+              <dl class="row">
+                <dt class="col-sm-5">Title:</dt>
+                <dd class="col-sm-7">
+                  {% if assessment.video_file and assessment.video_file.id %}
+                    <a href="{% url 'video:view' assessment.video_file.id %}" target="_blank" 
+                       data-toggle="tooltip" data-placement="top" 
+                       title="Play this video in another window...">
+                      {{ assessment.video_file.title }}
+                      <i class="fas fa-play-circle text-primary ml-1"></i>
+                    </a>
+                  {% else %}
+                    No video associated
+                  {% endif %}
+                </dd>
+                
+                <dt class="col-sm-5">Recorded On:</dt>
+                <dd class="col-sm-7">{{ assessment.video_file.recorded_on|date:"M d, Y"|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Age at Recording:</dt>
+                <dd class="col-sm-7">{{ assessment.video_file.age_on_recording|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Duration:</dt>
+                <dd class="col-sm-7">{{ assessment.video_file.duration_formatted|default:"N/A" }}</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+
+        <!-- Assessment Details -->
+        <div class="col-lg-8 col-md-6">
+          <div class="card card-success">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-stethoscope mr-2"></i>GM Assessment Details
               </h3>
               <div class="card-tools">
                 {% if assessment.diagnosis_conclusion == 'NORMAL' %}
@@ -47,273 +118,224 @@
               </div>
             </div>
             <div class="card-body">
-              <!-- Patient Information -->
-              <div class="row">
-                <div class="col-lg-6 col-md-12">
-                  <dl class="row">
-                    <dt class="col-sm-4 col-6">Patient:</dt>
-                    <dd class="col-sm-8 col-6">
-                      <a href="{% url 'view-patient' assessment.patient.id %}" class="text-primary">
-                        <i class="fas fa-user mr-1"></i>{{ assessment.patient.baby_name }}
-                      </a>
-                    </dd>
-                    
-                    <dt class="col-sm-4 col-6">Assessment Date:</dt>
-                    <dd class="col-sm-8 col-6">
-                      <i class="fas fa-calendar mr-1"></i>{{ assessment.date_of_assessment|date:"M d, Y H:i" }}
-                    </dd>
-                    
-                    <dt class="col-sm-4 col-6">Age at Assessment:</dt>
-                    <dd class="col-sm-8 col-6">
-                      <i class="fas fa-birthday-cake mr-1"></i>{{ assessment.getAssessmentAge|default:"N/A" }}
-                    </dd>
-                  </dl>
-                </div>
-                <div class="col-lg-6 col-md-12">
-                  <dl class="row">
-                    <dt class="col-sm-4 col-6">Video File:</dt>
-                    <dd class="col-sm-8 col-6">
-                      {% if assessment.video_file and assessment.video_file.id %}
-                        <a href="{% url 'video:view' assessment.video_file.id %}" target="_blank" 
-                           class="text-primary" data-toggle="tooltip" data-placement="top" 
-                           title="View video in new window">
-                          <i class="fas fa-play-circle mr-1"></i>{{ assessment.video_file.title }}
-                        </a>
-                      {% else %}
-                        <span class="text-muted">No video associated</span>
-                      {% endif %}
-                    </dd>
-                    
-                    <dt class="col-sm-4 col-6">Next Assessment:</dt>
-                    <dd class="col-sm-8 col-6">
-                      {% if assessment.next_assessment_date %}
-                        <i class="fas fa-clock mr-1"></i>{{ assessment.next_assessment_date|date:"M d, Y" }}
-                      {% else %}
-                        <span class="text-muted">Not scheduled</span>
-                      {% endif %}
-                    </dd>
-                    
-                    <dt class="col-sm-4 col-6">Parents Informed:</dt>
-                    <dd class="col-sm-8 col-6">
-                      {% if assessment.parent_informed %}
-                        <span class="badge badge-success"><i class="fas fa-check"></i> Yes</span>
-                      {% else %}
-                        <span class="badge badge-warning"><i class="fas fa-times"></i> No</span>
-                      {% endif %}
-                    </dd>
-                  </dl>
-                </div>
+              <!-- Assessment Date -->
+              <div class="form-group">
+                <label>
+                  <i class="fas fa-calendar mr-2"></i>Assessment Date & Time
+                </label>
+                <p class="form-control-plaintext">
+                  {{ assessment.date_of_assessment|date:"M d, Y H:i" }}
+                  <small class="text-muted ml-2">(Age at assessment: {{ assessment.getAssessmentAge|default:"N/A" }})</small>
+                </p>
               </div>
-            </div>
-          </div>
 
-          <!-- Diagnosis Information -->
-          <div class="card card-info">
-            <div class="card-header">
-              <h3 class="card-title">
-                <i class="fas fa-stethoscope mr-2"></i>Diagnosis & Assessment
-              </h3>
-            </div>
-            <div class="card-body">
-              <div class="row">
-                <div class="col-12">
-                  <h6 class="text-bold">Primary Diagnosis:</h6>
-                  {% if assessment.isDiagnosisNormal %}
-                    <div class="alert alert-success">
-                      <i class="fas fa-check-circle mr-2"></i>Normal Development
-                    </div>
-                  {% else %}
-                    <div class="diagnoses-list">
-                      {% for dx in assessment.diagnosis.all %}
-                        <div class="alert alert-warning">
-                          <i class="fas fa-exclamation-triangle mr-2"></i>{{ dx.title }}
+              <!-- Diagnosis Selection Section -->
+              <div class="form-group">
+                <div class="card card-outline card-warning mb-3">
+                  <div class="card-header py-2">
+                    <h5 class="card-title mb-0 d-flex align-items-center justify-content-between">
+                      <span>
+                        <i class="fas fa-diagnoses mr-2 text-warning"></i>Primary Diagnosis
+                      </span>
+                      <span class="badge 
+                        {% if assessment.isDiagnosisNormal %}badge-success
+                        {% else %}badge-warning{% endif %}">
+                        {% if assessment.isDiagnosisNormal %}Normal
+                        {% else %}{{ assessment.diagnosis.count }} Selected{% endif %}
+                      </span>
+                    </h5>
+                  </div>
+                  <div class="card-body pt-3">
+                    <div class="diagnosis-options">
+                      {% if assessment.isDiagnosisNormal %}
+                        <div class="alert alert-success mb-2">
+                          <i class="fas fa-check-circle mr-2"></i>Normal Development
                         </div>
-                      {% empty %}
-                        <div class="alert alert-info">
-                          <i class="fas fa-info-circle mr-2"></i>No specific diagnosis selected
+                      {% else %}
+                        {% for dx in assessment.diagnosis.all %}
+                          <div class="alert alert-warning mb-2">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>{{ dx.title }}
+                          </div>
+                        {% empty %}
+                          <div class="alert alert-info mb-2">
+                            <i class="fas fa-info-circle mr-2"></i>No specific diagnosis selected
+                          </div>
+                        {% endfor %}
+                      {% endif %}
+                    </div>
+                    
+                    {% if assessment.diagnosis_other %}
+                      <div class="border-top pt-2 mt-3">
+                        <small class="text-muted">
+                          <i class="fas fa-plus-circle mr-1 text-info"></i>Additional Notes:
+                        </small>
+                        <div class="alert alert-light mt-2 mb-0">
+                          <i class="fas fa-sticky-note mr-2"></i>{{ assessment.diagnosis_other }}
                         </div>
-                      {% endfor %}
-                    </div>
-                  {% endif %}
-                  
-                  {% if assessment.diagnosis_other %}
-                    <h6 class="text-bold mt-3">Additional Notes:</h6>
-                    <div class="alert alert-light">
-                      <i class="fas fa-sticky-note mr-2"></i>{{ assessment.diagnosis_other }}
-                    </div>
-                  {% endif %}
-                  
-                  {% if assessment.management_plan %}
-                    <h6 class="text-bold mt-3">Management Plan:</h6>
-                    <div class="card card-outline card-secondary">
-                      <div class="card-body">
-                        {{ assessment.management_plan|linebreaks }}
                       </div>
-                    </div>
-                  {% endif %}
+                    {% endif %}
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <!-- Assessment History -->
-          <div class="card card-secondary">
-            <div class="card-header">
-              <h3 class="card-title">
-                <i class="fas fa-history mr-2"></i>Assessment History
-              </h3>
-            </div>
-            <div class="card-body">
-              <dl class="row">
-                <dt class="col-lg-3 col-md-4 col-6">Created By:</dt>
-                <dd class="col-lg-9 col-md-8 col-6">
-                  <i class="fas fa-user mr-1"></i>{{ assessment.added_by.get_full_name|default:assessment.added_by.username }}
-                </dd>
-                
-                <dt class="col-lg-3 col-md-4 col-6">Created On:</dt>
-                <dd class="col-lg-9 col-md-8 col-6">
-                  <i class="fas fa-clock mr-1"></i>{{ assessment.created_at|date:"M d, Y H:i" }}
-                </dd>
-                
-                {% if assessment.last_edit_by %}
-                <dt class="col-lg-3 col-md-4 col-6">Last Modified By:</dt>
-                <dd class="col-lg-9 col-md-8 col-6">
-                  <i class="fas fa-user-edit mr-1"></i>{{ assessment.last_edit_by.get_full_name|default:assessment.last_edit_by.username }}
-                </dd>
-                
-                <dt class="col-lg-3 col-md-4 col-6">Modified On:</dt>
-                <dd class="col-lg-9 col-md-8 col-6">
-                  <i class="fas fa-clock mr-1"></i>{{ assessment.updated_at|date:"M d, Y H:i" }}
-                </dd>
-                {% endif %}
-              </dl>
-            </div>
-          </div>
-        </div>
+              <!-- Diagnosis Conclusion -->
+              <div class="form-group">
+                <label>
+                  <i class="fas fa-clipboard-check mr-2"></i>Diagnosis Conclusion
+                </label>
+                <p class="form-control-plaintext">
+                  <span class="badge 
+                    {% if assessment.diagnosis_conclusion == 'NORMAL' %}badge-success
+                    {% elif assessment.diagnosis_conclusion == 'ABNORMAL' %}badge-warning
+                    {% elif assessment.diagnosis_conclusion == 'HIGH_RISK' %}badge-danger
+                    {% else %}badge-info{% endif %} mr-2">
+                    {{ assessment.get_diagnosis_conclusion_display }}
+                  </span>
+                </p>
+              </div>
 
-        <!-- Actions Sidebar -->
-        <div class="col-lg-4">
-          <!-- Quick Actions -->
-          <div class="card card-success">
-            <div class="card-header">
-              <h3 class="card-title">
-                <i class="fas fa-cogs mr-2"></i>Actions
-              </h3>
-            </div>
-            <div class="card-body">
-              <div class="btn-group-vertical w-100">
-                <!-- Edit Assessment -->
-                <a href="{% url 'assessment-edit' assessment.id %}" class="btn btn-warning mb-2">
-                  <i class="fas fa-edit mr-2"></i>Edit Assessment
-                </a>
-                
-                <!-- View Patient -->
-                <a href="{% url 'view-patient' assessment.patient.id %}" class="btn btn-primary mb-2">
-                  <i class="fas fa-user mr-2"></i>View Patient Details
-                </a>
-                
-                <!-- View All Assessments -->
-                <a href="{% url 'assessment-manager-patient' assessment.patient.id %}" class="btn btn-info mb-2">
-                  <i class="fas fa-list mr-2"></i>All Assessments
-                </a>
-                
-                <!-- View Video -->
-                {% if assessment.video_file %}
-                <a href="{% url 'video:view' assessment.video_file.id %}" target="_blank" class="btn btn-outline-primary mb-2">
-                  <i class="fas fa-play mr-2"></i>View Video
-                </a>
-                {% endif %}
-                
-                <!-- Bookmark Actions -->
-                {% if bookmark %}
-                <a href="{% url 'bookmark-view' bookmark.id %}" class="btn btn-outline-secondary mb-2">
-                  <i class="fas fa-bookmark mr-2"></i>View Bookmark
-                </a>
-                {% else %}
-                <a href="{% url 'bookmark-add' assessment.id 'Assessment' %}" class="btn btn-outline-secondary mb-2">
-                  <i class="far fa-bookmark mr-2"></i>Add Bookmark
-                </a>
-                {% endif %}
-                
-                <!-- Delete Assessment -->
-                <a href="{% url 'assessment-delete_start' assessment.id %}" class="btn btn-outline-danger">
-                  <i class="fas fa-trash mr-2"></i>Delete Assessment
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <!-- Patient Summary -->
-          <div class="card card-warning collapsed-card">
-            <div class="card-header">
-              <h3 class="card-title">
-                <i class="fas fa-user mr-2"></i>Patient Summary
-              </h3>
-              <div class="card-tools">
-                <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                  <i class="fas fa-plus"></i>
-                </button>
-              </div>
-            </div>
-            <div class="card-body" style="display: none;">
-              <dl class="row">
-                <dt class="col-sm-4">BHT:</dt>
-                <dd class="col-sm-8">{{ assessment.patient.bht|default:"N/A" }}</dd>
-                
-                <dt class="col-sm-4">NNC No:</dt>
-                <dd class="col-sm-8">{{ assessment.patient.nnc_no|default:"N/A" }}</dd>
-                
-                <dt class="col-sm-4">Mother:</dt>
-                <dd class="col-sm-8">{{ assessment.patient.mother_name|default:"N/A" }}</dd>
-                
-                <dt class="col-sm-4">Gender:</dt>
-                <dd class="col-sm-8">{{ assessment.patient.gender|default:"N/A" }}</dd>
-                
-                <dt class="col-sm-4">Current Age:</dt>
-                <dd class="col-sm-8">{{ assessment.patient.getCurrentAge|default:"N/A" }}</dd>
-              </dl>
-              
-              <div class="text-center">
-                <a href="{% url 'view-patient' assessment.patient.id %}" class="btn btn-primary btn-sm">
-                  <i class="fas fa-external-link-alt mr-2"></i>Full Patient Profile
-                </a>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Assessment Status -->
-          <div class="card card-dark">
-            <div class="card-header">
-              <h3 class="card-title">
-                <i class="fas fa-info-circle mr-2"></i>Status Information
-              </h3>
-            </div>
-            <div class="card-body">
-              <div class="info-box">
-                <span class="info-box-icon 
-                  {% if assessment.diagnosis_conclusion == 'NORMAL' %}bg-success
-                  {% elif assessment.diagnosis_conclusion == 'ABNORMAL' %}bg-warning
-                  {% elif assessment.diagnosis_conclusion == 'HIGH_RISK' %}bg-danger
-                  {% else %}bg-info{% endif %}">
-                  <i class="fas fa-clipboard-check"></i>
-                </span>
-                <div class="info-box-content">
-                  <span class="info-box-text">Assessment Status</span>
-                  <span class="info-box-number">{{ assessment.get_diagnosis_conclusion_display }}</span>
-                </div>
-              </div>
-              
-              {% if assessment.next_assessment_date %}
-              <div class="info-box">
-                <span class="info-box-icon bg-info">
-                  <i class="fas fa-calendar-plus"></i>
-                </span>
-                <div class="info-box-content">
-                  <span class="info-box-text">Next Assessment</span>
-                  <span class="info-box-number">{{ assessment.next_assessment_date|date:"M d, Y" }}</span>
+              <!-- Management Plan -->
+              {% if assessment.management_plan %}
+              <div class="form-group">
+                <label>
+                  <i class="fas fa-tasks mr-2"></i>Management Plan
+                </label>
+                <div class="card card-outline card-secondary">
+                  <div class="card-body">
+                    {{ assessment.management_plan|linebreaks }}
+                  </div>
                 </div>
               </div>
               {% endif %}
+
+              <!-- Next Assessment Date -->
+              <div class="form-group">
+                <label>
+                  <i class="fas fa-calendar-plus mr-2"></i>Next Assessment Date
+                </label>
+                <p class="form-control-plaintext">
+                  {% if assessment.next_assessment_date %}
+                    {{ assessment.next_assessment_date|date:"M d, Y" }}
+                  {% else %}
+                    <span class="text-muted">Not scheduled</span>
+                  {% endif %}
+                </p>
+              </div>
+
+              <!-- Parent Informed -->
+              <div class="form-group">
+                <label>
+                  <i class="fas fa-info-circle mr-2"></i>Parent Informed
+                </label>
+                <p class="form-control-plaintext">
+                  {% if assessment.parent_informed %}
+                    <span class="badge badge-success"><i class="fas fa-check"></i> Yes</span>
+                  {% else %}
+                    <span class="badge badge-warning"><i class="fas fa-times"></i> No</span>
+                  {% endif %}
+                </p>
+              </div>
+            </div>
+
+            <div class="card-footer">
+              <div class="row">
+                <div class="col-sm-6">
+                  <a href="{% url 'assessment-manager' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to List
+                  </a>
+                </div>
+                <div class="col-sm-6 text-right">
+                  <a href="{% url 'assessment-edit' assessment.id %}" class="btn btn-warning">
+                    <i class="fas fa-edit mr-2"></i>Edit Assessment
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Assessment History Row -->
+      <div class="row mt-3">
+        <div class="col-12">
+
+          <!-- Assessment History & Actions -->
+          <div class="row">
+            <div class="col-lg-8 col-md-7">
+              <div class="card card-secondary">
+                <div class="card-header">
+                  <h3 class="card-title">
+                    <i class="fas fa-history mr-2"></i>Assessment History
+                  </h3>
+                </div>
+                <div class="card-body">
+                  <dl class="row">
+                    <dt class="col-lg-3 col-md-4 col-6">Created By:</dt>
+                    <dd class="col-lg-9 col-md-8 col-6">
+                      <i class="fas fa-user mr-1"></i>{{ assessment.added_by.get_full_name|default:assessment.added_by.username }}
+                    </dd>
+                    
+                    <dt class="col-lg-3 col-md-4 col-6">Created On:</dt>
+                    <dd class="col-lg-9 col-md-8 col-6">
+                      <i class="fas fa-clock mr-1"></i>{{ assessment.created_at|date:"M d, Y H:i" }}
+                    </dd>
+                    
+                    {% if assessment.last_edit_by %}
+                    <dt class="col-lg-3 col-md-4 col-6">Last Modified By:</dt>
+                    <dd class="col-lg-9 col-md-8 col-6">
+                      <i class="fas fa-user-edit mr-1"></i>{{ assessment.last_edit_by.get_full_name|default:assessment.last_edit_by.username }}
+                    </dd>
+                    
+                    <dt class="col-lg-3 col-md-4 col-6">Modified On:</dt>
+                    <dd class="col-lg-9 col-md-8 col-6">
+                      <i class="fas fa-clock mr-1"></i>{{ assessment.updated_at|date:"M d, Y H:i" }}
+                    </dd>
+                    {% endif %}
+                  </dl>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-4 col-md-5">
+              <!-- Quick Actions -->
+              <div class="card card-dark">
+                <div class="card-header">
+                  <h3 class="card-title">
+                    <i class="fas fa-cogs mr-2"></i>Quick Actions
+                  </h3>
+                </div>
+                <div class="card-body">
+                  <div class="btn-group-vertical w-100">
+                    <!-- View All Assessments -->
+                    <a href="{% url 'assessment-manager-patient' assessment.patient.id %}" class="btn btn-info btn-sm mb-2">
+                      <i class="fas fa-list mr-2"></i>All Patient Assessments
+                    </a>
+                    
+                    <!-- View Video -->
+                    {% if assessment.video_file %}
+                    <a href="{% url 'video:view' assessment.video_file.id %}" target="_blank" class="btn btn-outline-primary btn-sm mb-2">
+                      <i class="fas fa-play mr-2"></i>View Video
+                    </a>
+                    {% endif %}
+                    
+                    <!-- Bookmark Actions -->
+                    {% if bookmark %}
+                    <a href="{% url 'bookmark-view' bookmark.id %}" class="btn btn-outline-secondary btn-sm mb-2">
+                      <i class="fas fa-bookmark mr-2"></i>View Bookmark
+                    </a>
+                    {% else %}
+                    <a href="{% url 'bookmark-add' assessment.id 'Assessment' %}" class="btn btn-outline-secondary btn-sm mb-2">
+                      <i class="far fa-bookmark mr-2"></i>Add Bookmark
+                    </a>
+                    {% endif %}
+                    
+                    <!-- Delete Assessment -->
+                    <a href="{% url 'assessment-delete_start' assessment.id %}" class="btn btn-outline-danger btn-sm">
+                      <i class="fas fa-trash mr-2"></i>Delete Assessment
+                    </a>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -335,5 +357,96 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<style>
+.diagnosis-options ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.diagnosis-options li {
+    margin-bottom: 8px;
+    padding: 5px 0;
+}
+
+.diagnosis-options .alert {
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.card-outline.card-warning {
+    border-color: #ffc107;
+}
+
+.card-outline.card-warning .card-header {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-bottom: 1px solid #ffc107;
+}
+
+.form-control-plaintext {
+    padding-left: 0;
+    padding-right: 0;
+    border: none;
+    background-color: transparent;
+    font-size: 14px;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 5px;
+}
+
+.card-success .card-header {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.card-primary .card-header {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.card-info .card-header {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+}
+
+.card-secondary .card-header {
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+.card-dark .card-header {
+    background-color: #343a40;
+    border-color: #343a40;
+}
+
+.diagnosis-options .alert-success {
+    background-color: #d1e7dd;
+    border-color: #badbcc;
+    color: #0f5132;
+}
+
+.diagnosis-options .alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffecb5;
+    color: #664d03;
+}
+
+.diagnosis-options .alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #055160;
+}
+
+.diagnosis-options .alert-light {
+    background-color: #fefefe;
+    border-color: #e9ecef;
+    color: #495057;
+}
+</style>
 
 {% endblock main_content %}

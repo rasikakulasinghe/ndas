@@ -2936,3 +2936,240 @@ INFO 2025-08-28 15:49:28,183 basehttp 12408 19404 "GET /assessment/view/file/id/
 INFO 2025-08-28 15:49:41,026 basehttp 12408 19404 "GET /assessment/edit/file/id/4/ HTTP/1.1" 200 32808
 INFO 2025-08-28 15:50:16,734 basehttp 12408 19404 "GET /video/view/4/ HTTP/1.1" 200 39671
 INFO 2025-08-28 15:50:40,976 basehttp 12408 19404 "GET /video/view/4/ HTTP/1.1" 200 39671
+INFO 2025-08-29 08:42:07,960 autoreload 3716 5224 Watching for file changes with StatReloader
+INFO 2025-08-29 08:42:37,430 basehttp 3716 15284 "GET / HTTP/1.1" 302 0
+INFO 2025-08-29 08:42:37,664 basehttp 3716 15284 "GET /users/login/?next=/ HTTP/1.1" 200 12804
+INFO 2025-08-29 08:42:37,786 basehttp 3716 15284 "GET /static/dist/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-08-29 08:42:37,787 basehttp 3716 8296 "GET /static/dist/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-08-29 08:42:37,804 basehttp 3716 21592 "GET /static/js/videojs-failsafe.js HTTP/1.1" 304 0
+INFO 2025-08-29 08:42:37,805 basehttp 3716 9876 "GET /static/js/debug.js HTTP/1.1" 304 0
+INFO 2025-08-29 08:42:37,805 basehttp 3716 14060 "GET /static/js/main.js HTTP/1.1" 304 0
+INFO 2025-08-29 08:42:37,806 basehttp 3716 12548 "GET /static/js/utils.js HTTP/1.1" 304 0
+INFO 2025-08-29 08:42:37,949 basehttp 3716 8304 "GET /static/js/rotate.js HTTP/1.1" 304 0
+INFO 2025-08-29 08:42:37,949 basehttp 3716 9688 "GET /static/js/zoomrotate.js HTTP/1.1" 304 0
+WARNING 2025-08-29 08:42:38,623 log 3716 9688 Not Found: /favicon.ico
+WARNING 2025-08-29 08:42:38,625 basehttp 3716 9688 "GET /favicon.ico HTTP/1.1" 404 15877
+WARNING 2025-08-29 08:42:38,643 log 3716 8304 Not Found: /favicon.ico
+WARNING 2025-08-29 08:42:38,645 basehttp 3716 8304 "GET /favicon.ico HTTP/1.1" 404 15877
+INFO 2025-08-29 08:42:41,623 basehttp 3716 8304 "GET /media/videos/2025/08/VID-20250714-WA00011.mp4 HTTP/1.1" 200 34974399
+INFO 2025-08-29 08:42:41,627 basehttp 3716 8304 - Broken pipe from ('127.0.0.1', 64495)
+WARNING 2025-08-29 08:43:24,350 log 3716 1980 Not Found: /favicon.ico
+WARNING 2025-08-29 08:43:24,351 basehttp 3716 1980 "GET /favicon.ico HTTP/1.1" 404 15877
+INFO 2025-08-29 08:46:48,028 basehttp 3716 2360 "GET /users/login/?next=/ HTTP/1.1" 200 21999
+INFO 2025-08-29 08:47:10,665 basehttp 3716 2360 "GET /users/contact-developer/ HTTP/1.1" 200 16849
+INFO 2025-08-29 08:47:14,114 basehttp 3716 2360 "GET /users/reset_password/ HTTP/1.1" 200 11940
+INFO 2025-08-29 08:47:30,304 basehttp 3716 2360 "GET /users/login/ HTTP/1.1" 200 21999
+INFO 2025-08-29 08:48:45,688 basehttp 3716 2360 "GET /users/login/ HTTP/1.1" 200 21999
+INFO 2025-08-29 08:48:46,461 basehttp 3716 2360 "GET /users/login/ HTTP/1.1" 200 21999
+INFO 2025-08-29 08:48:47,382 basehttp 3716 2360 "GET /users/login/ HTTP/1.1" 200 21999
+INFO 2025-08-29 08:48:48,490 basehttp 3716 2360 "GET /users/login/ HTTP/1.1" 200 21999
+INFO 2025-08-29 08:48:51,337 basehttp 3716 2360 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-08-29 08:48:52,082 basehttp 3716 2360 "GET / HTTP/1.1" 200 44963
+INFO 2025-08-29 08:49:11,727 basehttp 3716 2360 "GET / HTTP/1.1" 200 44639
+INFO 2025-08-29 08:49:36,649 basehttp 3716 2360 "GET / HTTP/1.1" 200 49878
+INFO 2025-08-29 08:49:57,980 basehttp 3716 2360 "GET / HTTP/1.1" 200 49878
+INFO 2025-08-29 08:50:16,413 basehttp 3716 2360 "GET /users/logout/ HTTP/1.1" 302 0
+INFO 2025-08-29 08:50:16,437 basehttp 3716 2360 "GET /users/login/ HTTP/1.1" 200 22329
+INFO 2025-08-29 08:51:33,600 basehttp 3716 2360 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-08-29 08:51:33,755 basehttp 3716 2360 "GET / HTTP/1.1" 200 50202
+INFO 2025-08-29 08:55:28,993 basehttp 3716 2360 "GET / HTTP/1.1" 200 49849
+INFO 2025-08-29 08:55:47,448 basehttp 3716 2360 "GET /users/logout/ HTTP/1.1" 302 0
+INFO 2025-08-29 08:55:47,459 basehttp 3716 2360 "GET /users/login/ HTTP/1.1" 200 22329
+INFO 2025-08-29 08:56:38,152 basehttp 3716 2360 "GET /users/login/ HTTP/1.1" 200 21999
+INFO 2025-08-29 08:56:40,734 basehttp 3716 2360 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-08-29 08:56:40,885 basehttp 3716 2360 "GET / HTTP/1.1" 200 51135
+INFO 2025-08-29 08:57:09,943 basehttp 3716 2360 "GET /users/logout/ HTTP/1.1" 302 0
+INFO 2025-08-29 08:57:09,952 basehttp 3716 2360 "GET /users/login/ HTTP/1.1" 200 22329
+INFO 2025-08-29 08:58:22,880 basehttp 3716 2360 "GET /users/login/ HTTP/1.1" 200 21999
+INFO 2025-08-29 08:59:39,476 basehttp 3716 2360 "GET /users/login/ HTTP/1.1" 200 23761
+INFO 2025-08-29 09:00:53,824 basehttp 3716 2360 "GET /users/login/ HTTP/1.1" 200 25345
+INFO 2025-08-29 09:02:57,673 basehttp 3716 2360 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-08-29 09:02:57,834 basehttp 3716 2360 "GET / HTTP/1.1" 200 51135
+INFO 2025-08-29 09:03:05,184 basehttp 3716 2360 "GET /users/logout/ HTTP/1.1" 302 0
+INFO 2025-08-29 09:03:05,193 basehttp 3716 2360 "GET /users/login/ HTTP/1.1" 200 25675
+INFO 2025-08-29 09:24:57,391 basehttp 3716 11580 "GET /users/login/ HTTP/1.1" 200 24880
+INFO 2025-08-29 09:41:28,841 basehttp 3716 15772 "GET /users/login/ HTTP/1.1" 200 23381
+INFO 2025-08-29 09:41:51,553 basehttp 3716 15772 "GET /users/contact-developer/ HTTP/1.1" 200 16849
+INFO 2025-08-29 09:42:19,423 basehttp 3716 15772 "GET /users/login/ HTTP/1.1" 200 23381
+INFO 2025-08-29 09:42:20,524 basehttp 3716 15772 "GET /users/login/ HTTP/1.1" 200 23381
+INFO 2025-08-29 09:42:23,761 basehttp 3716 15772 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-08-29 09:42:23,986 basehttp 3716 15772 "GET / HTTP/1.1" 200 51135
+INFO 2025-08-29 09:42:36,864 basehttp 3716 15772 "GET /users/logout/ HTTP/1.1" 302 0
+INFO 2025-08-29 09:42:36,872 basehttp 3716 5004 "GET /users/login/ HTTP/1.1" 200 23711
+INFO 2025-08-29 09:42:43,548 basehttp 3716 5004 "GET /users/reset_password/ HTTP/1.1" 200 11940
+INFO 2025-08-29 09:49:03,655 basehttp 3716 16192 "GET /users/reset_password/ HTTP/1.1" 200 20301
+INFO 2025-08-29 09:49:12,547 basehttp 3716 16192 "GET /users/contact-developer/ HTTP/1.1" 200 16849
+INFO 2025-08-29 09:51:10,858 basehttp 3716 16192 "GET /users/reset_password/ HTTP/1.1" 200 20301
+INFO 2025-08-29 09:51:12,376 basehttp 3716 16192 "GET /users/reset_password/ HTTP/1.1" 200 20301
+INFO 2025-08-29 09:51:15,856 basehttp 3716 16192 "POST /users/reset_password/ HTTP/1.1" 302 0
+INFO 2025-08-29 09:51:15,869 basehttp 3716 16192 "GET /users/reset_password_sent/ HTTP/1.1" 200 18068
+INFO 2025-08-29 09:51:21,166 basehttp 3716 16192 "GET /users/login/ HTTP/1.1" 200 23381
+INFO 2025-08-29 09:51:24,784 basehttp 3716 16192 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-08-29 09:51:25,001 basehttp 3716 16192 "GET / HTTP/1.1" 200 51135
+INFO 2025-08-29 09:51:37,977 basehttp 3716 16192 "GET /manager/patient/ HTTP/1.1" 200 70557
+INFO 2025-08-29 09:51:38,023 basehttp 3716 16192 "GET /static/css/manager.css HTTP/1.1" 304 0
+INFO 2025-08-29 09:51:38,029 basehttp 3716 14956 "GET /static/js/manager.js HTTP/1.1" 304 0
+ERROR 2025-08-29 09:51:45,052 log 3716 14956 Internal Server Error: /manager/patient/normal
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 172, in patient_manager_diagnosis_normal
+    patients_list = getPatientList(PtStatus.DX_NORMAL).order_by("-id")
+                    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\ndas\custom_codes\custom_methods.py", line 251, in getPatientList
+    return var_ptl.exclude(Q(gmassessment__diagnosis_conclusion='ABNORMAL') and Q(hineassessment__score__lt = 73) and Q(developmentalassessment__is_dx_normal=False)).exclude(videos__isnull=True).distinct()
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\query.py", line 1429, in exclude
+    return self._filter_or_exclude(True, args, kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\query.py", line 1439, in _filter_or_exclude
+    clone._filter_or_exclude_inplace(negate, args, kwargs)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\query.py", line 1444, in _filter_or_exclude_inplace
+    self._query.add_q(~Q(*args, **kwargs))
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1532, in add_q
+    clause, _ = self._add_q(q_object, self.used_aliases)
+                ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1562, in _add_q
+    child_clause, needed_inner = self.build_filter(
+                                 ~~~~~~~~~~~~~~~~~^
+        child,
+        ^^^^^^
+    ...<5 lines>...
+        check_filterable=check_filterable,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1388, in build_filter
+    return self._add_q(
+           ~~~~~~~~~~~^
+        filter_expr,
+        ^^^^^^^^^^^^
+    ...<5 lines>...
+        check_filterable=check_filterable,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1562, in _add_q
+    child_clause, needed_inner = self.build_filter(
+                                 ~~~~~~~~~~~~~~~~~^
+        child,
+        ^^^^^^
+    ...<5 lines>...
+        check_filterable=check_filterable,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1407, in build_filter
+    lookups, parts, reffed_expression = self.solve_lookup_type(arg)
+                                        ~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1217, in solve_lookup_type
+    _, field, _, lookup_parts = self.names_to_path(lookup_splitted, self.get_meta())
+                                ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1709, in names_to_path
+    raise FieldError(
+    ...<2 lines>...
+    )
+django.core.exceptions.FieldError: Cannot resolve keyword 'developmentalassessment' into field. Choices are: added_by, added_by_id, address, antenatal_hx, apgar_1, apgar_10, apgar_5, attachments, baby_name, bht, birth_weight, cdicrecord, created_at, developmental_assessments, disk_no, do_admission, do_discharge, dob_tob, gender, gmassessment, hine_assessments, id, indecation_for_gma, intranatal_hx, last_edit_by, last_edit_by_id, length, mo_delivery, moh_area, mother_name, nnc_no, ofc, other_relavent_details, pc_no, phm_area, pin, pog_days, pog_wks, postnatal_hx, problems, ptc_no, resuscitated, resustn_note, tp_lan, tp_mobile, updated_at, videos
+ERROR 2025-08-29 09:51:45,074 basehttp 3716 14956 "GET /manager/patient/normal HTTP/1.1" 500 150345
+INFO 2025-08-29 10:09:30,022 basehttp 3716 5148 "GET /manager/patient/ HTTP/1.1" 200 70557
+INFO 2025-08-29 10:09:31,223 basehttp 3716 5148 "GET / HTTP/1.1" 200 50811
+INFO 2025-08-29 10:09:34,794 basehttp 3716 5148 "GET /manager/assessment/ HTTP/1.1" 200 41763
+INFO 2025-08-29 10:09:37,701 basehttp 3716 5148 "GET /hine/manager/ HTTP/1.1" 200 38160
+INFO 2025-08-29 10:09:38,575 basehttp 3716 5148 "GET /da/manager/ HTTP/1.1" 200 38176
+INFO 2025-08-29 10:09:40,252 basehttp 3716 5148 "GET /manager/assessment/ HTTP/1.1" 200 41763
+INFO 2025-08-29 10:10:49,548 basehttp 3716 5148 "GET /video/manager/ HTTP/1.1" 200 54344
+INFO 2025-08-29 10:10:57,920 basehttp 3716 5148 "GET /attachment/manager/ HTTP/1.1" 200 65227
+INFO 2025-08-29 10:11:09,930 basehttp 3716 5148 "GET /manager/bookmarks/ HTTP/1.1" 200 38155
+INFO 2025-08-29 10:11:12,792 basehttp 3716 5148 "GET /attachment/manager/ HTTP/1.1" 200 65227
+INFO 2025-08-29 10:11:32,024 basehttp 3716 5148 "GET /patient/view/4/ HTTP/1.1" 200 115541
+INFO 2025-08-29 10:12:20,561 basehttp 3716 5148 "GET /patient/edit/4/ HTTP/1.1" 200 73212
+INFO 2025-08-29 10:12:38,283 basehttp 3716 2000 "GET /patient/add/ HTTP/1.1" 200 64394
+INFO 2025-08-29 10:18:12,146 basehttp 3716 11516 "GET /patient/add/ HTTP/1.1" 200 64394
+INFO 2025-08-29 10:18:13,742 basehttp 3716 11516 "GET /manager/patient/ HTTP/1.1" 200 70557
+INFO 2025-08-29 10:18:15,924 basehttp 3716 11516 "GET /patient/edit/4/ HTTP/1.1" 200 73178
+INFO 2025-08-29 10:18:48,102 basehttp 3716 11516 "GET /patient/edit/4/ HTTP/1.1" 200 73168
+INFO 2025-08-29 10:18:58,787 basehttp 3716 11516 "GET /manager/patient/ HTTP/1.1" 200 70557
+INFO 2025-08-29 10:19:15,887 basehttp 3716 11516 "GET /patient/delete/confirm/2/ HTTP/1.1" 200 39497
+WARNING 2025-08-29 10:19:25,692 views 3716 11516 Invalid password attempt for patient deletion by user: rasikakulasinghe for patient ID: 2
+INFO 2025-08-29 10:19:25,695 basehttp 3716 11516 "POST /patient/delete/2/ HTTP/1.1" 200 39843
+INFO 2025-08-29 10:19:34,551 basehttp 3716 11516 "GET /manager/patient/ HTTP/1.1" 200 70557
+INFO 2025-08-29 10:22:30,153 basehttp 3716 11516 "GET /manager/patient/ HTTP/1.1" 200 70351
+INFO 2025-08-29 10:22:31,953 basehttp 3716 11516 "GET /manager/patient/ HTTP/1.1" 200 70351
+INFO 2025-08-29 10:22:34,296 basehttp 3716 11516 "GET /manager/patient/ HTTP/1.1" 200 70351
+INFO 2025-08-29 10:22:36,082 basehttp 3716 11516 "GET /patient/edit/4/ HTTP/1.1" 200 73168
+INFO 2025-08-29 10:22:41,428 basehttp 3716 11516 "GET /patient/delete/confirm/2/ HTTP/1.1" 200 39497
+INFO 2025-08-29 10:23:28,663 basehttp 3716 11516 "GET /manager/patient/new HTTP/1.1" 200 54783
+INFO 2025-08-29 10:23:42,179 basehttp 3716 11516 "GET /video/manager/ HTTP/1.1" 200 54344
+INFO 2025-08-29 10:23:45,769 basehttp 3716 11516 "GET /manager/patient/ HTTP/1.1" 200 70351
+INFO 2025-08-29 10:24:02,336 basehttp 3716 11516 "GET /patient/view/4/ HTTP/1.1" 200 115541
+INFO 2025-08-29 10:24:15,393 basehttp 3716 11516 "GET /video/add/4/ HTTP/1.1" 200 54419
+INFO 2025-08-29 10:24:36,174 basehttp 3716 11516 "POST /video/add/4/ HTTP/1.1" 200 148
+INFO 2025-08-29 10:24:43,524 basehttp 3716 11516 "GET /video/view/5/ HTTP/1.1" 200 50363
+INFO 2025-08-29 10:24:44,050 basehttp 3716 11516 "GET /media/videos/2025/08/VID-20250714-WA00011_rIbxeMP.mp4 HTTP/1.1" 200 34974399
+INFO 2025-08-29 10:24:44,192 basehttp 3716 11516 "GET /media/videos/2025/08/VID-20250714-WA00011_rIbxeMP.mp4 HTTP/1.1" 304 0
+INFO 2025-08-29 10:24:53,497 basehttp 3716 11516 "GET /assessment/add/4/5/ HTTP/1.1" 200 58271
+INFO 2025-08-29 10:25:14,660 basehttp 3716 11516 "POST /assessment/add/4/5/ HTTP/1.1" 200 117
+INFO 2025-08-29 10:25:16,410 basehttp 3716 11516 "GET /assessment/view/2/ HTTP/1.1" 200 48566
+INFO 2025-08-29 10:25:31,585 basehttp 3716 11516 "GET /assessment/add/4/5/ HTTP/1.1" 302 0
+INFO 2025-08-29 10:25:31,722 basehttp 3716 11516 "GET /assessment/view/2/ HTTP/1.1" 200 48580
+INFO 2025-08-29 10:25:38,271 basehttp 3716 11516 "GET /assessment/add/4/5/ HTTP/1.1" 302 0
+INFO 2025-08-29 10:25:38,405 basehttp 3716 11516 "GET /assessment/view/2/ HTTP/1.1" 200 48580
+INFO 2025-08-29 10:25:47,063 basehttp 3716 11516 "GET /video/view/5/ HTTP/1.1" 200 50372
+INFO 2025-08-29 10:25:51,988 basehttp 3716 11516 "GET /assessment/view/file/id/5/ HTTP/1.1" 200 48244
+INFO 2025-08-29 10:26:18,590 basehttp 3716 11516 "GET /manager/assessment/ HTTP/1.1" 200 44339
+INFO 2025-08-29 10:27:55,914 basehttp 3716 11516 "GET /manager/assessment/ HTTP/1.1" 200 44339
+INFO 2025-08-29 10:29:15,067 basehttp 3716 11516 "GET /assessment/delete/confirm/2/ HTTP/1.1" 200 39543
+INFO 2025-08-29 10:33:12,897 basehttp 3716 11516 "GET /manager/patient/ HTTP/1.1" 200 70351
+INFO 2025-08-29 10:33:14,579 basehttp 3716 11516 "GET /patient/view/4/ HTTP/1.1" 200 118688
+INFO 2025-08-29 10:33:19,091 basehttp 3716 11516 "GET /attachment/add/4/ HTTP/1.1" 200 53771
+INFO 2025-08-29 10:33:32,349 basehttp 3716 11516 "GET /attachment/add/4/ HTTP/1.1" 200 53771
+INFO 2025-08-29 10:33:39,736 basehttp 3716 11516 "GET /attachment/add/4/ HTTP/1.1" 200 53771
+INFO 2025-08-29 10:34:04,634 basehttp 3716 11516 "GET /video/view/5/ HTTP/1.1" 200 50372
+INFO 2025-08-29 10:34:04,799 basehttp 3716 11516 "GET /media/videos/2025/08/VID-20250714-WA00011_rIbxeMP.mp4 HTTP/1.1" 304 0
+INFO 2025-08-29 10:34:10,825 basehttp 3716 11516 "GET /assessment/view/file/id/5/ HTTP/1.1" 200 48244
+INFO 2025-08-29 10:34:17,189 basehttp 3716 11516 "GET /assessment/view/file/id/5/ HTTP/1.1" 200 48244
+INFO 2025-08-29 10:34:21,543 basehttp 3716 11516 "GET /assessment/edit/2/ HTTP/1.1" 200 49958
+INFO 2025-08-29 10:34:42,055 basehttp 3716 11516 "GET /video/manager/ HTTP/1.1" 200 57154
+INFO 2025-08-29 10:34:48,605 basehttp 3716 11516 "GET /assessment/add/3/1/ HTTP/1.1" 200 58202
+INFO 2025-08-29 10:38:28,421 basehttp 3716 11516 "GET /assessment/add/3/1/ HTTP/1.1" 200 62161
+INFO 2025-08-29 10:38:36,886 basehttp 3716 11516 "GET / HTTP/1.1" 200 50811
+INFO 2025-08-29 10:38:39,379 basehttp 3716 11516 "GET /assessment/add/3/1/ HTTP/1.1" 200 62161
+INFO 2025-08-29 10:39:40,208 basehttp 3716 11516 "GET /manager/patient/ HTTP/1.1" 200 70351
+INFO 2025-08-29 10:39:42,584 basehttp 3716 11516 "GET /video/manager/ HTTP/1.1" 200 57154
+INFO 2025-08-29 10:39:45,617 basehttp 3716 11516 "GET /video/view/3/ HTTP/1.1" 200 50360
+INFO 2025-08-29 10:39:46,168 basehttp 3716 11516 "GET /media/videos/2025/08/asfsad/asfsad_xzcvx_original_20250826_154744.mp4 HTTP/1.1" 200 34974399
+INFO 2025-08-29 10:42:50,124 basehttp 3716 18644 "GET /video/manager/ HTTP/1.1" 200 57154
+INFO 2025-08-29 10:43:01,035 basehttp 3716 18644 "GET /assessment/add/3/3/ HTTP/1.1" 200 61424
+INFO 2025-08-29 10:44:47,940 basehttp 3716 18644 "GET /manager/assessment/ HTTP/1.1" 200 44339
+INFO 2025-08-29 10:44:52,568 basehttp 3716 18644 "GET /assessment/view/2/ HTTP/1.1" 200 48244
+INFO 2025-08-29 10:45:06,969 basehttp 3716 18644 "GET /assessment/edit/2/ HTTP/1.1" 200 55225
+INFO 2025-08-29 10:52:08,193 basehttp 3716 2284 "GET /assessment/edit/2/ HTTP/1.1" 200 52608
+INFO 2025-08-29 10:52:11,453 basehttp 3716 2284 "GET /assessment/edit/2/ HTTP/1.1" 200 52608
+INFO 2025-08-29 12:44:09,026 basehttp 3716 10056 "GET /assessment/edit/2/ HTTP/1.1" 302 0
+INFO 2025-08-29 12:44:09,411 basehttp 3716 10056 "GET /users/login/?next=/assessment/edit/2/ HTTP/1.1" 200 23381
+INFO 2025-08-29 12:44:16,513 basehttp 3716 10056 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-08-29 12:44:16,759 basehttp 3716 10056 "GET / HTTP/1.1" 200 51135
+INFO 2025-08-29 12:44:36,303 basehttp 3716 10056 "GET /assessment/add/3/1/ HTTP/1.1" 200 62006
+INFO 2025-08-29 12:45:06,593 basehttp 3716 10056 "POST /assessment/add/3/1/ HTTP/1.1" 200 117
+INFO 2025-08-29 12:45:08,282 basehttp 3716 10056 "GET /assessment/view/3/ HTTP/1.1" 200 48913
+INFO 2025-08-29 12:46:22,698 basehttp 3716 10056 "GET /manager/assessment/patient/3/ HTTP/1.1" 200 41795
+INFO 2025-08-29 12:46:25,379 basehttp 3716 10056 "GET /assessment/view/3/ HTTP/1.1" 200 48591
+INFO 2025-08-29 12:46:29,005 basehttp 3716 10056 "GET /assessment/edit/3/ HTTP/1.1" 200 55500
+INFO 2025-08-29 12:50:41,509 basehttp 3716 10056 "GET /assessment/edit/3/ HTTP/1.1" 200 56547
+INFO 2025-08-29 12:50:44,650 basehttp 3716 10056 "GET /assessment/edit/3/ HTTP/1.1" 200 56547
+INFO 2025-08-29 13:35:38,149 basehttp 3716 8912 "GET /assessment/edit/3/ HTTP/1.1" 200 56547
+INFO 2025-08-29 13:35:40,018 basehttp 3716 8912 "GET /assessment/edit/3/ HTTP/1.1" 200 56547
+INFO 2025-08-29 13:35:43,676 basehttp 3716 8912 "POST /assessment/edit/3/ HTTP/1.1" 302 0
+INFO 2025-08-29 13:35:43,854 basehttp 3716 8912 "GET /assessment/view/3/ HTTP/1.1" 200 50645
+INFO 2025-08-29 13:36:10,910 basehttp 3716 8912 "GET /video/view/1/ HTTP/1.1" 200 50408
+INFO 2025-08-29 13:36:11,728 basehttp 3716 8912 "GET /media/videos/2025/08/asfsad/asfsad_dsafdsfds_original_20250826_132535.mp4 HTTP/1.1" 200 34974399
+INFO 2025-08-29 13:39:26,774 basehttp 3716 8912 "GET / HTTP/1.1" 200 50464
+INFO 2025-08-29 13:39:32,085 basehttp 3716 8912 "GET /hine/manager/ HTTP/1.1" 200 38160
+INFO 2025-08-29 13:39:38,346 basehttp 3716 8912 "GET /manager/patient/ HTTP/1.1" 200 70351
+INFO 2025-08-29 13:39:51,284 basehttp 3716 8912 "GET /patient/view/4/ HTTP/1.1" 200 118688

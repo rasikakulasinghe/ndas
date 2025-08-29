@@ -1,112 +1,480 @@
 {% extends 'src/base.html' %}
-{% block title %}Assessment - Edit{% endblock %}
+{% load static %}
+{% block title %}Edit Assessment - {{ assmnt.patient.baby_name }}{% endblock %}
 
 {% block main_content %}
-
-</br>
-{% include 'src/form_error.html' %}
-
-<div class="container-sm">
-  <div class="card">
-  <div class="card-header bg-info"><h3 class="card-title">Edit GM Assessment</h3></div>
-
-  <form action="{% url 'assessment-edit' assmnt.id %}" method="POST">
-    {% csrf_token %}
-
-    <div class="card-body">
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Patient : </label>
-        <div class="col-sm">{{assmnt.patient.baby_name}}</div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Title : </label>
-        <div class="col-sm">
-          {% if assmnt.video_file and assmnt.video_file.id %}
-          <a href="{% url 'video:view' assmnt.video_file.id %}" target="_blank" data-toggle="tooltip" data-placement="top" title="Play this video in another window..."> {{assmnt.video_file.caption}} <i class="fas fa-play-circle" style="color: #0752d5;"></i></a>
-          {% else %}
-          No video associated
-          {% endif %}
+<div class="container-fluid">
+  <!-- Content Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0">Edit GM Assessment</h1>
+          <small class="text-muted">Patient: {{ assmnt.patient.baby_name }}</small>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'view-patient' assmnt.patient.id %}">{{ assmnt.patient.baby_name }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'assessment-view' assmnt.id %}">Assessment</a></li>
+            <li class="breadcrumb-item active">Edit</li>
+          </ol>
         </div>
       </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Date of Assessment : </label>
-        <div class="col-sm">
-          <div class=" d-flex align-items-center">
-            <div>{{form.date_of_assessment}}</div>
-            &nbsp; &nbsp; <div><a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Next assessment date if planing to follow up ..."></span></a></div>
-            </div>
-        </div>
-      </div>
-
-      <div class="form-group row align-items-top">
-        <label class="col-form-label col-sm-2">Diagnosis : </label>
-        <div class="col-sm">
-        <div id="accordion">
-          <div class="card">
-          <div class="card-header">
-          <h4 class="card-title w-100">
-          <a class="d-block w-100" data-toggle="collapse" href="#collapseOne" aria-expanded="true">
-            <i class="fas fa-eye" style="color: #00328a;"></i> &nbsp; &nbsp; Click here to see diagnosis list...
-          </a>
-          </h4>
-          </div>
-          <div id="collapseOne" class="collapse hide" data-parent="#accordion" style="">
-          <div class="card-body">
-            <div class="col-sm">{{form.diagnosis}}</div>
-          </div>
-          </div>
-          </div>
-          </div>
-          </div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Diagnosis Other : </label>
-        <div class="col-sm">{{form.diagnosis_other}}</div>
-      </div>
-      
-      <div id="container_dx">
-        <div class="form-group row">
-          <label class="col-form-label col-sm-2">Diagnosis Conclusion : </label>
-          <div class="col-sm">{{form.diagnosis_conclusion}}</div>
-        </div>
-        </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Managment Plan : </label>
-        <div class="col-sm">{{form.managment_plan}}</div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Next Assessment Date : </label>
-        <div class="col-sm">
-          <div class=" d-flex align-items-center">
-            <div>{{form.next_assessment_date}}</div>
-            &nbsp; &nbsp; <div><a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Select next assessment date if plan to follow up further..."></span></a></div>
-            </div>
-        </div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Parent Infomed : </label>
-        <div class="col-sm">{{form.parant_informed}}</div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-sm-2 col-form-label"></label>
-        <div class="col-sm"><button type="submit" class="btn btn-primary float-right">Update Assessment</button></div>
-      </div>
-
-      </br>
-
-  </form>
-
     </div>
-    <!-- /.card-body -->
   </div>
-  <!-- /.card -->
+
+  <!-- Main content -->
+  <section class="content">
+    <div class="container-fluid">
+      {% include 'src/form_error.html' %}
+      
+      <div class="row">
+        <!-- Patient & Video Information -->
+        <div class="col-lg-4 col-md-6">
+          <!-- Patient Info -->
+          <div class="card card-primary">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-user mr-2"></i>Patient Information
+              </h3>
+            </div>
+            <div class="card-body">
+              <dl class="row">
+                <dt class="col-sm-5">Baby Name:</dt>
+                <dd class="col-sm-7">{{ assmnt.patient.baby_name|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Mother Name:</dt>
+                <dd class="col-sm-7">{{ assmnt.patient.mother_name|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Gender:</dt>
+                <dd class="col-sm-7">{{ assmnt.patient.gender|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Current Age:</dt>
+                <dd class="col-sm-7">{{ assmnt.patient.getCurrentAge|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Corrected Age:</dt>
+                <dd class="col-sm-7">{{ assmnt.patient.getCorrectedAge|default:"N/A" }}</dd>
+              </dl>
+            </div>
+          </div>
+
+          <!-- Video Info -->
+          <div class="card card-info">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-video mr-2"></i>Video Information
+              </h3>
+            </div>
+            <div class="card-body">
+              <dl class="row">
+                <dt class="col-sm-5">Title:</dt>
+                <dd class="col-sm-7">
+                  {% if assmnt.video_file and assmnt.video_file.id %}
+                    <a href="{% url 'video:view' assmnt.video_file.id %}" target="_blank" 
+                       data-toggle="tooltip" data-placement="top" 
+                       title="Play this video in another window...">
+                      {{ assmnt.video_file.caption }}
+                      <i class="fas fa-play-circle text-primary ml-1"></i>
+                    </a>
+                  {% else %}
+                    No video associated
+                  {% endif %}
+                </dd>
+                
+                <dt class="col-sm-5">Recorded On:</dt>
+                <dd class="col-sm-7">{{ assmnt.video_file.recorded_on|date:"M d, Y"|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Age at Recording:</dt>
+                <dd class="col-sm-7">{{ assmnt.video_file.age_on_recording|default:"N/A" }}</dd>
+                
+                <dt class="col-sm-5">Duration:</dt>
+                <dd class="col-sm-7">{{ assmnt.video_file.duration_formatted|default:"N/A" }}</dd>
+              </dl>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Assessment Form -->
+        <div class="col-lg-8 col-md-6">
+          <div class="card card-success">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-stethoscope mr-2"></i>GM Assessment Form
+              </h3>
+            </div>
+            <form action="{% url 'assessment-edit' assmnt.id %}" method="POST" id="assessment-form">
+              {% csrf_token %}
+              
+              <div class="card-body">
+                <!-- Assessment Date -->
+                <div class="form-group">
+                  <label for="{{ form.date_of_assessment.id_for_label }}">
+                    <i class="fas fa-calendar mr-2"></i>{{ form.date_of_assessment.label }}
+                  </label>
+                  {{ form.date_of_assessment }}
+                  <small class="form-text text-muted">{{ form.date_of_assessment.help_text|default:"Date and time when this assessment was performed" }}</small>
+                  {% if form.date_of_assessment.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in form.date_of_assessment.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Diagnosis Selection Section -->
+                <div class="form-group">
+                  <div class="card card-outline card-warning mb-3">
+                    <div class="card-header py-2" data-toggle="collapse" data-target="#diagnosisCard" 
+                         aria-expanded="false" aria-controls="diagnosisCard" style="cursor: pointer; user-select: none;">
+                      <h5 class="card-title mb-0 d-flex align-items-center justify-content-between">
+                        <span>
+                          <i class="fas fa-diagnoses mr-2 text-warning"></i>{{ form.diagnosis.label }}
+                        </span>
+                        <i class="fas fa-plus" id="diagnosisToggleIcon" style="transition: transform 0.2s;"></i>
+                      </h5>
+                    </div>
+                    <div id="diagnosisCard" class="collapse">
+                      <div class="card-body pt-3">
+                        <div class="diagnosis-options">
+                          {{ form.diagnosis }}
+                        </div>
+                        {% if form.diagnosis.errors %}
+                          <div class="invalid-feedback d-block mt-2">
+                            {% for error in form.diagnosis.errors %}{{ error }}{% endfor %}
+                          </div>
+                        {% endif %}
+                        
+                        <!-- Other Diagnosis Toggle -->
+                        <div class="form-check mt-3 pt-2 border-top">
+                          <input class="form-check-input" type="checkbox" id="otherDiagnosisToggle">
+                          <label class="form-check-label" for="otherDiagnosisToggle">
+                            <i class="fas fa-plus-circle mr-1 text-info"></i>Other (specify below)
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Other Diagnosis -->
+                <div class="form-group" id="otherDiagnosisGroup" style="display: none;">
+                  <label for="{{ form.diagnosis_other.id_for_label }}">
+                    <i class="fas fa-edit mr-2"></i>{{ form.diagnosis_other.label }}
+                  </label>
+                  {{ form.diagnosis_other }}
+                  <small class="form-text text-muted">{{ form.diagnosis_other.help_text|default:"Additional diagnosis notes not covered by standard list" }}</small>
+                  {% if form.diagnosis_other.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in form.diagnosis_other.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Diagnosis Conclusion -->
+                <div class="form-group">
+                  <label for="{{ form.diagnosis_conclusion.id_for_label }}">
+                    <i class="fas fa-clipboard-check mr-2"></i>{{ form.diagnosis_conclusion.label }}
+                  </label>
+                  {{ form.diagnosis_conclusion }}
+                  <small class="form-text text-muted">{{ form.diagnosis_conclusion.help_text|default:"Overall assessment conclusion" }}</small>
+                  {% if form.diagnosis_conclusion.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in form.diagnosis_conclusion.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Management Plan -->
+                <div class="form-group">
+                  <label for="{{ form.managment_plan.id_for_label }}">
+                    <i class="fas fa-tasks mr-2"></i>{{ form.managment_plan.label }}
+                  </label>
+                  {{ form.managment_plan }}
+                  <small class="form-text text-muted">{{ form.managment_plan.help_text|default:"Recommended treatment and intervention plan" }}</small>
+                  {% if form.managment_plan.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in form.managment_plan.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Next Assessment Date -->
+                <div class="form-group">
+                  <label for="{{ form.next_assessment_date.id_for_label }}">
+                    <i class="fas fa-calendar-plus mr-2"></i>{{ form.next_assessment_date.label }}
+                  </label>
+                  {{ form.next_assessment_date }}
+                  <small class="form-text text-muted">{{ form.next_assessment_date.help_text|default:"Scheduled date for follow-up assessment (optional)" }}</small>
+                  {% if form.next_assessment_date.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in form.next_assessment_date.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Parent Informed -->
+                <div class="form-group">
+                  <div class="form-check">
+                    {{ form.parant_informed }}
+                    <label class="form-check-label" for="{{ form.parant_informed.id_for_label }}">
+                      <i class="fas fa-info-circle mr-2"></i>{{ form.parant_informed.label }}
+                    </label>
+                  </div>
+                  <small class="form-text text-muted">{{ form.parant_informed.help_text|default:"Check if the parent has been informed of the assessment results" }}</small>
+                  {% if form.parant_informed.errors %}
+                    <div class="invalid-feedback d-block">
+                      {% for error in form.parant_informed.errors %}{{ error }}{% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="card-footer">
+                <div class="row">
+                  <div class="col-sm-6">
+                    <button type="button" class="btn btn-secondary" onclick="window.history.back()">
+                      <i class="fas fa-arrow-left mr-2"></i>Back
+                    </button>
+                  </div>
+                  <div class="col-sm-6 text-right">
+                    <button type="submit" class="btn btn-success">
+                      <i class="fas fa-save mr-2"></i>Update Assessment
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('assessment-form');
+    const otherDiagnosisToggle = document.getElementById('otherDiagnosisToggle');
+    const otherDiagnosisGroup = document.getElementById('otherDiagnosisGroup');
+    const diagnosisCard = document.getElementById('diagnosisCard');
+    const diagnosisToggleIcon = document.getElementById('diagnosisToggleIcon');
+    
+    // Toggle other diagnosis field
+    if (otherDiagnosisToggle && otherDiagnosisGroup) {
+        // Check if there's already content in the other diagnosis field
+        const otherDiagnosisField = otherDiagnosisGroup.querySelector('textarea');
+        if (otherDiagnosisField && otherDiagnosisField.value.trim()) {
+            otherDiagnosisToggle.checked = true;
+            otherDiagnosisGroup.style.display = 'block';
+        }
+        
+        otherDiagnosisToggle.addEventListener('change', function() {
+            if (this.checked) {
+                otherDiagnosisGroup.style.display = 'block';
+                otherDiagnosisGroup.querySelector('textarea').focus();
+            } else {
+                otherDiagnosisGroup.style.display = 'none';
+                otherDiagnosisGroup.querySelector('textarea').value = '';
+            }
+        });
+    }
+    
+    // Handle diagnosis card collapse with + and - icons
+    if (diagnosisCard && diagnosisToggleIcon) {
+        diagnosisCard.addEventListener('show.bs.collapse', function() {
+            diagnosisToggleIcon.classList.remove('fa-plus');
+            diagnosisToggleIcon.classList.add('fa-minus');
+        });
+        
+        diagnosisCard.addEventListener('hide.bs.collapse', function() {
+            diagnosisToggleIcon.classList.remove('fa-minus');
+            diagnosisToggleIcon.classList.add('fa-plus');
+        });
+    }
+    
+    // Form validation
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!validateForm()) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    }
+    
+    function validateForm() {
+        let isValid = true;
+        const errors = [];
+        
+        // Clear previous validation states
+        form.querySelectorAll('.is-invalid').forEach(element => {
+            element.classList.remove('is-invalid');
+        });
+        form.querySelectorAll('.custom-error-message').forEach(element => {
+            element.remove();
+        });
+        
+        // Assessment Date validation
+        const assessmentDate = form.querySelector('[name="date_of_assessment"]');
+        if (assessmentDate) {
+            if (!assessmentDate.value.trim()) {
+                showFieldError(assessmentDate, 'Assessment date is required');
+                isValid = false;
+            } else {
+                // Check if assessment date is not in the future
+                const now = new Date();
+                const selectedDate = new Date(assessmentDate.value);
+                if (selectedDate > now) {
+                    showFieldError(assessmentDate, 'Assessment date cannot be in the future');
+                    isValid = false;
+                }
+            }
+        }
+        
+        // Diagnosis validation
+        const diagnosisCheckboxes = document.querySelectorAll('input[name="diagnosis"]:checked');
+        const diagnosisOther = document.querySelector('textarea[name="diagnosis_other"]');
+        
+        if (diagnosisCheckboxes.length === 0 && (!diagnosisOther || !diagnosisOther.value.trim())) {
+            const diagnosisContainer = document.querySelector('#diagnosisCard');
+            if (diagnosisContainer) {
+                showFieldError(diagnosisContainer, 'Please select at least one diagnosis or provide other diagnosis');
+                // Auto-expand diagnosis section to show error
+                if (diagnosisCard && !diagnosisCard.classList.contains('show')) {
+                    $(diagnosisCard).collapse('show');
+                }
+            }
+            isValid = false;
+        }
+        
+        // Diagnosis Conclusion validation
+        const diagnosisConclusion = form.querySelector('[name="diagnosis_conclusion"]');
+        if (diagnosisConclusion && !diagnosisConclusion.value.trim()) {
+            showFieldError(diagnosisConclusion, 'Diagnosis conclusion is required');
+            isValid = false;
+        }
+        
+        // Management Plan validation
+        const managementPlan = form.querySelector('[name="managment_plan"]');
+        if (managementPlan && !managementPlan.value.trim()) {
+            showFieldError(managementPlan, 'Management plan is required');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            showAlert('Please correct the validation errors below', 'danger');
+            // Scroll to first error
+            const firstError = form.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstError.focus();
+            }
+        }
+        
+        return isValid;
+    }
+    
+    function showFieldError(field, message) {
+        field.classList.add('is-invalid');
+        
+        // Create or update error message
+        let errorDiv = field.parentNode.querySelector('.custom-error-message');
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.className = 'invalid-feedback d-block custom-error-message';
+            field.parentNode.appendChild(errorDiv);
+        }
+        errorDiv.textContent = message;
+    }
+    
+    function showAlert(message, type) {
+        // Remove any existing alerts
+        const existingAlerts = document.querySelectorAll('.assessment-alert');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        // Create new alert
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible assessment-alert`;
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        `;
+        
+        // Insert alert at the top of the form
+        const cardBody = form.querySelector('.card-body');
+        cardBody.insertBefore(alert, cardBody.firstChild);
+        
+        // Auto-dismiss after 5 seconds for success messages
+        if (type === 'success') {
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+    }
+    
+    // Initialize tooltips if available
+    if (typeof $().tooltip === 'function') {
+        $('[data-toggle="tooltip"]').tooltip();
+    }
+    
+    // Initialize Bootstrap collapse if available
+    if (typeof $().collapse === 'function') {
+        $('.collapse').collapse('hide');
+    }
+});
+</script>
+
+<style>
+.diagnosis-options ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.diagnosis-options li {
+    margin-bottom: 8px;
+    padding: 5px 0;
+}
+
+.diagnosis-options input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.diagnosis-options label {
+    font-weight: normal;
+    margin-bottom: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.card-outline.card-warning {
+    border-color: #ffc107;
+}
+
+.card-outline.card-warning .card-header {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-bottom: 1px solid #ffc107;
+}
+
+#diagnosisToggleIcon {
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.diagnosis-options .form-check {
+    padding-left: 0;
+}
+
+.diagnosis-options .form-check-input {
+    margin-left: 0;
+    margin-top: 0.125rem;
+}
+</style>
+
 {% endblock main_content %}

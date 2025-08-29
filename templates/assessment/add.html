@@ -80,6 +80,7 @@
               </dl>
             </div>
           </div>
+
         </div>
 
         <!-- Assessment Form -->
@@ -108,34 +109,34 @@
                   {% endif %}
                 </div>
 
-                <!-- Diagnosis Section -->
+                <!-- Diagnosis Selection Section -->
                 <div class="form-group">
-                  <label>
-                    <i class="fas fa-diagnoses mr-2"></i>{{ form.diagnosis.label }}
-                  </label>
-                  <div class="card">
-                    <div class="card-header" id="diagnosisHeader">
-                      <button class="btn btn-link btn-block text-left collapsed" type="button" 
-                              data-toggle="collapse" data-target="#diagnosisCollapse" 
-                              aria-expanded="false" aria-controls="diagnosisCollapse">
-                        <i class="fas fa-chevron-down mr-2"></i>
-                        Click to select diagnoses from list
-                      </button>
+                  <div class="card card-outline card-warning mb-3">
+                    <div class="card-header py-2" data-toggle="collapse" data-target="#diagnosisCard" 
+                         aria-expanded="false" aria-controls="diagnosisCard" style="cursor: pointer; user-select: none;">
+                      <h5 class="card-title mb-0 d-flex align-items-center justify-content-between">
+                        <span>
+                          <i class="fas fa-diagnoses mr-2 text-warning"></i>{{ form.diagnosis.label }}
+                        </span>
+                        <i class="fas fa-plus" id="diagnosisToggleIcon" style="transition: transform 0.2s;"></i>
+                      </h5>
                     </div>
-                    <div id="diagnosisCollapse" class="collapse" data-parent="#diagnosisAccordion">
-                      <div class="card-body">
-                        {{ form.diagnosis }}
+                    <div id="diagnosisCard" class="collapse">
+                      <div class="card-body pt-3">
+                        <div class="diagnosis-options">
+                          {{ form.diagnosis }}
+                        </div>
                         {% if form.diagnosis.errors %}
-                          <div class="invalid-feedback d-block">
+                          <div class="invalid-feedback d-block mt-2">
                             {% for error in form.diagnosis.errors %}{{ error }}{% endfor %}
                           </div>
                         {% endif %}
                         
                         <!-- Other Diagnosis Toggle -->
-                        <div class="form-check mt-3">
+                        <div class="form-check mt-3 pt-2 border-top">
                           <input class="form-check-input" type="checkbox" id="otherDiagnosisToggle">
                           <label class="form-check-label" for="otherDiagnosisToggle">
-                            Other (specify below)
+                            <i class="fas fa-plus-circle mr-1 text-info"></i>Other (specify below)
                           </label>
                         </div>
                       </div>
@@ -263,6 +264,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const progressText = document.getElementById('progress-text');
     const otherDiagnosisToggle = document.getElementById('otherDiagnosisToggle');
     const otherDiagnosisGroup = document.getElementById('otherDiagnosisGroup');
+    const diagnosisCard = document.getElementById('diagnosisCard');
+    const diagnosisToggleIcon = document.getElementById('diagnosisToggleIcon');
     
     let currentXHR = null;
     
@@ -279,6 +282,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Handle diagnosis card collapse with + and - icons
+    if (diagnosisCard && diagnosisToggleIcon) {
+        diagnosisCard.addEventListener('show.bs.collapse', function() {
+            diagnosisToggleIcon.classList.remove('fa-plus');
+            diagnosisToggleIcon.classList.add('fa-minus');
+        });
+        
+        diagnosisCard.addEventListener('hide.bs.collapse', function() {
+            diagnosisToggleIcon.classList.remove('fa-minus');
+            diagnosisToggleIcon.classList.add('fa-plus');
+        });
+    }
+    
     // Handle form submission
     form.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -292,22 +308,85 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     function validateForm() {
-        const assessmentDate = form.querySelector('[name="date_of_assessment"]').value;
+        let isValid = true;
         
-        if (!assessmentDate) {
-            showAlert('Please select the assessment date.', 'danger');
-            return false;
+        // Clear previous validation states
+        form.querySelectorAll('.is-invalid').forEach(element => {
+            element.classList.remove('is-invalid');
+        });
+        form.querySelectorAll('.custom-error-message').forEach(element => {
+            element.remove();
+        });
+        
+        // Assessment Date validation
+        const assessmentDate = form.querySelector('[name="date_of_assessment"]');
+        if (!assessmentDate.value.trim()) {
+            showFieldError(assessmentDate, 'Assessment date is required');
+            isValid = false;
+        } else {
+            // Check if assessment date is not in the future
+            const now = new Date();
+            const selectedDate = new Date(assessmentDate.value);
+            if (selectedDate > now) {
+                showFieldError(assessmentDate, 'Assessment date cannot be in the future');
+                isValid = false;
+            }
         }
         
-        // Check if assessment date is not in the future
-        const now = new Date();
-        const selectedDate = new Date(assessmentDate);
-        if (selectedDate > now) {
-            showAlert('Assessment date cannot be in the future.', 'danger');
-            return false;
+        // Diagnosis validation
+        const diagnosisCheckboxes = document.querySelectorAll('input[name="diagnosis"]:checked');
+        const diagnosisOther = document.querySelector('textarea[name="diagnosis_other"]');
+        
+        if (diagnosisCheckboxes.length === 0 && (!diagnosisOther || !diagnosisOther.value.trim())) {
+            const diagnosisContainer = document.querySelector('#diagnosisCard');
+            if (diagnosisContainer) {
+                showFieldError(diagnosisContainer, 'Please select at least one diagnosis or provide other diagnosis');
+                // Auto-expand diagnosis section to show error
+                if (diagnosisCard && !diagnosisCard.classList.contains('show')) {
+                    $(diagnosisCard).collapse('show');
+                }
+            }
+            isValid = false;
         }
         
-        return true;
+        // Diagnosis Conclusion validation
+        const diagnosisConclusion = form.querySelector('[name="diagnosis_conclusion"]');
+        if (diagnosisConclusion && !diagnosisConclusion.value.trim()) {
+            showFieldError(diagnosisConclusion, 'Diagnosis conclusion is required');
+            isValid = false;
+        }
+        
+        // Management Plan validation
+        const managementPlan = form.querySelector('[name="management_plan"]');
+        if (managementPlan && !managementPlan.value.trim()) {
+            showFieldError(managementPlan, 'Management plan is required');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            showAlert('Please correct the validation errors below', 'danger');
+            // Scroll to first error
+            const firstError = form.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstError.focus();
+            }
+        }
+        
+        return isValid;
+    }
+    
+    function showFieldError(field, message) {
+        field.classList.add('is-invalid');
+        
+        // Create or update error message
+        let errorDiv = field.parentNode.querySelector('.custom-error-message');
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.className = 'invalid-feedback d-block custom-error-message';
+            field.parentNode.appendChild(errorDiv);
+        }
+        errorDiv.textContent = message;
     }
     
     function saveAssessment(formData) {
@@ -348,7 +427,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (successMessage) {
                             showAlert('Assessment created successfully!', 'success');
                             setTimeout(() => {
-                                window.location.href = '{% url "assessment-view" pk=999 %}'.replace('999', 'PLACEHOLDER');
+                                window.location.href = '/assessment/view/' + 'PLACEHOLDER' + '/';
                             }, 1500);
                             return;
                         }
@@ -475,6 +554,11 @@ document.addEventListener('DOMContentLoaded', function() {
         $('[data-toggle="tooltip"]').tooltip();
     }
     
+    // Initialize Bootstrap collapse if available
+    if (typeof $().collapse === 'function') {
+        $('.collapse').collapse('hide');
+    }
+    
     // Set default assessment date to now
     const assessmentDateInput = form.querySelector('[name="date_of_assessment"]');
     if (assessmentDateInput && !assessmentDateInput.value) {
@@ -489,5 +573,53 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<style>
+.diagnosis-options ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.diagnosis-options li {
+    margin-bottom: 8px;
+    padding: 5px 0;
+}
+
+.diagnosis-options input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.diagnosis-options label {
+    font-weight: normal;
+    margin-bottom: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.card-outline.card-warning {
+    border-color: #ffc107;
+}
+
+.card-outline.card-warning .card-header {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-bottom: 1px solid #ffc107;
+}
+
+#diagnosisToggleIcon {
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.diagnosis-options .form-check {
+    padding-left: 0;
+}
+
+.diagnosis-options .form-check-input {
+    margin-left: 0;
+    margin-top: 0.125rem;
+}
+</style>
 
 {% endblock main_content %}

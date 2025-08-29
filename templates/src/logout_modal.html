@@ -1,233 +1,589 @@
-<!-- Logout Confirmation Modal -->
+<!-- Professional Logout Confirmation Modal -->
 <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="logoutModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
-    <div class="modal-content border-0 shadow-lg">
-      <div class="modal-header bg-gradient-warning border-0 text-center">
-        <div class="w-100">
-          <h5 class="modal-title text-dark font-weight-bold mb-0" id="logoutModalLabel">
-            <i class="fas fa-shield-alt mr-2"></i>Secure Logout
-          </h5>
+  <div class="modal-dialog modal-dialog-centered modal-lg logout-modal-custom" role="document">
+    <div class="modal-content border-0 shadow-lg professional-logout-modal">
+      <!-- Compact Professional Header -->
+      <div class="modal-header bg-gradient-danger border-0 professional-header-compact">
+        <div class="d-flex align-items-center w-100">
+          <div class="logout-icon-container-compact mr-3">
+            <i class="fas fa-shield-alt text-white"></i>
+          </div>
+          <div class="flex-grow-1">
+            <h5 class="modal-title text-white font-weight-bold mb-0" id="logoutModalLabel">
+              Secure Session Logout
+            </h5>
+            <small class="text-light opacity-75">NDAS Healthcare System</small>
+          </div>
         </div>
-        <button type="button" class="close text-dark position-absolute" style="right: 1rem; top: 50%; transform: translateY(-50%);" data-dismiss="modal" aria-label="Close">
+        <button type="button" class="close text-white professional-close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <div class="modal-body text-center py-4">
-        <div class="mb-4">
-          <div class="d-flex justify-content-center align-items-center mb-3">
-            <div class="logout-icon-wrapper">
-              <i class="fas fa-sign-out-alt text-warning"></i>
+      
+      <!-- Compact Modal Body with Horizontal Layout -->
+      <div class="modal-body professional-body-compact">
+        <div class="row align-items-center">
+          <!-- Left Side - Status Icon and Message -->
+          <div class="col-8">
+            <div class="d-flex align-items-center">
+              <div class="status-icon-wrapper-compact mr-3">
+                <i class="fas fa-sign-out-alt text-danger"></i>
+              </div>
+              <div class="logout-message-content">
+                <h6 class="font-weight-bold text-dark mb-1">Confirm Logout Action</h6>
+                <p class="text-muted small mb-0">
+                  <i class="fas fa-exclamation-triangle text-warning mr-1"></i>
+                  Your session will be securely terminated. Any unsaved work will be lost.
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Right Side - Action Buttons -->
+          <div class="col-4">
+            <div class="btn-group-compact">
+              <button type="button" class="btn btn-outline-secondary btn-sm mb-2 btn-block" data-dismiss="modal">
+                <i class="fas fa-times mr-1"></i> Cancel
+              </button>
+              <a href="{% url 'user-logout' %}" class="btn btn-danger btn-sm btn-block logout-confirm-btn">
+                <i class="fas fa-sign-out-alt mr-1"></i> Confirm Logout
+              </a>
             </div>
           </div>
         </div>
-        <h6 class="font-weight-bold text-dark mb-3">Ready to logout?</h6>
-        <p class="text-muted small mb-3 px-2">
-          Your session will be securely terminated and all unsaved work may be lost.
-        </p>
-        <div class="alert alert-light border-0 py-2 mb-0" style="background-color: #f8f9fa;">
-          <small class="text-muted">
-            <i class="fas fa-info-circle mr-1"></i>
-            You'll be redirected to the login page
-          </small>
+        
+        <!-- Bottom Security Notice -->
+        <div class="row mt-3">
+          <div class="col-12">
+            <div class="alert alert-info border-0 py-2 mb-0 security-notice-compact">
+              <div class="d-flex align-items-center justify-content-center">
+                <i class="fas fa-info-circle text-info mr-2"></i>
+                <small class="text-muted mb-0">You'll be redirected to the secure login page</small>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="modal-footer border-0 justify-content-center pt-0 pb-4">
-        <button type="button" class="btn btn-outline-secondary btn-sm px-4 mr-3" data-dismiss="modal">
-          <i class="fas fa-arrow-left mr-1"></i>Stay Logged In
-        </button>
-        <a href="{% url 'user-logout' %}" class="btn btn-warning btn-sm px-4 logout-confirm-btn">
-          <i class="fas fa-sign-out-alt mr-1"></i>Logout Now
-        </a>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Custom Styles for Logout Modal -->
+<!-- Professional Logout Modal Styles -->
 <style>
-#logoutModal .modal-content {
-  border-radius: 20px;
-  overflow: hidden;
-  animation: modalSlideIn 0.3s ease-out;
+/* Compact Modal Container */
+#logoutModal .logout-modal-custom {
+  max-width: 600px;
+  width: 90%;
 }
 
-@keyframes modalSlideIn {
-  from {
-    transform: translateY(-50px);
+#logoutModal .professional-logout-modal {
+  border-radius: 12px;
+  overflow: hidden;
+  animation: professionalModalSlideIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  max-height: 300px;
+}
+
+@keyframes professionalModalSlideIn {
+  0% {
+    transform: translateY(-20px) scale(0.98);
     opacity: 0;
   }
-  to {
-    transform: translateY(0);
+  100% {
+    transform: translateY(0) scale(1);
     opacity: 1;
   }
 }
 
-#logoutModal .modal-header {
-  padding: 1.5rem 1.5rem 1rem 1.5rem;
+/* Compact Professional Header */
+#logoutModal .professional-header-compact {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+  padding: 1rem 1.5rem;
   position: relative;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
 }
 
-#logoutModal .modal-body {
-  padding: 0 1.5rem 1rem 1.5rem;
-}
-
-#logoutModal .modal-footer {
-  padding: 0 1.5rem 1.5rem 1.5rem;
-}
-
-#logoutModal .logout-icon-wrapper {
-  width: 70px;
-  height: 70px;
+#logoutModal .logout-icon-container-compact {
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  background: rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 3px solid #fff;
-  box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
 }
 
-#logoutModal .logout-icon-wrapper i {
-  font-size: 2rem;
+#logoutModal .logout-icon-container-compact i {
+  font-size: 1.2rem;
 }
 
-#logoutModal .btn {
-  border-radius: 10px;
-  font-weight: 500;
+#logoutModal .professional-close {
+  font-size: 1.3rem;
+  opacity: 0.8;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 0;
+  margin: 0;
 }
 
-#logoutModal .btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+#logoutModal .professional-close:hover {
+  opacity: 1;
+  transform: scale(1.1);
 }
 
-#logoutModal .btn-warning:hover {
-  background-color: #e0a800;
-  border-color: #d39e00;
+/* Compact Professional Body */
+#logoutModal .professional-body-compact {
+  padding: 1.5rem;
+  background: #ffffff;
 }
 
-#logoutModal .btn-outline-secondary:hover {
-  background-color: #6c757d;
-  border-color: #6c757d;
+#logoutModal .status-icon-wrapper-compact {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fff5f5 0%, #ffeaea 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #dc3545;
+  box-shadow: 0 3px 10px rgba(220, 53, 69, 0.2);
+  flex-shrink: 0;
+}
+
+#logoutModal .status-icon-wrapper-compact i {
+  font-size: 1.3rem;
+}
+
+#logoutModal .logout-message-content h6 {
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+#logoutModal .logout-message-content p {
+  font-size: 0.85rem;
+  line-height: 1.3;
+}
+
+#logoutModal .security-notice-compact {
+  background: linear-gradient(135deg, #e7f3ff 0%, #f0f8ff 100%) !important;
+  border-radius: 8px;
+  border: 1px solid rgba(23, 162, 184, 0.2) !important;
+  padding: 0.5rem 1rem !important;
+}
+
+/* Compact Button Styling */
+#logoutModal .btn-group-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+#logoutModal .btn-group-compact .btn {
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.5rem 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+  text-align: center;
+  min-width: 120px;
+}
+
+#logoutModal .btn-group-compact .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  text-decoration: none;
+}
+
+#logoutModal .btn-group-compact .btn-danger {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  border: none;
   color: white;
 }
 
-#logoutModal .alert {
-  border-radius: 10px;
+#logoutModal .btn-group-compact .btn-danger:hover {
+  background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+  box-shadow: 0 3px 8px rgba(220, 53, 69, 0.3);
 }
 
-/* Mobile responsive adjustments */
-@media (max-width: 576px) {
-  #logoutModal .modal-dialog {
-    margin: 1rem;
+#logoutModal .btn-group-compact .btn-outline-secondary {
+  border: 1px solid #6c757d;
+  color: #6c757d;
+  background: white;
+}
+
+#logoutModal .btn-group-compact .btn-outline-secondary:hover {
+  background: #6c757d;
+  color: white;
+  border-color: #6c757d;
+}
+
+/* Loading State Enhancement */
+#logoutModal .logout-confirm-btn.loading {
+  pointer-events: none;
+  opacity: 0.7;
+  position: relative;
+}
+
+#logoutModal .logout-confirm-btn.loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 50%;
+  left: 50%;
+  margin-left: 10px;
+  margin-top: -8px;
+  border: 2px solid transparent;
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: professionalSpin 1s linear infinite;
+}
+
+@keyframes professionalSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Enhanced Responsive Design */
+@media (max-width: 768px) {
+  #logoutModal .logout-modal-custom {
+    max-width: 95%;
+    margin: 1rem auto;
   }
   
-  #logoutModal .modal-footer .btn {
+  #logoutModal .professional-body-compact {
+    padding: 1rem;
+  }
+  
+  #logoutModal .professional-body-compact .row {
+    flex-direction: column;
+  }
+  
+  #logoutModal .professional-body-compact .col-8,
+  #logoutModal .professional-body-compact .col-4 {
+    max-width: 100%;
+    flex: 0 0 100%;
+    margin-bottom: 1rem;
+  }
+  
+  #logoutModal .professional-body-compact .col-4 {
+    margin-bottom: 0;
+  }
+  
+  #logoutModal .btn-group-compact {
+    flex-direction: row;
+    justify-content: center;
+    gap: 1rem;
+  }
+  
+  #logoutModal .btn-group-compact .btn {
     flex: 1;
-    margin: 0 0.25rem;
+    max-width: 140px;
+  }
+}
+
+@media (max-width: 576px) {
+  #logoutModal .logout-modal-custom {
+    max-width: 98%;
+    margin: 0.5rem auto;
   }
   
-  #logoutModal .modal-footer {
+  #logoutModal .professional-header-compact {
+    padding: 0.75rem 1rem;
+  }
+  
+  #logoutModal .professional-body-compact {
+    padding: 1rem 0.75rem;
+  }
+  
+  #logoutModal .logout-icon-container-compact {
+    width: 35px;
+    height: 35px;
+  }
+  
+  #logoutModal .logout-icon-container-compact i {
+    font-size: 1rem;
+  }
+  
+  #logoutModal .status-icon-wrapper-compact {
+    width: 40px;
+    height: 40px;
+  }
+  
+  #logoutModal .status-icon-wrapper-compact i {
+    font-size: 1.1rem;
+  }
+  
+  #logoutModal .logout-message-content h6 {
+    font-size: 0.9rem;
+  }
+  
+  #logoutModal .logout-message-content p {
+    font-size: 0.8rem;
+  }
+  
+  #logoutModal .btn-group-compact {
     flex-direction: column;
     gap: 0.5rem;
   }
   
-  #logoutModal .modal-footer .btn {
+  #logoutModal .btn-group-compact .btn {
     width: 100%;
-    margin: 0;
+    max-width: none;
+  }
+}
+
+/* Accessibility Enhancements */
+#logoutModal .btn-group-compact .btn:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+#logoutModal .professional-close:focus {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* Dark Mode Compatibility */
+@media (prefers-color-scheme: dark) {
+  #logoutModal .professional-body-compact {
+    background: #2c3e50;
+    color: #ecf0f1;
+  }
+  
+  #logoutModal .logout-message-content h6 {
+    color: #ecf0f1;
+  }
+  
+  #logoutModal .logout-message-content p {
+    color: #bdc3c7;
+  }
+  
+  #logoutModal .security-notice-compact {
+    background: #34495e !important;
+    color: #ecf0f1;
+    border-color: #4a5c6a !important;
   }
 }
 </style>
 
 <script type="text/javascript">
-// Use vanilla JavaScript to ensure it works regardless of jQuery timing
+// Professional Logout Modal JavaScript with Enhanced UX
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Logout modal script loading...');
+    console.log('🔐 Professional logout modal script loading...');
     
     // Wait for jQuery if it's not loaded yet
-    function initLogoutModal() {
+    function initProfessionalLogoutModal() {
         if (typeof $ === 'undefined') {
-            console.log('jQuery not ready, waiting...');
-            setTimeout(initLogoutModal, 100);
+            console.log('⏳ jQuery not ready, waiting...');
+            setTimeout(initProfessionalLogoutModal, 100);
             return;
         }
         
-        console.log('Initializing logout modal with jQuery...');
+        console.log('🚀 Initializing professional logout modal with jQuery...');
         
-        // Function to show logout confirmation modal
+        // Enhanced function to show logout confirmation modal
         window.showLogoutConfirmation = function() {
-            console.log('showLogoutConfirmation called');
+            console.log('🔐 Professional logout confirmation triggered');
             var modal = $('#logoutModal');
             if (modal.length) {
                 modal.modal({
                     backdrop: 'static',
-                    keyboard: true
+                    keyboard: true,
+                    focus: true
                 });
-                console.log('Modal shown');
+                console.log('✅ Professional modal displayed');
+                
+                // Add entrance animation enhancement
+                setTimeout(function() {
+                    modal.find('.professional-logout-modal').addClass('modal-entered');
+                }, 50);
+                
             } else {
-                console.error('Logout modal not found in DOM');
-                // Fallback to browser confirm
-                if (confirm('Are you sure you want to logout?')) {
+                console.error('❌ Professional logout modal not found in DOM');
+                // Enhanced fallback with better styling
+                if (confirm('🔐 NDAS Security Notice\n\nAre you sure you want to logout?\nYour session will be terminated and any unsaved work will be lost.')) {
                     window.location.href = "{% url 'user-logout' %}";
                 }
             }
         };
         
-        // Handle logout links with confirmation - Use event delegation
+        // Handle logout links with professional confirmation - Use event delegation
         $(document).off('click.logoutConfirm').on('click.logoutConfirm', '.logout-confirm', function(e) {
-            console.log('Logout confirm clicked:', this);
+            console.log('🔐 Logout confirmation clicked:', this);
             e.preventDefault();
             e.stopPropagation();
             showLogoutConfirmation();
             return false;
         });
         
-        // Add loading state to logout button
+        // Enhanced loading state for professional logout button
         $(document).off('click.logoutBtn').on('click.logoutBtn', '.logout-confirm-btn', function(e) {
             e.preventDefault();
             var btn = $(this);
             var originalText = btn.html();
             var logoutUrl = btn.attr('href');
             
-            btn.html('<i class="fas fa-spinner fa-spin mr-1"></i>Logging out...');
-            btn.addClass('disabled').attr('disabled', true);
+            // Add professional loading state
+            btn.html('<i class="fas fa-spinner fa-spin mr-2"></i>Terminating Session...');
+            btn.addClass('loading disabled').attr('disabled', true);
             
-            // Simulate a brief delay for better UX
+            // Add loading animation to the entire modal
+            $('#logoutModal .professional-logout-modal').addClass('modal-processing');
+            
+            // Professional logout sequence with enhanced timing
             setTimeout(function() {
+                console.log('🔐 Redirecting to secure logout...');
                 window.location.href = logoutUrl;
-            }, 800);
+            }, 1200);
             
             return false;
         });
         
-        // Focus management for accessibility
+        // Enhanced focus management for accessibility
         $('#logoutModal').on('shown.bs.modal', function () {
-            $(this).find('.btn-warning').focus();
+            // Focus on the primary action button (logout)
+            var primaryBtn = $(this).find('.btn-danger.btn-professional');
+            if (primaryBtn.length) {
+                setTimeout(function() {
+                    primaryBtn.focus();
+                }, 300);
+            }
         });
         
-        // Keyboard shortcuts
+        // Professional keyboard shortcuts and navigation
         $(document).on('keydown', function(e) {
             if ($('#logoutModal').hasClass('show')) {
-                // Enter key to confirm logout
-                if (e.keyCode === 13) {
-                    e.preventDefault();
-                    $('.logout-confirm-btn').click();
+                switch(e.keyCode) {
+                    case 13: // Enter key to confirm logout
+                        e.preventDefault();
+                        $('.logout-confirm-btn').click();
+                        break;
+                    case 27: // ESC key to cancel (handled by Bootstrap but we log it)
+                        console.log('🔐 Logout cancelled via ESC key');
+                        break;
+                    case 9: // Tab key navigation enhancement
+                        // Let Bootstrap handle tab navigation but enhance focus visibility
+                        setTimeout(function() {
+                            var focusedElement = $('#logoutModal :focus');
+                            if (focusedElement.length) {
+                                focusedElement.addClass('professional-focus-enhanced');
+                                setTimeout(function() {
+                                    focusedElement.removeClass('professional-focus-enhanced');
+                                }, 200);
+                            }
+                        }, 10);
+                        break;
                 }
             }
         });
         
-        console.log('✅ Logout modal script initialized successfully');
+        // Modal lifecycle event handling for professional experience
+        $('#logoutModal').on('show.bs.modal', function () {
+            console.log('🔐 Professional logout modal opening...');
+            $('body').addClass('modal-opening');
+        });
+        
+        $('#logoutModal').on('shown.bs.modal', function () {
+            console.log('✅ Professional logout modal opened');
+            $('body').removeClass('modal-opening').addClass('modal-open-professional');
+        });
+        
+        $('#logoutModal').on('hide.bs.modal', function () {
+            console.log('🔐 Professional logout modal closing...');
+            $('body').removeClass('modal-open-professional').addClass('modal-closing');
+        });
+        
+        $('#logoutModal').on('hidden.bs.modal', function () {
+            console.log('✅ Professional logout modal closed');
+            $('body').removeClass('modal-closing');
+            // Reset any loading states
+            var btn = $(this).find('.logout-confirm-btn');
+            btn.removeClass('loading disabled').removeAttr('disabled');
+            $(this).find('.professional-logout-modal').removeClass('modal-processing');
+        });
+        
+        // Add professional hover effects
+        $('#logoutModal').on('mouseenter', '.btn-professional', function() {
+            $(this).addClass('btn-hover-enhanced');
+        }).on('mouseleave', '.btn-professional', function() {
+            $(this).removeClass('btn-hover-enhanced');
+        });
+        
+        console.log('✅ Professional logout modal script initialized successfully');
     }
     
-    initLogoutModal();
+    initProfessionalLogoutModal();
 });
 
-// Also provide immediate fallback
+// Enhanced immediate fallback with professional styling
 window.showLogoutConfirmation = window.showLogoutConfirmation || function() {
-    if (confirm('Are you sure you want to logout?')) {
+    var confirmMessage = '🔐 NDAS Healthcare System - Security Notice\n\n' +
+                        'Are you sure you want to logout?\n\n' +
+                        '• Your session will be securely terminated\n' +
+                        '• Any unsaved work will be lost\n' +
+                        '• You will be redirected to the login page\n\n' +
+                        'Click OK to confirm logout or Cancel to stay logged in.';
+    
+    if (confirm(confirmMessage)) {
+        console.log('🔐 Fallback logout confirmed');
         window.location.href = "{% url 'user-logout' %}";
+    } else {
+        console.log('🔐 Fallback logout cancelled');
     }
 };
+
+// Professional modal enhancement CSS classes
+var professionalModalCSS = `
+<style>
+.professional-focus-enhanced {
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25) !important;
+    transform: scale(1.02) !important;
+}
+
+.btn-hover-enhanced {
+    transform: translateY(-1px) scale(1.02) !important;
+}
+
+.modal-processing {
+    pointer-events: none;
+    opacity: 0.9;
+}
+
+.modal-processing::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(1px);
+    border-radius: 18px;
+}
+
+body.modal-opening {
+    overflow: hidden;
+}
+
+body.modal-open-professional {
+    overflow: hidden;
+}
+
+body.modal-closing {
+    overflow: hidden;
+}
+</style>`;
+
+// Inject professional enhancement styles
+if (!document.getElementById('professional-modal-enhancements')) {
+    var styleElement = document.createElement('div');
+    styleElement.id = 'professional-modal-enhancements';
+    styleElement.innerHTML = professionalModalCSS;
+    document.head.appendChild(styleElement);
+}
 </script>
