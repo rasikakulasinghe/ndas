@@ -8,63 +8,184 @@
 
 <div class="container-sm">
   <div class="card">
-  <div class="card-header bg-info"><h3 class="card-title">Edit HINE Record</h3></div>
-
-  <form action="{% url 'hine-assessment-edit' shr.id %}" method="POST">
-    {% csrf_token %}
-
-    <div class="card-body">
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Patient : </label>
-        <div class="col-sm-10">{{patient.baby_name}}</div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Current Age : </label>
-        <div class="col-sm-10">{{patient.getCurrentAge}}</div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Assessment Date : </label>
-        <div class="col-sm-3">{{hine_form.date_of_assessment}}</div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">HINE Score : </label>
-        <div class="col-sm-3">
-            {{hine_form.score}}
-        </div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Comment : </label>
-        <div class="col-sm-10">
-            {{hine_form.comment}}
-        </div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Assessment done by : </label>
-        <div class="col-sm-10">
-            {{hine_form.assessment_done_by}}
-        </div>
-      </div>
-
-    </br><hr>
-    
-      <div class="form-group row">
-        <label class="col-sm-2 col-form-label"></label>
-        <div class="col-sm"><button type="submit" class="btn btn-primary float-right">Update HINE Record</button></div>
-      </div>
-
-      </br>
-
-  </form>
-
+    <div class="card-header bg-warning">
+      <h3 class="card-title"><i class="fas fa-edit mr-2"></i>Edit HINE Assessment Record</h3>
     </div>
-    <!-- /.card-body -->
-  </div>
-  <!-- /.card -->
+
+    <form action="{% url 'hine-assessment-edit' shr.id %}" method="POST" novalidate>
+      {% csrf_token %}
+
+      <div class="card-body">
+
+        <div class="form-group row">
+          <label class="col-form-label col-sm-2">Patient : </label>
+          <div class="col-sm-10">
+            <span class="form-control-plaintext font-weight-bold">{{patient.baby_name}}</span>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-form-label col-sm-2">Current Age : </label>
+          <div class="col-sm-10">
+            <span class="form-control-plaintext">{{patient.getCurrentAge}}</span>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-form-label col-sm-2" for="{{ hine_form.date_of_assessment.id_for_label }}">
+            Assessment Date <span class="text-danger">*</span> : 
+          </label>
+          <div class="col-sm-4">
+            {{hine_form.date_of_assessment}}
+            {% if hine_form.date_of_assessment.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in hine_form.date_of_assessment.errors %}
+                  <small class="text-danger">{{ error }}</small><br>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <small class="form-text text-muted">Date and time when the HINE assessment was performed</small>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-form-label col-sm-2" for="{{ hine_form.score.id_for_label }}">
+            HINE Score <span class="text-danger">*</span> : 
+          </label>
+          <div class="col-sm-3">
+            {{hine_form.score}}
+            {% if hine_form.score.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in hine_form.score.errors %}
+                  <small class="text-danger">{{ error }}</small><br>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <small class="form-text text-muted">Total HINE score (0-78, higher scores indicate better neurological function)</small>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-form-label col-sm-2" for="{{ hine_form.comment.id_for_label }}">Comment : </label>
+          <div class="col-sm-10">
+            {{hine_form.comment}}
+            {% if hine_form.comment.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in hine_form.comment.errors %}
+                  <small class="text-danger">{{ error }}</small><br>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <small class="form-text text-muted">Additional notes and observations from the assessment</small>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-form-label col-sm-2" for="{{ hine_form.assessment_done_by.id_for_label }}">
+            Assessment done by <span class="text-danger">*</span> : 
+          </label>
+          <div class="col-sm-10">
+            {{hine_form.assessment_done_by}}
+            {% if hine_form.assessment_done_by.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in hine_form.assessment_done_by.errors %}
+                  <small class="text-danger">{{ error }}</small><br>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <small class="form-text text-muted">Name of the healthcare professional who conducted the assessment</small>
+          </div>
+        </div>
+
+        <!-- Form-wide errors -->
+        {% if hine_form.non_field_errors %}
+          <div class="alert alert-danger" role="alert">
+            {% for error in hine_form.non_field_errors %}
+              {{ error }}<br>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        </br><hr>
+        
+        <div class="form-group row">
+          <label class="col-sm-2 col-form-label"></label>
+          <div class="col-sm">
+            <button type="submit" class="btn btn-warning float-right">
+              <i class="fas fa-save mr-2"></i>Update HINE Record
+            </button>
+            <a href="{% url 'hine-assessment-view' shr.id %}" class="btn btn-secondary float-right mr-2">
+              <i class="fas fa-times mr-2"></i>Cancel
+            </a>
+          </div>
+        </div>
+
+        </br>
+
+    </form>
+
+      </div>
+      <!-- /.card-body -->
+    </div>
+    <!-- /.card -->
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add form validation
+    const form = document.querySelector('form');
+    const scoreField = document.getElementById('{{ hine_form.score.id_for_label }}');
+    const dateField = document.getElementById('{{ hine_form.date_of_assessment.id_for_label }}');
+    const assessorField = document.getElementById('{{ hine_form.assessment_done_by.id_for_label }}');
+
+    // Real-time validation for HINE score
+    if (scoreField) {
+        scoreField.addEventListener('input', function() {
+            const value = parseInt(this.value);
+            const feedback = this.parentNode.querySelector('.invalid-feedback');
+            
+            if (isNaN(value) || value < 0 || value > 78) {
+                this.classList.add('is-invalid');
+                if (!feedback) {
+                    const div = document.createElement('div');
+                    div.className = 'invalid-feedback d-block';
+                    div.innerHTML = '<small class="text-danger">HINE score must be between 0 and 78</small>';
+                    this.parentNode.appendChild(div);
+                }
+            } else {
+                this.classList.remove('is-invalid');
+                if (feedback && !feedback.innerHTML.includes('{{ hine_form.score.errors|first }}')) {
+                    feedback.remove();
+                }
+            }
+        });
+    }
+
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+        let hasError = false;
+
+        // Validate required fields
+        [dateField, scoreField, assessorField].forEach(field => {
+            if (field && (!field.value || field.value.trim() === '')) {
+                field.classList.add('is-invalid');
+                hasError = true;
+            } else if (field) {
+                field.classList.remove('is-invalid');
+            }
+        });
+
+        if (hasError) {
+            e.preventDefault();
+            // Scroll to first error
+            const firstError = form.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.focus();
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    });
+});
+</script>
+
 {% endblock main_content %}

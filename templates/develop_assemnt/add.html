@@ -10,138 +10,339 @@
   <div class="card">
   <div class="card-header bg-info"><h3 class="card-title">Create New Developmental Assessment Record</h3></div>
 
-  <form action="{% url 'da-assessment-add' patient.id %}" method="POST">
+  <form action="{% url 'da-assessment-add' patient.id %}" method="POST" novalidate>
     {% csrf_token %}
 
     <div class="card-body">
 
       <div class="form-group row">
         <label class="col-form-label col-sm-2">Patient : </label>
-        <div class="col-sm-10">{{patient.baby_name}}</div>
+        <div class="col-sm-10">
+          <span class="form-control-plaintext font-weight-bold">{{patient.baby_name}}</span>
+        </div>
       </div>
 
       <div class="form-group row">
         <label class="col-form-label col-sm-2">Current Age : </label>
-        <div class="col-sm-10">{{patient.getCurrentAge}}</div>
+        <div class="col-sm-10">
+          <span class="form-control-plaintext">{{patient.getCurrentAge}}</span>
+        </div>
       </div>
 
       <div class="form-group row">
         <label class="col-form-label col-sm-2">Corrected Age : </label>
-        <div class="col-sm-10">{{patient.getCorrectedAge}}</div>
+        <div class="col-sm-10">
+          <span class="form-control-plaintext">{{patient.getCorrectedAge}}</span>
+        </div>
       </div>
       
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">Assessment Date : </label>
-        <div class="col-sm-3">{{da_form.date_of_assessment}}</div>
-      </div>
-
-      </br> <div> <hr> </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Gross Motor Assessment : </label>
-        <div class="col-sm-10">{{da_form.gm_details}}</div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2"></label>
-        <div class="col-sm">
-          <div class="d-flex align-items-center">
-            <div>Developmental age from &nbsp;&nbsp;</div>
-            <div>{{da_form.gm_age_from}}</div>
-            <div>&nbsp;&nbsp; Months to &nbsp;&nbsp;</div>
-            <div>{{da_form.gm_age_to}}</div>
-            <div>&nbsp;&nbsp; Months</div>
+        <label class="col-form-label col-sm-2" for="{{ da_form.date_of_assessment.id_for_label }}">
+          Assessment Date <span class="text-danger">*</span> : 
+        </label>
+        <div class="col-sm-4">
+          {{da_form.date_of_assessment}}
+          {% if da_form.date_of_assessment.errors %}
+            <div class="invalid-feedback d-block">
+              {% for error in da_form.date_of_assessment.errors %}
+                <small class="text-danger">{{ error }}</small><br>
+              {% endfor %}
             </div>
+          {% endif %}
+          <small class="form-text text-muted">Date and time when the developmental assessment was performed</small>
         </div>
       </div>
 
-      </br> <div> <hr> </div>
+      </br> <div class="section-divider"> <hr> </div>
 
-
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Fine motor and vision : </label>
-        <div class="col-sm-10">{{da_form.fmv_details}}</div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2"></label>
-        <div class="col-sm">
-          <div class="d-flex align-items-center">
-            <div>Developmental age from &nbsp;&nbsp;</div>
-            <div>{{da_form.fmv_age_from}}</div>
-            <div>&nbsp;&nbsp; Months to &nbsp;&nbsp;</div>
-            <div>{{da_form.fmv_age_to}}</div>
-            <div>&nbsp;&nbsp; Months</div>
-            </div>
-        </div>
-      </div>
-
-      </br> <div> <hr> </div>
-
-
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Hearing, Speech and Language : </label>
-        <div class="col-sm-10">{{da_form.hsl_details}}</div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2"></label>
-        <div class="col-sm">
-          <div class="d-flex align-items-center">
-            <div>Developmental age from &nbsp;&nbsp;</div>
-            <div>{{da_form.hsl_age_from}}</div>
-            <div>&nbsp;&nbsp; Months to &nbsp;&nbsp;</div>
-            <div>{{da_form.hsl_age_to}}</div>
-            <div>&nbsp;&nbsp; Months</div>
-            </div>
-        </div>
-      </div>
-
-      </br> <div> <hr> </div>
-
-
-
-    <div class="form-group row">
-      <label class="col-form-label col-sm-2">Social, Emotional and Behaviour : </label>
-      <div class="col-sm-10">{{da_form.seb_details}}</div>
-    </div>
-
-    <div class="form-group row">
-      <label class="col-form-label col-sm-2"></label>
-      <div class="col-sm">
-        <div class="d-flex align-items-center">
-          <div>Developmental age from &nbsp;&nbsp;</div>
-          <div>{{da_form.seb_age_from}}</div>
-          <div>&nbsp;&nbsp; Months to &nbsp;&nbsp;</div>
-          <div>{{da_form.seb_age_to}}</div>
-          <div>&nbsp;&nbsp; Months</div>
+      <!-- Gross Motor Assessment Section -->
+      <div class="assessment-section">
+        <h5 class="text-primary mb-3"><i class="fas fa-running"></i> Gross Motor Assessment</h5>
+        
+        <div class="form-group row">
+          <label class="col-form-label col-sm-2" for="{{ da_form.gm_details.id_for_label }}">Assessment Details : </label>
+          <div class="col-sm-10">
+            {{da_form.gm_details}}
+            {% if da_form.gm_details.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in da_form.gm_details.errors %}
+                  <small class="text-danger">{{ error }}</small><br>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <small class="form-text text-muted">Detailed observations for gross motor development</small>
           </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-form-label col-sm-2">Developmental Age Range : </label>
+          <div class="col-sm-10">
+            <div class="row">
+              <div class="col-sm-2">
+                <label for="{{ da_form.gm_age_from.id_for_label }}" class="sr-only">From (months)</label>
+                {{da_form.gm_age_from}}
+                {% if da_form.gm_age_from.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in da_form.gm_age_from.errors %}
+                      <small class="text-danger">{{ error }}</small><br>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+              <div class="col-sm-1 text-center align-self-center">
+                <span class="text-muted">to</span>
+              </div>
+              <div class="col-sm-2">
+                <label for="{{ da_form.gm_age_to.id_for_label }}" class="sr-only">To (months)</label>
+                {{da_form.gm_age_to}}
+                {% if da_form.gm_age_to.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in da_form.gm_age_to.errors %}
+                      <small class="text-danger">{{ error }}</small><br>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+              <div class="col-sm-2 align-self-center">
+                <span class="text-muted">months</span>
+              </div>
+            </div>
+            <small class="form-text text-muted">Gross motor developmental age range (0-72 months)</small>
+          </div>
+        </div>
       </div>
-    </div>
 
-    </br> <div> <hr> </div> </br>
+      </br> <div class="section-divider"> <hr> </div>
 
+      <!-- Fine Motor and Vision Assessment Section -->
+      <div class="assessment-section">
+        <h5 class="text-primary mb-3"><i class="fas fa-eye"></i> Fine Motor and Vision Assessment</h5>
+        
+        <div class="form-group row">
+          <label class="col-form-label col-sm-2" for="{{ da_form.fmv_details.id_for_label }}">Assessment Details : </label>
+          <div class="col-sm-10">
+            {{da_form.fmv_details}}
+            {% if da_form.fmv_details.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in da_form.fmv_details.errors %}
+                  <small class="text-danger">{{ error }}</small><br>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <small class="form-text text-muted">Detailed observations for fine motor and vision development</small>
+          </div>
+        </div>
 
+        <div class="form-group row">
+          <label class="col-form-label col-sm-2">Developmental Age Range : </label>
+          <div class="col-sm-10">
+            <div class="row">
+              <div class="col-sm-2">
+                <label for="{{ da_form.fmv_age_from.id_for_label }}" class="sr-only">From (months)</label>
+                {{da_form.fmv_age_from}}
+                {% if da_form.fmv_age_from.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in da_form.fmv_age_from.errors %}
+                      <small class="text-danger">{{ error }}</small><br>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+              <div class="col-sm-1 text-center align-self-center">
+                <span class="text-muted">to</span>
+              </div>
+              <div class="col-sm-2">
+                <label for="{{ da_form.fmv_age_to.id_for_label }}" class="sr-only">To (months)</label>
+                {{da_form.fmv_age_to}}
+                {% if da_form.fmv_age_to.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in da_form.fmv_age_to.errors %}
+                      <small class="text-danger">{{ error }}</small><br>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+              <div class="col-sm-2 align-self-center">
+                <span class="text-muted">months</span>
+              </div>
+            </div>
+            <small class="form-text text-muted">Fine motor and vision developmental age range (0-72 months)</small>
+          </div>
+        </div>
+      </div>
 
+      </br> <div class="section-divider"> <hr> </div>
+
+      <!-- Hearing, Speech and Language Assessment Section -->
+      <div class="assessment-section">
+        <h5 class="text-primary mb-3"><i class="fas fa-comments"></i> Hearing, Speech and Language Assessment</h5>
+        
+        <div class="form-group row">
+          <label class="col-form-label col-sm-2" for="{{ da_form.hsl_details.id_for_label }}">Assessment Details : </label>
+          <div class="col-sm-10">
+            {{da_form.hsl_details}}
+            {% if da_form.hsl_details.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in da_form.hsl_details.errors %}
+                  <small class="text-danger">{{ error }}</small><br>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <small class="form-text text-muted">Detailed observations for hearing, speech and language development</small>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-form-label col-sm-2">Developmental Age Range : </label>
+          <div class="col-sm-10">
+            <div class="row">
+              <div class="col-sm-2">
+                <label for="{{ da_form.hsl_age_from.id_for_label }}" class="sr-only">From (months)</label>
+                {{da_form.hsl_age_from}}
+                {% if da_form.hsl_age_from.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in da_form.hsl_age_from.errors %}
+                      <small class="text-danger">{{ error }}</small><br>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+              <div class="col-sm-1 text-center align-self-center">
+                <span class="text-muted">to</span>
+              </div>
+              <div class="col-sm-2">
+                <label for="{{ da_form.hsl_age_to.id_for_label }}" class="sr-only">To (months)</label>
+                {{da_form.hsl_age_to}}
+                {% if da_form.hsl_age_to.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in da_form.hsl_age_to.errors %}
+                      <small class="text-danger">{{ error }}</small><br>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+              <div class="col-sm-2 align-self-center">
+                <span class="text-muted">months</span>
+              </div>
+            </div>
+            <small class="form-text text-muted">Hearing, speech and language developmental age range (0-72 months)</small>
+          </div>
+        </div>
+      </div>
+
+      </br> <div class="section-divider"> <hr> </div>
+
+      <!-- Social, Emotional and Behavioral Assessment Section -->
+      <div class="assessment-section">
+        <h5 class="text-primary mb-3"><i class="fas fa-users"></i> Social, Emotional and Behavioral Assessment</h5>
+        
+        <div class="form-group row">
+          <label class="col-form-label col-sm-2" for="{{ da_form.seb_details.id_for_label }}">Assessment Details : </label>
+          <div class="col-sm-10">
+            {{da_form.seb_details}}
+            {% if da_form.seb_details.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in da_form.seb_details.errors %}
+                  <small class="text-danger">{{ error }}</small><br>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <small class="form-text text-muted">Detailed observations for social, emotional and behavioral development</small>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-form-label col-sm-2">Developmental Age Range : </label>
+          <div class="col-sm-10">
+            <div class="row">
+              <div class="col-sm-2">
+                <label for="{{ da_form.seb_age_from.id_for_label }}" class="sr-only">From (months)</label>
+                {{da_form.seb_age_from}}
+                {% if da_form.seb_age_from.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in da_form.seb_age_from.errors %}
+                      <small class="text-danger">{{ error }}</small><br>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+              <div class="col-sm-1 text-center align-self-center">
+                <span class="text-muted">to</span>
+              </div>
+              <div class="col-sm-2">
+                <label for="{{ da_form.seb_age_to.id_for_label }}" class="sr-only">To (months)</label>
+                {{da_form.seb_age_to}}
+                {% if da_form.seb_age_to.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in da_form.seb_age_to.errors %}
+                      <small class="text-danger">{{ error }}</small><br>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+              <div class="col-sm-2 align-self-center">
+                <span class="text-muted">months</span>
+              </div>
+            </div>
+            <small class="form-text text-muted">Social, emotional and behavioral developmental age range (0-72 months)</small>
+          </div>
+        </div>
+      </div>
+
+      </br> <div class="section-divider"> <hr> </div> </br>
+
+      <!-- Additional Assessment Information -->
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">Comment : </label>
+        <label class="col-form-label col-sm-2" for="{{ da_form.comment.id_for_label }}">Comment : </label>
         <div class="col-sm-10">
-            {{da_form.comment}}
+          {{da_form.comment}}
+          {% if da_form.comment.errors %}
+            <div class="invalid-feedback d-block">
+              {% for error in da_form.comment.errors %}
+                <small class="text-danger">{{ error }}</small><br>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <small class="form-text text-muted">Additional notes and observations from the assessment</small>
         </div>
       </div>
 
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">Assessment done by : </label>
+        <label class="col-form-label col-sm-2" for="{{ da_form.assessment_done_by.id_for_label }}">
+          Assessment done by <span class="text-danger">*</span> : 
+        </label>
         <div class="col-sm-10">
-            {{da_form.assessment_done_by}}
+          {{da_form.assessment_done_by}}
+          {% if da_form.assessment_done_by.errors %}
+            <div class="invalid-feedback d-block">
+              {% for error in da_form.assessment_done_by.errors %}
+                <small class="text-danger">{{ error }}</small><br>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <small class="form-text text-muted">Name of the healthcare professional who conducted the assessment</small>
         </div>
       </div>
+
+      <!-- Form-wide errors -->
+      {% if da_form.non_field_errors %}
+        <div class="alert alert-danger" role="alert">
+          {% for error in da_form.non_field_errors %}
+            {{ error }}<br>
+          {% endfor %}
+        </div>
+      {% endif %}
 
       <div class="form-group row">
         <label class="col-sm-2 col-form-label"></label>
-        <div class="col-sm"><button type="submit" class="btn btn-primary float-right">Add Developmental Assessment Record</button></div>
+        <div class="col-sm">
+          <button type="submit" class="btn btn-primary float-right">
+            <i class="fas fa-save"></i> Add Developmental Assessment Record
+          </button>
+          <a href="{% url 'view-patient' patient.id %}" class="btn btn-secondary float-right mr-2">
+            <i class="fas fa-times"></i> Cancel
+          </a>
+        </div>
       </div>
 
       </br>
@@ -153,5 +354,199 @@
   </div>
   <!-- /.card -->
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add form validation
+    const form = document.querySelector('form');
+    const dateField = document.getElementById('{{ da_form.date_of_assessment.id_for_label }}');
+    const assessorField = document.getElementById('{{ da_form.assessment_done_by.id_for_label }}');
+
+    // Age range validation pairs
+    const ageRangePairs = [
+        ['{{ da_form.gm_age_from.id_for_label }}', '{{ da_form.gm_age_to.id_for_label }}', 'Gross Motor'],
+        ['{{ da_form.fmv_age_from.id_for_label }}', '{{ da_form.fmv_age_to.id_for_label }}', 'Fine Motor and Vision'],
+        ['{{ da_form.hsl_age_from.id_for_label }}', '{{ da_form.hsl_age_to.id_for_label }}', 'Hearing, Speech and Language'],
+        ['{{ da_form.seb_age_from.id_for_label }}', '{{ da_form.seb_age_to.id_for_label }}', 'Social, Emotional and Behavioral']
+    ];
+
+    // Real-time age range validation
+    ageRangePairs.forEach(([fromId, toId, domainName]) => {
+        const fromField = document.getElementById(fromId);
+        const toField = document.getElementById(toId);
+
+        if (fromField && toField) {
+            function validateRange() {
+                const fromValue = parseInt(fromField.value);
+                const toValue = parseInt(toField.value);
+
+                // Clear previous custom errors
+                [fromField, toField].forEach(field => {
+                    const customFeedback = field.parentNode.querySelector('.custom-invalid-feedback');
+                    if (customFeedback) customFeedback.remove();
+                });
+
+                if (fromValue && toValue) {
+                    if (fromValue > toValue) {
+                        // Add error to 'to' field
+                        toField.classList.add('is-invalid');
+                        const feedback = document.createElement('div');
+                        feedback.className = 'custom-invalid-feedback invalid-feedback d-block';
+                        feedback.innerHTML = `<small class="text-danger">${domainName} "to" value must be greater than or equal to "from" value</small>`;
+                        toField.parentNode.appendChild(feedback);
+                    } else {
+                        toField.classList.remove('is-invalid');
+                        fromField.classList.remove('is-invalid');
+                    }
+                }
+
+                // Validate range (0-72 months)
+                [fromField, toField].forEach(field => {
+                    const value = parseInt(field.value);
+                    if (value && (value < 0 || value > 72)) {
+                        field.classList.add('is-invalid');
+                        const feedback = document.createElement('div');
+                        feedback.className = 'custom-invalid-feedback invalid-feedback d-block';
+                        feedback.innerHTML = '<small class="text-danger">Age must be between 0 and 72 months</small>';
+                        field.parentNode.appendChild(feedback);
+                    } else if (value >= 0 && value <= 72) {
+                        // Only remove is-invalid if no other errors
+                        const existingError = field.parentNode.querySelector('.custom-invalid-feedback');
+                        if (!existingError) {
+                            field.classList.remove('is-invalid');
+                        }
+                    }
+                });
+            }
+
+            fromField.addEventListener('input', validateRange);
+            toField.addEventListener('input', validateRange);
+        }
+    });
+
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+        let hasError = false;
+
+        // Validate required fields
+        [dateField, assessorField].forEach(field => {
+            if (field && (!field.value || field.value.trim() === '')) {
+                field.classList.add('is-invalid');
+                hasError = true;
+            } else if (field) {
+                field.classList.remove('is-invalid');
+            }
+        });
+
+        // Validate age ranges
+        ageRangePairs.forEach(([fromId, toId, domainName]) => {
+            const fromField = document.getElementById(fromId);
+            const toField = document.getElementById(toId);
+
+            if (fromField && toField && fromField.value && toField.value) {
+                const fromValue = parseInt(fromField.value);
+                const toValue = parseInt(toField.value);
+
+                if (fromValue > toValue) {
+                    toField.classList.add('is-invalid');
+                    hasError = true;
+                }
+
+                // Validate range limits
+                [fromField, toField].forEach(field => {
+                    const value = parseInt(field.value);
+                    if (value < 0 || value > 72) {
+                        field.classList.add('is-invalid');
+                        hasError = true;
+                    }
+                });
+            }
+        });
+
+        if (hasError) {
+            e.preventDefault();
+            // Scroll to first error
+            const firstError = form.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.focus();
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    });
+
+    // Auto-resize textareas
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    });
+});
+</script>
+
+<style>
+.form-control-plaintext.font-weight-bold {
+    color: #495057 !important;
+}
+
+.section-divider {
+    margin: 1.5rem 0;
+}
+
+.assessment-section {
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid #17a2b8;
+}
+
+.assessment-section h5 {
+    margin-bottom: 1rem;
+    color: #17a2b8 !important;
+}
+
+.assessment-section h5 i {
+    margin-right: 0.5rem;
+}
+
+.align-self-center {
+    align-self: center !important;
+}
+
+/* Custom spacing for age range inputs */
+.age-range-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.age-range-input {
+    flex: 0 0 80px;
+}
+
+/* Textarea auto-resize */
+textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Enhanced invalid feedback */
+.custom-invalid-feedback {
+    margin-top: 0.25rem;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .assessment-section {
+        padding: 1rem;
+    }
+    
+    .assessment-section h5 {
+        font-size: 1.1rem;
+    }
+}
+</style>
 
 {% endblock main_content %}

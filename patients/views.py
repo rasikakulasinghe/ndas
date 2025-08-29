@@ -1,4 +1,6 @@
 from django.shortcuts import redirect, render
+from datetime import timedelta
+from django.utils import timezone
 from django.urls import reverse
 from patients.models import (
     Patient,
@@ -22,6 +24,7 @@ from patients.forms import (
     HINEAssessmentForm,
     DevelopmentalAssessmentForm,
 )
+from ndas.custom_codes.choice import BOOKMARK_TYPE
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -1140,50 +1143,133 @@ def help_article(request, pk):
 
 @login_required(login_url="user-login")
 def bookmark_manager(request):
-    var_patients_list = Bookmark.objects.all().order_by("-id")
-    paginator = Paginator(var_patients_list, 10)
-    page_number = request.GET.get("page")
-    bookmark_list = paginator.get_page(page_number)
-    return render(
-        request, "bookmark/manager.html", {"bookmark_page_obj": bookmark_list}
-    )
+    try:
+        # Get all bookmarks
+        var_bookmarks_list = Bookmark.objects.select_related('owner', 'last_edit_by').all().order_by("-id")
+        
+        # Search and filter functionality
+        search_title = request.GET.get('search_title', '').strip()
+        bookmark_type = request.GET.get('bookmark_type', '')
+        owner = request.GET.get('owner', '').strip()
+        date_range = request.GET.get('date_range', '')
+        
+        # Apply search filters
+        if search_title:
+            var_bookmarks_list = var_bookmarks_list.filter(
+                title__icontains=search_title
+            )
+        
+        if bookmark_type:
+            var_bookmarks_list = var_bookmarks_list.filter(
+                bookmark_type=bookmark_type
+            )
+        
+        if owner:
+            var_bookmarks_list = var_bookmarks_list.filter(
+                owner__username__icontains=owner
+            )
+        
+        # Apply date range filters
+        if date_range:
+            from datetime import timedelta
+            from django.utils import timezone
+            
+            now = timezone.now()
+            if date_range == 'today':
+                start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                var_bookmarks_list = var_bookmarks_list.filter(created_on__gte=start_date)
+            elif date_range == 'week':
+                start_date = now - timedelta(days=7)
+                var_bookmarks_list = var_bookmarks_list.filter(created_on__gte=start_date)
+            elif date_range == 'month':
+                start_date = now - timedelta(days=30)
+                var_bookmarks_list = var_bookmarks_list.filter(created_on__gte=start_date)
+            elif date_range == 'year':
+                start_date = now - timedelta(days=365)
+                var_bookmarks_list = var_bookmarks_list.filter(created_on__gte=start_date)
+        
+        # Calculate statistics
+        bookmark_stats = {
+            'total': var_bookmarks_list.count(),
+            'patient': var_bookmarks_list.filter(bookmark_type='Patient').count(),
+            'video': var_bookmarks_list.filter(bookmark_type='Video').count(),
+            'assessment': var_bookmarks_list.filter(
+                bookmark_type__in=['GMA', 'HINE', 'DA', 'CDICR']
+            ).count(),
+        }
+        
+        # Pagination
+        paginator = Paginator(var_bookmarks_list, 15)
+        page_number = request.GET.get("page")
+        bookmark_page_obj = paginator.get_page(page_number)
+        
+        context = {
+            "bookmark_page_obj": bookmark_page_obj,
+            "bookmark_stats": bookmark_stats,
+        }
+        
+        return render(request, "bookmark/manager.html", context)
+        
+    except Exception as e:
+        messages.error(request, f"Error loading bookmark records: {str(e)}")
+        return render(request, "bookmark/manager.html", {
+            "bookmark_page_obj": None,
+            "bookmark_stats": {'total': 0, 'patient': 0, 'video': 0, 'assessment': 0},
+        })
 
 
 @login_required(login_url="user-login")
 def bookmark_add(request, item_id, bookmark_type):
+    # Validate bookmark type
+    valid_types = [choice[0] for choice in BOOKMARK_TYPE]
+    if bookmark_type not in valid_types:
+        messages.error(request, "Invalid bookmark type.")
+        return redirect("manage-patients")
+    
     bookmark_form = BookmarkForm()
 
     if request.method == "POST":
         bookmark_form_data = BookmarkForm(request.POST)
         if bookmark_form_data.is_valid():
+            try:
+                title = bookmark_form_data.cleaned_data["title"]
+                description = bookmark_form_data.cleaned_data["description"]
 
-            title = bookmark_form_data.cleaned_data["title"]
-            description = bookmark_form_data.cleaned_data["description"]
-
-            # check bookmark already exist
-            if (
-                Bookmark.objects.filter(bookmark_type=bookmark_type)
-                .filter(object_id=item_id)
-                .exists()
-                == False
-            ):
-
-                prep_bm = Bookmark.objects.create(
-                    title=title,
+                # Check if bookmark already exists for this user
+                existing_bookmark = Bookmark.objects.filter(
                     bookmark_type=bookmark_type,
                     object_id=item_id,
-                    description=description,
-                    owner=request.user,
-                    last_edit_by=None,
-                )
+                    owner=request.user
+                ).first()
 
-                messages.success(request, "New bookmark created succusfully")
-                return redirect("bookmark-view", pk=prep_bm.id)
-            else:
-                messages.warning(
-                    request,
-                    "Already bookmarked, please remove before create new bookmark...",
-                )
+                if not existing_bookmark:
+                    prep_bm = Bookmark.objects.create(
+                        title=title,
+                        bookmark_type=bookmark_type,
+                        object_id=item_id,
+                        description=description,
+                        owner=request.user,
+                        added_by=request.user,
+                    )
+
+                    messages.success(request, "New bookmark created successfully.")
+                    return redirect("bookmark-view", pk=prep_bm.id)
+                else:
+                    messages.warning(
+                        request,
+                        "You have already bookmarked this item. Please remove the existing bookmark before creating a new one.",
+                    )
+                    return render(
+                        request,
+                        "bookmark/add.html",
+                        {
+                            "form": bookmark_form_data,
+                            "item_id": item_id,
+                            "bookmark_type": bookmark_type,
+                        },
+                    )
+            except Exception as e:
+                messages.error(request, f"Error creating bookmark: {str(e)}")
                 return render(
                     request,
                     "bookmark/add.html",
@@ -1194,7 +1280,16 @@ def bookmark_add(request, item_id, bookmark_type):
                     },
                 )
         else:
-            messages.error(request, bookmark_form_data.errors)
+            # Format errors for better user experience
+            error_messages = []
+            for field, errors in bookmark_form_data.errors.items():
+                field_name = bookmark_form_data.fields[field].label or field.replace('_', ' ').title()
+                for error in errors:
+                    error_messages.append(f"{field_name}: {error}")
+            
+            if error_messages:
+                messages.error(request, "Please correct the following errors: " + "; ".join(error_messages))
+            
             return render(
                 request,
                 "bookmark/add.html",
@@ -1495,18 +1590,47 @@ def attachment_delete(request, pk):
 
 @login_required(login_url="user-login")
 def cdic_assessment_add(request, pid):
-    selected_patient = Patient.objects.get(pk=pid)
+    try:
+        selected_patient = Patient.objects.get(pk=pid)
+    except Patient.DoesNotExist:
+        messages.error(request, "Patient not found.")
+        return redirect("manage-patients")
+    
     cdic_assemnt_form = CDICRecordForm()
 
     if request.method == "POST":
         cdic_assemnt_form_data = CDICRecordForm(request.POST)
         if cdic_assemnt_form_data.is_valid():
-            cdic_record = cdic_assemnt_form_data.save(commit=False)
-            cdic_record.patient = selected_patient
-            cdic_record.created_by = request.user
-            cdic_record.save()
-            messages.success(request, "New CDIC record addes successfully...")
-            return redirect("cdic-assessment-view", cdic_record.id)
+            try:
+                cdic_record = cdic_assemnt_form_data.save(commit=False)
+                cdic_record.patient = selected_patient
+                cdic_record.added_by = request.user
+                cdic_record.save()
+                messages.success(request, "New CDIC record added successfully.")
+                return redirect("cdic-assessment-view", cdic_record.id)
+            except Exception as e:
+                messages.error(request, f"Error saving CDIC record: {str(e)}")
+                return render(
+                    request,
+                    "cdic_record/add.html",
+                    {"patient": selected_patient, "cdic_assemnt_form": cdic_assemnt_form_data},
+                )
+        else:
+            # Format errors for better user experience
+            error_messages = []
+            for field, errors in cdic_assemnt_form_data.errors.items():
+                field_name = cdic_assemnt_form_data.fields[field].label or field.replace('_', ' ').title()
+                for error in errors:
+                    error_messages.append(f"{field_name}: {error}")
+            
+            if error_messages:
+                messages.error(request, "Please correct the following errors: " + "; ".join(error_messages))
+            
+            return render(
+                request,
+                "cdic_record/add.html",
+                {"patient": selected_patient, "cdic_assemnt_form": cdic_assemnt_form_data},
+            )
     else:
         return render(
             request,
@@ -1557,27 +1681,203 @@ def cdic_assessment_view(request, cdic_id):
 
 @login_required(login_url="user-login")
 def cdic_assessment_manager(request):
-    var_cdic_list = CDICRecord.objects.all().order_by("-id")
-    paginator = Paginator(var_cdic_list, 10)
-    page_number = request.GET.get("page")
-    cdic_record_list = paginator.get_page(page_number)
-    return render(
-        request, "cdic_record/manager.html", {"cdic_record_list": cdic_record_list}
-    )
+    try:
+        # Get all CDIC records
+        var_cdic_list = CDICRecord.objects.select_related('patient', 'created_by', 'edit_by').all().order_by("-id")
+        
+        # Search and filter functionality
+        search_patient = request.GET.get('search_patient', '').strip()
+        date_range = request.GET.get('date_range', '')
+        follow_up_status = request.GET.get('follow_up_status', '')
+        created_by = request.GET.get('created_by', '').strip()
+        
+        # Apply search filters
+        if search_patient:
+            var_cdic_list = var_cdic_list.filter(
+                patient__baby_name__icontains=search_patient
+            )
+        
+        if created_by:
+            var_cdic_list = var_cdic_list.filter(
+                created_by__username__icontains=created_by
+            )
+        
+        # Apply date range filters
+        if date_range:
+            from datetime import timedelta
+            from django.utils import timezone
+            
+            now = timezone.now()
+            if date_range == 'today':
+                start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                var_cdic_list = var_cdic_list.filter(assessment_date__gte=start_date)
+            elif date_range == 'week':
+                start_date = now - timedelta(days=7)
+                var_cdic_list = var_cdic_list.filter(assessment_date__gte=start_date)
+            elif date_range == 'month':
+                start_date = now - timedelta(days=30)
+                var_cdic_list = var_cdic_list.filter(assessment_date__gte=start_date)
+            elif date_range == 'quarter':
+                start_date = now - timedelta(days=90)
+                var_cdic_list = var_cdic_list.filter(assessment_date__gte=start_date)
+            elif date_range == 'year':
+                start_date = now - timedelta(days=365)
+                var_cdic_list = var_cdic_list.filter(assessment_date__gte=start_date)
+        
+        # Apply follow-up status filters
+        if follow_up_status:
+            from datetime import date
+            today = date.today()
+            
+            if follow_up_status == 'pending':
+                var_cdic_list = var_cdic_list.filter(
+                    next_appointment_date__isnull=False,
+                    next_appointment_date__gte=today
+                )
+            elif follow_up_status == 'completed':
+                var_cdic_list = var_cdic_list.filter(
+                    next_appointment_date__isnull=True
+                )
+            elif follow_up_status == 'overdue':
+                var_cdic_list = var_cdic_list.filter(
+                    next_appointment_date__isnull=False,
+                    next_appointment_date__lt=today
+                )
+        
+        # Calculate statistics
+        from datetime import date
+        today = date.today()
+        
+        cdic_stats = {
+            'total': var_cdic_list.count(),
+            'completed': var_cdic_list.filter(next_appointment_date__isnull=True).count(),
+            'pending': var_cdic_list.filter(
+                next_appointment_date__isnull=False,
+                next_appointment_date__gte=today
+            ).count(),
+            'this_week': var_cdic_list.filter(
+                assessment_date__gte=today - timedelta(days=7)
+            ).count(),
+        }
+        
+        # Pagination
+        paginator = Paginator(var_cdic_list, 15)
+        page_number = request.GET.get("page")
+        cdic_record_list = paginator.get_page(page_number)
+        
+        context = {
+            "cdic_record_list": cdic_record_list,
+            "cdic_stats": cdic_stats,
+            "patient": None,
+        }
+        
+        return render(request, "cdic_record/manager.html", context)
+        
+    except Exception as e:
+        messages.error(request, f"Error loading CDIC assessment records: {str(e)}")
+        return render(request, "cdic_record/manager.html", {
+            "cdic_record_list": None,
+            "cdic_stats": {'total': 0, 'completed': 0, 'pending': 0, 'this_week': 0},
+            "patient": None,
+        })
 
 
 @login_required(login_url="user-login")
 def cdic_assessment_manager_by_patients(request, pid):
-    sp = Patient.objects.get(pk=pid)
-    var_cdic_list = CDICRecord.objects.filter(patient=sp.id).order_by("-id")
-    paginator = Paginator(var_cdic_list, 10)
-    page_number = request.GET.get("page")
-    cdic_record_list = paginator.get_page(page_number)
-    return render(
-        request,
-        "cdic_record/manager.html",
-        {"patient": sp, "cdic_record_list": cdic_record_list},
-    )
+    try:
+        # Get patient with error handling
+        try:
+            sp = Patient.objects.get(pk=pid)
+        except Patient.DoesNotExist:
+            messages.error(request, "Patient not found.")
+            return redirect("manage-patients")
+        
+        # Get CDIC records for this patient
+        var_cdic_list = CDICRecord.objects.select_related('patient', 'created_by', 'edit_by').filter(patient=sp.id).order_by("-id")
+        
+        # Search and filter functionality (same as general manager but for specific patient)
+        date_range = request.GET.get('date_range', '')
+        follow_up_status = request.GET.get('follow_up_status', '')
+        created_by = request.GET.get('created_by', '').strip()
+        
+        # Apply filters
+        if created_by:
+            var_cdic_list = var_cdic_list.filter(
+                created_by__username__icontains=created_by
+            )
+        
+        if date_range:
+            from datetime import datetime, timedelta
+            from django.utils import timezone
+            
+            now = timezone.now()
+            if date_range == 'today':
+                start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                var_cdic_list = var_cdic_list.filter(assessment_date__gte=start_date)
+            elif date_range == 'week':
+                start_date = now - timedelta(days=7)
+                var_cdic_list = var_cdic_list.filter(assessment_date__gte=start_date)
+            elif date_range == 'month':
+                start_date = now - timedelta(days=30)
+                var_cdic_list = var_cdic_list.filter(assessment_date__gte=start_date)
+            elif date_range == 'quarter':
+                start_date = now - timedelta(days=90)
+                var_cdic_list = var_cdic_list.filter(assessment_date__gte=start_date)
+            elif date_range == 'year':
+                start_date = now - timedelta(days=365)
+                var_cdic_list = var_cdic_list.filter(assessment_date__gte=start_date)
+        
+        if follow_up_status:
+            from datetime import date
+            today = date.today()
+            
+            if follow_up_status == 'pending':
+                var_cdic_list = var_cdic_list.filter(
+                    next_appointment_date__isnull=False,
+                    next_appointment_date__gte=today
+                )
+            elif follow_up_status == 'completed':
+                var_cdic_list = var_cdic_list.filter(
+                    next_appointment_date__isnull=True
+                )
+            elif follow_up_status == 'overdue':
+                var_cdic_list = var_cdic_list.filter(
+                    next_appointment_date__isnull=False,
+                    next_appointment_date__lt=today
+                )
+        
+        # Calculate statistics for this patient
+        from datetime import date
+        today = date.today()
+        
+        cdic_stats = {
+            'total': var_cdic_list.count(),
+            'completed': var_cdic_list.filter(next_appointment_date__isnull=True).count(),
+            'pending': var_cdic_list.filter(
+                next_appointment_date__isnull=False,
+                next_appointment_date__gte=today
+            ).count(),
+            'this_week': var_cdic_list.filter(
+                assessment_date__gte=today - timedelta(days=7)
+            ).count(),
+        }
+        
+        # Pagination
+        paginator = Paginator(var_cdic_list, 15)
+        page_number = request.GET.get("page")
+        cdic_record_list = paginator.get_page(page_number)
+        
+        context = {
+            "patient": sp,
+            "cdic_record_list": cdic_record_list,
+            "cdic_stats": cdic_stats,
+        }
+        
+        return render(request, "cdic_record/manager.html", context)
+        
+    except Exception as e:
+        messages.error(request, f"Error loading CDIC assessment records for patient: {str(e)}")
+        return redirect("view-patient", pk=pid)
 
 
 @login_required(login_url="user-login")
@@ -1620,20 +1920,40 @@ def cdic_assessment_delete(request, aid):
 # Functions for HINE assessments
 @login_required(login_url="user-login")
 def hine_assessment_add(request, pid):
-    sp = Patient.objects.get(pk=pid)
+    try:
+        sp = Patient.objects.get(pk=pid)
+    except Patient.DoesNotExist:
+        messages.error(request, "Patient not found.")
+        return redirect("manage-patients")
+    
     hine_form = HINEAssessmentForm()
+    
     if request.method == "POST":
         hine_form_data = HINEAssessmentForm(request.POST)
         if hine_form_data.is_valid():
-            hine_record = hine_form_data.save(commit=False)
-            hine_record.patient = sp
-            hine_record.added_by = request.user
-            hine_record.added_on = getCurrentDateTime()
-            hine_record.save()
-            messages.success(request, "New HINE record created successfully...")
-            return redirect("hine-assessment-view", hine_record.id)
+            try:
+                hine_record = hine_form_data.save(commit=False)
+                hine_record.patient = sp
+                hine_record.added_by = request.user
+                hine_record.save()
+                messages.success(request, "New HINE assessment record created successfully.")
+                return redirect("hine-assessment-view", hine_record.id)
+            except Exception as e:
+                messages.error(request, f"Error saving HINE record: {str(e)}")
+                return render(
+                    request, "hine/add.html", {"patient": sp, "hine_form": hine_form_data}
+                )
         else:
-            messages.error(request, hine_form_data.errors)
+            # Format errors for better user experience
+            error_messages = []
+            for field, errors in hine_form_data.errors.items():
+                field_name = hine_form_data.fields[field].label or field.replace('_', ' ').title()
+                for error in errors:
+                    error_messages.append(f"{field_name}: {error}")
+            
+            if error_messages:
+                messages.error(request, "Please correct the following errors: " + "; ".join(error_messages))
+            
             return render(
                 request, "hine/add.html", {"patient": sp, "hine_form": hine_form_data}
             )
@@ -1678,29 +1998,158 @@ def hine_assessment_view(request, hine_id):
 
 @login_required(login_url="user-login")
 def hine_assessment_manager(request):
-    var_hine_list = HINEAssessment.objects.all().order_by("-id")
-    paginator = Paginator(var_hine_list, 10)
-    page_number = request.GET.get("page")
-    hine_record_list = paginator.get_page(page_number)
-    return render(
-        request,
-        "hine/manager.html",
-        {"patient": "", "hine_record_list": hine_record_list},
-    )
+    try:
+        # Get all HINE assessments
+        var_hine_list = HINEAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').all().order_by("-id")
+        
+        # Search and filter functionality
+        search_patient = request.GET.get('search_patient', '').strip()
+        search_assessor = request.GET.get('search_assessor', '').strip()
+        score_range = request.GET.get('score_range', '')
+        date_range = request.GET.get('date_range', '')
+        
+        # Apply search filters
+        if search_patient:
+            var_hine_list = var_hine_list.filter(
+                patient__baby_name__icontains=search_patient
+            )
+        
+        if search_assessor:
+            var_hine_list = var_hine_list.filter(
+                assessment_done_by__icontains=search_assessor
+            )
+        
+        if score_range:
+            if score_range == 'normal':
+                var_hine_list = var_hine_list.filter(score__gte=60)
+            elif score_range == 'moderate':
+                var_hine_list = var_hine_list.filter(score__gte=40, score__lt=60)
+            elif score_range == 'significant':
+                var_hine_list = var_hine_list.filter(score__lt=40)
+        
+        # Apply date range filters
+        if date_range:
+            from datetime import timedelta
+            from django.utils import timezone
+            
+            now = timezone.now()
+            if date_range == 'today':
+                start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                var_hine_list = var_hine_list.filter(date_of_assessment__gte=start_date)
+            elif date_range == 'week':
+                start_date = now - timedelta(days=7)
+                var_hine_list = var_hine_list.filter(date_of_assessment__gte=start_date)
+            elif date_range == 'month':
+                start_date = now - timedelta(days=30)
+                var_hine_list = var_hine_list.filter(date_of_assessment__gte=start_date)
+            elif date_range == 'year':
+                start_date = now - timedelta(days=365)
+                var_hine_list = var_hine_list.filter(date_of_assessment__gte=start_date)
+        
+        # Calculate statistics
+        hine_stats = {
+            'total': var_hine_list.count(),
+            'normal': var_hine_list.filter(score__gte=60).count(),
+            'moderate': var_hine_list.filter(score__gte=40, score__lt=60).count(),
+            'significant': var_hine_list.filter(score__lt=40).count(),
+        }
+        
+        # Pagination
+        paginator = Paginator(var_hine_list, 15)  # Increased page size
+        page_number = request.GET.get("page")
+        hine_record_list = paginator.get_page(page_number)
+        
+        context = {
+            "patient": None,
+            "hine_record_list": hine_record_list,
+            "hine_stats": hine_stats,
+        }
+        
+        return render(request, "hine/manager.html", context)
+        
+    except Exception as e:
+        messages.error(request, f"Error loading HINE assessment records: {str(e)}")
+        return render(request, "hine/manager.html", {
+            "patient": None,
+            "hine_record_list": None,
+            "hine_stats": {'total': 0, 'normal': 0, 'moderate': 0, 'significant': 0},
+        })
 
 
 @login_required(login_url="user-login")
 def hine_assessment_manager_by_patients(request, pid):
-    sp = Patient.objects.get(pk=pid)
-    var_hine_list = HINEAssessment.objects.filter(patient=sp.id).order_by("-id")
-    paginator = Paginator(var_hine_list, 10)
-    page_number = request.GET.get("page")
-    hine_record_list = paginator.get_page(page_number)
-    return render(
-        request,
-        "hine/manager.html",
-        {"patient": sp, "hine_record_list": hine_record_list},
-    )
+    try:
+        # Get patient with error handling
+        try:
+            sp = Patient.objects.get(pk=pid)
+        except Patient.DoesNotExist:
+            messages.error(request, "Patient not found.")
+            return redirect("manage-patients")
+        
+        # Get HINE assessments for this patient
+        var_hine_list = HINEAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').filter(patient=sp.id).order_by("-id")
+        
+        # Search and filter functionality (same as general manager but for specific patient)
+        search_assessor = request.GET.get('search_assessor', '').strip()
+        score_range = request.GET.get('score_range', '')
+        date_range = request.GET.get('date_range', '')
+        
+        # Apply filters
+        if search_assessor:
+            var_hine_list = var_hine_list.filter(
+                assessment_done_by__icontains=search_assessor
+            )
+        
+        if score_range:
+            if score_range == 'normal':
+                var_hine_list = var_hine_list.filter(score__gte=60)
+            elif score_range == 'moderate':
+                var_hine_list = var_hine_list.filter(score__gte=40, score__lt=60)
+            elif score_range == 'significant':
+                var_hine_list = var_hine_list.filter(score__lt=40)
+        
+        if date_range:
+            from datetime import datetime, timedelta
+            from django.utils import timezone
+            
+            now = timezone.now()
+            if date_range == 'today':
+                start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                var_hine_list = var_hine_list.filter(date_of_assessment__gte=start_date)
+            elif date_range == 'week':
+                start_date = now - timedelta(days=7)
+                var_hine_list = var_hine_list.filter(date_of_assessment__gte=start_date)
+            elif date_range == 'month':
+                start_date = now - timedelta(days=30)
+                var_hine_list = var_hine_list.filter(date_of_assessment__gte=start_date)
+            elif date_range == 'year':
+                start_date = now - timedelta(days=365)
+                var_hine_list = var_hine_list.filter(date_of_assessment__gte=start_date)
+        
+        # Calculate statistics for this patient
+        hine_stats = {
+            'total': var_hine_list.count(),
+            'normal': var_hine_list.filter(score__gte=60).count(),
+            'moderate': var_hine_list.filter(score__gte=40, score__lt=60).count(),
+            'significant': var_hine_list.filter(score__lt=40).count(),
+        }
+        
+        # Pagination
+        paginator = Paginator(var_hine_list, 15)
+        page_number = request.GET.get("page")
+        hine_record_list = paginator.get_page(page_number)
+        
+        context = {
+            "patient": sp,
+            "hine_record_list": hine_record_list,
+            "hine_stats": hine_stats,
+        }
+        
+        return render(request, "hine/manager.html", context)
+        
+    except Exception as e:
+        messages.error(request, f"Error loading HINE assessment records for patient: {str(e)}")
+        return redirect("view-patient", pk=pid)
 
 
 @login_required(login_url="user-login")
@@ -1739,21 +2188,44 @@ def hine_assessment_delete(request, hine_id):
 # Functions for Developmental assessments
 @login_required(login_url="user-login")
 def da_assessment_add(request, pid):
-    sp = Patient.objects.get(pk=pid)
+    try:
+        sp = Patient.objects.get(pk=pid)
+    except Patient.DoesNotExist:
+        messages.error(request, "Patient not found.")
+        return redirect("manage-patients")
+    
     da_form = DevelopmentalAssessmentForm()
+    
     if request.method == "POST":
         da_form_data = DevelopmentalAssessmentForm(request.POST)
         if da_form_data.is_valid():
-            da_record = da_form_data.save(commit=False)
-            da_record.patient = sp
-            da_record.added_by = request.user
-            da_record.save()
-            messages.success(
-                request, "New developmental assessment record created successfully..."
-            )
-            return redirect("da-assessment-view", da_record.id)
+            try:
+                da_record = da_form_data.save(commit=False)
+                da_record.patient = sp
+                da_record.added_by = request.user
+                da_record.save()
+                messages.success(
+                    request, "New developmental assessment record created successfully."
+                )
+                return redirect("da-assessment-view", da_record.id)
+            except Exception as e:
+                messages.error(request, f"Error saving developmental assessment record: {str(e)}")
+                return render(
+                    request,
+                    "develop_assemnt/add.html",
+                    {"patient": sp, "da_form": da_form_data},
+                )
         else:
-            messages.error(request, da_form_data.errors)
+            # Format errors for better user experience
+            error_messages = []
+            for field, errors in da_form_data.errors.items():
+                field_name = da_form_data.fields[field].label or field.replace('_', ' ').title()
+                for error in errors:
+                    error_messages.append(f"{field_name}: {error}")
+            
+            if error_messages:
+                messages.error(request, "Please correct the following errors: " + "; ".join(error_messages))
+            
             return render(
                 request,
                 "develop_assemnt/add.html",
@@ -1799,29 +2271,212 @@ def da_assessment_view(request, da_id):
 
 @login_required(login_url="user-login")
 def da_assessment_manager(request):
-    var_da_list = DevelopmentalAssessment.objects.all().order_by("-id")
-    paginator = Paginator(var_da_list, 10)
-    page_number = request.GET.get("page")
-    da_record_list = paginator.get_page(page_number)
-    return render(
-        request,
-        "develop_assemnt/manager.html",
-        {"patient": "", "da_record_list": da_record_list},
-    )
+    try:
+        # Get all developmental assessments
+        var_da_list = DevelopmentalAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').all().order_by("-id")
+        
+        # Search and filter functionality
+        search_patient = request.GET.get('search_patient', '').strip()
+        development_status = request.GET.get('development_status', '')
+        age_range = request.GET.get('age_range', '')
+        date_range = request.GET.get('date_range', '')
+        assessor = request.GET.get('assessor', '').strip()
+        
+        # Apply search filters
+        if search_patient:
+            var_da_list = var_da_list.filter(
+                patient__baby_name__icontains=search_patient
+            )
+        
+        if assessor:
+            var_da_list = var_da_list.filter(
+                assessment_done_by__icontains=assessor
+            )
+        
+        if development_status:
+            if development_status == 'normal':
+                var_da_list = var_da_list.filter(is_dx_normal=True)
+            elif development_status == 'delayed':
+                var_da_list = var_da_list.filter(is_dx_normal=False)
+        
+        # Apply age range filters (assuming getAssessmentAgeInMonths method exists)
+        if age_range:
+            age_ranges = {
+                '0-6': (0, 6),
+                '6-12': (6, 12),
+                '12-24': (12, 24),
+                '24-36': (24, 36),
+                '36-48': (36, 48),
+                '48-72': (48, 72),
+            }
+            if age_range in age_ranges:
+                min_age, max_age = age_ranges[age_range]
+                # This would require a custom filter or database function
+                # For now, we'll filter in Python (not ideal for large datasets)
+                filtered_ids = []
+                for record in var_da_list:
+                    try:
+                        age_months = record.getAssessmentAgeInMonths
+                        if isinstance(age_months, str):
+                            # Extract numeric value if it's a string like "12 months"
+                            age_months = int(''.join(filter(str.isdigit, age_months)))
+                        if min_age <= age_months <= max_age:
+                            filtered_ids.append(record.id)
+                    except (ValueError, AttributeError):
+                        continue
+                var_da_list = var_da_list.filter(id__in=filtered_ids)
+        
+        # Apply date range filters
+        if date_range:
+            now = timezone.now()
+            if date_range == 'today':
+                start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                var_da_list = var_da_list.filter(date_of_assessment__gte=start_date)
+            elif date_range == 'week':
+                start_date = now - timedelta(days=7)
+                var_da_list = var_da_list.filter(date_of_assessment__gte=start_date)
+            elif date_range == 'month':
+                start_date = now - timedelta(days=30)
+                var_da_list = var_da_list.filter(date_of_assessment__gte=start_date)
+            elif date_range == 'quarter':
+                start_date = now - timedelta(days=90)
+                var_da_list = var_da_list.filter(date_of_assessment__gte=start_date)
+            elif date_range == 'year':
+                start_date = now - timedelta(days=365)
+                var_da_list = var_da_list.filter(date_of_assessment__gte=start_date)
+        
+        # Calculate statistics
+        da_stats = {
+            'total': var_da_list.count(),
+            'normal': var_da_list.filter(is_dx_normal=True).count(),
+            'delayed': var_da_list.filter(is_dx_normal=False).count(),
+            'this_month': var_da_list.filter(
+                date_of_assessment__gte=timezone.now() - timedelta(days=30)
+            ).count(),
+        }
+        
+        # Pagination
+        paginator = Paginator(var_da_list, 15)
+        page_number = request.GET.get("page")
+        da_record_list = paginator.get_page(page_number)
+        
+        context = {
+            "patient": None,
+            "da_record_list": da_record_list,
+            "da_stats": da_stats,
+        }
+        
+        return render(request, "develop_assemnt/manager.html", context)
+        
+    except Exception as e:
+        messages.error(request, f"Error loading developmental assessment records: {str(e)}")
+        return render(request, "develop_assemnt/manager.html", {
+            "patient": None,
+            "da_record_list": None,
+            "da_stats": {'total': 0, 'normal': 0, 'delayed': 0, 'this_month': 0},
+        })
 
 
 @login_required(login_url="user-login")
 def da_assessment_manager_by_patients(request, pid):
-    sp = Patient.objects.get(pk=pid)
-    var_da_list = DevelopmentalAssessment.objects.filter(patient=sp.id).order_by("-id")
-    paginator = Paginator(var_da_list, 10)
-    page_number = request.GET.get("page")
-    da_record_list = paginator.get_page(page_number)
-    return render(
-        request,
-        "develop_assemnt/manager.html",
-        {"patient": sp, "da_record_list": da_record_list},
-    )
+    try:
+        # Get patient with error handling
+        try:
+            sp = Patient.objects.get(pk=pid)
+        except Patient.DoesNotExist:
+            messages.error(request, "Patient not found.")
+            return redirect("manage-patients")
+        
+        # Get developmental assessments for this patient
+        var_da_list = DevelopmentalAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').filter(patient=sp.id).order_by("-id")
+        
+        # Search and filter functionality (same as general manager but for specific patient)
+        development_status = request.GET.get('development_status', '')
+        age_range = request.GET.get('age_range', '')
+        date_range = request.GET.get('date_range', '')
+        assessor = request.GET.get('assessor', '').strip()
+        
+        # Apply filters
+        if assessor:
+            var_da_list = var_da_list.filter(
+                assessment_done_by__icontains=assessor
+            )
+        
+        if development_status:
+            if development_status == 'normal':
+                var_da_list = var_da_list.filter(is_dx_normal=True)
+            elif development_status == 'delayed':
+                var_da_list = var_da_list.filter(is_dx_normal=False)
+        
+        # Apply age range filters
+        if age_range:
+            age_ranges = {
+                '0-6': (0, 6),
+                '6-12': (6, 12),
+                '12-24': (12, 24),
+                '24-36': (24, 36),
+                '36-48': (36, 48),
+                '48-72': (48, 72),
+            }
+            if age_range in age_ranges:
+                min_age, max_age = age_ranges[age_range]
+                filtered_ids = []
+                for record in var_da_list:
+                    try:
+                        age_months = record.getAssessmentAgeInMonths
+                        if isinstance(age_months, str):
+                            age_months = int(''.join(filter(str.isdigit, age_months)))
+                        if min_age <= age_months <= max_age:
+                            filtered_ids.append(record.id)
+                    except (ValueError, AttributeError):
+                        continue
+                var_da_list = var_da_list.filter(id__in=filtered_ids)
+        
+        # Apply date range filters
+        if date_range:
+            now = timezone.now()
+            if date_range == 'today':
+                start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                var_da_list = var_da_list.filter(date_of_assessment__gte=start_date)
+            elif date_range == 'week':
+                start_date = now - timedelta(days=7)
+                var_da_list = var_da_list.filter(date_of_assessment__gte=start_date)
+            elif date_range == 'month':
+                start_date = now - timedelta(days=30)
+                var_da_list = var_da_list.filter(date_of_assessment__gte=start_date)
+            elif date_range == 'quarter':
+                start_date = now - timedelta(days=90)
+                var_da_list = var_da_list.filter(date_of_assessment__gte=start_date)
+            elif date_range == 'year':
+                start_date = now - timedelta(days=365)
+                var_da_list = var_da_list.filter(date_of_assessment__gte=start_date)
+        
+        # Calculate statistics for this patient
+        da_stats = {
+            'total': var_da_list.count(),
+            'normal': var_da_list.filter(is_dx_normal=True).count(),
+            'delayed': var_da_list.filter(is_dx_normal=False).count(),
+            'this_month': var_da_list.filter(
+                date_of_assessment__gte=timezone.now() - timedelta(days=30)
+            ).count(),
+        }
+        
+        # Pagination
+        paginator = Paginator(var_da_list, 15)
+        page_number = request.GET.get("page")
+        da_record_list = paginator.get_page(page_number)
+        
+        context = {
+            "patient": sp,
+            "da_record_list": da_record_list,
+            "da_stats": da_stats,
+        }
+        
+        return render(request, "develop_assemnt/manager.html", context)
+        
+    except Exception as e:
+        messages.error(request, f"Error loading developmental assessment records for patient: {str(e)}")
+        return redirect("view-patient", pk=pid)
 
 
 @login_required(login_url="user-login")

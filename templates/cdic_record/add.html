@@ -10,92 +10,230 @@
   <div class="card">
   <div class="card-header bg-info"><h3 class="card-title">Create New CDIC Record</h3></div>
 
-  <form action="{% url 'cdic-assessment-add' patient.id %}" method="POST">
+  <form action="{% url 'cdic-assessment-add' patient.id %}" method="POST" novalidate>
     {% csrf_token %}
 
     <div class="card-body">
 
       <div class="form-group row">
         <label class="col-form-label col-sm-2">Patient : </label>
-        <div class="col-sm-10">{{patient.baby_name}}</div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Assessment Date : </label>
-        <div class="col-sm-2">{{cdic_assemnt_form.assessment_date}}</div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Assessment Note : </label>
         <div class="col-sm-10">
-            {{cdic_assemnt_form.assessment}}
+          <span class="form-control-plaintext font-weight-bold">{{patient.baby_name}}</span>
         </div>
       </div>
 
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">Today Intervention : </label>
-        <div class="col-sm">{{cdic_assemnt_form.today_interventions}}</div>
+        <label class="col-form-label col-sm-2" for="{{ cdic_assemnt_form.assessment_date.id_for_label }}">
+          Assessment Date <span class="text-danger">*</span> : 
+        </label>
+        <div class="col-sm-3">
+          {{cdic_assemnt_form.assessment_date}}
+          {% if cdic_assemnt_form.assessment_date.errors %}
+            <div class="invalid-feedback d-block">
+              {% for error in cdic_assemnt_form.assessment_date.errors %}
+                <small class="text-danger">{{ error }}</small><br>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <small class="form-text text-muted">Date when the assessment was performed</small>
+        </div>
       </div>
 
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">Done By : </label>
+        <label class="col-form-label col-sm-2" for="{{ cdic_assemnt_form.assessment.id_for_label }}">Assessment Note : </label>
+        <div class="col-sm-10">
+          {{cdic_assemnt_form.assessment}}
+          {% if cdic_assemnt_form.assessment.errors %}
+            <div class="invalid-feedback d-block">
+              {% for error in cdic_assemnt_form.assessment.errors %}
+                <small class="text-danger">{{ error }}</small><br>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <small class="form-text text-muted">Detailed assessment findings and observations</small>
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2" for="{{ cdic_assemnt_form.today_interventions.id_for_label }}">Today's Intervention : </label>
+        <div class="col-sm-10">
+          {{cdic_assemnt_form.today_interventions}}
+          {% if cdic_assemnt_form.today_interventions.errors %}
+            <div class="invalid-feedback d-block">
+              {% for error in cdic_assemnt_form.today_interventions.errors %}
+                <small class="text-danger">{{ error }}</small><br>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <small class="form-text text-muted">Interventions and treatments provided during this visit</small>
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-form-label col-sm-2" for="{{ cdic_assemnt_form.assessment_done_by.id_for_label }}">
+          Done By <span class="text-danger">*</span> : 
+        </label>
         <div class="col-sm-10">
           <div class="d-flex align-items-center">
-            <div>{{cdic_assemnt_form.assessment_done_by}}</div>
-            &nbsp; &nbsp; <div><a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Mention the officer who did the assessment..."></span></a></div>
+            <div class="flex-grow-1">
+              {{cdic_assemnt_form.assessment_done_by}}
+              {% if cdic_assemnt_form.assessment_done_by.errors %}
+                <div class="invalid-feedback d-block">
+                  {% for error in cdic_assemnt_form.assessment_done_by.errors %}
+                    <small class="text-danger">{{ error }}</small><br>
+                  {% endfor %}
+                </div>
+              {% endif %}
             </div>
+            <div class="ml-2">
+              <a href="#" data-toggle="tooltip" data-placement="top" title="Name or ID of the healthcare professional who performed the assessment">
+                <span class="fa fa-question-circle text-info"></span>
+              </a>
+            </div>
+          </div>
+          <small class="form-text text-muted">Name and position of the healthcare professional</small>
         </div>
       </div>
 
-<div id="container_ass_complt" style="display: none;">
+      <div id="container_ass_complt">
+        <div class="form-group row">
+          <label class="col-form-label col-sm-2" for="{{ cdic_assemnt_form.next_appointment_date.id_for_label }}">Next Appointment Date : </label>
+          <div class="col-sm-4">
+            {{cdic_assemnt_form.next_appointment_date}}
+            {% if cdic_assemnt_form.next_appointment_date.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in cdic_assemnt_form.next_appointment_date.errors %}
+                  <small class="text-danger">{{ error }}</small><br>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <small class="form-text text-muted">Scheduled date and time for next appointment</small>
+          </div>
+        </div>
 
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Next Appointment Date : </label>
-        <div class="col-sm-2">{{cdic_assemnt_form.next_appointment_date}}</div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Plan for Next Appointment : </label>
-        <div class="col-sm">{{cdic_assemnt_form.next_appointment_plan}}</div>
-      </div>
-
-</div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Is Discharged : </label>
-        <div class="col-sm">{{cdic_assemnt_form.is_discharged}}</div>
-      </div>
-
-<div id="container_discharge" style="display: none;">
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Discharge Date : </label>
-        <div class="col-sm">
-          <div class=" d-flex align-items-center">
-            <div>{{cdic_assemnt_form.discharge_date}}</div>
-            &nbsp; &nbsp; <div><a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Select the date of discharge patient from CDIC..."></span></a></div>
-            </div>
+        <div class="form-group row">
+          <label class="col-form-label col-sm-2" for="{{ cdic_assemnt_form.next_appointment_plan.id_for_label }}">Plan for Next Appointment : </label>
+          <div class="col-sm-10">
+            {{cdic_assemnt_form.next_appointment_plan}}
+            {% if cdic_assemnt_form.next_appointment_plan.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in cdic_assemnt_form.next_appointment_plan.errors %}
+                  <small class="text-danger">{{ error }}</small><br>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <small class="form-text text-muted">Planned activities and goals for next appointment</small>
+          </div>
         </div>
       </div>
+
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">Discharge By : </label>
-        <div class="col-sm">
-          <div class=" d-flex align-items-center">
-            <div>{{cdic_assemnt_form.discharged_by}}</div>
-            &nbsp; &nbsp; <div><a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Select patient discharge date from clinic..."></span></a></div>
+        <label class="col-form-label col-sm-2" for="{{ cdic_assemnt_form.is_discharged.id_for_label }}">Is Discharged : </label>
+        <div class="col-sm-10">
+          <div class="form-check">
+            {{cdic_assemnt_form.is_discharged}}
+            <label class="form-check-label ml-2" for="{{ cdic_assemnt_form.is_discharged.id_for_label }}">
+              Patient has been discharged from CDIC care
+            </label>
+          </div>
+          {% if cdic_assemnt_form.is_discharged.errors %}
+            <div class="invalid-feedback d-block">
+              {% for error in cdic_assemnt_form.is_discharged.errors %}
+                <small class="text-danger">{{ error }}</small><br>
+              {% endfor %}
             </div>
+          {% endif %}
         </div>
       </div>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Discharge Plan : </label>
-        <div class="col-sm">{{cdic_assemnt_form.discharge_plan}}</div>
+
+      <div id="container_discharge" style="display: none;">
+        <div class="form-group row">
+          <label class="col-form-label col-sm-2" for="{{ cdic_assemnt_form.discharge_date.id_for_label }}">
+            Discharge Date <span class="text-danger">*</span> : 
+          </label>
+          <div class="col-sm-3">
+            <div class="d-flex align-items-center">
+              <div class="flex-grow-1">
+                {{cdic_assemnt_form.discharge_date}}
+                {% if cdic_assemnt_form.discharge_date.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in cdic_assemnt_form.discharge_date.errors %}
+                      <small class="text-danger">{{ error }}</small><br>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+              <div class="ml-2">
+                <a href="#" data-toggle="tooltip" data-placement="top" title="Date when the patient was discharged from CDIC care">
+                  <span class="fa fa-question-circle text-info"></span>
+                </a>
+              </div>
+            </div>
+            <small class="form-text text-muted">Date of discharge from clinic</small>
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-form-label col-sm-2" for="{{ cdic_assemnt_form.discharged_by.id_for_label }}">
+            Discharge By <span class="text-danger">*</span> : 
+          </label>
+          <div class="col-sm-10">
+            <div class="d-flex align-items-center">
+              <div class="flex-grow-1">
+                {{cdic_assemnt_form.discharged_by}}
+                {% if cdic_assemnt_form.discharged_by.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in cdic_assemnt_form.discharged_by.errors %}
+                      <small class="text-danger">{{ error }}</small><br>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+              <div class="ml-2">
+                <a href="#" data-toggle="tooltip" data-placement="top" title="Name or ID of the healthcare professional who authorized discharge">
+                  <span class="fa fa-question-circle text-info"></span>
+                </a>
+              </div>
+            </div>
+            <small class="form-text text-muted">Name and position of officer authorizing discharge</small>
+          </div>
+        </div>
+        
+        <div class="form-group row">
+          <label class="col-form-label col-sm-2" for="{{ cdic_assemnt_form.discharge_plan.id_for_label }}">Discharge Plan : </label>
+          <div class="col-sm-10">
+            {{cdic_assemnt_form.discharge_plan}}
+            {% if cdic_assemnt_form.discharge_plan.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in cdic_assemnt_form.discharge_plan.errors %}
+                  <small class="text-danger">{{ error }}</small><br>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <small class="form-text text-muted">Discharge planning and follow-up instructions</small>
+          </div>
+        </div>
       </div>
-</div>
+
+      <!-- Form-wide errors -->
+      {% if cdic_assemnt_form.non_field_errors %}
+        <div class="alert alert-danger" role="alert">
+          {% for error in cdic_assemnt_form.non_field_errors %}
+            {{ error }}<br>
+          {% endfor %}
+        </div>
+      {% endif %}
 
       <div class="form-group row">
         <label class="col-sm-2 col-form-label"></label>
-        <div class="col-sm"><button type="submit" class="btn btn-primary float-right">Add CDIC Record</button></div>
+        <div class="col-sm">
+          <button type="submit" class="btn btn-primary float-right">
+            <i class="fas fa-save"></i> Add CDIC Record
+          </button>
+          <a href="{% url 'view-patient' patient.id %}" class="btn btn-secondary float-right mr-2">
+            <i class="fas fa-times"></i> Cancel
+          </a>
+        </div>
       </div>
 
       </br>
@@ -108,33 +246,161 @@
   <!-- /.card -->
 </div>
 
-
 <!-- JavaScript code -->
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
 
-  function toggleis_CDIC_assessment_completed() {
-    var checkbox = document.getElementById("is_assessment_completed");
-    var textboxContainer = document.getElementById("container_ass_complt");
+    // Add form validation
+    const form = document.querySelector('form');
+    const assessmentDateField = document.getElementById('{{ cdic_assemnt_form.assessment_date.id_for_label }}');
+    const assessorField = document.getElementById('{{ cdic_assemnt_form.assessment_done_by.id_for_label }}');
+    const isDischargedField = document.getElementById('{{ cdic_assemnt_form.is_discharged.id_for_label }}');
+    const dischargeDateField = document.getElementById('{{ cdic_assemnt_form.discharge_date.id_for_label }}');
+    const dischargedByField = document.getElementById('{{ cdic_assemnt_form.discharged_by.id_for_label }}');
+    const nextAppointmentDateField = document.getElementById('{{ cdic_assemnt_form.next_appointment_date.id_for_label }}');
 
-    if (checkbox.checked) {
-      textboxContainer.style.display = "block";
-    } else {
-      textboxContainer.style.display = "none";
+    // Toggle discharge fields visibility
+    function toggleis_discharged_fromCDIC() {
+        const textboxContainer = document.getElementById("container_discharge");
+        const requiredFields = [dischargeDateField, dischargedByField];
+        
+        if (isDischargedField && isDischargedField.checked) {
+            textboxContainer.style.display = "block";
+            // Add required attributes
+            requiredFields.forEach(field => {
+                if (field) field.setAttribute('required', 'required');
+            });
+        } else {
+            textboxContainer.style.display = "none";
+            // Remove required attributes and clear errors
+            requiredFields.forEach(field => {
+                if (field) {
+                    field.removeAttribute('required');
+                    field.classList.remove('is-invalid');
+                    const feedback = field.parentNode.querySelector('.invalid-feedback:not(.d-block)');
+                    if (feedback) feedback.remove();
+                }
+            });
+        }
     }
-  }
 
-  function toggleis_discharged_fromCDIC() {
-    var checkbox = document.getElementById("is_discharged");
-    var textboxContainer = document.getElementById("container_discharge");
-
-    if (checkbox.checked) {
-      textboxContainer.style.display = "block";
-    } else {
-      textboxContainer.style.display = "none";
+    // Set up discharge toggle
+    if (isDischargedField) {
+        isDischargedField.addEventListener('change', toggleis_discharged_fromCDIC);
+        // Initialize on page load
+        toggleis_discharged_fromCDIC();
     }
-  }
 
+    // Real-time validation
+    if (nextAppointmentDateField && assessmentDateField) {
+        nextAppointmentDateField.addEventListener('change', function() {
+            const appointmentDate = new Date(this.value);
+            const assessmentDate = new Date(assessmentDateField.value);
+            
+            if (appointmentDate <= assessmentDate) {
+                this.classList.add('is-invalid');
+                let feedback = this.parentNode.querySelector('.invalid-feedback:not(.d-block)');
+                if (!feedback) {
+                    feedback = document.createElement('div');
+                    feedback.className = 'invalid-feedback';
+                    feedback.style.display = 'block';
+                    feedback.innerHTML = '<small class="text-danger">Next appointment must be after assessment date</small>';
+                    this.parentNode.appendChild(feedback);
+                }
+            } else {
+                this.classList.remove('is-invalid');
+                const feedback = this.parentNode.querySelector('.invalid-feedback:not(.d-block)');
+                if (feedback) feedback.remove();
+            }
+        });
+    }
+
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+        let hasError = false;
+
+        // Validate required fields
+        const requiredFields = [assessmentDateField, assessorField];
+        
+        // Add discharge fields if discharge is checked
+        if (isDischargedField && isDischargedField.checked) {
+            requiredFields.push(dischargeDateField, dischargedByField);
+        }
+
+        requiredFields.forEach(field => {
+            if (field && (!field.value || field.value.trim() === '')) {
+                field.classList.add('is-invalid');
+                hasError = true;
+            } else if (field) {
+                field.classList.remove('is-invalid');
+            }
+        });
+
+        // Validate date relationships
+        if (nextAppointmentDateField && assessmentDateField && nextAppointmentDateField.value && assessmentDateField.value) {
+            const appointmentDate = new Date(nextAppointmentDateField.value);
+            const assessmentDate = new Date(assessmentDateField.value);
+            
+            if (appointmentDate <= assessmentDate) {
+                nextAppointmentDateField.classList.add('is-invalid');
+                hasError = true;
+            }
+        }
+
+        if (dischargeDateField && assessmentDateField && dischargeDateField.value && assessmentDateField.value) {
+            const dischargeDate = new Date(dischargeDateField.value);
+            const assessmentDate = new Date(assessmentDateField.value);
+            
+            if (dischargeDate < assessmentDate) {
+                dischargeDateField.classList.add('is-invalid');
+                hasError = true;
+                
+                let feedback = dischargeDateField.parentNode.querySelector('.invalid-feedback:not(.d-block)');
+                if (!feedback) {
+                    feedback = document.createElement('div');
+                    feedback.className = 'invalid-feedback';
+                    feedback.style.display = 'block';
+                    feedback.innerHTML = '<small class="text-danger">Discharge date cannot be before assessment date</small>';
+                    dischargeDateField.parentNode.appendChild(feedback);
+                }
+            }
+        }
+
+        if (hasError) {
+            e.preventDefault();
+            // Scroll to first error
+            const firstError = form.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.focus();
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    });
+});
 </script>
 
+<style>
+.form-control-plaintext.font-weight-bold {
+    color: #495057 !important;
+}
+
+.flex-grow-1 {
+    flex: 1 1 auto;
+}
+
+.form-check {
+    padding-left: 0;
+}
+
+.form-check .form-check-input {
+    margin-left: 0;
+}
+
+.text-info {
+    color: #17a2b8 !important;
+}
+</style>
 
 {% endblock main_content %}

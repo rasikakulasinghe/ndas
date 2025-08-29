@@ -10,34 +10,78 @@
   <div class="card">
   <div class="card-header bg-info"><h3 class="card-title">Add New Bookmark</h3></div>
 
-  <form action="{% url 'bookmark-add' item_id bookmark_type %}" method="POST">
+  <form action="{% url 'bookmark-add' item_id bookmark_type %}" method="POST" novalidate>
     {% csrf_token %}
 
     <div class="card-body">
 
       <div class="form-group row">
         <label class="col-form-label col-sm-2">Item ID : </label>
-        <div class="col-sm">{{item_id}}</div>
+        <div class="col-sm">
+          <span class="form-control-plaintext font-weight-bold">{{item_id}}</span>
+        </div>
       </div>
 
       <div class="form-group row">
         <label class="col-form-label col-sm-2">Type : </label>
-        <div class="col-sm">{{bookmark_type}}</div>
+        <div class="col-sm">
+          <span class="form-control-plaintext">
+            <span class="badge badge-info">{{bookmark_type}}</span>
+          </span>
+        </div>
       </div>
 
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">Title : </label>
-        <div class="col-sm">{{form.title}}</div>
+        <label class="col-form-label col-sm-2" for="{{ form.title.id_for_label }}">
+          Title <span class="text-danger">*</span> : 
+        </label>
+        <div class="col-sm">
+          {{form.title}}
+          {% if form.title.errors %}
+            <div class="invalid-feedback d-block">
+              {% for error in form.title.errors %}
+                <small class="text-danger">{{ error }}</small><br>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <small class="form-text text-muted">Descriptive title for the bookmark (max 200 characters)</small>
+        </div>
       </div>
 
       <div class="form-group row">
-        <label class="col-form-label col-sm-2">Description : </label>
-        <div class="col-sm">{{form.description}}</div>
+        <label class="col-form-label col-sm-2" for="{{ form.description.id_for_label }}">Description : </label>
+        <div class="col-sm">
+          {{form.description}}
+          {% if form.description.errors %}
+            <div class="invalid-feedback d-block">
+              {% for error in form.description.errors %}
+                <small class="text-danger">{{ error }}</small><br>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <small class="form-text text-muted">Detailed description of the bookmark (max 1000 characters)</small>
+        </div>
       </div>
+
+      <!-- Form-wide errors -->
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger" role="alert">
+          {% for error in form.non_field_errors %}
+            {{ error }}<br>
+          {% endfor %}
+        </div>
+      {% endif %}
 
       <div class="form-group row">
         <label class="col-sm-2 col-form-label"></label>
-        <div class="col-sm"><button type="submit" class="btn btn-primary float-right">Add Bookmark</button></div>
+        <div class="col-sm">
+          <button type="submit" class="btn btn-primary float-right">
+            <i class="fas fa-bookmark"></i> Add Bookmark
+          </button>
+          <button type="button" class="btn btn-secondary float-right mr-2" onclick="history.back()">
+            <i class="fas fa-times"></i> Cancel
+          </button>
+        </div>
       </div>
 
       </br>
@@ -50,6 +94,139 @@
   <!-- /.card -->
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add form validation
+    const form = document.querySelector('form');
+    const titleField = document.getElementById('{{ form.title.id_for_label }}');
+    const descriptionField = document.getElementById('{{ form.description.id_for_label }}');
+
+    // Real-time validation for title
+    if (titleField) {
+        titleField.addEventListener('input', function() {
+            const value = this.value.trim();
+            const feedback = this.parentNode.querySelector('.invalid-feedback');
+            
+            // Title validation
+            if (!value || value.length < 2) {
+                this.classList.add('is-invalid');
+                if (!feedback) {
+                    const div = document.createElement('div');
+                    div.className = 'invalid-feedback d-block';
+                    div.innerHTML = '<small class="text-danger">Title must be at least 2 characters long</small>';
+                    this.parentNode.appendChild(div);
+                }
+            } else if (value.length > 200) {
+                this.classList.add('is-invalid');
+                if (!feedback) {
+                    const div = document.createElement('div');
+                    div.className = 'invalid-feedback d-block';
+                    div.innerHTML = '<small class="text-danger">Title cannot exceed 200 characters</small>';
+                    this.parentNode.appendChild(div);
+                }
+            } else if (!/^[a-zA-Z0-9\s\-_\.(),!?]+$/.test(value)) {
+                this.classList.add('is-invalid');
+                if (!feedback) {
+                    const div = document.createElement('div');
+                    div.className = 'invalid-feedback d-block';
+                    div.innerHTML = '<small class="text-danger">Title can only contain letters, numbers, spaces, and basic punctuation</small>';
+                    this.parentNode.appendChild(div);
+                }
+            } else {
+                this.classList.remove('is-invalid');
+                if (feedback && !feedback.innerHTML.includes('{{ form.title.errors|first }}')) {
+                    feedback.remove();
+                }
+            }
+
+            // Update character counter
+            updateCharCounter(this, 200, 'title-counter');
+        });
+    }
+
+    // Real-time validation for description
+    if (descriptionField) {
+        descriptionField.addEventListener('input', function() {
+            const value = this.value.trim();
+            
+            if (value.length > 1000) {
+                this.classList.add('is-invalid');
+                const feedback = this.parentNode.querySelector('.invalid-feedback');
+                if (!feedback) {
+                    const div = document.createElement('div');
+                    div.className = 'invalid-feedback d-block';
+                    div.innerHTML = '<small class="text-danger">Description cannot exceed 1000 characters</small>';
+                    this.parentNode.appendChild(div);
+                }
+            } else {
+                this.classList.remove('is-invalid');
+                const feedback = this.parentNode.querySelector('.invalid-feedback');
+                if (feedback && !feedback.innerHTML.includes('{{ form.description.errors|first }}')) {
+                    feedback.remove();
+                }
+            }
+
+            // Update character counter
+            updateCharCounter(this, 1000, 'desc-counter');
+        });
+    }
+
+    // Character counter function
+    function updateCharCounter(field, maxLength, counterId) {
+        let counter = document.getElementById(counterId);
+        if (!counter) {
+            counter = document.createElement('div');
+            counter.id = counterId;
+            counter.className = 'char-counter text-muted small mt-1';
+            field.parentNode.appendChild(counter);
+        }
+        const remaining = maxLength - field.value.length;
+        counter.textContent = `${remaining} characters remaining`;
+        counter.style.color = remaining < 50 ? '#dc3545' : '#6c757d';
+    }
+
+    // Initialize character counters
+    if (titleField) updateCharCounter(titleField, 200, 'title-counter');
+    if (descriptionField) updateCharCounter(descriptionField, 1000, 'desc-counter');
+
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+        let hasError = false;
+
+        // Validate required title field
+        if (titleField && (!titleField.value || titleField.value.trim() === '')) {
+            titleField.classList.add('is-invalid');
+            hasError = true;
+        } else if (titleField) {
+            titleField.classList.remove('is-invalid');
+        }
+
+        if (hasError) {
+            e.preventDefault();
+            // Scroll to first error
+            const firstError = form.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.focus();
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    });
+});
 </script>
+
+<style>
+.char-counter {
+    text-align: right;
+    margin-top: 5px;
+}
+
+.badge {
+    font-size: 0.9em;
+}
+
+.form-control-plaintext.font-weight-bold {
+    color: #495057 !important;
+}
+</style>
 
 {% endblock main_content %}

@@ -1,113 +1,598 @@
 {% extends 'src/base.html' %}
-{% block title %}Bookmark Manager{% endblock title%}
+{% load static %}
+{% block title %}Bookmark Manager{% endblock title %}
 
 {% block main_content %}
-<div class="container">
-
-</br>
-
-{% if bookmark_page_obj %}
-
-{{bookmark_page_obj.User.id}}
-
-  <div class="card">
-    <div class="card-header bg-info">
-    <h3 class="card-title">Bookmark Manager</h3>
+<div class="content-wrapper">
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0">
+            <i class="fas fa-bookmark text-primary mr-2"></i>Bookmark Manager
+          </h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item active">Bookmarks</li>
+          </ol>
+        </div>
+      </div>
     </div>
-    <table class="table table-hover text-nowrap">
-    <thead>
-    <tr>
-    <th>Index</th>
-    <th>Title</th>
-    <th>Type</th>
-    <th>Description</th>
-    <th>Owner</th>
-    <th>Created</th>
-    <th>Action</th>
-    </tr>
-    </thead>
-    <tbody>
+  </div>
 
-      {% for Bookmark in bookmark_page_obj %}
-    <tr>
-      <td>{{ Bookmark.id }}</td>
-      <td>{{ Bookmark.title }}</td>
-      <td>{{ Bookmark.bookmark_type }}</td>
-      <td>{{ Bookmark.description }}</td>
-      <td>{{ Bookmark.owner.username }}</td>
-      <td><div style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="Bookmarked on : {{ Bookmark.created_on }} {% if Bookmark.last_edit_by %}last edited on {{ Bookmark.added_on }} by {{ Bookmark.last_edit_by }}{% endif %}" class="fas fa-info-circle" style="color: #3d7deb;"></i></div></td>
-      <td><div style="cursor: pointer;" class=" btn-group" role="group">
-          <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
-          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
+  <section class="content">
+    <div class="container-fluid">
 
-            {% if Bookmark.bookmark_type == 'Patient' and Bookmark.object_id %}
-            <a class="dropdown-item" href="{% url 'view-patient' Bookmark.object_id %}"><i class="fas fa-eye"></i> View Bookmarked Patient</a>
-            {% elif Bookmark.bookmark_type == 'Video' and Bookmark.object_id %}
-            <a class="dropdown-item" href="{% url 'video:view' Bookmark.object_id %}"><i class="fas fa-eye"></i> View Bookmarked Video</a>
-            {% elif Bookmark.bookmark_type == 'GMA' and Bookmark.object_id %}
-            <a class="dropdown-item" href="{% url 'assessment-view' Bookmark.object_id %}"><i class="fas fa-eye"></i> View Bookmarked GMA</a>
-            {% elif Bookmark.bookmark_type == 'HINE' and Bookmark.object_id %}
-            <a class="dropdown-item" href="{% url 'hine-assessment-view' Bookmark.object_id %}"><i class="fas fa-eye"></i> View Bookmarked HINE</a>
-            {% elif Bookmark.bookmark_type == 'Attachment' and Bookmark.object_id %}
-            <a class="dropdown-item" href="{% url 'attachment-view' Bookmark.object_id %}"><i class="fas fa-eye"></i> View Bookmarked Attachment</a>
-            {% elif Bookmark.bookmark_type == 'DA' %}
-            <a class="dropdown-item" href="{% url 'da-assessment-view' Bookmark.object_id %}"><i class="fas fa-eye"></i> View Bookmarked Developmental Assessment</a>
-            {% elif Bookmark.bookmark_type == 'CDICR' %}
-            <a class="dropdown-item" href="{% url 'cdic-assessment-view' Bookmark.object_id %}"><i class="fas fa-eye"></i> View Bookmarked CDIC Record</a>
-            {% else %}
-            {% endif %}
-
-            <div><hr></div>
-            <a class="dropdown-item" href="{% url 'bookmark-view' Bookmark.id %}"><i class="fas fa-eye"></i> View</a>
-            <a class="dropdown-item" href="{% url 'bookmark-edit' Bookmark.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
-            <a class="dropdown-item" href="{% url 'bookmark-delete' Bookmark.id %}"><i class="far fa-trash-alt"></i> Delete</a>
-            <a class="dropdown-item" href="{% url 'user-view-by-username' Bookmark.owner.username %}"><i class="fas fas fa-eye"></i> View Owner</a>
+      <!-- Statistics Cards -->
+      <div class="row mb-4">
+        <div class="col-lg-3 col-6">
+          <div class="small-box bg-info">
+            <div class="inner">
+              <h3>{{ bookmark_stats.total|default:0 }}</h3>
+              <p>Total Bookmarks</p>
+            </div>
+            <div class="icon">
+              <i class="fas fa-bookmark"></i>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-6">
+          <div class="small-box bg-success">
+            <div class="inner">
+              <h3>{{ bookmark_stats.patient|default:0 }}</h3>
+              <p>Patient Bookmarks</p>
+            </div>
+            <div class="icon">
+              <i class="fas fa-user"></i>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-6">
+          <div class="small-box bg-warning">
+            <div class="inner">
+              <h3>{{ bookmark_stats.video|default:0 }}</h3>
+              <p>Video Bookmarks</p>
+            </div>
+            <div class="icon">
+              <i class="fas fa-video"></i>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-6">
+          <div class="small-box bg-secondary">
+            <div class="inner">
+              <h3>{{ bookmark_stats.assessment|default:0 }}</h3>
+              <p>Assessment Bookmarks</p>
+            </div>
+            <div class="icon">
+              <i class="fas fa-clipboard-list"></i>
+            </div>
           </div>
         </div>
       </div>
-    </td>
 
-    </tr>
-    </tbody>
+      <!-- Search and Filter Section -->
+      <div class="card card-secondary collapsed-card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-search mr-2"></i>Search & Filter Options
+          </h3>
+          <div class="card-tools">
+            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+              <i class="fas fa-plus"></i>
+            </button>
+          </div>
+        </div>
+        <div class="card-body" style="display: none;">
+          <form method="GET" id="searchForm">
+            <div class="row">
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label for="search_title">Search Title</label>
+                  <input type="text" class="form-control" id="search_title" name="search_title" 
+                         value="{{ request.GET.search_title }}" placeholder="Enter bookmark title...">
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label for="bookmark_type">Bookmark Type</label>
+                  <select class="form-control" id="bookmark_type" name="bookmark_type">
+                    <option value="">All Types</option>
+                    <option value="Patient" {% if request.GET.bookmark_type == 'Patient' %}selected{% endif %}>Patient</option>
+                    <option value="Video" {% if request.GET.bookmark_type == 'Video' %}selected{% endif %}>Video</option>
+                    <option value="GMA" {% if request.GET.bookmark_type == 'GMA' %}selected{% endif %}>GMA Assessment</option>
+                    <option value="HINE" {% if request.GET.bookmark_type == 'HINE' %}selected{% endif %}>HINE Assessment</option>
+                    <option value="DA" {% if request.GET.bookmark_type == 'DA' %}selected{% endif %}>Developmental Assessment</option>
+                    <option value="CDICR" {% if request.GET.bookmark_type == 'CDICR' %}selected{% endif %}>CDIC Record</option>
+                    <option value="Attachment" {% if request.GET.bookmark_type == 'Attachment' %}selected{% endif %}>Attachment</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label for="owner">Owner</label>
+                  <input type="text" class="form-control" id="owner" name="owner" 
+                         value="{{ request.GET.owner }}" placeholder="Enter username...">
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label for="date_range">Created Date Range</label>
+                  <select class="form-control" id="date_range" name="date_range">
+                    <option value="">All Time</option>
+                    <option value="today" {% if request.GET.date_range == 'today' %}selected{% endif %}>Today</option>
+                    <option value="week" {% if request.GET.date_range == 'week' %}selected{% endif %}>This Week</option>
+                    <option value="month" {% if request.GET.date_range == 'month' %}selected{% endif %}>This Month</option>
+                    <option value="year" {% if request.GET.date_range == 'year' %}selected{% endif %}>This Year</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-12">
+                <button type="submit" class="btn btn-primary mr-2">
+                  <i class="fas fa-search mr-1"></i>Search
+                </button>
+                <a href="{% url 'bookmark-manager' %}" class="btn btn-secondary">
+                  <i class="fas fa-times mr-1"></i>Clear Filters
+                </a>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
 
-    {% endfor %}
+      <!-- Results Section -->
+      {% if bookmark_page_obj %}
+        <div class="card">
+          <div class="card-header bg-primary">
+            <h3 class="card-title">
+              <i class="fas fa-list mr-2"></i>Bookmark Records
+              <span class="badge badge-light ml-2">{{ bookmark_page_obj.paginator.count }} total</span>
+            </h3>
+            <div class="card-tools">
+              <div class="input-group input-group-sm" style="width: 250px;">
+                <input type="text" id="quickSearch" class="form-control float-right" placeholder="Quick search...">
+                <div class="input-group-append">
+                  <button type="submit" class="btn btn-default">
+                    <i class="fas fa-search"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-body table-responsive p-0">
+            <table class="table table-hover text-nowrap" id="bookmarkTable">
+              <thead>
+                <tr>
+                  <th><i class="fas fa-hashtag mr-1"></i>ID</th>
+                  <th><i class="fas fa-heading mr-1"></i>Title</th>
+                  <th><i class="fas fa-tag mr-1"></i>Type</th>
+                  <th><i class="fas fa-comment mr-1"></i>Description</th>
+                  <th><i class="fas fa-user mr-1"></i>Owner</th>
+                  <th><i class="fas fa-calendar mr-1"></i>Created</th>
+                  <th><i class="fas fa-cogs mr-1"></i>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
 
-    </table>
+                {% for Bookmark in bookmark_page_obj %}
+                <tr data-bookmark-id="{{ Bookmark.id }}">
+                  <td>
+                    <span class="badge badge-secondary">{{ Bookmark.id }}</span>
+                  </td>
+                  <td>
+                    <strong>{{ Bookmark.title|truncatechars:50 }}</strong>
+                    {% if Bookmark.title|length > 50 %}
+                      <i class="fas fa-info-circle text-muted ml-1" 
+                         data-toggle="tooltip" data-placement="top" 
+                         title="{{ Bookmark.title }}"></i>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if Bookmark.bookmark_type == 'Patient' %}
+                      <span class="badge badge-primary"><i class="fas fa-user mr-1"></i>Patient</span>
+                    {% elif Bookmark.bookmark_type == 'Video' %}
+                      <span class="badge badge-info"><i class="fas fa-video mr-1"></i>Video</span>
+                    {% elif Bookmark.bookmark_type == 'GMA' %}
+                      <span class="badge badge-success"><i class="fas fa-stethoscope mr-1"></i>GMA</span>
+                    {% elif Bookmark.bookmark_type == 'HINE' %}
+                      <span class="badge badge-warning"><i class="fas fa-brain mr-1"></i>HINE</span>
+                    {% elif Bookmark.bookmark_type == 'DA' %}
+                      <span class="badge badge-secondary"><i class="fas fa-child mr-1"></i>Dev. Assessment</span>
+                    {% elif Bookmark.bookmark_type == 'CDICR' %}
+                      <span class="badge badge-danger"><i class="fas fa-clipboard-list mr-1"></i>CDIC</span>
+                    {% elif Bookmark.bookmark_type == 'Attachment' %}
+                      <span class="badge badge-dark"><i class="fas fa-paperclip mr-1"></i>Attachment</span>
+                    {% else %}
+                      <span class="badge badge-light">{{ Bookmark.bookmark_type }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if Bookmark.description %}
+                      <span class="text-muted">{{ Bookmark.description|truncatechars:60 }}</span>
+                      {% if Bookmark.description|length > 60 %}
+                        <i class="fas fa-info-circle text-muted ml-1" 
+                           data-toggle="tooltip" data-placement="top" 
+                           title="{{ Bookmark.description }}"></i>
+                      {% endif %}
+                    {% else %}
+                      <span class="text-muted font-italic">No description</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a href="{% url 'user-view-by-username' Bookmark.owner.username %}" 
+                       class="text-decoration-none" data-toggle="tooltip" 
+                       data-placement="top" title="View user profile">
+                      <i class="fas fa-user text-primary mr-1"></i>{{ Bookmark.owner.username }}
+                    </a>
+                  </td>
+                  <td>
+                    <div data-toggle="tooltip" data-placement="top" 
+                         title="Created: {{ Bookmark.created_on|date:'F d, Y g:i A' }}{% if Bookmark.last_edit_by %} | Last edited: {{ Bookmark.last_edit_on|date:'F d, Y g:i A' }} by {{ Bookmark.last_edit_by.username }}{% endif %}">
+                      <i class="fas fa-clock text-primary mr-1"></i>
+                      <small class="text-muted">{{ Bookmark.created_on|timesince }} ago</small>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="btn-group" role="group">
+                      <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                              data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-cogs"></i> Actions
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-right">
+                        <!-- Quick Access to Bookmarked Item -->
+                        {% if Bookmark.bookmark_type == 'Patient' and Bookmark.object_id %}
+                          <a class="dropdown-item text-primary" href="{% url 'view-patient' Bookmark.object_id %}">
+                            <i class="fas fa-external-link-alt mr-2"></i>View Patient
+                          </a>
+                          <div class="dropdown-divider"></div>
+                        {% elif Bookmark.bookmark_type == 'Video' and Bookmark.object_id %}
+                          <a class="dropdown-item text-primary" href="{% url 'video:view' Bookmark.object_id %}">
+                            <i class="fas fa-external-link-alt mr-2"></i>View Video
+                          </a>
+                          <div class="dropdown-divider"></div>
+                        {% elif Bookmark.bookmark_type == 'GMA' and Bookmark.object_id %}
+                          <a class="dropdown-item text-primary" href="{% url 'assessment-view' Bookmark.object_id %}">
+                            <i class="fas fa-external-link-alt mr-2"></i>View GMA
+                          </a>
+                          <div class="dropdown-divider"></div>
+                        {% elif Bookmark.bookmark_type == 'HINE' and Bookmark.object_id %}
+                          <a class="dropdown-item text-primary" href="{% url 'hine-assessment-view' Bookmark.object_id %}">
+                            <i class="fas fa-external-link-alt mr-2"></i>View HINE
+                          </a>
+                          <div class="dropdown-divider"></div>
+                        {% elif Bookmark.bookmark_type == 'Attachment' and Bookmark.object_id %}
+                          <a class="dropdown-item text-primary" href="{% url 'attachment-view' Bookmark.object_id %}">
+                            <i class="fas fa-external-link-alt mr-2"></i>View Attachment
+                          </a>
+                          <div class="dropdown-divider"></div>
+                        {% elif Bookmark.bookmark_type == 'DA' and Bookmark.object_id %}
+                          <a class="dropdown-item text-primary" href="{% url 'da-assessment-view' Bookmark.object_id %}">
+                            <i class="fas fa-external-link-alt mr-2"></i>View Dev. Assessment
+                          </a>
+                          <div class="dropdown-divider"></div>
+                        {% elif Bookmark.bookmark_type == 'CDICR' and Bookmark.object_id %}
+                          <a class="dropdown-item text-primary" href="{% url 'cdic-assessment-view' Bookmark.object_id %}">
+                            <i class="fas fa-external-link-alt mr-2"></i>View CDIC Record
+                          </a>
+                          <div class="dropdown-divider"></div>
+                        {% endif %}
+                        
+                        <!-- Bookmark Management Actions -->
+                        <a class="dropdown-item" href="{% url 'bookmark-view' Bookmark.id %}">
+                          <i class="fas fa-eye text-info mr-2"></i>View Details
+                        </a>
+                        <a class="dropdown-item" href="{% url 'bookmark-edit' Bookmark.id %}">
+                          <i class="fas fa-edit text-warning mr-2"></i>Edit Bookmark
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-danger" href="{% url 'bookmark-delete' Bookmark.id %}" 
+                           onclick="return confirm('Are you sure you want to delete this bookmark?')">
+                          <i class="fas fa-trash-alt mr-2"></i>Delete Bookmark
+                        </a>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- Pagination -->
+          {% if bookmark_page_obj.paginator.num_pages > 1 %}
+            <div class="card-footer">
+              <div class="row align-items-center">
+                <div class="col-sm-6">
+                  <div class="dataTables_info">
+                    Showing {{ bookmark_page_obj.start_index }} to {{ bookmark_page_obj.end_index }} 
+                    of {{ bookmark_page_obj.paginator.count }} entries
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <nav aria-label="Bookmark pagination">
+                    <ul class="pagination pagination-sm justify-content-end mb-0">
+                      {% if bookmark_page_obj.has_previous %}
+                        <li class="page-item">
+                          <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1">
+                            <i class="fas fa-angle-double-left"></i>
+                          </a>
+                        </li>
+                        <li class="page-item">
+                          <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ bookmark_page_obj.previous_page_number }}">
+                            <i class="fas fa-angle-left"></i>
+                          </a>
+                        </li>
+                      {% else %}
+                        <li class="page-item disabled">
+                          <span class="page-link"><i class="fas fa-angle-double-left"></i></span>
+                        </li>
+                        <li class="page-item disabled">
+                          <span class="page-link"><i class="fas fa-angle-left"></i></span>
+                        </li>
+                      {% endif %}
+                      
+                      <!-- Page numbers -->
+                      {% for page_num in bookmark_page_obj.paginator.page_range %}
+                        {% if page_num == bookmark_page_obj.number %}
+                          <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                          </li>
+                        {% elif page_num > bookmark_page_obj.number|add:'-3' and page_num < bookmark_page_obj.number|add:'3' %}
+                          <li class="page-item">
+                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_num }}">{{ page_num }}</a>
+                          </li>
+                        {% endif %}
+                      {% endfor %}
+                      
+                      {% if bookmark_page_obj.has_next %}
+                        <li class="page-item">
+                          <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ bookmark_page_obj.next_page_number }}">
+                            <i class="fas fa-angle-right"></i>
+                          </a>
+                        </li>
+                        <li class="page-item">
+                          <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ bookmark_page_obj.paginator.num_pages }}">
+                            <i class="fas fa-angle-double-right"></i>
+                          </a>
+                        </li>
+                      {% else %}
+                        <li class="page-item disabled">
+                          <span class="page-link"><i class="fas fa-angle-right"></i></span>
+                        </li>
+                        <li class="page-item disabled">
+                          <span class="page-link"><i class="fas fa-angle-double-right"></i></span>
+                        </li>
+                      {% endif %}
+                    </ul>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      
+      {% else %}
+        <!-- No Results Found -->
+        <div class="card">
+          <div class="card-body text-center py-5">
+            <div class="mb-3">
+              <i class="fas fa-bookmark fa-3x text-muted"></i>
+            </div>
+            <h4 class="text-muted mb-3">No Bookmarks Found</h4>
+            <p class="text-muted mb-4">
+              {% if request.GET %}
+                No bookmarks match your search criteria. Try adjusting your filters.
+              {% else %}
+                You haven't created any bookmarks yet. Start bookmarking important records!
+              {% endif %}
+            </p>
+            <div class="btn-group" role="group">
+              <a href="{% url 'bookmark-manager' %}" class="btn btn-outline-primary">
+                <i class="fas fa-refresh mr-1"></i>Reset Filters
+              </a>
+              <a href="{% url 'home' %}" class="btn btn-primary">
+                <i class="fas fa-home mr-1"></i>Go to Dashboard
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+      
     </div>
-
+  </section>
 </div>
 
-</br>
+<!-- Custom Styles -->
+<style>
+.small-box .inner h3 {
+  font-size: 2.2rem;
+  font-weight: bold;
+}
 
-<nav aria-label="Page navigation example">
-  <ul class="pagination justify-content-center">
-  <li>
-    {% if bookmark_page_obj.has_previous %}
-      <li class="page-item"> <a class="page-link" href="?page=1" tabindex="-1">&laquo; First</a>
-      <li class="page-item"> <a class="page-link" href="?page={{ bookmark_page_obj.previous_page_number }}" tabindex="-1">Previous</a></li>
-    {% else %}
-      <li class="page-item disabled"> <a class="page-link" href="#" tabindex="-1">&laquo; First</a>
-      <li class="page-item disabled"> <a class="page-link" href="#" tabindex="-1">Previous</a> </li>
-    {% endif %}
-  
-    <li class="page-item"><a class="page-link">Page {{ bookmark_page_obj.number }} of {{ bookmark_page_obj.paginator.num_pages }}</a></li>
-  
-    {% if bookmark_page_obj.has_next %}
-      <li class="page-item"><a class="page-link" href="?page={{ bookmark_page_obj.next_page_number }}">Next</a></li>
-      <li class="page-item"><a class="page-link" href="?page={{ bookmark_page_obj.paginator.num_pages }}">Last &raquo;</a></li>
-    {% else %}
-      <li class="page-item disabled"><a class="page-link" href="#">Next</a></li>
-      <li class="page-item disabled"><a class="page-link" href="#">Last &raquo;</a></li>
-    {% endif %}
-  
-  </li>
-  </ul>
-</nav>
+.badge {
+  font-size: 0.85em;
+}
 
-{% else %} 
-<div class="alert alert-secondary" role="alert">No records found</div>
-{% endif %}
+.table td {
+  vertical-align: middle;
+}
 
-</div>
+.dropdown-menu {
+  min-width: 200px;
+}
+
+.dropdown-item i {
+  width: 20px;
+  text-align: center;
+}
+
+.quick-search-highlight {
+  background-color: yellow;
+  font-weight: bold;
+}
+
+.card-tools .input-group {
+  width: auto;
+}
+
+@media (max-width: 768px) {
+  .table-responsive {
+    border: none;
+  }
+  
+  .small-box .inner h3 {
+    font-size: 1.8rem;
+  }
+  
+  .badge {
+    font-size: 0.75em;
+  }
+  
+  .btn-group .dropdown-toggle {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+}
+
+.dataTables_info {
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+.pagination-sm .page-link {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.content-header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+</style>
+
+<!-- Custom JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+    
+    // Quick search functionality
+    const quickSearch = document.getElementById('quickSearch');
+    const table = document.getElementById('bookmarkTable');
+    const tbody = table.querySelector('tbody');
+    const originalRows = Array.from(tbody.querySelectorAll('tr'));
+    
+    if (quickSearch) {
+        quickSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            
+            if (searchTerm === '') {
+                // Show all rows
+                originalRows.forEach(row => {
+                    tbody.appendChild(row);
+                    row.style.display = '';
+                    // Remove highlight
+                    row.querySelectorAll('.quick-search-highlight').forEach(el => {
+                        el.outerHTML = el.innerHTML;
+                    });
+                });
+                return;
+            }
+            
+            // Filter and highlight matching rows
+            let visibleRows = 0;
+            originalRows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                const shouldShow = rowText.includes(searchTerm);
+                
+                if (shouldShow) {
+                    // Highlight matching text
+                    const cells = row.querySelectorAll('td');
+                    cells.forEach(cell => {
+                        if (!cell.querySelector('.btn-group')) { // Skip action column
+                            const cellText = cell.innerHTML;
+                            const regex = new RegExp(`(${searchTerm})`, 'gi');
+                            cell.innerHTML = cellText.replace(regex, '<span class="quick-search-highlight">$1</span>');
+                        }
+                    });
+                    
+                    row.style.display = '';
+                    tbody.appendChild(row);
+                    visibleRows++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Show "no results" message if no matches
+            let noResultsRow = tbody.querySelector('.no-results-row');
+            if (visibleRows === 0 && !noResultsRow) {
+                noResultsRow = document.createElement('tr');
+                noResultsRow.className = 'no-results-row';
+                noResultsRow.innerHTML = `
+                    <td colspan="7" class="text-center py-4 text-muted">
+                        <i class="fas fa-search fa-2x mb-2 d-block"></i>
+                        No bookmarks match "${searchTerm}"
+                    </td>
+                `;
+                tbody.appendChild(noResultsRow);
+            } else if (visibleRows > 0 && noResultsRow) {
+                noResultsRow.remove();
+            }
+        });
+    }
+    
+    // Auto-expand search card if there are search parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasSearchParams = urlParams.has('search_title') || urlParams.has('bookmark_type') || 
+                           urlParams.has('owner') || urlParams.has('date_range');
+    
+    if (hasSearchParams) {
+        const searchCard = document.querySelector('.collapsed-card');
+        if (searchCard) {
+            searchCard.classList.remove('collapsed-card');
+            searchCard.querySelector('.card-body').style.display = 'block';
+            searchCard.querySelector('.card-tools .fa-plus').classList.replace('fa-plus', 'fa-minus');
+        }
+    }
+    
+    // Form submission handler to preserve search parameters
+    const searchForm = document.getElementById('searchForm');
+    if (searchForm) {
+        searchForm.addEventListener('submit', function(e) {
+            // Remove empty form fields to clean up URL
+            const formData = new FormData(this);
+            const cleanedData = new URLSearchParams();
+            
+            for (let [key, value] of formData.entries()) {
+                if (value && value.trim() !== '') {
+                    cleanedData.append(key, value);
+                }
+            }
+            
+            // Redirect with clean URL
+            e.preventDefault();
+            const newUrl = `${window.location.pathname}${cleanedData.toString() ? '?' + cleanedData.toString() : ''}`;
+            window.location.href = newUrl;
+        });
+    }
+    
+    // Delete confirmation with enhanced UX
+    document.querySelectorAll('[onclick*="confirm"]').forEach(link => {
+        link.removeAttribute('onclick');
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            if (confirm('Are you sure you want to delete this bookmark? This action cannot be undone.')) {
+                window.location.href = this.href;
+            }
+        });
+    });
+});
+</script>
 
 {% endblock main_content %}

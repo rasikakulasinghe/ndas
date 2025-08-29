@@ -1057,22 +1057,30 @@
                   <span class="d-none d-sm-inline">New Video</span>
                 </a>
               </div>
-              <div class="col-lg-3 col-md-6 mb-2">
-                <a class="btn btn-info btn-block" href="{% url 'attachment-add' patient.id %}">
-                  <i class="fas fa-child mr-2"></i>
-                  <span class="d-none d-sm-inline">New Assessment</span>
+
+                           <div class="col-lg-3 col-md-6 mb-2">
+                <a class="btn btn-secondary btn-block" href="{% url 'attachment-add' patient.id %}">
+                  <i class="fas fa-paperclip mr-2"></i>
+                  <span class="d-none d-sm-inline">New Attachment</span>
                 </a>
               </div>
               <div class="col-lg-3 col-md-6 mb-2">
-                <a class="btn btn-warning btn-block" href="{% url 'attachment-add' patient.id %}">
+                <a class="btn btn-info btn-block" href="{% url 'hine-assessment-add' patient.id %}">
+                  <i class="fas fa-child mr-2"></i>
+                  <span class="d-none d-sm-inline">New HINE Record</span>
+                </a>
+              </div>
+              <div class="col-lg-3 col-md-6 mb-2">
+                <a class="btn btn-warning btn-block" href="{% url 'cdic-assessment-add' patient.id %}">
                   <i class="fas fa-hands-helping mr-2"></i>
                   <span class="d-none d-sm-inline">New CDIC Record</span>
                 </a>
               </div>
+ 
               <div class="col-lg-3 col-md-6 mb-2">
-                <a class="btn btn-secondary btn-block" href="{% url 'attachment-add' patient.id %}">
+                <a class="btn btn-secondary btn-block" href="{% url 'da-assessment-add' patient.id %}">
                   <i class="fas fa-paperclip mr-2"></i>
-                  <span class="d-none d-sm-inline">New Attachment</span>
+                  <span class="d-none d-sm-inline">New Developmental Assessment</span>
                 </a>
               </div>
             </div>
