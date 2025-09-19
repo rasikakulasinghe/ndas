@@ -4428,3 +4428,99 @@ INFO 2025-08-29 15:32:20,508 basehttp 18480 11580 "GET /cdic/manager/ HTTP/1.1" 
 INFO 2025-08-29 15:33:01,357 basehttp 18480 11580 "GET /cdic/manager/ HTTP/1.1" 200 51151
 INFO 2025-08-29 15:33:08,194 basehttp 18480 11580 "GET /cdic/manager/ HTTP/1.1" 200 51151
 INFO 2025-09-16 19:32:07,749 autoreload 24152 1644 Watching for file changes with StatReloader
+INFO 2025-09-16 19:36:00,546 basehttp 24152 23168 "GET / HTTP/1.1" 302 0
+INFO 2025-09-16 19:36:00,707 basehttp 24152 23168 "GET /users/login/?next=/ HTTP/1.1" 200 23381
+INFO 2025-09-16 19:36:00,928 basehttp 24152 15900 "GET /static/js/main.js HTTP/1.1" 304 0
+INFO 2025-09-16 19:36:00,928 basehttp 24152 14924 "GET /static/js/videojs-failsafe.js HTTP/1.1" 304 0
+INFO 2025-09-16 19:36:00,929 basehttp 24152 6792 "GET /static/js/debug.js HTTP/1.1" 304 0
+INFO 2025-09-16 19:36:00,929 basehttp 24152 21368 "GET /static/js/utils.js HTTP/1.1" 304 0
+INFO 2025-09-16 19:36:00,937 basehttp 24152 23168 "GET /static/dist/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-16 19:36:00,938 basehttp 24152 16540 "GET /static/dist/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-16 19:36:00,954 basehttp 24152 23168 "GET /static/js/rotate.js HTTP/1.1" 304 0
+INFO 2025-09-16 19:36:00,954 basehttp 24152 16540 "GET /static/js/zoomrotate.js HTTP/1.1" 304 0
+WARNING 2025-09-16 19:36:02,024 log 24152 16540 Not Found: /favicon.ico
+WARNING 2025-09-16 19:36:02,025 basehttp 24152 16540 "GET /favicon.ico HTTP/1.1" 404 15877
+INFO 2025-09-16 19:36:08,201 basehttp 24152 16540 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-16 19:36:08,589 basehttp 24152 16540 "GET / HTTP/1.1" 200 50865
+INFO 2025-09-16 19:36:26,827 basehttp 24152 22872 "GET / HTTP/1.1" 200 50541
+INFO 2025-09-16 19:36:27,929 basehttp 24152 22872 "GET /patient/add/ HTTP/1.1" 200 64394
+INFO 2025-09-16 19:36:42,366 basehttp 24152 13572 "GET /manager/patient/ HTTP/1.1" 200 70351
+INFO 2025-09-16 19:36:42,417 basehttp 24152 19228 "GET /static/js/manager.js HTTP/1.1" 304 0
+INFO 2025-09-16 19:36:42,422 basehttp 24152 13572 "GET /static/css/manager.css HTTP/1.1" 304 0
+INFO 2025-09-16 19:37:12,227 basehttp 24152 11820 "GET /manager/patient/new HTTP/1.1" 200 54783
+ERROR 2025-09-16 19:37:15,444 log 24152 11820 Internal Server Error: /manager/patient/normal
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 175, in patient_manager_diagnosis_normal
+    patients_list = getPatientList(PtStatus.DX_NORMAL).order_by("-id")
+                    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\ndas\custom_codes\custom_methods.py", line 251, in getPatientList
+    return var_ptl.exclude(Q(gmassessment__diagnosis_conclusion='ABNORMAL') and Q(hineassessment__score__lt = 73) and Q(developmentalassessment__is_dx_normal=False)).exclude(videos__isnull=True).distinct()
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\query.py", line 1429, in exclude
+    return self._filter_or_exclude(True, args, kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\query.py", line 1439, in _filter_or_exclude
+    clone._filter_or_exclude_inplace(negate, args, kwargs)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\query.py", line 1444, in _filter_or_exclude_inplace
+    self._query.add_q(~Q(*args, **kwargs))
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1532, in add_q
+    clause, _ = self._add_q(q_object, self.used_aliases)
+                ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1562, in _add_q
+    child_clause, needed_inner = self.build_filter(
+                                 ~~~~~~~~~~~~~~~~~^
+        child,
+        ^^^^^^
+    ...<5 lines>...
+        check_filterable=check_filterable,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1388, in build_filter
+    return self._add_q(
+           ~~~~~~~~~~~^
+        filter_expr,
+        ^^^^^^^^^^^^
+    ...<5 lines>...
+        check_filterable=check_filterable,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1562, in _add_q
+    child_clause, needed_inner = self.build_filter(
+                                 ~~~~~~~~~~~~~~~~~^
+        child,
+        ^^^^^^
+    ...<5 lines>...
+        check_filterable=check_filterable,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1407, in build_filter
+    lookups, parts, reffed_expression = self.solve_lookup_type(arg)
+                                        ~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1217, in solve_lookup_type
+    _, field, _, lookup_parts = self.names_to_path(lookup_splitted, self.get_meta())
+                                ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1709, in names_to_path
+    raise FieldError(
+    ...<2 lines>...
+    )
+django.core.exceptions.FieldError: Cannot resolve keyword 'developmentalassessment' into field. Choices are: added_by, added_by_id, address, antenatal_hx, apgar_1, apgar_10, apgar_5, attachments, baby_name, bht, birth_weight, cdicrecord, created_at, developmental_assessments, disk_no, do_admission, do_discharge, dob_tob, gender, gmassessment, hine_assessments, id, indecation_for_gma, intranatal_hx, last_edit_by, last_edit_by_id, length, mo_delivery, moh_area, mother_name, nnc_no, ofc, other_relavent_details, pc_no, phm_area, pin, pog_days, pog_wks, postnatal_hx, problems, ptc_no, resuscitated, resustn_note, tp_lan, tp_mobile, updated_at, videos
+ERROR 2025-09-16 19:37:15,459 basehttp 24152 11820 "GET /manager/patient/normal HTTP/1.1" 500 145723
+INFO 2025-09-16 19:37:33,938 basehttp 24152 2916 "GET /patient/view/2/ HTTP/1.1" 200 106098
+INFO 2025-09-16 19:38:16,881 basehttp 24152 2916 "GET /video/add/2/ HTTP/1.1" 200 54393
+INFO 2025-09-16 19:39:22,772 basehttp 24152 2916 "POST /video/add/2/ HTTP/1.1" 200 156
+INFO 2025-09-16 19:39:33,527 basehttp 24152 2916 "GET /video/view/6/ HTTP/1.1" 200 50629
+WARNING 2025-09-16 19:39:46,507 log 24152 10704 Not Found: /favicon.ico
+WARNING 2025-09-16 19:39:46,508 basehttp 24152 10704 "GET /favicon.ico HTTP/1.1" 404 15877
+INFO 2025-09-16 19:40:14,686 basehttp 24152 10704 "GET /patient/view/2/ HTTP/1.1" 200 108633
+INFO 2025-09-16 19:40:14,702 basehttp 24152 2916 - Broken pipe from ('127.0.0.1', 56047)
