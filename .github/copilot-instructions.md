@@ -40,14 +40,14 @@ Extended AbstractUser with professional positions, contact info, profile picture
 
 ## Development Workflows
 
-### Essential Commands
-```bash
-# Environment setup (Windows)
+### Essential Commands (Windows PowerShell)
+```powershell
+# Environment setup
 venv\Scripts\activate
 pip install -r requirements.txt
 
 # Database operations
-python manage.py makemigrations && python manage.py migrate
+python manage.py makemigrations; python manage.py migrate
 python manage.py createsuperuser
 
 # Development server
@@ -59,11 +59,41 @@ python manage.py test patients  # Specific app
 npx playwright test  # E2E tests
 ```
 
+### Form Development Pattern
+All forms MUST follow consistent Bootstrap styling from `patients/forms.py`:
+```python
+class MyForm(forms.ModelForm):
+    field = forms.ChoiceField(
+        choices=MY_CHOICES,
+        widget=forms.Select(attrs={"class": "form-control"})
+    )
+    
+    class Meta:
+        widgets = {
+            "text_field": forms.TextInput(attrs={"class": "form-control"}),
+            "textarea_field": forms.Textarea(attrs={"class": "form-control", "rows": 4})
+        }
+```
+
+### View Development Pattern
+All views follow this structure:
+```python
+@login_required(login_url="user-login")
+def my_view(request):
+    # Standard pattern for data loading
+    var_objects = MyModel.objects.all()
+    count = getCountZeroIfNone(var_objects)  # Use custom method
+    
+    # Template context with consistent naming
+    context = {"var_objects": var_objects, "count": count}
+    return render(request, "myapp/template.html", context)
+```
+
 ### Security & File Handling
 - **CSP and security headers** configured in `settings.py`
 - **File uploads**: Video files (2GB max), general uploads (100MB memory limit)
 - **Validation**: Custom validators for medical data, file types, and sizes
-- **User activity tracking** via custom middleware
+- **User activity tracking** via `users.middleware.UserActivityMiddleware`
 
 ### Frontend Architecture & UI Consistency
 - **AdminLTE 3.2 + Bootstrap 4.6** professional medical interface
@@ -91,15 +121,6 @@ npx playwright test  # E2E tests
 - **Bootstrap 4.6**: Grid system, utilities, forms
 - **Font Awesome 6.4**: Icons throughout
 - **Custom CSS**: `static/dist/css/` (custom_css.css, ndas-sidebar.css)
-
-#### Form Standards
-All forms MUST use consistent Bootstrap classes:
-```python
-# In forms.py
-widget=forms.Select(attrs={"class": "form-control"})
-widget=forms.TextInput(attrs={"class": "form-control"})
-widget=forms.Textarea(attrs={"class": "form-control", "rows": 4})
-```
 
 #### Component Patterns
 - **Info Boxes**: Use AdminLTE's `info-box` class with consistent icons
@@ -170,15 +191,21 @@ file_field = models.FileField(
 - **Environment**: `.env` file with python-decouple
 - **Database**: PostgreSQL ready with connection pooling
 - **Caching**: Redis integration configured
-- **Task processing**: Celery for video processing
+- **Task processing**: Celery for video processing with FFmpeg
 - **Monitoring**: Sentry SDK integration
 - **Static files**: WhiteNoise for production serving
 
 ## Common Integration Points
-- **Video processing**: FFmpeg integration for metadata extraction
+- **Video processing**: FFmpeg integration for metadata extraction via `ffmpeg-python`
 - **Rich text**: CKEditor for assessment fields
 - **PDF generation**: ReportLab for medical reports
 - **Authentication**: Custom user model with professional roles
 - **File organization**: Date-based media structure (`%Y/%m/`)
+
+## Data Flow Patterns
+- **Patient → Video → Assessment**: Core workflow where patients have videos, videos have assessments
+- **User tracking**: All CUD operations automatically track user via middleware
+- **Status management**: Use `ndas_enums.PtStatus` for patient status filtering
+- **Search optimization**: Key fields indexed, use `getPatientList()` for filtered queries
 
 When extending functionality, follow the established patterns of centralized configuration, comprehensive validation, and consistent user tracking across all data modifications.

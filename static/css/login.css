@@ -1,0 +1,336 @@
+/*
+ * NDAS - Login Page Styles
+ * Professional login interface for healthcare professionals
+ * Created: September 24, 2025
+ */
+
+/* Clean Login Page Layout */
+.login-page {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.login-box {
+    width: 900px;
+    max-width: 95%;
+    margin: 0 auto;
+}
+
+/* Simple Login Card */
+.simple-login-card {
+    border-radius: 20px;
+    overflow: hidden;
+    background: white;
+    min-height: 500px;
+    border: none;
+    box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.1),
+        0 8px 16px rgba(0, 0, 0, 0.06),
+        0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Welcome Panel (Left Side) */
+.welcome-panel {
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #1a252f 100%);
+    color: white;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.welcome-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 0%, transparent 30%),
+        radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.05) 0%, transparent 25%);
+    pointer-events: none;
+}
+
+.welcome-content {
+    padding: 3rem 2.5rem;
+    width: 100%;
+    position: relative;
+    z-index: 2;
+}
+
+.brand-icon {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.brand-icon i {
+    font-size: 3.5rem;
+    color: white;
+    opacity: 0.9;
+}
+
+.welcome-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.welcome-subtitle {
+    font-size: 1.1rem;
+    font-weight: 300;
+    text-align: center;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.welcome-description p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    opacity: 0.85;
+}
+
+/* Form Panel (Right Side) */
+.form-panel {
+    background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+    padding: 0;
+    display: flex;
+    align-items: center;
+    border-left: 1px solid #e1e8ed;
+}
+
+.form-content {
+    padding: 3rem 2.5rem;
+    width: 100%;
+}
+
+.form-header {
+    text-align: left;
+    margin-bottom: 2rem;
+}
+
+.form-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.form-subtitle {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    margin-bottom: 0;
+}
+
+/* Simple Form Styling */
+.form-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #34495e;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.simple-input {
+    border: 1px solid #e1e8ed;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    background: #ffffff;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.simple-input:focus {
+    border-color: #2c3e50;
+    box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
+    background: #ffffff;
+    outline: none;
+}
+
+.simple-input::placeholder {
+    color: #bdc3c7;
+    font-size: 0.85rem;
+}
+
+/* Password Input with Toggle */
+.password-input-wrapper {
+    position: relative;
+}
+
+.password-toggle-simple {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #95a5a6;
+    transition: color 0.3s ease;
+}
+
+.password-toggle-simple:hover {
+    color: #2c3e50;
+}
+
+/* Forgot Link */
+.forgot-link {
+    color: #2c3e50;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+}
+
+.forgot-link:hover {
+    color: #34495e;
+    text-decoration: none;
+}
+
+/* Simple Checkbox */
+.simple-checkbox .custom-control-label {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    font-weight: 400;
+}
+
+.simple-checkbox .custom-control-input:checked ~ .custom-control-label::before {
+    background-color: #2c3e50;
+    border-color: #2c3e50;
+}
+
+/* Simple Sign In Button */
+.simple-btn {
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    border: none;
+    border-radius: 8px;
+    padding: 0.875rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(44, 62, 80, 0.2);
+}
+
+.simple-btn:hover {
+    background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(44, 62, 80, 0.3);
+    color: white;
+}
+
+.simple-btn:active {
+    transform: translateY(0);
+}
+
+/* Support Link */
+.support-link {
+    color: #2c3e50;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.support-link:hover {
+    color: #34495e;
+    text-decoration: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .login-box {
+        width: 100%;
+        margin: 0;
+    }
+    
+    .simple-login-card {
+        border-radius: 0;
+        min-height: 100vh;
+    }
+    
+    .simple-login-card .row {
+        flex-direction: column;
+    }
+    
+    .welcome-panel {
+        min-height: 40vh;
+    }
+    
+    .welcome-content {
+        padding: 2rem 1.5rem;
+        text-align: center;
+    }
+    
+    .brand-icon i {
+        font-size: 2.5rem;
+    }
+    
+    .welcome-title {
+        font-size: 1.8rem;
+    }
+    
+    .welcome-description {
+        display: none;
+    }
+    
+    .form-content {
+        padding: 2rem 1.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .login-page {
+        padding: 0;
+    }
+    
+    .welcome-content {
+        padding: 1.5rem 1rem;
+    }
+    
+    .form-content {
+        padding: 1.5rem 1rem;
+    }
+    
+    .welcome-title {
+        font-size: 1.5rem;
+    }
+    
+    .form-title {
+        font-size: 1.5rem;
+    }
+}
+
+/* Loading State */
+.simple-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.simple-btn.loading::after {
+    content: '';
+    width: 16px;
+    height: 16px;
+    margin-left: 8px;
+    border: 2px solid transparent;
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Focus States for Accessibility */
+.simple-input:focus,
+.simple-btn:focus {
+    outline: 2px solid #2c3e50;
+    outline-offset: 2px;
+}
