@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/user/Pictures/Screenshots/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
