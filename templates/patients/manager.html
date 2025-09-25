@@ -15,8 +15,7 @@ Manager{% endblock title%} {% block extra_css %}
 
         {% if patients_page_obj %}
         <span class="badge badge-light ml-3 px-3 py-2">
-          <i class="fas fa-users mr-2"></i>
-          {{ patients_page_obj.paginator.count }} Total Records
+           Total {{ patients_page_obj.paginator.count }} Records
         </span>
         {% endif %}
 
@@ -136,7 +135,7 @@ Manager{% endblock title%} {% block extra_css %}
         {% if patients_page_obj %}
         <div class="table-responsive">
           <table class="table table-hover text-nowrap">
-            <thead>
+            <thead class="bg-light">
               <tr>
                 <th
                   scope="col"
@@ -318,6 +317,85 @@ Manager{% endblock title%} {% block extra_css %}
               </tr>
               {% endfor %}
             </tbody>
+            <!-- Integrated Table Footer with Pagination -->
+            <tfoot class="bg-light">
+              <tr>
+                <td colspan="10" class="border-0 py-2">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <!-- Results Info -->
+                    <small class="text-muted">
+                      Showing <strong>{{ patients_page_obj.start_index }}-{{ patients_page_obj.end_index }}</strong>
+                      of <strong>{{ patients_page_obj.paginator.count }}</strong> patients
+                    </small>
+
+                    <!-- Compact Pagination -->
+                    <nav aria-label="Patient pagination">
+                      <ul class="pagination pagination-sm mb-0">
+                        <!-- Previous -->
+                        <li class="page-item {% if not patients_page_obj.has_previous %}disabled{% endif %}">
+                          {% if patients_page_obj.has_previous %}
+                            <a class="page-link px-2" href="?page={{ patients_page_obj.previous_page_number }}" title="Previous">
+                              <i class="fas fa-chevron-left"></i>
+                            </a>
+                          {% else %}
+                            <span class="page-link px-2 text-muted">
+                              <i class="fas fa-chevron-left"></i>
+                            </span>
+                          {% endif %}
+                        </li>
+
+                        <!-- Page Numbers -->
+                        {% for page_num in patients_page_obj.paginator.page_range %}
+                          {% if page_num == patients_page_obj.number %}
+                            <li class="page-item active">
+                              <span class="page-link bg-info border-info px-2">{{ page_num }}</span>
+                            </li>
+                          {% elif page_num > patients_page_obj.number|add:'-3' and page_num < patients_page_obj.number|add:'3' %}
+                            <li class="page-item">
+                              <a class="page-link px-2" href="?page={{ page_num }}">{{ page_num }}</a>
+                            </li>
+                          {% elif page_num == 1 or page_num == patients_page_obj.paginator.num_pages %}
+                            <li class="page-item">
+                              <a class="page-link px-2" href="?page={{ page_num }}">{{ page_num }}</a>
+                            </li>
+                          {% elif page_num == patients_page_obj.number|add:'-4' or page_num == patients_page_obj.number|add:'3' %}
+                            <li class="page-item disabled">
+                              <span class="page-link px-2">...</span>
+                            </li>
+                          {% endif %}
+                        {% endfor %}
+
+                        <!-- Next -->
+                        <li class="page-item {% if not patients_page_obj.has_next %}disabled{% endif %}">
+                          {% if patients_page_obj.has_next %}
+                            <a class="page-link px-2" href="?page={{ patients_page_obj.next_page_number }}" title="Next">
+                              <i class="fas fa-chevron-right"></i>
+                            </a>
+                          {% else %}
+                            <span class="page-link px-2 text-muted">
+                              <i class="fas fa-chevron-right"></i>
+                            </span>
+                          {% endif %}
+                        </li>
+                      </ul>
+                    </nav>
+
+                    <!-- Quick Page Jump (for large datasets) -->
+                    {% if patients_page_obj.paginator.num_pages > 10 %}
+                    <div class="d-flex align-items-center">
+                      <small class="text-muted mr-1">Page:</small>
+                      <input type="number" class="form-control form-control-sm" style="width: 50px;"
+                             min="1" max="{{ patients_page_obj.paginator.num_pages }}"
+                             value="{{ patients_page_obj.number }}" id="pageJump">
+                      <button class="btn btn-sm btn-outline-info ml-1 px-2" onclick="jumpToPage()" title="Go to page">
+                        <i class="fas fa-arrow-right fa-xs"></i>
+                      </button>
+                    </div>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
 
@@ -337,88 +415,6 @@ Manager{% endblock title%} {% block extra_css %}
         {% endif %}
 
       </div>
-
-      <!-- Compact Bootstrap Pagination -->
-      {% if patients_page_obj %}
-      <div class="card-footer bg-light py-3">
-        <div class="d-flex justify-content-between align-items-center">
-          <!-- Results Info -->
-          <div class="text-muted small">
-            <span class="font-weight-medium">{{ patients_page_obj.start_index }}-{{ patients_page_obj.end_index }}</span>
-            of <span class="font-weight-medium">{{ patients_page_obj.paginator.count }}</span> patients
-          </div>
-
-          <!-- Compact Pagination -->
-          <nav aria-label="Patient pagination">
-            <ul class="pagination pagination-sm mb-0">
-              <!-- First Page -->
-              {% if patients_page_obj.has_previous %}
-                <li class="page-item">
-                  <a class="page-link" href="?page=1" title="First page">
-                    <i class="fas fa-angle-double-left"></i>
-                  </a>
-                </li>
-              {% endif %}
-
-              <!-- Previous -->
-              <li class="page-item {% if not patients_page_obj.has_previous %}disabled{% endif %}">
-                {% if patients_page_obj.has_previous %}
-                  <a class="page-link" href="?page={{ patients_page_obj.previous_page_number }}" title="Previous page">
-                    <i class="fas fa-angle-left"></i>
-                  </a>
-                {% else %}
-                  <span class="page-link">
-                    <i class="fas fa-angle-left"></i>
-                  </span>
-                {% endif %}
-              </li>
-
-              <!-- Current Page Info -->
-              <li class="page-item active">
-                <span class="page-link bg-info border-info">
-                  {{ patients_page_obj.number }} of {{ patients_page_obj.paginator.num_pages }}
-                </span>
-              </li>
-
-              <!-- Next -->
-              <li class="page-item {% if not patients_page_obj.has_next %}disabled{% endif %}">
-                {% if patients_page_obj.has_next %}
-                  <a class="page-link" href="?page={{ patients_page_obj.next_page_number }}" title="Next page">
-                    <i class="fas fa-angle-right"></i>
-                  </a>
-                {% else %}
-                  <span class="page-link">
-                    <i class="fas fa-angle-right"></i>
-                  </span>
-                {% endif %}
-              </li>
-
-              <!-- Last Page -->
-              {% if patients_page_obj.has_next %}
-                <li class="page-item">
-                  <a class="page-link" href="?page={{ patients_page_obj.paginator.num_pages }}" title="Last page">
-                    <i class="fas fa-angle-double-right"></i>
-                  </a>
-                </li>
-              {% endif %}
-            </ul>
-          </nav>
-
-          <!-- Page Jump (for large datasets) -->
-          {% if patients_page_obj.paginator.num_pages > 10 %}
-          <div class="d-flex align-items-center">
-            <small class="text-muted mr-2">Go to:</small>
-            <input type="number" class="form-control form-control-sm" style="width: 60px;"
-                   min="1" max="{{ patients_page_obj.paginator.num_pages }}"
-                   value="{{ patients_page_obj.number }}" id="pageJump">
-            <button class="btn btn-sm btn-outline-secondary ml-1" onclick="jumpToPage()">
-              <i class="fas fa-arrow-right"></i>
-            </button>
-          </div>
-          {% endif %}
-        </div>
-      </div>
-      {% endif %}
     </div>
   </div>
 </div>
