@@ -5,400 +5,392 @@
 
 {% include 'src/form_error.html' %}
 
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-11 col-xl-10">
 
-  <div class="container-fluid">
-    <div class="card">
-    <div class="card-header bg-info">Add New Patient</div>
-
-  <form action="{% url 'add-patient'%}" method="POST" id="patient-form">
-    {% csrf_token %}
-
-    <div class="card-body">
-
-      <!-- Basic Medical Record Identifiers -->
-      <h5 class="text-primary mb-3"><i class="fas fa-id-card"></i> Medical Record Identifiers</h5>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">BHT <span class="text-danger">*</span>:</label>
-        <div class="col-sm">
-          {{form.bht}}
-          {% if form.bht.errors %}
-            <div class="invalid-feedback d-block">{{ form.bht.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
-      
-      <div class="form-group row align-items-center">
-        <label class="col-form-label col-sm-2">NNC No :</label>
-        <div class="col-sm">
-          {{form.nnc_no}}
-          {% if form.nnc_no.errors %}
-            <div class="invalid-feedback d-block">{{ form.nnc_no.errors.0 }}</div>
-          {% endif %}
-        </div>
-        <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Neonatal clinic registration number, Ex : NNC/123/2023"></span></a>
-      </div>
-      
-      <div class="form-group row align-items-center">
-        <label class="col-form-label col-sm-2">CDIC No :</label>
-        <div class="col-sm">
-          {{form.ptc_no}}
-          {% if form.ptc_no.errors %}
-            <div class="invalid-feedback d-block">{{ form.ptc_no.errors.0 }}</div>
-          {% endif %}
-        </div>
-        <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Child development interventional clinic registration number"></span></a>
-      </div>
-      
-      <div class="form-group row align-items-center">
-        <label class="col-form-label col-sm-2">PC No :</label>
-        <div class="col-sm">
-          {{form.pc_no}}
-          {% if form.pc_no.errors %}
-            <div class="invalid-feedback d-block">{{ form.pc_no.errors.0 }}</div>
-          {% endif %}
-        </div>
-        <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Paediatric clinic registration number"></span></a>
-      </div>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">PHN :</label>
-        <div class="col-sm">
-          {{form.pin}}
-          {% if form.pin.errors %}
-            <div class="invalid-feedback d-block">{{ form.pin.errors.0 }}</div>
-          {% endif %}
-        </div>
-        <a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Personal health number issued from hospital"></span></a>
-      </div>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Disk No :</label>
-        <div class="col-sm">
-          {{form.disk_no}}
-          {% if form.disk_no.errors %}
-            <div class="invalid-feedback d-block">{{ form.disk_no.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
-
-      <!-- Personal Information -->
-      <hr class="mt-4 mb-3">
-      <h5 class="text-primary mb-3"><i class="fas fa-user"></i> Personal Information</h5>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Baby Name <span class="text-danger">*</span>:</label>
-        <div class="col-sm">
-          {{form.baby_name}}
-          {% if form.baby_name.errors %}
-            <div class="invalid-feedback d-block">{{ form.baby_name.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Mother Name <span class="text-danger">*</span>:</label>
-        <div class="col-sm">
-          {{form.mother_name}}
-          {% if form.mother_name.errors %}
-            <div class="invalid-feedback d-block">{{ form.mother_name.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Gender <span class="text-danger">*</span>:</label>
-        <div class="col-sm">
-          {{form.gender}}
-          {% if form.gender.errors %}
-            <div class="invalid-feedback d-block">{{ form.gender.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
-
-      <!-- Birth Information -->
-      <hr class="mt-4 mb-3">
-      <h5 class="text-primary mb-3"><i class="fas fa-baby"></i> Birth Information</h5>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Date and Time of Birth <span class="text-danger">*</span>:</label>
-        <div class="col-sm">
-          {{form.dob_tob}}
-          {% if form.dob_tob.errors %}
-            <div class="invalid-feedback d-block">{{ form.dob_tob.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">POG <span class="text-danger">*</span>:</label>
-        <div class="col-sm">
-          <div class="d-flex align-items-center">
-            <div>
-              {{form.pog_wks}}
-              {% if form.pog_wks.errors %}
-                <div class="invalid-feedback d-block">{{ form.pog_wks.errors.0 }}</div>
-              {% endif %}
+      <!-- Main Card Container -->
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h4 class="card-title mb-0 font-weight-bold">
+            <i class="fas fa-user-plus mr-2"></i>Add New Patient
+          </h4>
             </div>
-            <div>&nbsp;&nbsp;Weeks and&nbsp;&nbsp;</div>
-            <div>
-              {{form.pog_days}}
-              {% if form.pog_days.errors %}
-                <div class="invalid-feedback d-block">{{ form.pog_days.errors.0 }}</div>
-              {% endif %}
-            </div>
-            <div>&nbsp;&nbsp;Days</div>
-          </div>
-        </div>
-      </div>
+        <div class="card-body">
 
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Mode of Delivery :</label>
-        <div class="col-sm">
-          {{form.mo_delivery}}
-          {% if form.mo_delivery.errors %}
-            <div class="invalid-feedback d-block">{{ form.mo_delivery.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">APGAR :</label>
-        <div class="col-sm">
-         <div class="d-flex align-items-center">
-            <div>
-              {{form.apgar_1}}
-              {% if form.apgar_1.errors %}
-                <div class="invalid-feedback d-block">{{ form.apgar_1.errors.0 }}</div>
-              {% endif %}
-            </div>
-            <div>&nbsp;&nbsp;-&nbsp;&nbsp;</div>
-            <div>
-              {{form.apgar_5}}
-              {% if form.apgar_5.errors %}
-                <div class="invalid-feedback d-block">{{ form.apgar_5.errors.0 }}</div>
-              {% endif %}
-            </div>
-            <div>&nbsp;&nbsp;-&nbsp;&nbsp;</div>
-            <div>
-              {{form.apgar_10}}
-              {% if form.apgar_10.errors %}
-                <div class="invalid-feedback d-block">{{ form.apgar_10.errors.0 }}</div>
-              {% endif %}
-            </div>
-            <div>&nbsp;&nbsp;&nbsp;&nbsp;(Ex: 1 minute > 5 minutes > 10 minutes)</div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Resuscitated :</label>
-        <div class="col-sm">
-          {{form.resuscitated}}
-          {% if form.resuscitated.errors %}
-            <div class="invalid-feedback d-block">{{ form.resuscitated.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
+          <form action="{% url 'add-patient'%}" method="POST" id="patient-form">
+            {% csrf_token %}
 
-      <div id="textbox-container" style="display: none;">
-      <div class="form-group row align-items-top">
-        <label class="col-form-label col-sm-2">Resuscitation Note :</label>
-        <div class="col-sm">
-          {{form.resustn_note}}
-          {% if form.resustn_note.errors %}
-            <div class="invalid-feedback d-block">{{ form.resustn_note.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
-      </div>
+            <!-- Medical Record Identifiers Card -->
+                <div class="card shadow-sm mb-4">
+                  <div class="card-header bg-light border-0 py-3">
+                <h6 class="mb-0 font-weight-bold text-primary">
+                  <i class="fas fa-id-card mr-2"></i>Medical Record Identifiers
+                </h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-md-4 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">BHT <span class="text-danger">*</span></label>
+                    {{form.bht}}
+                    {% if form.bht.errors %}
+                      <div class="invalid-feedback d-block">{{ form.bht.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">NNC No</label>
+                    {{form.nnc_no}}
+                    {% if form.nnc_no.errors %}
+                      <div class="invalid-feedback d-block">{{ form.nnc_no.errors.0 }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">e.g., NNC/123/2023</small>
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">CDIC No</label>
+                    {{form.ptc_no}}
+                    {% if form.ptc_no.errors %}
+                      <div class="invalid-feedback d-block">{{ form.ptc_no.errors.0 }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">e.g., PTC/123/2023</small>
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">PC No</label>
+                    {{form.pc_no}}
+                    {% if form.pc_no.errors %}
+                      <div class="invalid-feedback d-block">{{ form.pc_no.errors.0 }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">e.g., PC/123/2023</small>
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">PHN</label>
+                    {{form.pin}}
+                    {% if form.pin.errors %}
+                      <div class="invalid-feedback d-block">{{ form.pin.errors.0 }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">e.g., 0751245852</small>
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">Disk No</label>
+                    {{form.disk_no}}
+                    {% if form.disk_no.errors %}
+                      <div class="invalid-feedback d-block">{{ form.disk_no.errors.0 }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">e.g., 123</small>
+                    </div>
+                    </div>
+                  </div>
+                </div>
 
-      <!-- Physical Measurements -->
-      <hr class="mt-4 mb-3">
-      <h5 class="text-primary mb-3"><i class="fas fa-ruler"></i> Physical Measurements</h5>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Birth Weight (g) <span class="text-danger">*</span>:</label>
-        <div class="col-sm">
-          {{form.birth_weight}}
-          {% if form.birth_weight.errors %}
-            <div class="invalid-feedback d-block">{{ form.birth_weight.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Length (cm) :</label>
-        <div class="col-sm">
-          {{form.length}}
-          {% if form.length.errors %}
-            <div class="invalid-feedback d-block">{{ form.length.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">OFC (cm) <span class="text-danger">*</span>:</label>
-        <div class="col-sm">
-          {{form.ofc}}
-          {% if form.ofc.errors %}
-            <div class="invalid-feedback d-block">{{ form.ofc.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
-
-      <!-- Contact Information -->
-      <hr class="mt-4 mb-3">
-      <h5 class="text-primary mb-3"><i class="fas fa-phone"></i> Contact Information</h5>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Address :</label>
-        <div class="col-sm">
-          {{form.address}}
-          {% if form.address.errors %}
-            <div class="invalid-feedback d-block">{{ form.address.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Mobile Phone <span class="text-danger">*</span>:</label>
-        <div class="col-sm">
-          {{form.tp_mobile}}
-          {% if form.tp_mobile.errors %}
-            <div class="invalid-feedback d-block">{{ form.tp_mobile.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Landline Phone :</label>
-        <div class="col-sm">
-          {{form.tp_lan}}
-          {% if form.tp_lan.errors %}
-            <div class="invalid-feedback d-block">{{ form.tp_lan.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">MOH Area :</label>
-        <div class="col-sm">
-          {{form.moh_area}}
-          {% if form.moh_area.errors %}
-            <div class="invalid-feedback d-block">{{ form.moh_area.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">PHM Area :</label>
-        <div class="col-sm">
-          {{form.phm_area}}
-          {% if form.phm_area.errors %}
-            <div class="invalid-feedback d-block">{{ form.phm_area.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
-
-      <!-- Clinical Information -->
-      <hr class="mt-4 mb-3">
-      <h5 class="text-primary mb-3"><i class="fas fa-stethoscope"></i> Clinical Information</h5>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Problems :</label>
-        <div class="col-sm">
-          {{form.problems}}
-          {% if form.problems.errors %}
-            <div class="invalid-feedback d-block">{{ form.problems.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Indications for GMA :</label>
-        <div class="col-sm">
-          <div class="card">
-            <div class="card-header bg-light">
-              <h6 class="card-title mb-0">
-                <i class="fas fa-stethoscope text-primary"></i> Select applicable GMA indications
-              </h6>
-            </div>
-            <div class="card-body">
-              <div class="row">
-                <div class="col-sm">
-                  {{form.indecation_for_gma}}
-                  {% if form.indecation_for_gma.errors %}
-                    <div class="invalid-feedback d-block">{{ form.indecation_for_gma.errors.0 }}</div>
-                  {% endif %}
+                <!-- Personal Information Card -->
+                <div class="card shadow-sm mb-4">
+                  <div class="card-header bg-light border-0 py-3">
+                <h6 class="mb-0 font-weight-bold text-primary">
+                  <i class="fas fa-user mr-2"></i>Personal Information
+                </h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">Baby Name <span class="text-danger">*</span></label>
+                    {{form.baby_name}}
+                    {% if form.baby_name.errors %}
+                      <div class="invalid-feedback d-block">{{ form.baby_name.errors.0 }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">Full name of the baby</small>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">Mother's Name <span class="text-danger">*</span></label>
+                    {{form.mother_name}}
+                    {% if form.mother_name.errors %}
+                      <div class="invalid-feedback d-block">{{ form.mother_name.errors.0 }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">Full name of the mother</small>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">Gender <span class="text-danger">*</span></label>
+                    {{form.gender}}
+                    {% if form.gender.errors %}
+                      <div class="invalid-feedback d-block">{{ form.gender.errors.0 }}</div>
+                    {% endif %}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Medical History -->
-      <hr class="mt-4 mb-3">
-      <h5 class="text-primary mb-3"><i class="fas fa-history"></i> Medical History</h5>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Antenatal History :</label>
-        <div class="col-sm">
-          {{form.antenatal_hx}}
-          {% if form.antenatal_hx.errors %}
-            <div class="invalid-feedback d-block">{{ form.antenatal_hx.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Intranatal History :</label>
-        <div class="col-sm">
-          {{form.intranatal_hx}}
-          {% if form.intranatal_hx.errors %}
-            <div class="invalid-feedback d-block">{{ form.intranatal_hx.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Postnatal History :</label>
-        <div class="col-sm">
-          {{form.postnatal_hx}}
-          {% if form.postnatal_hx.errors %}
-            <div class="invalid-feedback d-block">{{ form.postnatal_hx.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Other Relevant Details :</label>
-        <div class="col-sm">
-          {{form.other_relavent_details}}
-          {% if form.other_relavent_details.errors %}
-            <div class="invalid-feedback d-block">{{ form.other_relavent_details.errors.0 }}</div>
-          {% endif %}
-        </div>
-      </div>
+        <!-- Birth Information Card -->
+            <div class="card shadow-sm mb-4">
+              <div class="card-header bg-light border-0 py-3">
+                <h6 class="mb-0 font-weight-bold text-primary">
+                  <i class="fas fa-baby mr-2"></i>Birth Information
+                </h6>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">Date and Time of Birth <span class="text-danger">*</span></label>
+                    {{form.dob_tob}}
+                    {% if form.dob_tob.errors %}
+                      <div class="invalid-feedback d-block">{{ form.dob_tob.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">Mode of Delivery</label>
+                    {{form.mo_delivery}}
+                    {% if form.mo_delivery.errors %}
+                      <div class="invalid-feedback d-block">{{ form.mo_delivery.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-8 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">Period of Gestation (POG) <span class="text-danger">*</span></label>
+                    <div class="row">
+                      <div class="col-6">
+                        <div class="input-group">
+                          {{form.pog_wks}}
+                          <div class="input-group-append">
+                            <span class="input-group-text small">weeks</span>
+                          </div>
+                        </div>
+                        {% if form.pog_wks.errors %}
+                          <div class="invalid-feedback d-block">{{ form.pog_wks.errors.0 }}</div>
+                        {% endif %}
+                      </div>
+                      <div class="col-6">
+                        <div class="input-group">
+                          {{form.pog_days}}
+                          <div class="input-group-append">
+                            <span class="input-group-text small">days</span>
+                          </div>
+                        </div>
+                        {% if form.pog_days.errors %}
+                          <div class="invalid-feedback d-block">{{ form.pog_days.errors.0 }}</div>
+                        {% endif %}
+                      </div>
 
-      <div class="form-group row">
-        <label class="col-sm-2 col-form-label"></label>
-        <div class="col-sm">
-          <button type="submit" class="btn btn-primary float-right" id="submit-btn">
-            <i class="fas fa-save"></i>  Add New Patient
-          </button>
-        </div>
+                      
+                    </div>
+                    <small class="form-text text-muted">e.g., 38 weeks 5 days</small>
+                  </div>
+                  <div class="col-md-8 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">APGAR Scores</label>
+                    <div class="row">
+                      <div class="col-4">
+                        <div class="text-center">
+                          <small class="text-muted font-weight-bold d-block mb-1">1 min</small>
+                          {{form.apgar_1}}
+                          {% if form.apgar_1.errors %}
+                            <div class="invalid-feedback d-block">{{ form.apgar_1.errors.0 }}</div>
+                          {% endif %}
+                        </div>
+                      </div>
+                      <div class="col-4">
+                        <div class="text-center">
+                          <small class="text-muted font-weight-bold d-block mb-1">5 min</small>
+                          {{form.apgar_5}}
+                          {% if form.apgar_5.errors %}
+                            <div class="invalid-feedback d-block">{{ form.apgar_5.errors.0 }}</div>
+                          {% endif %}
+                        </div>
+                      </div>
+                      <div class="col-4">
+                        <div class="text-center">
+                          <small class="text-muted font-weight-bold d-block mb-1">10 min</small>
+                          {{form.apgar_10}}
+                          {% if form.apgar_10.errors %}
+                            <div class="invalid-feedback d-block">{{ form.apgar_10.errors.0 }}</div>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                    <small class="form-text text-muted">Score 0-10 for each time interval</small>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">Resuscitated</label>
+                    <br>
+                    {{form.resuscitated}}
+                    {% if form.resuscitated.errors %}
+                      <div class="invalid-feedback d-block">{{ form.resuscitated.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                  <div id="textbox-container" class="col-12 mb-3" style="display: none;">
+                    <label class="form-label small text-muted font-weight-bold">Resuscitation Note</label>
+                    {{form.resustn_note}}
+                    {% if form.resustn_note.errors %}
+                      <div class="invalid-feedback d-block">{{ form.resustn_note.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+        <!-- Physical Measurements Card -->
+            <div class="card shadow-sm mb-4">
+              <div class="card-header bg-light border-0 py-3">
+            <h6 class="mb-0 font-weight-bold text-primary">
+              <i class="fas fa-ruler mr-2"></i>Physical Measurements
+            </h6>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-4 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">Birth Weight (g) <span class="text-danger">*</span></label>
+                    {{form.birth_weight}}
+                    {% if form.birth_weight.errors %}
+                      <div class="invalid-feedback d-block">{{ form.birth_weight.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">Length (cm)</label>
+                    {{form.length}}
+                    {% if form.length.errors %}
+                      <div class="invalid-feedback d-block">{{ form.length.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">OFC (cm) <span class="text-danger">*</span></label>
+                    {{form.ofc}}
+                    {% if form.ofc.errors %}
+                      <div class="invalid-feedback d-block">{{ form.ofc.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+        <!-- Contact Information Card -->
+            <div class="card shadow-sm mb-4">
+              <div class="card-header bg-light border-0 py-3">
+            <h6 class="mb-0 font-weight-bold text-primary">
+              <i class="fas fa-phone mr-2"></i>Contact Information
+            </h6>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-12 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">Address</label>
+                    {{form.address}}
+                    {% if form.address.errors %}
+                      <div class="invalid-feedback d-block">{{ form.address.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">Mobile Phone <span class="text-danger">*</span></label>
+                    {{form.tp_mobile}}
+                    {% if form.tp_mobile.errors %}
+                      <div class="invalid-feedback d-block">{{ form.tp_mobile.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">Landline Phone</label>
+                    {{form.tp_lan}}
+                    {% if form.tp_lan.errors %}
+                      <div class="invalid-feedback d-block">{{ form.tp_lan.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">MOH Area</label>
+                    {{form.moh_area}}
+                    {% if form.moh_area.errors %}
+                      <div class="invalid-feedback d-block">{{ form.moh_area.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">PHM Area</label>
+                    {{form.phm_area}}
+                    {% if form.phm_area.errors %}
+                      <div class="invalid-feedback d-block">{{ form.phm_area.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+        <!-- Clinical Information Card -->
+            <div class="card shadow-sm mb-4">
+              <div class="card-header bg-light border-0 py-3">
+            <h6 class="mb-0 font-weight-bold text-primary">
+              <i class="fas fa-stethoscope mr-2"></i>Clinical Information
+            </h6>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-12 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">Problems</label>
+                    {{form.problems}}
+                    {% if form.problems.errors %}
+                      <div class="invalid-feedback d-block">{{ form.problems.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-12 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">Indications for GMA</label>
+                    <div class="border rounded p-3 bg-light">
+                      {{form.indecation_for_gma}}
+                      {% if form.indecation_for_gma.errors %}
+                        <div class="invalid-feedback d-block">{{ form.indecation_for_gma.errors.0 }}</div>
+                      {% endif %}
+                    </div>
+                    <small class="form-text text-muted">Select applicable GMA indications</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+        <!-- Medical History Card -->
+            <div class="card shadow-sm mb-4">
+              <div class="card-header bg-light border-0 py-3">
+            <h6 class="mb-0 font-weight-bold text-primary">
+              <i class="fas fa-history mr-2"></i>Medical History
+            </h6>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-12 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">Antenatal History</label>
+                    {{form.antenatal_hx}}
+                    {% if form.antenatal_hx.errors %}
+                      <div class="invalid-feedback d-block">{{ form.antenatal_hx.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-12 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">Intranatal History</label>
+                    {{form.intranatal_hx}}
+                    {% if form.intranatal_hx.errors %}
+                      <div class="invalid-feedback d-block">{{ form.intranatal_hx.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-12 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">Postnatal History</label>
+                    {{form.postnatal_hx}}
+                    {% if form.postnatal_hx.errors %}
+                      <div class="invalid-feedback d-block">{{ form.postnatal_hx.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-12 mb-3">
+                    <label class="form-label small text-muted font-weight-bold">Other Relevant Details</label>
+                    {{form.other_relavent_details}}
+                    {% if form.other_relavent_details.errors %}
+                      <div class="invalid-feedback d-block">{{ form.other_relavent_details.errors.0 }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-flex justify-content-end mb-4">
+              <button type="button" class="btn btn-secondary mr-2" onclick="window.history.back()">
+                <i class="fas fa-times"></i> Cancel
+              </button>
+              <button type="submit" class="btn btn-primary" id="submit-btn">
+                <i class="fas fa-save"></i> Add New Patient
+              </button>
+                </div>
+
+          </form>
+
+            </div>
       </div>
-
-      </br>
-
-  </form>
-
     </div>
-    <!-- /.card-body -->
   </div>
-  <!-- /.card -->
 </div>
 
 
@@ -513,18 +505,16 @@ document.addEventListener('DOMContentLoaded', function() {
   gmaCheckboxes.forEach(checkbox => {
     checkbox.addEventListener('change', function() {
       const checkedCount = document.querySelectorAll('input[name="indecation_for_gma"]:checked').length;
-      const gmaCard = document.querySelector('.card-header');
-      
+      const gmaContainer = checkbox.closest('.border');
+
       if (checkedCount > 0) {
-        gmaCard.classList.remove('bg-light');
-        gmaCard.classList.add('bg-info');
-        gmaCard.style.color = 'white';
+        gmaContainer.classList.remove('bg-light');
+        gmaContainer.classList.add('bg-info', 'text-white');
       } else {
-        gmaCard.classList.remove('bg-info');
-        gmaCard.classList.add('bg-light');
-        gmaCard.style.color = '';
+        gmaContainer.classList.remove('bg-info', 'text-white');
+        gmaContainer.classList.add('bg-light');
       }
-      
+
       console.log(`GMA indicators selected: ${checkedCount}`);
     });
   });

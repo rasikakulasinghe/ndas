@@ -8561,3 +8561,196 @@ INFO 2025-09-26 10:27:30,878 basehttp 8120 9220 "GET /patient/view/4/ HTTP/1.1" 
 INFO 2025-09-26 10:40:05,290 basehttp 8120 15864 "GET /patient/view/4/ HTTP/1.1" 200 118494
 INFO 2025-09-26 10:40:08,241 basehttp 8120 15864 "GET /patient/view/4/ HTTP/1.1" 200 118494
 INFO 2025-09-26 10:40:11,312 basehttp 8120 15864 "GET /patient/view/4/ HTTP/1.1" 200 118494
+INFO 2025-09-26 10:42:18,233 basehttp 8120 15864 "GET /manager/patient/ HTTP/1.1" 200 56208
+INFO 2025-09-26 10:42:25,902 basehttp 8120 15864 "GET /manager/patient/new HTTP/1.1" 200 42947
+ERROR 2025-09-26 10:42:30,931 log 8120 15864 Internal Server Error: /manager/patient/diagnosed/any
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 162, in patient_manager_diagnosed_any
+    patients_list = getPatientList(PtStatus.DIAGNOSED).order_by("-id")
+                    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\ndas\custom_codes\custom_methods.py", line 249, in getPatientList
+    return var_ptl.filter(Q(gmassessment__diagnosis_conclusion='ABNORMAL') | Q(hineassessment__score__lt = 73) | Q(developmentalassessment__is_dx_normal=False)).distinct()
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\query.py", line 1421, in filter
+    return self._filter_or_exclude(False, args, kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\query.py", line 1439, in _filter_or_exclude
+    clone._filter_or_exclude_inplace(negate, args, kwargs)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\query.py", line 1446, in _filter_or_exclude_inplace
+    self._query.add_q(Q(*args, **kwargs))
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1532, in add_q
+    clause, _ = self._add_q(q_object, self.used_aliases)
+                ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1562, in _add_q
+    child_clause, needed_inner = self.build_filter(
+                                 ~~~~~~~~~~~~~~~~~^
+        child,
+        ^^^^^^
+    ...<5 lines>...
+        check_filterable=check_filterable,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1388, in build_filter
+    return self._add_q(
+           ~~~~~~~~~~~^
+        filter_expr,
+        ^^^^^^^^^^^^
+    ...<5 lines>...
+        check_filterable=check_filterable,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1562, in _add_q
+    child_clause, needed_inner = self.build_filter(
+                                 ~~~~~~~~~~~~~~~~~^
+        child,
+        ^^^^^^
+    ...<5 lines>...
+        check_filterable=check_filterable,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1407, in build_filter
+    lookups, parts, reffed_expression = self.solve_lookup_type(arg)
+                                        ~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1217, in solve_lookup_type
+    _, field, _, lookup_parts = self.names_to_path(lookup_splitted, self.get_meta())
+                                ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1709, in names_to_path
+    raise FieldError(
+    ...<2 lines>...
+    )
+django.core.exceptions.FieldError: Cannot resolve keyword 'hineassessment' into field. Choices are: added_by, added_by_id, address, antenatal_hx, apgar_1, apgar_10, apgar_5, attachments, baby_name, bht, birth_weight, cdicrecord, created_at, developmental_assessments, disk_no, do_admission, do_discharge, dob_tob, gender, gmassessment, hine_assessments, id, indecation_for_gma, intranatal_hx, last_edit_by, last_edit_by_id, length, mo_delivery, moh_area, mother_name, nnc_no, ofc, other_relavent_details, pc_no, phm_area, pin, pog_days, pog_wks, postnatal_hx, problems, ptc_no, resuscitated, resustn_note, tp_lan, tp_mobile, updated_at, videos
+ERROR 2025-09-26 10:42:30,960 basehttp 8120 15864 "GET /manager/patient/diagnosed/any HTTP/1.1" 500 147090
+INFO 2025-09-26 10:44:37,387 autoreload 8120 15016 D:\Projects\Current Projects\NDAS - Project\NDAS\ndas\custom_codes\custom_methods.py changed, reloading.
+INFO 2025-09-26 10:44:42,542 autoreload 13472 17828 Watching for file changes with StatReloader
+INFO 2025-09-26 10:44:54,758 basehttp 13472 6728 "GET /manager/patient/diagnosed/any HTTP/1.1" 302 0
+INFO 2025-09-26 10:44:54,852 basehttp 13472 6728 "GET /users/login/?next=/manager/patient/diagnosed/any HTTP/1.1" 200 15740
+INFO 2025-09-26 10:44:57,212 basehttp 13472 6728 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-26 10:44:57,450 basehttp 13472 6728 "GET / HTTP/1.1" 200 50513
+INFO 2025-09-26 10:44:59,424 basehttp 13472 6728 "GET /manager/patient/ HTTP/1.1" 200 56208
+INFO 2025-09-26 10:45:02,248 basehttp 13472 6728 "GET /manager/patient/new HTTP/1.1" 200 42947
+ERROR 2025-09-26 10:45:05,344 log 13472 6728 Internal Server Error: /manager/patient/diagnosed/any
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 162, in patient_manager_diagnosed_any
+    patients_list = getPatientList(PtStatus.DIAGNOSED).order_by("-id")
+                    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\ndas\custom_codes\custom_methods.py", line 249, in getPatientList
+    return var_ptl.filter(Q(gmassessment__diagnosis_conclusion='ABNORMAL') | Q(hine_assessments__score__lt = 73) | Q(developmentalassessment__is_dx_normal=False)).distinct()
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\query.py", line 1421, in filter
+    return self._filter_or_exclude(False, args, kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\query.py", line 1439, in _filter_or_exclude
+    clone._filter_or_exclude_inplace(negate, args, kwargs)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\query.py", line 1446, in _filter_or_exclude_inplace
+    self._query.add_q(Q(*args, **kwargs))
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1532, in add_q
+    clause, _ = self._add_q(q_object, self.used_aliases)
+                ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1562, in _add_q
+    child_clause, needed_inner = self.build_filter(
+                                 ~~~~~~~~~~~~~~~~~^
+        child,
+        ^^^^^^
+    ...<5 lines>...
+        check_filterable=check_filterable,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1388, in build_filter
+    return self._add_q(
+           ~~~~~~~~~~~^
+        filter_expr,
+        ^^^^^^^^^^^^
+    ...<5 lines>...
+        check_filterable=check_filterable,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1562, in _add_q
+    child_clause, needed_inner = self.build_filter(
+                                 ~~~~~~~~~~~~~~~~~^
+        child,
+        ^^^^^^
+    ...<5 lines>...
+        check_filterable=check_filterable,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1407, in build_filter
+    lookups, parts, reffed_expression = self.solve_lookup_type(arg)
+                                        ~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1217, in solve_lookup_type
+    _, field, _, lookup_parts = self.names_to_path(lookup_splitted, self.get_meta())
+                                ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1709, in names_to_path
+    raise FieldError(
+    ...<2 lines>...
+    )
+django.core.exceptions.FieldError: Cannot resolve keyword 'developmentalassessment' into field. Choices are: added_by, added_by_id, address, antenatal_hx, apgar_1, apgar_10, apgar_5, attachments, baby_name, bht, birth_weight, cdicrecord, created_at, developmental_assessments, disk_no, do_admission, do_discharge, dob_tob, gender, gmassessment, hine_assessments, id, indecation_for_gma, intranatal_hx, last_edit_by, last_edit_by_id, length, mo_delivery, moh_area, mother_name, nnc_no, ofc, other_relavent_details, pc_no, phm_area, pin, pog_days, pog_wks, postnatal_hx, problems, ptc_no, resuscitated, resustn_note, tp_lan, tp_mobile, updated_at, videos
+ERROR 2025-09-26 10:45:05,369 basehttp 13472 6728 "GET /manager/patient/diagnosed/any HTTP/1.1" 500 147436
+INFO 2025-09-26 10:45:56,390 autoreload 13472 17828 D:\Projects\Current Projects\NDAS - Project\NDAS\ndas\custom_codes\custom_methods.py changed, reloading.
+INFO 2025-09-26 10:45:57,391 autoreload 9316 15712 Watching for file changes with StatReloader
+INFO 2025-09-26 10:46:12,855 basehttp 9316 1428 "GET /manager/patient/diagnosed/any HTTP/1.1" 302 0
+INFO 2025-09-26 10:46:12,871 basehttp 9316 1428 "GET /users/login/?next=/manager/patient/diagnosed/any HTTP/1.1" 200 15740
+INFO 2025-09-26 10:46:16,134 basehttp 9316 1428 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-26 10:46:16,376 basehttp 9316 1428 "GET / HTTP/1.1" 200 50513
+INFO 2025-09-26 10:46:20,813 basehttp 9316 1428 "GET /manager/patient/ HTTP/1.1" 200 56208
+INFO 2025-09-26 10:46:24,188 basehttp 9316 1428 "GET /manager/patient/diagnosed/any HTTP/1.1" 200 53326
+INFO 2025-09-26 10:46:29,987 basehttp 9316 1428 "GET /manager/patient/new HTTP/1.1" 200 42947
+INFO 2025-09-26 10:46:33,017 basehttp 9316 1428 "GET /manager/patient/normal HTTP/1.1" 200 56202
+INFO 2025-09-26 10:46:36,928 basehttp 9316 1428 "GET /manager/patient/diagnosed/gma/normal HTTP/1.1" 200 53269
+INFO 2025-09-26 10:46:43,912 basehttp 9316 1428 "GET /manager/patient/diagnosed/gma/abnormal HTTP/1.1" 200 50393
+INFO 2025-09-26 10:46:48,758 basehttp 9316 1428 "GET /manager/patient/diagnosed/da/normal HTTP/1.1" 200 42947
+INFO 2025-09-26 10:46:51,797 basehttp 9316 1428 "GET /manager/patient/diagnosed/da/abnormal HTTP/1.1" 200 42947
+INFO 2025-09-26 10:46:55,643 basehttp 9316 1428 "GET /manager/patient/diagnosed/hine HTTP/1.1" 200 50436
+INFO 2025-09-26 10:47:05,145 basehttp 9316 1428 "GET /manager/patient/discharged HTTP/1.1" 200 42947
+INFO 2025-09-26 10:47:10,477 basehttp 9316 1428 "GET /manager/patient/diagnosed/any HTTP/1.1" 200 53326
+INFO 2025-09-26 10:47:17,043 basehttp 9316 1428 "GET /manager/patient/ HTTP/1.1" 200 56208
+INFO 2025-09-26 10:47:20,630 basehttp 9316 1428 "GET /manager/patient/diagnosed/any HTTP/1.1" 200 53326
+INFO 2025-09-26 10:47:35,090 basehttp 9316 1428 "GET /patient/add/ HTTP/1.1" 200 64394
+WARNING 2025-09-26 13:20:50,600 log 9316 13084 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-09-26 13:20:50,602 basehttp 9316 13084 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 15988
+INFO 2025-09-26 13:30:44,117 basehttp 9316 10552 "GET /patient/add/ HTTP/1.1" 302 0
+INFO 2025-09-26 13:30:44,145 basehttp 9316 10552 "GET /users/login/?next=/patient/add/ HTTP/1.1" 200 15740
+INFO 2025-09-26 13:30:46,596 basehttp 9316 10552 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-26 13:30:46,811 basehttp 9316 10552 "GET / HTTP/1.1" 200 50513
+INFO 2025-09-26 13:30:48,302 basehttp 9316 10552 "GET /patient/add/ HTTP/1.1" 200 64394
+INFO 2025-09-26 13:35:53,816 basehttp 9316 2508 "GET /patient/add/ HTTP/1.1" 200 66395
+INFO 2025-09-26 13:39:41,818 basehttp 9316 2508 "GET /patient/add/ HTTP/1.1" 200 67323
+WARNING 2025-09-26 13:42:01,211 log 9316 2508 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-09-26 13:42:01,213 basehttp 9316 2508 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 15988
+INFO 2025-09-26 13:43:15,392 basehttp 9316 18620 "GET /patient/add/ HTTP/1.1" 200 70058
+INFO 2025-09-26 13:45:41,295 basehttp 9316 18620 "GET /patient/add/ HTTP/1.1" 200 68540
+INFO 2025-09-26 13:47:19,635 basehttp 9316 18620 "GET /patient/add/ HTTP/1.1" 200 68455
+INFO 2025-09-26 13:49:03,220 basehttp 9316 18620 "GET /patient/add/ HTTP/1.1" 200 68456
+INFO 2025-09-26 13:49:04,709 basehttp 9316 18620 "GET /patient/add/ HTTP/1.1" 200 68456
+INFO 2025-09-26 13:50:17,621 basehttp 9316 18620 "GET /patient/add/ HTTP/1.1" 200 68568
+INFO 2025-09-26 13:50:43,216 basehttp 9316 18620 "GET /patient/add/ HTTP/1.1" 200 68596
+INFO 2025-09-26 13:50:55,654 basehttp 9316 10428 "GET /patient/add/ HTTP/1.1" 200 68598
+INFO 2025-09-26 13:51:19,023 basehttp 9316 10428 "GET /patient/add/ HTTP/1.1" 200 68480
+INFO 2025-09-26 13:51:46,672 basehttp 9316 10428 "GET /patient/add/ HTTP/1.1" 200 68484
+INFO 2025-09-26 13:58:55,358 basehttp 9316 3664 "GET /patient/add/ HTTP/1.1" 200 68505
+INFO 2025-09-26 14:02:30,177 basehttp 9316 19892 "POST /patient/add/ HTTP/1.1" 200 69815
+INFO 2025-09-26 14:03:10,393 basehttp 9316 19892 "POST /patient/add/ HTTP/1.1" 302 0
+INFO 2025-09-26 14:03:10,608 basehttp 9316 19892 "GET /patient/view/5/ HTTP/1.1" 200 104774
+INFO 2025-09-26 14:04:29,204 basehttp 9316 19892 "GET /da/add/5/ HTTP/1.1" 200 55476
+INFO 2025-09-26 14:04:51,200 basehttp 9316 19892 "GET /patient/add/ HTTP/1.1" 200 68505

@@ -246,19 +246,19 @@ def getPatientList(pts_type):
     elif pts_type == PtStatus.DISCHARGED:
         return var_ptl.filter(cdicrecord__is_discharged=True).distinct()
     elif pts_type == PtStatus.DIAGNOSED:
-        return var_ptl.filter(Q(gmassessment__diagnosis_conclusion='ABNORMAL') | Q(hineassessment__score__lt = 73) | Q(developmentalassessment__is_dx_normal=False)).distinct()
+        return var_ptl.filter(Q(gmassessment__diagnosis_conclusion='ABNORMAL') | Q(hine_assessments__score__lt = 73) | Q(developmental_assessments__is_dx_normal=False)).distinct()
     elif pts_type == PtStatus.DX_NORMAL:
-        return var_ptl.exclude(Q(gmassessment__diagnosis_conclusion='ABNORMAL') and Q(hineassessment__score__lt = 73) and Q(developmentalassessment__is_dx_normal=False)).exclude(videos__isnull=True).distinct()
+        return var_ptl.exclude(Q(gmassessment__diagnosis_conclusion='ABNORMAL') and Q(hine_assessments__score__lt = 73) and Q(developmental_assessments__is_dx_normal=False)).exclude(videos__isnull=True).distinct()
     elif pts_type == PtStatus.DX_GMA_ABNORMAL:
         return var_ptl.filter(gmassessment__diagnosis_conclusion='ABNORMAL').distinct()
     elif pts_type == PtStatus.DX_GMA_NORMAL:
         return var_ptl.filter(gmassessment__diagnosis_conclusion='NORMAL').distinct()
     elif pts_type == PtStatus.DX_DA_NORMAL:
-        return var_ptl.filter(developmentalassessment__is_dx_normal=True).distinct()
+        return var_ptl.filter(developmental_assessments__is_dx_normal=True).distinct()
     elif pts_type == PtStatus.DX_DA_ABNORMAL:
-        return var_ptl.filter(developmentalassessment__is_dx_normal=False).distinct()
+        return var_ptl.filter(developmental_assessments__is_dx_normal=False).distinct()
     elif pts_type == PtStatus.DX_HINE:
-        return var_ptl.filter(Q(hineassessment__score__lt = 73)).distinct()
+        return var_ptl.filter(Q(hine_assessments__score__lt = 73)).distinct()
     else:
         return None
 
