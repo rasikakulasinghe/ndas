@@ -8481,3 +8481,83 @@ INFO 2025-09-25 13:22:08,528 basehttp 8016 17632 "GET /users/login/ HTTP/1.1" 20
 INFO 2025-09-25 13:22:11,081 basehttp 8016 17632 "GET /users/reset_password/ HTTP/1.1" 200 20301
 INFO 2025-09-25 13:22:13,712 basehttp 8016 17632 "GET /users/login/ HTTP/1.1" 200 15740
 INFO 2025-09-25 13:22:31,214 basehttp 8016 10916 "GET /users/contact-developer/?id=0925416b-dbbd-42cf-b670-0850e62f424e&vscodeBrowserReqId=1758786751201 HTTP/1.1" 200 17705
+INFO 2025-09-26 09:50:28,539 autoreload 8120 15016 Watching for file changes with StatReloader
+INFO 2025-09-26 09:50:48,870 basehttp 8120 11076 "GET / HTTP/1.1" 302 0
+INFO 2025-09-26 09:50:49,063 basehttp 8120 11076 "GET /users/login/?next=/ HTTP/1.1" 200 15740
+INFO 2025-09-26 09:50:49,374 basehttp 8120 11076 "GET /static/css/login.css HTTP/1.1" 304 0
+INFO 2025-09-26 09:50:49,374 basehttp 8120 13732 "GET /static/js/login.js HTTP/1.1" 304 0
+WARNING 2025-09-26 09:50:50,024 log 8120 13732 Not Found: /favicon.ico
+WARNING 2025-09-26 09:50:50,025 basehttp 8120 13732 "GET /favicon.ico HTTP/1.1" 404 15877
+WARNING 2025-09-26 09:50:50,039 log 8120 18400 Not Found: /favicon.ico
+WARNING 2025-09-26 09:50:50,040 basehttp 8120 18400 "GET /favicon.ico HTTP/1.1" 404 15877
+INFO 2025-09-26 09:51:05,639 basehttp 8120 18148 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-26 09:51:06,188 basehttp 8120 18148 "GET / HTTP/1.1" 200 50513
+INFO 2025-09-26 09:51:12,427 basehttp 8120 18148 "GET /manager/patient/ HTTP/1.1" 200 56208
+INFO 2025-09-26 09:51:27,654 basehttp 8120 15152 "GET /manager/assessment/ HTTP/1.1" 200 61090
+INFO 2025-09-26 09:51:31,775 basehttp 8120 15152 "GET /hine/manager/ HTTP/1.1" 200 50145
+INFO 2025-09-26 09:51:35,356 basehttp 8120 2636 "GET /da/manager/ HTTP/1.1" 200 41852
+INFO 2025-09-26 09:51:37,878 basehttp 8120 2636 "GET /cdic/manager/ HTTP/1.1" 200 42425
+INFO 2025-09-26 09:51:44,009 basehttp 8120 12556 "GET /manager/assessment/ HTTP/1.1" 200 61090
+INFO 2025-09-26 09:51:45,989 basehttp 8120 12556 "GET /manager/patient/ HTTP/1.1" 200 56208
+INFO 2025-09-26 09:51:53,925 basehttp 8120 15760 "GET /manager/assessment/ HTTP/1.1" 200 61090
+INFO 2025-09-26 09:52:04,577 basehttp 8120 8236 "GET /hine/manager/ HTTP/1.1" 200 50145
+INFO 2025-09-26 09:52:09,418 basehttp 8120 8236 "GET /da/manager/ HTTP/1.1" 200 41852
+INFO 2025-09-26 09:52:15,452 basehttp 8120 7136 "GET /cdic/manager/ HTTP/1.1" 200 42425
+INFO 2025-09-26 09:52:24,428 basehttp 8120 11972 "GET /manager/patient/ HTTP/1.1" 200 56208
+ERROR 2025-09-26 09:52:33,723 log 8120 3220 Internal Server Error: /manager/patient/diagnosed/da/normal
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 227, in patient_manager_da_normal
+    patients_list = getPatientList(PtStatus.DX_DA_NORMAL).order_by("-id")
+                    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\ndas\custom_codes\custom_methods.py", line 257, in getPatientList
+    return var_ptl.filter(developmentalassessment__is_dx_normal=True).distinct()
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\query.py", line 1421, in filter
+    return self._filter_or_exclude(False, args, kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\query.py", line 1439, in _filter_or_exclude
+    clone._filter_or_exclude_inplace(negate, args, kwargs)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\query.py", line 1446, in _filter_or_exclude_inplace
+    self._query.add_q(Q(*args, **kwargs))
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1532, in add_q
+    clause, _ = self._add_q(q_object, self.used_aliases)
+                ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1562, in _add_q
+    child_clause, needed_inner = self.build_filter(
+                                 ~~~~~~~~~~~~~~~~~^
+        child,
+        ^^^^^^
+    ...<5 lines>...
+        check_filterable=check_filterable,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1407, in build_filter
+    lookups, parts, reffed_expression = self.solve_lookup_type(arg)
+                                        ~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1217, in solve_lookup_type
+    _, field, _, lookup_parts = self.names_to_path(lookup_splitted, self.get_meta())
+                                ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1709, in names_to_path
+    raise FieldError(
+    ...<2 lines>...
+    )
+django.core.exceptions.FieldError: Cannot resolve keyword 'developmentalassessment' into field. Choices are: added_by, added_by_id, address, antenatal_hx, apgar_1, apgar_10, apgar_5, attachments, baby_name, bht, birth_weight, cdicrecord, created_at, developmental_assessments, disk_no, do_admission, do_discharge, dob_tob, gender, gmassessment, hine_assessments, id, indecation_for_gma, intranatal_hx, last_edit_by, last_edit_by_id, length, mo_delivery, moh_area, mother_name, nnc_no, ofc, other_relavent_details, pc_no, phm_area, pin, pog_days, pog_wks, postnatal_hx, problems, ptc_no, resuscitated, resustn_note, tp_lan, tp_mobile, updated_at, videos
+ERROR 2025-09-26 09:52:33,737 basehttp 8120 3220 "GET /manager/patient/diagnosed/da/normal HTTP/1.1" 500 134029
+INFO 2025-09-26 09:52:48,106 basehttp 8120 2560 "GET /patient/view/4/ HTTP/1.1" 200 119528
+INFO 2025-09-26 10:24:18,462 basehttp 8120 9220 "GET /patient/view/4/ HTTP/1.1" 200 119212
+INFO 2025-09-26 10:25:44,518 basehttp 8120 9220 "GET /patient/view/4/ HTTP/1.1" 200 119124
+INFO 2025-09-26 10:26:43,291 basehttp 8120 9220 "GET /patient/view/4/ HTTP/1.1" 200 118640
+INFO 2025-09-26 10:26:45,573 basehttp 8120 9220 "GET /patient/view/4/ HTTP/1.1" 200 118640
+INFO 2025-09-26 10:27:30,878 basehttp 8120 9220 "GET /patient/view/4/ HTTP/1.1" 200 118683
+INFO 2025-09-26 10:40:05,290 basehttp 8120 15864 "GET /patient/view/4/ HTTP/1.1" 200 118494
+INFO 2025-09-26 10:40:08,241 basehttp 8120 15864 "GET /patient/view/4/ HTTP/1.1" 200 118494
+INFO 2025-09-26 10:40:11,312 basehttp 8120 15864 "GET /patient/view/4/ HTTP/1.1" 200 118494

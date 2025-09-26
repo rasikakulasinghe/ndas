@@ -1035,125 +1035,116 @@
 
         <!-- Enhanced Action Panel -->
         <div class="card shadow-sm">
-          <div class="card-header bg-light">
-            <h6 class="mb-0">
-              <i class="fas fa-tools mr-2"></i>
-              Quick Actions
-            </h6>
+          <div class="card-header bg-light d-flex align-items-center">
+            <i class="fas fa-bolt mr-2 text-warning"></i>
+            <h6 class="mb-0">Quick Actions</h6>
           </div>
-          <div class="card-body patient-actions">
-            
-            <!-- Primary Actions Group -->
-            <div class="row mb-3">
-              <div class="col-12">
-                <h6 class="text-muted mb-2">
-                  <i class="fas fa-plus-circle mr-1"></i>
-                  Add New Records
-                </h6>
-              </div>
-              <div class="col-lg-3 col-md-6 mb-2">
-                <a class="btn btn-success btn-block" href="{% url 'video:add' patient.id %}">
-                  <i class="fas fa-video mr-2"></i>
-                  <span class="d-none d-sm-inline">New Video</span>
-                </a>
-              </div>
+          <div class="card-body p-4">
 
-                           <div class="col-lg-3 col-md-6 mb-2">
-                <a class="btn btn-secondary btn-block" href="{% url 'attachment-add' patient.id %}">
+            <!-- Top Row: Add New Records -->
+            <div class="row mb-3">
+              <div class="col-lg col-md-4 col-sm-6 mb-2">
+                <a class="btn btn-success btn-block d-flex align-items-center justify-content-center py-2" href="{% url 'video:add' patient.id %}">
+                  <i class="fas fa-video mr-2"></i>
+                  <span>New Video</span>
+                </a>
+              </div>
+              <div class="col-lg col-md-4 col-sm-6 mb-2">
+                <a class="btn btn-secondary btn-block d-flex align-items-center justify-content-center py-2" href="{% url 'attachment-add' patient.id %}">
                   <i class="fas fa-paperclip mr-2"></i>
-                  <span class="d-none d-sm-inline">New Attachment</span>
+                  <span>New Attachment</span>
                 </a>
               </div>
-              <div class="col-lg-3 col-md-6 mb-2">
-                <a class="btn btn-info btn-block" href="{% url 'hine-assessment-add' patient.id %}">
-                  <i class="fas fa-child mr-2"></i>
-                  <span class="d-none d-sm-inline">New HINE Record</span>
+              <div class="col-lg col-md-4 col-sm-6 mb-2">
+                <a class="btn btn-info btn-block d-flex align-items-center justify-content-center py-2" href="{% url 'hine-assessment-add' patient.id %}">
+                  <i class="fas fa-list-alt mr-2"></i>
+                  <span>New HINE Record</span>
                 </a>
               </div>
-              <div class="col-lg-3 col-md-6 mb-2">
-                <a class="btn btn-warning btn-block" href="{% url 'cdic-assessment-add' patient.id %}">
-                  <i class="fas fa-hands-helping mr-2"></i>
-                  <span class="d-none d-sm-inline">New CDIC Record</span>
+              <div class="col-lg col-md-4 col-sm-6 mb-2">
+                <a class="btn btn-warning btn-block d-flex align-items-center justify-content-center py-2" href="{% url 'cdic-assessment-add' patient.id %}">
+                  <i class="fas fa-list-ul mr-2"></i>
+                  <span>New CDIC Record</span>
                 </a>
               </div>
- 
-              <div class="col-lg-3 col-md-6 mb-2">
-                <a class="btn btn-secondary btn-block" href="{% url 'da-assessment-add' patient.id %}">
-                  <i class="fas fa-paperclip mr-2"></i>
-                  <span class="d-none d-sm-inline">New Developmental Assessment</span>
+              <div class="col-lg col-md-4 col-sm-6 mb-2">
+                <a class="btn btn-dark btn-block d-flex align-items-center justify-content-center py-2" href="{% url 'da-assessment-add' patient.id %}">
+                  <i class="fas fa-chart-bar mr-2"></i>
+                  <span class="d-none d-lg-inline">New Developmental Assessment</span>
+                  <span class="d-lg-none">New Assessment</span>
                 </a>
               </div>
             </div>
 
-            <hr class="my-3">
-
-            <!-- View Actions Group -->
+            <!-- Middle Row: View Actions -->
             <div class="row mb-3">
-              <div class="col-12">
-                <h6 class="text-muted mb-2">
-                  <i class="fas fa-eye mr-1"></i>
-                  View Records
-                </h6>
-              </div>
-              {% if file_videos %}
-              <div class="col-lg-4 col-md-6 mb-2">
-                <a class="btn btn-outline-primary btn-block" href="{% url 'video:manager-by-patient' patient.id %}">
-                  <i class="fas fa-video mr-2"></i>
-                  <span class="d-none d-sm-inline">View Videos</span>
+              <div class="col-lg-4 col-md-4 col-sm-12 mb-2">
+                {% if file_videos %}
+                <a class="btn btn-outline-primary btn-block d-flex align-items-center justify-content-center py-2" href="{% url 'video:manager-by-patient' patient.id %}">
+                  <i class="fas fa-play-circle mr-2"></i>
+                  <span>View Videos</span>
                   <span class="badge badge-primary ml-2">{{file_video_count}}</span>
                 </a>
+                {% else %}
+                <button class="btn btn-outline-primary btn-block d-flex align-items-center justify-content-center py-2" disabled>
+                  <i class="fas fa-play-circle mr-2"></i>
+                  <span>View Videos</span>
+                  <span class="badge badge-light ml-2">0</span>
+                </button>
+                {% endif %}
               </div>
-              {% endif %}
-              {% if file_attachment %}
-              <div class="col-lg-4 col-md-6 mb-2">
-                <a class="btn btn-outline-secondary btn-block" href="{% url 'attachment-manager-patient' patient.id %}">
-                  <i class="fas fa-paperclip mr-2"></i>
-                  <span class="d-none d-sm-inline">View Attachments</span>
+              <div class="col-lg-4 col-md-4 col-sm-12 mb-2">
+                {% if file_attachment %}
+                <a class="btn btn-outline-secondary btn-block d-flex align-items-center justify-content-center py-2" href="{% url 'attachment-manager-patient' patient.id %}">
+                  <i class="fas fa-file-alt mr-2"></i>
+                  <span>View Attachments</span>
                   <span class="badge badge-secondary ml-2">{{file_attachment_count}}</span>
                 </a>
+                {% else %}
+                <button class="btn btn-outline-secondary btn-block d-flex align-items-center justify-content-center py-2" disabled>
+                  <i class="fas fa-file-alt mr-2"></i>
+                  <span>View Attachments</span>
+                  <span class="badge badge-light ml-2">0</span>
+                </button>
+                {% endif %}
               </div>
-              {% endif %}
-              <div class="col-lg-4 col-md-6 mb-2">
+              <div class="col-lg-4 col-md-4 col-sm-12 mb-2">
                 {% if bookmark %}
-                <a class="btn btn-outline-success btn-block" href="{% url 'bookmark-view' bookmark.id %}">
+                <a class="btn btn-outline-success btn-block d-flex align-items-center justify-content-center py-2" href="{% url 'bookmark-view' bookmark.id %}">
                   <i class="fas fa-bookmark mr-2"></i>
-                  <span class="d-none d-sm-inline">View Bookmark</span>
+                  <span>View Bookmark</span>
                 </a>
                 {% else %}
-                <a class="btn btn-outline-success btn-block" href="{% url 'bookmark-add' patient.id 'Patient' %}">
+                <a class="btn btn-outline-success btn-block d-flex align-items-center justify-content-center py-2" href="{% url 'bookmark-add' patient.id 'Patient' %}">
                   <i class="fas fa-bookmark mr-2"></i>
-                  <span class="d-none d-sm-inline">Add Bookmark</span>
+                  <span>Add Bookmark</span>
                 </a>
                 {% endif %}
               </div>
             </div>
 
-            <hr class="my-3">
-
-            <!-- Management Actions Group -->
+            <!-- Bottom Row: Management Actions -->
             <div class="row">
-              <div class="col-12">
-                <h6 class="text-muted mb-2">
-                  <i class="fas fa-cog mr-1"></i>
-                  Patient Management
-                </h6>
-              </div>
-              <div class="col-lg-6 col-md-6 mb-2">
-                <a class="btn btn-primary btn-block" href="{% url 'edit-patient' patient.id %}">
+              <div class="col-lg-6 col-md-6 col-sm-12 mb-2">
+                <a class="btn btn-primary btn-block d-flex align-items-center justify-content-center py-2" href="{% url 'edit-patient' patient.id %}">
                   <i class="fas fa-edit mr-2"></i>
-                  Update Patient
+                  <span>Update Patient</span>
                 </a>
               </div>
               {% if user.is_superuser %}
-              <div class="col-lg-6 col-md-6 mb-2">
-                <button class="btn btn-danger btn-block" onclick="confirmPatientDeletion()" type="button">
+              <div class="col-lg-6 col-md-6 col-sm-12 mb-2">
+                <button class="btn btn-danger btn-block d-flex align-items-center justify-content-center py-2" onclick="confirmPatientDeletion()" type="button">
                   <i class="fas fa-trash-alt mr-2"></i>
-                  Delete Patient
+                  <span>Delete Patient</span>
                 </button>
+              </div>
+              {% else %}
+              <div class="col-lg-6 col-md-6 col-sm-12 mb-2">
+                <!-- Empty space for alignment when delete button is not shown -->
               </div>
               {% endif %}
             </div>
-            
+
           </div>
         </div>
           </div>
