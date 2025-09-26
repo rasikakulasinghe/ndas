@@ -51,13 +51,20 @@ This is a Django-based **Neurodevelopmental Assessment System (NDAS)** that mana
     - `UserTrackingMixin`: Tracks who added/modified records
   - `choice.py` - Predefined choices using Django's TextChoices for consistency
   - `validators.py` - Custom field validators for medical data and file uploads
-  - `custom_methods.py` - Utility functions
+  - `custom_methods.py` - Utility functions like `getCountZeroIfNone()`
 
-### Model Architecture Patterns
-- **All models inherit from abstract base classes** for consistent auditing
+### Model Architecture Patterns (MANDATORY)
+- **All models MUST inherit from both abstract base classes**:
+  ```python
+  class MyModel(TimeStampedModel, UserTrackingMixin):
+      # Your fields here
+      pass
+  ```
 - **Medical data validation** through custom validators (birth weight, APGAR scores)
 - **Choice standardization** using centralized TextChoices for medical terminology
 - **File upload validation** with size limits and type checking
+- **Searchable fields** must have `db_index=True` for performance
+- **Rich medical data** includes comprehensive help_text for medical fields
 
 ### Frontend Architecture
 - **AdminLTE-based UI framework** with professional medical interface design
@@ -119,6 +126,82 @@ This is a Django-based **Neurodevelopmental Assessment System (NDAS)** that mana
 - **Validation**: Through custom validators in `ndas/custom_codes/validators.py`
 - **Storage**: Organized by date and type for efficient management
 - **Processing**: FFmpeg integration for video processing tasks
+
+## Development Patterns (MANDATORY)
+
+### Form Development Pattern
+All forms MUST follow consistent Bootstrap styling from `patients/forms.py`:
+```python
+class MyForm(forms.ModelForm):
+    field = forms.ChoiceField(
+        choices=MY_CHOICES,
+        widget=forms.Select(attrs={"class": "form-control"})
+    )
+
+    class Meta:
+        widgets = {
+            "text_field": forms.TextInput(attrs={"class": "form-control"}),
+            "textarea_field": forms.Textarea(attrs={"class": "form-control", "rows": 4})
+        }
+```
+
+### View Development Pattern
+All views follow this structure:
+```python
+@login_required(login_url="user-login")
+def my_view(request):
+    # Standard pattern for data loading
+    var_objects = MyModel.objects.all()
+    count = getCountZeroIfNone(var_objects)  # Use custom method
+
+    # Template context with consistent naming
+    context = {"var_objects": var_objects, "count": count}
+    return render(request, "myapp/template.html", context)
+```
+
+### Template Structure (MANDATORY)
+```django
+{% extends 'src/base.html' %}  # Always for authenticated pages
+{% load static %}
+{% block title %}Section - Action | Context{% endblock %}
+{% block main_content %}
+<div class="container-fluid">
+  {% csrf_token %}
+  <!-- Content here -->
+</div>
+{% endblock %}
+```
+
+## Critical Development Rules
+
+### When Adding New Models
+1. Inherit from `TimeStampedModel, UserTrackingMixin`
+2. Add choices to `ndas/custom_codes/choice.py`
+3. Create validators in `ndas/custom_codes/validators.py`
+4. Use `db_index=True` for searchable fields
+5. Include comprehensive help_text for medical fields
+
+### File Upload Handling
+Always use custom validators from `ndas/custom_codes/validators.py`:
+```python
+file_field = models.FileField(
+    upload_to="path/%Y/%m/",
+    validators=[validate_video_file],  # Or appropriate validator
+)
+```
+
+### UI Development Rules
+1. **Always extend** `'src/base.html'` for authenticated pages
+2. **Include CSRF token** in all container-fluid divs: `{% csrf_token %}`
+3. **Use consistent form classes** from `patients/forms.py` patterns
+4. **Follow AdminLTE structure**: info-box, card layouts, table patterns
+5. **Maintain responsive design** with mobile-first CSS
+
+## Data Flow Patterns
+- **Patient → Video → Assessment**: Core workflow where patients have videos, videos have assessments
+- **User tracking**: All CUD operations automatically track user via middleware
+- **Status management**: Use `ndas_enums.PtStatus` for patient status filtering
+- **Search optimization**: Key fields indexed, use `getPatientList()` for filtered queries
 
 ## Key Dependencies and Integration
 - **Django 4.2.16**: Latest LTS with security updates
