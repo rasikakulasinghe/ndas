@@ -1,23 +1,19 @@
-{% extends 'src/base.html' %} {% load static %} {% block title %}HINE Records Manager{% endblock title%} {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/manager.css' %}" />
-{% endblock extra_css %} {% block main_content %}
+{% extends 'src/base.html' %} {% load static %} {% block title %}HINE Records Manager{% endblock title%}
+{% block main_content %}
 
 <!-- Main content -->
 <div class="content">
   <div>
-
     <!-- Clean Table Card -->
-    <div class="card shadow-sm border-0">
+    <div class="card">
       <div class="card-header bg-info">
         <h3 class="card-title text-white">
           <i class="fas fa-brain mr-2"></i>HINE Assessment Records{% if patient %} :: Patient > {{patient.baby_name}}{% endif %}
         </h3>
 
-        {% if hine_record_list %}
-        <span class="badge badge-light ml-3 px-3 py-2">
-          <i class="fas fa-clipboard-check mr-2"></i>
-          {{ hine_record_list.paginator.count }} Total Records
-        </span>
+        {% if hine_record_list %} <a> &nbsp;:&nbsp;
+           ({{ hine_record_list.paginator.count }})
+        </a>
         {% endif %}
 
         <div class="card-tools d-flex align-items-center">
@@ -54,36 +50,21 @@
               style="min-width: 220px"
             >
               <h6 class="dropdown-header">Filter Options</h6>
-              <a
-                class="dropdown-item"
-                href="#"
-              >
+              <a class="dropdown-item" href="#">
                 <i class="fas fa-brain mr-2"></i>All HINE Records
               </a>
               <div class="dropdown-divider"></div>
-              <a
-                class="dropdown-item"
-                href="#"
-              >
-                <i class="fas fa-check-circle mr-2"></i>Normal (≥60)
+              <a class="dropdown-item" href="#">
+                <i class="fas fa-check-circle mr-2 text-success"></i>Normal (≥60)
               </a>
-              <a
-                class="dropdown-item"
-                href="#"
-              >
-                <i class="fas fa-exclamation-triangle mr-2"></i>Moderate (40-59)
+              <a class="dropdown-item" href="#">
+                <i class="fas fa-exclamation-triangle mr-2 text-warning"></i>Moderate (40-59)
               </a>
-              <a
-                class="dropdown-item"
-                href="#"
-              >
-                <i class="fas fa-exclamation-circle mr-2"></i>Significant (<40)
+              <a class="dropdown-item" href="#">
+                <i class="fas fa-exclamation-circle mr-2 text-danger"></i>Significant (<40)
               </a>
               <div class="dropdown-divider"></div>
-              <a
-                class="dropdown-item"
-                href="#"
-              >
+              <a class="dropdown-item" href="#">
                 <i class="fas fa-clock mr-2"></i>Recent Assessments
               </a>
             </div>
@@ -104,7 +85,7 @@
         {% if hine_record_list %}
         <div class="table-responsive">
           <table class="table table-hover text-nowrap">
-            <thead>
+            <thead class="bg-light">
               <tr>
                 <th
                   scope="col"
@@ -146,7 +127,7 @@
                   class="border-0 text-uppercase text-secondary font-weight-bold d-none d-lg-table-cell"
                   style="font-size: 0.75rem; padding: 1rem 0.75rem"
                 >
-                  AGE AT ASSESSMENT
+                  AGE
                 </th>
                 <th
                   scope="col"
@@ -160,7 +141,7 @@
                   class="border-0 text-uppercase text-secondary font-weight-bold d-none d-sm-table-cell"
                   style="font-size: 0.75rem; padding: 1rem 0.75rem"
                 >
-                  CREATED BY
+                  INFO
                 </th>
                 <th
                   scope="col"
@@ -209,99 +190,133 @@
                   </small>
                 </td>
 
-                <td
-                  class="align-middle py-3 px-3 text-center d-none d-md-table-cell"
-                >
+                <td class="text-center align-middle py-3 px-3 d-none d-md-table-cell">
                   <div class="score-display">
-                    <span class="h5 mb-0 {% if HINERecord.score >= 60 %}text-success{% elif HINERecord.score >= 40 %}text-warning{% else %}text-danger{% endif %}">
+                    <span class="h5 mb-0 font-weight-bold {% if HINERecord.score >= 60 %}text-success{% elif HINERecord.score >= 40 %}text-warning{% else %}text-danger{% endif %}">
                       {{ HINERecord.score }}
                     </span>
                     <small class="text-muted d-block">/78</small>
                   </div>
                 </td>
 
-                <td
-                  class="align-middle py-3 px-3 text-muted d-none d-lg-table-cell"
-                >
+                <td class="align-middle py-3 px-3 text-muted d-none d-lg-table-cell">
                   {{ HINERecord.date_of_assessment|date:"M d, Y"|default:"-" }}
                 </td>
 
-                <td
-                  class="align-middle py-3 px-3 d-none d-lg-table-cell"
-                >
-                  <span class="badge badge-info px-2 py-1">{{ HINERecord.getAssessmentAgeInMonths }}</span>
+                <td class="text-center align-middle py-3 px-3 d-none d-lg-table-cell">
+                  <span class="badge badge-info">{{ HINERecord.getAssessmentAgeInMonths }}</span>
                 </td>
 
-                <td
-                  class="align-middle py-3 px-3 d-none d-sm-table-cell"
-                >
-                  <span class="text-truncate" style="max-width: 150px;" data-toggle="tooltip" title="{{ HINERecord.assessment_done_by }}">
+                <td class="align-middle py-3 px-3 d-none d-sm-table-cell">
+                  <span class="text-truncate d-inline-block" style="max-width: 150px;" data-toggle="tooltip" title="{{ HINERecord.assessment_done_by }}">
                     {{ HINERecord.assessment_done_by }}
                   </span>
                 </td>
 
-                <td
-                  class="align-middle py-3 px-3 d-none d-sm-table-cell text-center"
-                >
+                <td class="text-center align-middle py-3 px-3 d-none d-sm-table-cell">
                   <button
                     type="button"
                     class="btn btn-link p-0 text-primary"
                     data-toggle="tooltip"
-                    data-html="true"
-                    title="Created by: {{ HINERecord.added_by|default:'Unknown' }} on {{ HINERecord.added_on|date:'M d, Y'|default:'-' }}{% if HINERecord.last_edit_by %}<br>Last edited: {{ HINERecord.last_edit_on|date:'M d, Y'|default:'-' }} by {{ HINERecord.last_edit_by }}{% endif %}"
+                    title="Added by: {{ HINERecord.added_by|default:'Unknown' }} on {{ HINERecord.added_on|date:'M d, Y'|default:'-' }}"
                   >
                     <i class="fas fa-info-circle" style="font-size: 1.1rem"></i>
                   </button>
                 </td>
 
                 <td class="align-middle py-3 px-3 text-center">
-                  <div class="dropdown">
-                    <button
-                      type="button"
-                      class="btn btn-link p-0 text-primary"
-                      data-toggle="dropdown"
-                      aria-haspopup="true"
-                      aria-expanded="false"
-                      title="Actions"
-                    >
-                      <i class="fas fa-ellipsis-v" style="font-size: 1.1rem"></i>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-right">
-                      <a class="dropdown-item" href="{% url 'hine-assessment-view' HINERecord.id %}">
-                        <i class="fas fa-eye mr-2"></i>View Record
-                      </a>
-                      <a class="dropdown-item" href="{% url 'hine-assessment-edit' HINERecord.id %}">
-                        <i class="fas fa-edit mr-2"></i>Edit Record
-                      </a>
-                      <div class="dropdown-divider"></div>
-                      <a class="dropdown-item" href="{% url 'view-patient' HINERecord.patient.id %}">
-                        <i class="fas fa-user mr-2"></i>View Patient
-                      </a>
-                      {% if not patient %}
-                      <a class="dropdown-item" href="{% url 'hine-assessment-manager-patient' HINERecord.patient.id %}">
-                        <i class="fas fa-list mr-2"></i>Patient's HINE Records
-                      </a>
-                      {% endif %}
-                      <div class="dropdown-divider"></div>
-                      {% if HINERecord.isBookmarked %}
-                      <a class="dropdown-item" href="{% url 'bookmark-view' HINERecord.isBookmarked.id %}">
-                        <i class="fas fa-bookmark mr-2"></i>View Bookmark
-                      </a>
-                      {% else %}
-                      <a class="dropdown-item" href="{% url 'bookmark-add' HINERecord.id 'HINE' %}">
-                        <i class="fas fa-star mr-2"></i>Add Bookmark
-                      </a>
-                      {% endif %}
-                      <div class="dropdown-divider"></div>
-                      <a class="dropdown-item text-danger" href="{% url 'hine-assessment-delete_start' HINERecord.id %}" onclick="return confirm('Are you sure you want to delete this HINE record?')">
-                        <i class="fas fa-trash mr-2"></i>Delete Record
-                      </a>
-                    </div>
-                  </div>
+                  <button
+                    type="button"
+                    class="btn btn-link p-0 text-primary mr-1"
+                    data-toggle="tooltip"
+                    title="View HINE Record"
+                    onclick="window.location.href='{% url 'hine-assessment-view' HINERecord.id %}'"
+                  >
+                    <i class="fas fa-eye" style="font-size: 1.1rem"></i>
+                  </button>
                 </td>
               </tr>
               {% endfor %}
             </tbody>
+            <!-- Integrated Table Footer with Pagination -->
+            <tfoot class="bg-light">
+              <tr>
+                <td colspan="9" class="border-0 py-2">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <!-- Results Info -->
+                    <small class="text-muted">
+                      Showing <strong>{{ hine_record_list.start_index }}-{{ hine_record_list.end_index }}</strong>
+                      of <strong>{{ hine_record_list.paginator.count }}</strong> HINE records
+                    </small>
+
+                    <!-- Compact Pagination -->
+                    <nav aria-label="HINE records pagination">
+                      <ul class="pagination pagination-sm mb-0">
+                        <!-- Previous -->
+                        <li class="page-item {% if not hine_record_list.has_previous %}disabled{% endif %}">
+                          {% if hine_record_list.has_previous %}
+                            <a class="page-link px-2" href="?page={{ hine_record_list.previous_page_number }}" title="Previous">
+                              <i class="fas fa-chevron-left"></i>
+                            </a>
+                          {% else %}
+                            <span class="page-link px-2 text-muted">
+                              <i class="fas fa-chevron-left"></i>
+                            </span>
+                          {% endif %}
+                        </li>
+
+                        <!-- Page Numbers -->
+                        {% for page_num in hine_record_list.paginator.page_range %}
+                          {% if page_num == hine_record_list.number %}
+                            <li class="page-item active">
+                              <span class="page-link bg-info border-info px-2">{{ page_num }}</span>
+                            </li>
+                          {% elif page_num > hine_record_list.number|add:'-3' and page_num < hine_record_list.number|add:'3' %}
+                            <li class="page-item">
+                              <a class="page-link px-2" href="?page={{ page_num }}">{{ page_num }}</a>
+                            </li>
+                          {% elif page_num == 1 or page_num == hine_record_list.paginator.num_pages %}
+                            <li class="page-item">
+                              <a class="page-link px-2" href="?page={{ page_num }}">{{ page_num }}</a>
+                            </li>
+                          {% elif page_num == hine_record_list.number|add:'-4' or page_num == hine_record_list.number|add:'3' %}
+                            <li class="page-item disabled">
+                              <span class="page-link px-2">...</span>
+                            </li>
+                          {% endif %}
+                        {% endfor %}
+
+                        <!-- Next -->
+                        <li class="page-item {% if not hine_record_list.has_next %}disabled{% endif %}">
+                          {% if hine_record_list.has_next %}
+                            <a class="page-link px-2" href="?page={{ hine_record_list.next_page_number }}" title="Next">
+                              <i class="fas fa-chevron-right"></i>
+                            </a>
+                          {% else %}
+                            <span class="page-link px-2 text-muted">
+                              <i class="fas fa-chevron-right"></i>
+                            </span>
+                          {% endif %}
+                        </li>
+                      </ul>
+                    </nav>
+
+                    <!-- Quick Page Jump (for large datasets) -->
+                    {% if hine_record_list.paginator.num_pages > 10 %}
+                    <div class="d-flex align-items-center">
+                      <small class="text-muted mr-1">Page:</small>
+                      <input type="number" class="form-control form-control-sm" style="width: 50px;"
+                             min="1" max="{{ hine_record_list.paginator.num_pages }}"
+                             value="{{ hine_record_list.number }}" id="pageJump">
+                      <button class="btn btn-sm btn-outline-info ml-1 px-2" onclick="jumpToPage()" title="Go to page">
+                        <i class="fas fa-arrow-right fa-xs"></i>
+                      </button>
+                    </div>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
 
@@ -312,13 +327,13 @@
             <h4 class="text-muted mb-3">No HINE Records Found</h4>
             <p class="text-muted mb-4">
               {% if patient %}
-                No HINE assessment records found for {{ patient.baby_name }}.
+                No HINE assessment records found for <strong>{{ patient.baby_name }}</strong>.
               {% else %}
                 No HINE assessment records found in the system.
               {% endif %}
             </p>
             {% if patient %}
-              <a href="{% url 'hine-assessment-add' patient.id %}" class="btn btn-success">
+              <a href="{% url 'hine-assessment-add' patient.id %}" class="btn btn-primary">
                 <i class="fas fa-plus mr-2"></i>Create First HINE Assessment
               </a>
             {% else %}
@@ -331,88 +346,6 @@
         {% endif %}
 
       </div>
-
-      <!-- Compact Bootstrap Pagination -->
-      {% if hine_record_list %}
-      <div class="card-footer bg-light py-3">
-        <div class="d-flex justify-content-between align-items-center">
-          <!-- Results Info -->
-          <div class="text-muted small">
-            <span class="font-weight-medium">{{ hine_record_list.start_index }}-{{ hine_record_list.end_index }}</span>
-            of <span class="font-weight-medium">{{ hine_record_list.paginator.count }}</span> records
-          </div>
-
-          <!-- Compact Pagination -->
-          <nav aria-label="HINE Records pagination">
-            <ul class="pagination pagination-sm mb-0">
-              <!-- First Page -->
-              {% if hine_record_list.has_previous %}
-                <li class="page-item">
-                  <a class="page-link" href="?page=1" title="First page">
-                    <i class="fas fa-angle-double-left"></i>
-                  </a>
-                </li>
-              {% endif %}
-
-              <!-- Previous -->
-              <li class="page-item {% if not hine_record_list.has_previous %}disabled{% endif %}">
-                {% if hine_record_list.has_previous %}
-                  <a class="page-link" href="?page={{ hine_record_list.previous_page_number }}" title="Previous page">
-                    <i class="fas fa-angle-left"></i>
-                  </a>
-                {% else %}
-                  <span class="page-link">
-                    <i class="fas fa-angle-left"></i>
-                  </span>
-                {% endif %}
-              </li>
-
-              <!-- Current Page Info -->
-              <li class="page-item active">
-                <span class="page-link bg-info border-info">
-                  {{ hine_record_list.number }} of {{ hine_record_list.paginator.num_pages }}
-                </span>
-              </li>
-
-              <!-- Next -->
-              <li class="page-item {% if not hine_record_list.has_next %}disabled{% endif %}">
-                {% if hine_record_list.has_next %}
-                  <a class="page-link" href="?page={{ hine_record_list.next_page_number }}" title="Next page">
-                    <i class="fas fa-angle-right"></i>
-                  </a>
-                {% else %}
-                  <span class="page-link">
-                    <i class="fas fa-angle-right"></i>
-                  </span>
-                {% endif %}
-              </li>
-
-              <!-- Last Page -->
-              {% if hine_record_list.has_next %}
-                <li class="page-item">
-                  <a class="page-link" href="?page={{ hine_record_list.paginator.num_pages }}" title="Last page">
-                    <i class="fas fa-angle-double-right"></i>
-                  </a>
-                </li>
-              {% endif %}
-            </ul>
-          </nav>
-
-          <!-- Page Jump (for large datasets) -->
-          {% if hine_record_list.paginator.num_pages > 10 %}
-          <div class="d-flex align-items-center">
-            <small class="text-muted mr-2">Go to:</small>
-            <input type="number" class="form-control form-control-sm" style="width: 60px;"
-                   min="1" max="{{ hine_record_list.paginator.num_pages }}"
-                   value="{{ hine_record_list.number }}" id="pageJump">
-            <button class="btn btn-sm btn-outline-secondary ml-1" onclick="jumpToPage()">
-              <i class="fas fa-arrow-right"></i>
-            </button>
-          </div>
-          {% endif %}
-        </div>
-      </div>
-      {% endif %}
     </div>
   </div>
 </div>

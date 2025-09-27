@@ -6,48 +6,89 @@
 <!-- Login Page Specific Styles -->
 <link rel="stylesheet" href="{% static 'css/login.css' %}">
 <style>
-/* Custom styles for Contact Developer page */
+/* Enhanced styles for Contact Developer page */
 .simple-input-display {
     background: #f8f9fa;
     border: 1px solid #e1e8ed;
     border-radius: 8px;
-    padding: 0.75rem 1rem;
-    font-size: 0.9rem;
+    padding: 0.875rem 1rem;
+    font-size: 0.95rem;
     color: #2c3e50;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.simple-input-display:hover {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    transform: translateY(-1px);
 }
 
 .contact-details .form-label {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: #34495e;
     margin-bottom: 0.5rem;
     display: block;
 }
 
-.contact-actions .btn {
+.contact-actions .btn, 
+.social-links .btn {
     border-radius: 8px;
     font-weight: 600;
     transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.contact-actions .btn:hover,
+.social-links .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
 .social-links .btn {
-    border-radius: 6px;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
+    padding: 0.75rem 1rem;
 }
 
 .help-info .alert {
-    border-radius: 8px;
-    border: 1px solid #d1ecf1;
-    background: #d1ecf1;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.1);
 }
 
 .system-info .alert {
-    border-radius: 8px;
-    border: 1px solid #d6d8db;
-    background: #f8f9fa;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(108, 117, 125, 0.1);
 }
 
-/* Responsive adjustments for mobile */
+.border-left-primary {
+    border-left: 4px solid #007bff !important;
+}
+
+.border-left-secondary {
+    border-left: 4px solid #6c757d !important;
+}
+
+.instruction-list ul {
+    margin-left: 0;
+    padding-left: 1.5rem;
+}
+
+.instruction-list ul li {
+    margin-bottom: 0.25rem;
+    color: #495057;
+}
+
+/* Enhanced welcome panel for contact page */
+.welcome-panel .brand-icon i.fa-headset {
+    color: #17a2b8;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.form-content {
+    padding: 2.5rem 2rem;
+}
+
+/* Mobile responsiveness */
 @media (max-width: 768px) {
     .form-header .row {
         text-align: center;
@@ -57,6 +98,18 @@
     .contact-actions,
     .social-links {
         text-align: center;
+    }
+    
+    .simple-login-card {
+        min-height: auto;
+    }
+    
+    .welcome-content {
+        padding: 2rem 1.5rem;
+    }
+    
+    .form-content {
+        padding: 2rem 1.5rem;
     }
 }
 </style>
@@ -77,23 +130,7 @@
 
     <!-- Content Wrapper. Contains page content -->
     <div class="content-wrapper">
-        <!-- Content Header (Page header) -->
-        <div class="content-header">
-            <div class="container-fluid">
-                <div class="row mb-2">
-                    <div class="col-sm-6">
-                        <h1>Contact Developer</h1>
-                    </div>
-                    <div class="col-sm-6">
-                        <ol class="breadcrumb float-sm-right">
-                            <li class="breadcrumb-item"><a href="/">Home</a></li>
-                            <li class="breadcrumb-item active">Contact Developer</li>
-                        </ol>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+        
         <!-- Main content -->
         <section class="content">
             <div class="container-fluid">
@@ -289,8 +326,13 @@
                         </div>
                         
                         <div class="welcome-description">
-                            <p>Get technical support and assistance for the Neurodevelopmental Assessment System.</p>
-                            <p>Our developer is here to help with system issues, feature requests, and general inquiries.</p>
+                            <p>Need assistance with the Neurodevelopmental Assessment System?</p>
+                            <ul style="text-align: left; padding-left: 1.5rem; font-size: 0.85rem; opacity: 0.9;">
+                                <li>System troubleshooting</li>
+                                <li>Feature requests</li>
+                                <li>User training support</li>
+                                <li>Technical documentation</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -299,8 +341,6 @@
                 <div class="col-md-7 form-panel">
                     <div class="form-content">
                         {% include 'src/messages.html' %}
-{% endif %}
-
                         
                         <div class="form-header mb-4">
                             <div class="row align-items-center">
@@ -407,39 +447,29 @@
                         </div>
                         {% endif %}
 
-                        <!-- Help Information -->
+                        <!-- Help Information - Visible Instructions -->
                         <div class="help-info mb-4">
-                            <div class="alert alert-info" style="border-radius: 8px; border: 1px solid #d1ecf1; background: #d1ecf1;">
-                                <h6 class="mb-2"><i class="fas fa-question-circle mr-2"></i>Need Help?</h6>
-                                <p class="mb-0 small">
-                                    For technical support, feature requests, or general inquiries about the NDAS system, 
-                                    please don't hesitate to contact me using any of the methods above.
-                                </p>
+                            <div class="alert alert-info border-left-primary" style="background: #e8f4fd; border-left: 4px solid #007bff; border-radius: 8px; padding: 1.25rem;">
+                                <h5 style="color: #0056b3; font-weight: 600; margin-bottom: 1rem;">
+                                    <i class="fas fa-question-circle mr-2"></i>How to Contact Support
+                                </h5>
+                                <div class="instruction-list" style="color: #2c3e50; font-size: 0.95rem; line-height: 1.6;">
+                                    <p style="margin-bottom: 0.75rem;">
+                                        <strong>For immediate assistance:</strong> Use the email button above to send your inquiry directly.
+                                    </p>
+                                    <p style="margin-bottom: 0.75rem;">
+                                        <strong>For urgent issues:</strong> Contact via WhatsApp for faster response during business hours.
+                                    </p>
+                                    
+                                </div>
                             </div>
                         </div>
 
-                        <!-- System Information -->
-                        {% if var %}
-                        <div class="system-info mb-4">
-                            <div class="alert alert-secondary" style="border-radius: 8px; border: 1px solid #d6d8db; background: #f8f9fa;">
-                                <h6 class="mb-2"><i class="fas fa-info-circle mr-2"></i>System Information</h6>
-                                <small class="text-muted">
-                                    When contacting support, please include: <code>{{ var }}</code>
-                                </small>
-                            </div>
-                        </div>
-                        {% endif %}
-
-                        <!-- Back to Login -->
                         <div class="form-footer text-center">
                             <a href="{% url 'user-login' %}" class="btn btn-outline-secondary mb-3" style="border-radius: 8px;">
                                 <i class="fas fa-arrow-left mr-1"></i>Back to Login
                             </a>
-                            <div>
-                                <small class="text-muted">
-                                    Professional healthcare system support
-                                </small>
-                            </div>
+
                         </div>
                     </div>
                 </div>

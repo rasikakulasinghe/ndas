@@ -1,11 +1,10 @@
 {% extends 'src/base.html' %} {% load static %} {% block title %}Assessment
-Manager{% endblock title%} {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/manager.css' %}" />
-{% endblock extra_css %} {% block main_content %}
+Manager{% endblock title%}
+{% block main_content %}
 
 <!-- Main content -->
-<div class="content">
-  <div>
+<div class="container-fluid">
+  {% csrf_token %}
     <!-- Clean Table Card -->
     <div class="card shadow-sm border-0">
       <div class="card-header bg-info">
@@ -13,16 +12,14 @@ Manager{% endblock title%} {% block extra_css %}
           <i class="fas fa-clipboard-list mr-2"></i>Assessment Records{% if patient %} :: Patient > {{patient.baby_name}}{% endif %}
         </h3>
 
-        {% if assessment_page_obj %}
-        <span class="badge badge-light ml-3 px-3 py-2">
-          <i class="fas fa-clipboard-check mr-2"></i>
-          {{ assessment_page_obj.paginator.count }} Total Records
-        </span>
+         {% if assessment_page_obj %} <a> &nbsp;:&nbsp;
+           ({{ assessment_page_obj.paginator.count }})
+        </a>
         {% endif %}
 
         <div class="card-tools d-flex align-items-center">
           <!-- Search Bar -->
-          <div class="input-group input-group-sm mr-3" style="width: 200px">
+          <div class="input-group input-group-sm mr-3 w-search-input">
             <input
               type="text"
               class="form-control form-control-sm"
@@ -50,8 +47,7 @@ Manager{% endblock title%} {% block extra_css %}
               <i class="fas fa-filter"></i>
             </button>
             <div
-              class="dropdown-menu dropdown-menu-right"
-              style="min-width: 220px"
+              class="dropdown-menu dropdown-menu-right w-dropdown-min"
             >
               <h6 class="dropdown-header">Filter Options</h6>
               <a
@@ -112,82 +108,26 @@ Manager{% endblock title%} {% block extra_css %}
           <table class="table table-hover text-nowrap">
             <thead>
               <tr>
-                <th
-                  scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
-                >
-                  INDEX
-                </th>
-                <th
-                  scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
-                >
-                  STATUS
-                </th>
-                <th
-                  scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
-                >
-                  PATIENT NAME
-                </th>
-                <th
-                  scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-md-table-cell"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
-                >
-                  DATE OF ASSESSMENT
-                </th>
-                <th
-                  scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-lg-table-cell"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
-                >
-                  NEXT ASSESSMENT DATE
-                </th>
-                <th
-                  scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-sm-table-cell"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
-                >
-                  INFORMED
-                </th>
-                <th
-                  scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
-                >
-                  DIAGNOSIS
-                </th>
-                <th
-                  scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-sm-table-cell"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
-                >
-                  CREATED BY
-                </th>
-                <th
-                  scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
-                >
-                  ACTIONS
-                </th>
+                <th scope="col" class="border-0">INDEX</th>
+                <th scope="col" class="border-0">STATUS</th>
+                <th scope="col" class="border-0">PATIENT NAME</th>
+                <th scope="col" class="border-0 d-none d-md-table-cell">DATE OF ASSESSMENT</th>
+                <th scope="col" class="border-0 d-none d-lg-table-cell">NEXT ASSESSMENT DATE</th>
+                <th scope="col" class="border-0 d-none d-sm-table-cell">INFORMED</th>
+                <th scope="col" class="border-0">DIAGNOSIS</th>
+                <th scope="col" class="border-0 d-none d-sm-table-cell">CREATED BY</th>
+                <th scope="col" class="border-0">ACTIONS</th>
               </tr>
             </thead>
             <tbody>
 
               {% for Assessment in assessment_page_obj %}
-              <tr class="border-bottom">
-                <td
-                  class="align-middle py-3 px-3 text-muted font-weight-medium"
-                >
+              <tr>
+                <td class="align-middle text-muted font-weight-medium">
                   {{ Assessment.id }}
                 </td>
 
-                <td class="align-middle py-3 px-3">
+                <td class="align-middle">
                   {% if Assessment.isBookmarked %}
                   <span class="badge badge-warning px-2 py-1">
                     <i class="fas fa-star mr-1"></i>BOOKMARKED
@@ -203,7 +143,7 @@ Manager{% endblock title%} {% block extra_css %}
                   {% endif %}
                 </td>
 
-                <td class="align-middle py-3 px-3">
+                <td class="align-middle">
                   <div class="font-weight-medium text-dark">
                     {{ Assessment.patient.baby_name|default:"Unnamed" }}
                   </div>
@@ -213,21 +153,15 @@ Manager{% endblock title%} {% block extra_css %}
                   </small>
                 </td>
 
-                <td
-                  class="align-middle py-3 px-3 text-muted d-none d-md-table-cell"
-                >
+                <td class="align-middle text-muted d-none d-md-table-cell">
                   {{ Assessment.date_of_assessment|date:"M d, Y"|default:"-" }}
                 </td>
 
-                <td
-                  class="align-middle py-3 px-3 text-muted d-none d-lg-table-cell"
-                >
+                <td class="align-middle text-muted d-none d-lg-table-cell">
                   {{ Assessment.next_assessment_date|date:"M d, Y"|default:"-" }}
                 </td>
 
-                <td
-                  class="align-middle py-3 px-3 d-none d-sm-table-cell"
-                >
+                <td class="align-middle d-none d-sm-table-cell">
                   {% if Assessment.parant_informed %}
                   <span
                     class="badge badge-success px-2 py-1"
@@ -247,7 +181,7 @@ Manager{% endblock title%} {% block extra_css %}
                   {% endif %}
                 </td>
 
-                <td class="align-middle py-3 px-3">
+                <td class="align-middle">
                   {% if Assessment.isDiagnosisNormal %}
                   <span
                     class="badge badge-success px-2 py-1"
@@ -267,20 +201,18 @@ Manager{% endblock title%} {% block extra_css %}
                   {% endif %}
                 </td>
 
-                <td
-                  class="align-middle py-3 px-3 d-none d-sm-table-cell text-center"
-                >
+                <td class="align-middle d-none d-sm-table-cell text-center">
                   <button
                     type="button"
                     class="btn btn-link p-0 text-primary"
                     data-toggle="tooltip"
                     title="Created by: {{ Assessment.added_by|default:'Unknown' }} on {{ Assessment.created_at|date:'M d, Y'|default:'-' }}"
                   >
-                    <i class="fas fa-info-circle" style="font-size: 1.1rem"></i>
+                    <i class="fas fa-info-circle"></i>
                   </button>
                 </td>
 
-                <td class="align-middle py-3 px-3 text-center">
+                <td class="align-middle text-center">
                   <div class="dropdown">
                     <button
                       type="button"
@@ -290,7 +222,7 @@ Manager{% endblock title%} {% block extra_css %}
                       aria-expanded="false"
                       title="Actions"
                     >
-                      <i class="fas fa-ellipsis-v" style="font-size: 1.1rem"></i>
+                      <i class="fas fa-ellipsis-v fa-icon-lg"></i>
                     </button>
                     <div class="dropdown-menu dropdown-menu-right">
                       <a class="dropdown-item" href="{% url 'assessment-view' Assessment.id %}">
@@ -426,7 +358,7 @@ Manager{% endblock title%} {% block extra_css %}
           {% if assessment_page_obj.paginator.num_pages > 10 %}
           <div class="d-flex align-items-center">
             <small class="text-muted mr-2">Go to:</small>
-            <input type="number" class="form-control form-control-sm" style="width: 60px;"
+            <input type="number" class="form-control form-control-sm w-page-jump-lg"
                    min="1" max="{{ assessment_page_obj.paginator.num_pages }}"
                    value="{{ assessment_page_obj.number }}" id="pageJump">
             <button class="btn btn-sm btn-outline-secondary ml-1" onclick="jumpToPage()">
@@ -438,7 +370,6 @@ Manager{% endblock title%} {% block extra_css %}
       </div>
       {% endif %}
     </div>
-  </div>
 </div>
 
 {% block extra_js %}

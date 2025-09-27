@@ -1,11 +1,10 @@
-{% extends 'src/base.html' %} {% load static %} {% block title %}Attachment Manager{% endblock title%} {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/manager.css' %}" />
-{% endblock extra_css %} {% block main_content %}
+{% extends 'src/base.html' %} {% load static %} {% block title %}Attachment Manager{% endblock title%}
+{% block main_content %}
 
 <!-- Main content -->
-<div class="content">
-  <div>
-    <!-- Clean Table Card -->
+<div class="container-fluid">
+  {% csrf_token %}
+    <!-- Clean Table Card - Using Bootstrap utilities consistently -->
     <div class="card shadow-sm border-0">
       <div class="card-header bg-info">
         <h3 class="card-title text-white">
@@ -18,39 +17,40 @@
         </span>
         {% endif %}
 
-        <div class="card-tools d-flex align-items-center">
-          <!-- Search Bar -->
-          <div class="input-group input-group-sm mr-3" style="width: 200px">
-            <input
-              type="text"
-              class="form-control form-control-sm"
-              placeholder="Search attachments..."
-              id="cardSearchInput"
-            />
-            <div class="input-group-append">
-              <button class="btn btn-outline-light btn-sm" type="button">
-                <i class="fas fa-search"></i>
-              </button>
+        <div class="card-tools">
+          <!-- Mobile-first responsive layout -->
+          <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center">
+            <!-- Search Bar -->
+            <div class="input-group input-group-sm mb-2 mb-md-0 mr-md-3" style="max-width: 250px;">
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                placeholder="Search attachments..."
+                id="cardSearchInput"
+              />
+              <div class="input-group-append">
+                <button class="btn btn-outline-light btn-sm" type="button">
+                  <i class="fas fa-search"></i>
+                </button>
+              </div>
             </div>
-          </div>
 
-          <!-- Filter Dropdown -->
-          <div class="dropdown mr-2">
-            <button
-              class="btn btn-tool text-white"
-              type="button"
-              data-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
-              data-toggle="tooltip"
-              title="Filter Records"
-            >
-              <i class="fas fa-filter"></i>
-            </button>
-            <div
-              class="dropdown-menu dropdown-menu-right"
-              style="min-width: 220px"
-            >
+            <!-- Filter and Export buttons -->
+            <div class="d-flex align-items-center">
+              <!-- Filter Dropdown -->
+              <div class="dropdown mr-2">
+                <button
+                  class="btn btn-tool text-white"
+                  type="button"
+                  data-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false"
+                  data-toggle="tooltip"
+                  title="Filter Records"
+                >
+                  <i class="fas fa-filter"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-right" style="min-width: 220px;">
               <h6 class="dropdown-header">Filter Options</h6>
               <a
                 class="dropdown-item{% if not type %} active{% endif %}"
@@ -87,98 +87,44 @@
             </div>
           </div>
 
-          <!-- Export Button -->
-          <button
-            type="button"
-            class="btn btn-tool text-white"
-            data-toggle="tooltip"
-            title="Export Records"
-          >
-            <i class="fas fa-download"></i>
-          </button>
+              <!-- Export Button -->
+              <button
+                type="button"
+                class="btn btn-tool text-white"
+                data-toggle="tooltip"
+                title="Export Records"
+              >
+                <i class="fas fa-download"></i>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
       <div class="card-body p-0">
         {% if attachment_page_obj %}
         <div class="table-responsive">
           <table class="table table-hover text-nowrap">
-            <thead class="bg-light">
+            <thead>
               <tr>
-                <th
-                  scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
-                >
-                  ID
-                </th>
-                <th
-                  scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
-                >
-                  TYPE
-                </th>
-                <th
-                  scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
-                >
-                  TITLE
-                </th>
-                <th
-                  scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
-                >
-                  PATIENT
-                </th>
-                <th
-                  scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-md-table-cell"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
-                >
-                  SIZE
-                </th>
-                <th
-                  scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-lg-table-cell"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
-                >
-                  DESCRIPTION
-                </th>
-                <th
-                  scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-lg-table-cell"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
-                >
-                  UPLOAD DATE
-                </th>
-                <th
-                  scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-sm-table-cell"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
-                >
-                  UPLOADED BY
-                </th>
-                <th
-                  scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
-                >
-                  ACTIONS
-                </th>
+                <th scope="col" class="border-0">ID</th>
+                <th scope="col" class="border-0">TYPE</th>
+                <th scope="col" class="border-0">TITLE</th>
+                <th scope="col" class="border-0">PATIENT</th>
+                <th scope="col" class="border-0 d-none d-md-table-cell">SIZE</th>
+                <th scope="col" class="border-0 d-none d-lg-table-cell">DESCRIPTION</th>
+                <th scope="col" class="border-0 d-none d-lg-table-cell">UPLOAD DATE</th>
+                <th scope="col" class="border-0 d-none d-sm-table-cell">UPLOADED BY</th>
+                <th scope="col" class="border-0">ACTIONS</th>
               </tr>
             </thead>
             <tbody>
               {% for attachment in attachment_page_obj %}
-              <tr class="border-bottom">
-                <td
-                  class="align-middle py-3 px-3 text-muted font-weight-medium"
-                >
+              <tr>
+                <td class="align-middle text-muted font-weight-medium">
                   {{ attachment.id }}
                 </td>
 
-                <td class="align-middle py-3 px-3">
+                <td class="align-middle">
                   {% if attachment.attachment_type == 'video' %}
                   <span class="badge badge-danger px-2 py-1">
                     <i class="fas fa-video mr-1"></i>VIDEO
@@ -206,9 +152,9 @@
                   {% endif %}
                 </td>
 
-                <td class="align-middle py-3 px-3">
+                <td class="align-middle">
                   <div class="font-weight-medium text-dark">
-                    <a href="{% url 'attachment-view' attachment.id %}" class="text-primary">
+                    <a href="{% url 'attachment-view' attachment.id %}" class="text-primary text-decoration-none">
                       {{ attachment.title|default:"Untitled"|truncatechars:30 }}
                     </a>
                     {% if attachment.is_sensitive %}
@@ -223,31 +169,27 @@
                     {% endif %}
                   </div>
                   <small class="d-block d-lg-none text-muted mt-1">
-                    {{ attachment.file_size_display|default:"Unknown" }} • 
+                    {{ attachment.file_size_display|default:"Unknown" }} •
                     {{ attachment.created_at|date:"M d, Y"|default:"-" }}
                   </small>
                 </td>
 
-                <td class="align-middle py-3 px-3">
+                <td class="align-middle">
                   <div class="font-weight-medium text-dark">
-                    <a href="{% url 'view-patient' attachment.patient.id %}" class="text-info">
+                    <a href="{% url 'view-patient' attachment.patient.id %}" class="text-info text-decoration-none">
                       {{ attachment.patient.baby_name|default:"Unnamed"|truncatechars:25 }}
                     </a>
                   </div>
                   {% if attachment.patient.bht %}
-                  <small class="text-muted">BHT: {{ attachment.patient.bht }}</small>
+                  <small class="text-muted d-block">BHT: {{ attachment.patient.bht }}</small>
                   {% endif %}
                 </td>
 
-                <td
-                  class="align-middle py-3 px-3 text-muted d-none d-md-table-cell"
-                >
+                <td class="align-middle text-muted d-none d-md-table-cell">
                   <span class="badge badge-light">{{ attachment.file_size_display|default:"Unknown" }}</span>
                 </td>
 
-                <td
-                  class="align-middle py-3 px-3 text-muted d-none d-lg-table-cell"
-                >
+                <td class="align-middle text-muted d-none d-lg-table-cell">
                   {% if attachment.description %}
                     <span data-toggle="tooltip" title="{{ attachment.description }}">
                       {{ attachment.description|truncatechars:40 }}
@@ -257,93 +199,73 @@
                   {% endif %}
                 </td>
 
-                <td
-                  class="align-middle py-3 px-3 text-muted d-none d-lg-table-cell"
-                >
+                <td class="align-middle text-muted d-none d-lg-table-cell">
                   {{ attachment.created_at|date:"M d, Y"|default:"-" }}
                 </td>
 
-                <td
-                  class="align-middle py-3 px-3 d-none d-sm-table-cell text-center"
-                >
+                <td class="align-middle d-none d-sm-table-cell text-center">
                   <button
                     type="button"
                     class="btn btn-link p-0 text-primary"
                     data-toggle="tooltip"
                     title="Uploaded by: {{ attachment.added_by|default:'Unknown' }} on {{ attachment.created_at|date:'M d, Y'|default:'-' }}"
                   >
-                    <i class="fas fa-info-circle" style="font-size: 1.1rem"></i>
+                    <i class="fas fa-info-circle"></i>
                   </button>
                 </td>
 
-                <td class="align-middle py-3 px-3 text-center">
-                  <div class="btn-group">
-                    <button
-                      type="button"
-                      class="btn btn-link p-0 text-primary mr-1"
-                      data-toggle="tooltip"
-                      title="View Attachment"
-                      onclick="window.location.href='{% url 'attachment-view' attachment.id %}'"
-                    >
-                      <i class="fas fa-eye" style="font-size: 1.1rem"></i>
-                    </button>
-                    <button type="button" class="btn btn-link p-0 text-secondary dropdown-toggle" 
-                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
-                            data-toggle="tooltip" title="More Actions">
-                      <i class="fas fa-ellipsis-v" style="font-size: 1.1rem"></i>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-right">
-                      <!-- View Options -->
-                      <h6 class="dropdown-header">View</h6>
-                      <a class="dropdown-item" href="{% url 'attachment-view' attachment.id %}">
-                        <i class="fas fa-eye text-primary"></i> 
-                        {% if attachment.attachment_type == 'image' %}View Image
-                        {% elif attachment.attachment_type == 'video' %}Play Video
-                        {% elif attachment.attachment_type == 'pdf' %}Read PDF
-                        {% else %}View File{% endif %}
-                      </a>
-                      
-                      <!-- Management Options -->
-                      <div class="dropdown-divider"></div>
-                      <h6 class="dropdown-header">Manage</h6>
-                      <a class="dropdown-item" href="{% url 'attachment-edit' attachment.id %}">
-                        <i class="fas fa-edit text-warning"></i> Edit
-                      </a>
-                      <a class="dropdown-item" href="javascript:void(0)" onclick="openDeleteAttachmentModal({
-                        id: '{{ attachment.id }}',
-                        title: '{{ attachment.title|escapejs }}',
-                        patient_name: '{{ attachment.patient.baby_name|escapejs }}',
-                        patient_bht: '{{ attachment.patient.bht|escapejs }}',
-                        patient_gender: '{{ attachment.patient.get_gender_display|escapejs }}',
-                        attachment_type: '{{ attachment.attachment_type }}',
-                        created_at: '{{ attachment.created_at|date:"M d, Y H:i" }}',
-                        added_by: '{{ attachment.added_by.get_full_name|default:attachment.added_by.username|escapejs }}',
-                        description: '{{ attachment.description|escapejs }}'
-                      })">
-                        <i class="fas fa-trash text-danger"></i> Delete
-                      </a>
-                      
-                      <!-- Related Items -->
-                      <div class="dropdown-divider"></div>
-                      <h6 class="dropdown-header">Related</h6>
-                      <a class="dropdown-item" href="{% url 'view-patient' attachment.patient.id %}">
-                        <i class="fas fa-user text-info"></i> View Patient
-                      </a>
-                      <a class="dropdown-item" href="{% url 'attachment-manager-patient' attachment.patient.id %}">
-                        <i class="fas fa-list text-info"></i> Patient's Attachments
-                      </a>
-                      
-                      <!-- Bookmark Options -->
-                      <div class="dropdown-divider"></div>
-                      {% if attachment.isBookmarked %}
-                        <a class="dropdown-item" href="{% url 'bookmark-view' attachment.isBookmarked.id %}">
-                          <i class="fas fa-bookmark text-success"></i> View Bookmark
+                <td class="align-middle text-center">
+                  <!-- Mobile-friendly actions -->
+                  <div class="btn-group btn-group-sm">
+                    <a href="{% url 'attachment-view' attachment.id %}"
+                       class="btn btn-outline-primary btn-sm"
+                       data-toggle="tooltip"
+                       title="View Attachment">
+                      <i class="fas fa-eye"></i>
+                      <span class="d-none d-lg-inline ml-1">View</span>
+                    </a>
+
+                    <div class="btn-group btn-group-sm">
+                      <button type="button"
+                              class="btn btn-outline-secondary btn-sm dropdown-toggle dropdown-toggle-split"
+                              data-toggle="dropdown"
+                              aria-haspopup="true"
+                              aria-expanded="false"
+                              data-toggle="tooltip"
+                              title="More Actions">
+                        <span class="sr-only">Toggle Dropdown</span>
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-right">
+                        <a class="dropdown-item" href="{% url 'attachment-edit' attachment.id %}">
+                          <i class="fas fa-edit text-warning mr-2"></i>Edit
                         </a>
-                      {% else %}
-                        <a class="dropdown-item" href="{% url 'bookmark-add' attachment.id 'Attachment' %}">
-                          <i class="far fa-bookmark text-success"></i> Add Bookmark
+                        <a class="dropdown-item" href="{% url 'view-patient' attachment.patient.id %}">
+                          <i class="fas fa-user text-info mr-2"></i>View Patient
                         </a>
-                      {% endif %}
+                        {% if attachment.isBookmarked %}
+                          <a class="dropdown-item" href="{% url 'bookmark-view' attachment.isBookmarked.id %}">
+                            <i class="fas fa-bookmark text-success mr-2"></i>View Bookmark
+                          </a>
+                        {% else %}
+                          <a class="dropdown-item" href="{% url 'bookmark-add' attachment.id 'Attachment' %}">
+                            <i class="far fa-bookmark text-success mr-2"></i>Add Bookmark
+                          </a>
+                        {% endif %}
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-danger" href="javascript:void(0)" onclick="openDeleteAttachmentModal({
+                          id: '{{ attachment.id }}',
+                          title: '{{ attachment.title|escapejs }}',
+                          patient_name: '{{ attachment.patient.baby_name|escapejs }}',
+                          patient_bht: '{{ attachment.patient.bht|escapejs }}',
+                          patient_gender: '{{ attachment.patient.get_gender_display|escapejs }}',
+                          attachment_type: '{{ attachment.attachment_type }}',
+                          created_at: '{{ attachment.created_at|date:"M d, Y H:i" }}',
+                          added_by: '{{ attachment.added_by.get_full_name|default:attachment.added_by.username|escapejs }}',
+                          description: '{{ attachment.description|escapejs }}'
+                        })">
+                          <i class="fas fa-trash mr-2"></i>Delete
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </td>
@@ -417,7 +339,7 @@
                     {% if attachment_page_obj.paginator.num_pages > 10 %}
                     <div class="d-flex align-items-center">
                       <small class="text-muted mr-1">Page:</small>
-                      <input type="number" class="form-control form-control-sm" style="width: 50px;"
+                      <input type="number" class="form-control form-control-sm w-page-jump"
                              min="1" max="{{ attachment_page_obj.paginator.num_pages }}"
                              value="{{ attachment_page_obj.number }}" id="pageJump">
                       <button class="btn btn-sm btn-outline-info ml-1 px-2" onclick="jumpToPage()" title="Go to page">
@@ -449,7 +371,6 @@
 
       </div>
     </div>
-  </div>
 </div>
 
 {% block extra_js %}

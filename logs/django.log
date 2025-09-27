@@ -8754,3 +8754,1345 @@ INFO 2025-09-26 14:03:10,393 basehttp 9316 19892 "POST /patient/add/ HTTP/1.1" 3
 INFO 2025-09-26 14:03:10,608 basehttp 9316 19892 "GET /patient/view/5/ HTTP/1.1" 200 104774
 INFO 2025-09-26 14:04:29,204 basehttp 9316 19892 "GET /da/add/5/ HTTP/1.1" 200 55476
 INFO 2025-09-26 14:04:51,200 basehttp 9316 19892 "GET /patient/add/ HTTP/1.1" 200 68505
+INFO 2025-09-27 20:15:52,807 autoreload 2600 4632 Watching for file changes with StatReloader
+INFO 2025-09-27 20:15:59,474 basehttp 2600 4868 "GET / HTTP/1.1" 302 0
+INFO 2025-09-27 20:15:59,661 basehttp 2600 4868 "GET /users/login/?next=/ HTTP/1.1" 200 15740
+INFO 2025-09-27 20:15:59,752 basehttp 2600 4868 "GET /static/dist/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-27 20:15:59,753 basehttp 2600 8540 "GET /static/dist/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-27 20:15:59,763 basehttp 2600 11728 "GET /static/js/login.js HTTP/1.1" 304 0
+INFO 2025-09-27 20:15:59,764 basehttp 2600 5248 "GET /static/css/login.css HTTP/1.1" 304 0
+WARNING 2025-09-27 20:16:00,291 log 2600 5248 Not Found: /favicon.ico
+WARNING 2025-09-27 20:16:00,292 basehttp 2600 5248 "GET /favicon.ico HTTP/1.1" 404 15877
+INFO 2025-09-27 20:16:07,080 basehttp 2600 13644 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-27 20:16:07,571 basehttp 2600 13644 "GET / HTTP/1.1" 200 51230
+INFO 2025-09-27 20:16:49,075 basehttp 2600 8552 "GET /?id=4aae8608-8b56-4a21-a81d-98d02b28db2a&vscodeBrowserReqId=1758984409063 HTTP/1.1" 302 0
+INFO 2025-09-27 20:16:49,087 basehttp 2600 8552 "GET /users/login/?next=/%3Fid%3D4aae8608-8b56-4a21-a81d-98d02b28db2a%26vscodeBrowserReqId%3D1758984409063 HTTP/1.1" 200 15740
+INFO 2025-09-27 20:17:33,075 basehttp 2600 20172 "GET / HTTP/1.1" 302 0
+INFO 2025-09-27 20:17:33,084 basehttp 2600 20172 "GET /users/login/?next=/ HTTP/1.1" 200 15740
+INFO 2025-09-27 20:17:33,316 basehttp 2600 20172 "GET /static/dist/css/social.css HTTP/1.1" 200 2189
+INFO 2025-09-27 20:17:33,329 basehttp 2600 2468 "GET /static/js/login.js HTTP/1.1" 200 2964
+INFO 2025-09-27 20:17:33,340 basehttp 2600 4144 "GET /static/dist/css/ndas-sidebar.css HTTP/1.1" 200 3918
+INFO 2025-09-27 20:17:33,357 basehttp 2600 12416 "GET /static/css/login.css HTTP/1.1" 200 6558
+INFO 2025-09-27 20:17:33,364 basehttp 2600 13280 "GET /static/dist/css/custom_css.css HTTP/1.1" 200 2900
+INFO 2025-09-27 20:17:33,376 basehttp 2600 14992 "GET /static/js/videojs-failsafe.js HTTP/1.1" 200 3039
+INFO 2025-09-27 20:17:33,389 basehttp 2600 2468 "GET /static/js/main.js HTTP/1.1" 200 2140
+INFO 2025-09-27 20:17:33,408 basehttp 2600 20172 "GET /static/js/utils.js HTTP/1.1" 200 5565
+INFO 2025-09-27 20:17:33,439 basehttp 2600 4144 "GET /static/js/debug.js HTTP/1.1" 200 4304
+INFO 2025-09-27 20:17:33,513 basehttp 2600 20172 "GET /static/js/rotate.js HTTP/1.1" 200 4611
+INFO 2025-09-27 20:17:33,514 basehttp 2600 4144 "GET /static/js/zoomrotate.js HTTP/1.1" 200 5853
+WARNING 2025-09-27 20:17:34,599 log 2600 4144 Not Found: /favicon.ico
+WARNING 2025-09-27 20:17:34,600 basehttp 2600 4144 "GET /favicon.ico HTTP/1.1" 404 15877
+INFO 2025-09-27 20:18:22,173 basehttp 2600 13856 "GET /users/logout/ HTTP/1.1" 302 0
+INFO 2025-09-27 20:18:22,187 basehttp 2600 13856 "GET /users/login/ HTTP/1.1" 200 16070
+INFO 2025-09-27 20:24:48,087 basehttp 2600 18152 "GET /users/login/ HTTP/1.1" 200 15740
+INFO 2025-09-27 20:24:48,138 basehttp 2600 18152 "GET /static/js/main.js HTTP/1.1" 304 0
+INFO 2025-09-27 20:24:50,134 basehttp 2600 18152 "GET /users/login/ HTTP/1.1" 200 15740
+INFO 2025-09-27 20:24:51,027 basehttp 2600 18152 "GET /users/login/ HTTP/1.1" 200 15740
+INFO 2025-09-27 20:25:57,554 basehttp 2600 17568 "GET /users/login/ HTTP/1.1" 200 15740
+INFO 2025-09-27 20:25:58,826 basehttp 2600 17568 "GET /users/login/ HTTP/1.1" 200 15740
+INFO 2025-09-27 20:25:59,936 basehttp 2600 17568 "GET /users/login/ HTTP/1.1" 200 15740
+INFO 2025-09-27 20:27:51,400 basehttp 2600 4660 "GET /users/login/ HTTP/1.1" 200 15740
+INFO 2025-09-27 20:27:52,657 basehttp 2600 4660 "GET /users/login/ HTTP/1.1" 200 15740
+INFO 2025-09-27 20:27:58,102 basehttp 2600 4660 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-27 20:27:58,308 basehttp 2600 4660 "GET / HTTP/1.1" 200 51230
+INFO 2025-09-27 20:28:04,960 basehttp 2600 4660 "GET /users/logout/ HTTP/1.1" 302 0
+INFO 2025-09-27 20:28:04,975 basehttp 2600 4660 "GET /users/login/ HTTP/1.1" 200 16070
+ERROR 2025-09-27 20:28:19,703 log 2600 4660 Internal Server Error: /users/contact-developer/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 505, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'endif'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\users\views.py", line 263, in developerContacts
+    return render(request, 'users/contact-developer.html', {'logged_user': logged_user, 'developer': developer, 'var': var})
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 34, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 175, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 157, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 200, in compile_nodelist
+    return parser.parse()
+           ~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 293, in do_extends
+    nodelist = parser.parse()
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 232, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 507, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 558, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 450: 'endif', expected 'endblock'. Did you forget to register or load this tag?
+ERROR 2025-09-27 20:28:19,734 basehttp 2600 4660 "GET /users/contact-developer/ HTTP/1.1" 500 202465
+INFO 2025-09-27 20:33:44,413 basehttp 2600 17248 "GET /users/login/ HTTP/1.1" 200 16885
+INFO 2025-09-27 20:33:47,204 basehttp 2600 17248 "GET /users/login/ HTTP/1.1" 200 16885
+INFO 2025-09-27 20:33:48,652 basehttp 2600 17248 "GET /users/login/ HTTP/1.1" 200 16885
+INFO 2025-09-27 20:33:50,037 basehttp 2600 17248 "GET /users/login/ HTTP/1.1" 200 16885
+INFO 2025-09-27 20:33:51,358 basehttp 2600 17248 "GET /users/login/ HTTP/1.1" 200 16885
+INFO 2025-09-27 20:33:52,174 basehttp 2600 17248 "GET /users/login/ HTTP/1.1" 200 16885
+INFO 2025-09-27 20:34:02,452 basehttp 2600 17248 "GET /users/login/ HTTP/1.1" 200 16885
+INFO 2025-09-27 20:34:03,187 basehttp 2600 17248 "GET /users/login/ HTTP/1.1" 200 16885
+INFO 2025-09-27 20:34:05,436 basehttp 2600 17248 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-27 20:34:05,646 basehttp 2600 17248 "GET / HTTP/1.1" 200 51230
+INFO 2025-09-27 20:34:09,372 basehttp 2600 17248 "GET / HTTP/1.1" 200 50906
+INFO 2025-09-27 20:34:15,756 basehttp 2600 17248 "GET /users/logout/ HTTP/1.1" 302 0
+INFO 2025-09-27 20:34:15,770 basehttp 2600 17248 "GET /users/login/ HTTP/1.1" 200 17215
+INFO 2025-09-27 20:34:20,656 basehttp 2600 17248 "GET /users/reset_password/ HTTP/1.1" 200 20301
+ERROR 2025-09-27 20:34:38,826 log 2600 17248 Internal Server Error: /users/contact-developer/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 505, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'endif'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\users\views.py", line 263, in developerContacts
+    return render(request, 'users/contact-developer.html', {'logged_user': logged_user, 'developer': developer, 'var': var})
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 34, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 175, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 157, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 200, in compile_nodelist
+    return parser.parse()
+           ~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 293, in do_extends
+    nodelist = parser.parse()
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 232, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 507, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 558, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 450: 'endif', expected 'endblock'. Did you forget to register or load this tag?
+ERROR 2025-09-27 20:34:38,843 basehttp 2600 17248 "GET /users/contact-developer/ HTTP/1.1" 500 202465
+INFO 2025-09-27 20:35:32,692 basehttp 2600 17248 "GET /users/login/ HTTP/1.1" 200 15740
+INFO 2025-09-27 20:35:33,640 basehttp 2600 17248 "GET /users/login/ HTTP/1.1" 200 15740
+INFO 2025-09-27 20:35:43,964 basehttp 2600 17248 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-27 20:35:44,202 basehttp 2600 17248 "GET / HTTP/1.1" 200 51230
+ERROR 2025-09-27 20:36:11,275 log 2600 17248 Internal Server Error: /users/contact-developer/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 505, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'endif'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\users\views.py", line 263, in developerContacts
+    return render(request, 'users/contact-developer.html', {'logged_user': logged_user, 'developer': developer, 'var': var})
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 34, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 175, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 157, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 200, in compile_nodelist
+    return parser.parse()
+           ~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 293, in do_extends
+    nodelist = parser.parse()
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 232, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 507, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 558, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 450: 'endif', expected 'endblock'. Did you forget to register or load this tag?
+ERROR 2025-09-27 20:36:11,300 basehttp 2600 17248 "GET /users/contact-developer/ HTTP/1.1" 500 202582
+INFO 2025-09-27 20:38:35,628 basehttp 2600 12980 "GET /users/contact-developer/ HTTP/1.1" 200 27625
+INFO 2025-09-27 20:38:46,306 basehttp 2600 9448 "GET / HTTP/1.1" 200 50906
+INFO 2025-09-27 20:38:52,749 basehttp 2600 18868 "GET /users/logout/ HTTP/1.1" 302 0
+INFO 2025-09-27 20:38:52,760 basehttp 2600 18868 "GET /users/login/ HTTP/1.1" 200 16070
+INFO 2025-09-27 20:38:55,717 basehttp 2600 18868 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-27 20:38:55,935 basehttp 2600 18868 "GET / HTTP/1.1" 200 51230
+INFO 2025-09-27 20:39:04,673 basehttp 2600 6948 "GET /users/logout/ HTTP/1.1" 302 0
+INFO 2025-09-27 20:39:04,696 basehttp 2600 6948 "GET /users/login/ HTTP/1.1" 200 16070
+INFO 2025-09-27 20:39:06,989 basehttp 2600 6948 "GET /users/contact-developer/ HTTP/1.1" 200 17704
+INFO 2025-09-27 20:41:07,938 basehttp 2600 2660 "GET /users/contact-developer/ HTTP/1.1" 200 16569
+INFO 2025-09-27 20:41:56,090 basehttp 2600 10060 "GET /users/login/ HTTP/1.1" 200 15740
+INFO 2025-09-27 20:41:58,179 basehttp 2600 10060 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-27 20:41:58,409 basehttp 2600 10060 "GET / HTTP/1.1" 200 51230
+INFO 2025-09-27 20:42:07,819 basehttp 2600 10540 "GET /users/contact-developer/ HTTP/1.1" 200 27625
+ERROR 2025-09-27 20:43:49,587 log 2600 10540 Internal Server Error: /users/contact-developer/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 505, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'else'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\users\views.py", line 263, in developerContacts
+    return render(request, 'users/contact-developer.html', {'logged_user': logged_user, 'developer': developer, 'var': var})
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 34, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 175, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 157, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 200, in compile_nodelist
+    return parser.parse()
+           ~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 293, in do_extends
+    nodelist = parser.parse()
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 232, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 507, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 558, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 321: 'else', expected 'endblock'. Did you forget to register or load this tag?
+ERROR 2025-09-27 20:43:49,600 basehttp 2600 10540 "GET /users/contact-developer/ HTTP/1.1" 500 240987
+INFO 2025-09-27 20:44:00,219 basehttp 2600 10540 "GET /users/contact-developer/ HTTP/1.1" 200 27625
+INFO 2025-09-27 20:44:06,964 basehttp 2600 10540 "GET / HTTP/1.1" 200 50906
+INFO 2025-09-27 20:44:12,963 basehttp 2600 10540 "GET /users/logout/ HTTP/1.1" 302 0
+INFO 2025-09-27 20:44:12,974 basehttp 2600 10540 "GET /users/login/ HTTP/1.1" 200 16070
+INFO 2025-09-27 20:44:15,177 basehttp 2600 10540 "GET /users/contact-developer/ HTTP/1.1" 200 16632
+INFO 2025-09-27 20:47:30,547 basehttp 2600 10540 "GET /users/contact-developer/ HTTP/1.1" 200 19669
+INFO 2025-09-27 20:47:32,773 basehttp 2600 10540 "GET /users/contact-developer/ HTTP/1.1" 200 19669
+INFO 2025-09-27 20:47:33,680 basehttp 2600 10540 "GET /users/contact-developer/ HTTP/1.1" 200 19669
+INFO 2025-09-27 20:47:34,499 basehttp 2600 10540 "GET /users/contact-developer/ HTTP/1.1" 200 19669
+INFO 2025-09-27 20:47:35,043 basehttp 2600 10540 "GET /users/contact-developer/ HTTP/1.1" 200 19669
+INFO 2025-09-27 20:49:14,646 basehttp 2600 10540 "GET /users/contact-developer/ HTTP/1.1" 200 21033
+INFO 2025-09-27 20:49:15,480 basehttp 2600 10540 "GET /users/contact-developer/ HTTP/1.1" 200 21033
+INFO 2025-09-27 20:50:26,985 basehttp 2600 10540 "GET /users/contact-developer/ HTTP/1.1" 200 21033
+INFO 2025-09-27 20:50:27,795 basehttp 2600 10540 "GET /users/contact-developer/ HTTP/1.1" 200 21033
+INFO 2025-09-27 20:50:29,893 basehttp 2600 10540 "GET /users/login/ HTTP/1.1" 200 15740
+INFO 2025-09-27 20:50:31,748 basehttp 2600 10540 "GET /users/contact-developer/ HTTP/1.1" 200 21033
+INFO 2025-09-27 20:59:01,992 basehttp 2600 11972 "GET /users/contact-developer/ HTTP/1.1" 200 19115
+INFO 2025-09-27 20:59:02,046 basehttp 2600 16076 "GET /static/js/debug.js HTTP/1.1" 304 0
+INFO 2025-09-27 20:59:02,047 basehttp 2600 15608 "GET /static/js/zoomrotate.js HTTP/1.1" 304 0
+INFO 2025-09-27 20:59:02,048 basehttp 2600 17816 "GET /static/js/utils.js HTTP/1.1" 304 0
+INFO 2025-09-27 20:59:02,048 basehttp 2600 11972 "GET /static/js/videojs-failsafe.js HTTP/1.1" 304 0
+INFO 2025-09-27 20:59:02,066 basehttp 2600 11972 "GET /static/js/rotate.js HTTP/1.1" 304 0
+INFO 2025-09-27 23:06:12,654 basehttp 2600 16220 "GET /users/contact-developer/ HTTP/1.1" 200 18205
+INFO 2025-09-27 23:07:27,838 basehttp 2600 16220 "GET /users/contact-developer/ HTTP/1.1" 200 18148
+INFO 2025-09-27 23:08:24,103 basehttp 2600 16220 "GET /users/login/ HTTP/1.1" 200 15740
+INFO 2025-09-27 23:08:29,454 basehttp 2600 16220 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-27 23:08:29,770 basehttp 2600 16220 "GET / HTTP/1.1" 200 51230
+INFO 2025-09-27 23:10:17,369 basehttp 2600 16220 "GET / HTTP/1.1" 200 50688
+INFO 2025-09-27 23:10:24,079 basehttp 2600 16220 "GET /users/logout/ HTTP/1.1" 302 0
+INFO 2025-09-27 23:10:24,094 basehttp 2600 16220 "GET /users/login/ HTTP/1.1" 200 16070
+INFO 2025-09-27 23:10:26,506 basehttp 2600 16220 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-27 23:10:26,709 basehttp 2600 16220 "GET / HTTP/1.1" 200 51012
+INFO 2025-09-27 23:10:29,525 basehttp 2600 16220 "GET /help/article/ HTTP/1.1" 200 38171
+INFO 2025-09-27 23:10:31,872 basehttp 2600 16220 "GET /users/contact-developer/ HTTP/1.1" 200 28462
+INFO 2025-09-27 23:11:32,029 basehttp 2600 16220 "GET /users/contact-developer/ HTTP/1.1" 200 27797
+INFO 2025-09-27 23:11:37,383 basehttp 2600 16220 "GET /manager/patient/ HTTP/1.1" 200 58862
+INFO 2025-09-27 23:11:37,459 basehttp 2600 7264 "GET /static/js/manager.js HTTP/1.1" 200 22547
+INFO 2025-09-27 23:11:37,485 basehttp 2600 16220 "GET /static/css/manager.css HTTP/1.1" 200 26176
+INFO 2025-09-27 23:11:41,501 basehttp 2600 16220 "GET /manager/patient/ HTTP/1.1" 200 58862
+INFO 2025-09-27 23:11:43,335 basehttp 2600 16220 "GET /manager/patient/ HTTP/1.1" 200 58862
+INFO 2025-09-27 23:11:46,559 basehttp 2600 16220 "GET /manager/patient/ HTTP/1.1" 200 58862
+INFO 2025-09-27 23:11:48,142 basehttp 2600 16220 "GET /manager/patient/ HTTP/1.1" 200 58862
+INFO 2025-09-27 23:12:11,020 basehttp 2600 16220 "GET /manager/assessment/ HTTP/1.1" 200 60872
+INFO 2025-09-27 23:12:12,344 basehttp 2600 16220 "GET /hine/manager/ HTTP/1.1" 200 49927
+INFO 2025-09-27 23:12:14,514 basehttp 2600 16220 "GET /da/manager/ HTTP/1.1" 200 41634
+INFO 2025-09-27 23:12:16,915 basehttp 2600 16220 "GET /cdic/manager/ HTTP/1.1" 200 42207
+INFO 2025-09-27 23:12:22,332 basehttp 2600 16220 "GET /cdic/manager/ HTTP/1.1" 200 42207
+INFO 2025-09-27 23:12:26,802 basehttp 2600 16220 "GET /users/logout/ HTTP/1.1" 302 0
+INFO 2025-09-27 23:12:26,813 basehttp 2600 16220 "GET /users/login/ HTTP/1.1" 200 16070
+INFO 2025-09-27 23:12:28,887 basehttp 2600 16220 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-27 23:12:29,100 basehttp 2600 16220 "GET / HTTP/1.1" 200 51012
+INFO 2025-09-27 23:12:31,594 basehttp 2600 16220 "GET /manager/patient/ HTTP/1.1" 200 58862
+INFO 2025-09-27 23:17:13,514 basehttp 2600 19196 "GET /manager/patient/ HTTP/1.1" 200 58862
+INFO 2025-09-27 23:17:14,702 basehttp 2600 19196 "GET /manager/patient/ HTTP/1.1" 200 58862
+INFO 2025-09-27 23:17:16,156 basehttp 2600 19196 "GET /manager/patient/ HTTP/1.1" 200 58862
+INFO 2025-09-27 23:17:18,253 basehttp 2600 19196 "GET /manager/patient/ HTTP/1.1" 200 58862
+INFO 2025-09-27 23:17:19,205 basehttp 2600 19196 "GET /manager/patient/ HTTP/1.1" 200 58862
+INFO 2025-09-27 23:17:42,647 basehttp 2600 19672 "GET /hine/manager/ HTTP/1.1" 200 49927
+INFO 2025-09-27 23:17:43,821 basehttp 2600 19672 "GET /da/manager/ HTTP/1.1" 200 41634
+INFO 2025-09-27 23:17:45,009 basehttp 2600 19672 "GET /cdic/manager/ HTTP/1.1" 200 42207
+INFO 2025-09-27 23:25:25,355 basehttp 2600 15688 "GET /manager/patient/ HTTP/1.1" 200 58862
+INFO 2025-09-27 23:25:26,755 basehttp 2600 15688 "GET /manager/patient/ HTTP/1.1" 200 58862
+INFO 2025-09-27 23:25:27,762 basehttp 2600 15688 "GET /manager/patient/ HTTP/1.1" 200 58862
+INFO 2025-09-27 23:25:29,498 basehttp 2600 15688 "GET /manager/patient/ HTTP/1.1" 200 58862
+INFO 2025-09-27 23:26:13,674 autoreload 10156 4348 Watching for file changes with StatReloader
+INFO 2025-09-27 23:26:17,557 basehttp 10156 10492 "GET /manager/patient/ HTTP/1.1" 302 0
+INFO 2025-09-27 23:26:17,673 basehttp 10156 10492 "GET /users/login/?next=/manager/patient/ HTTP/1.1" 200 15740
+INFO 2025-09-27 23:26:19,968 basehttp 10156 10492 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-27 23:26:20,225 basehttp 10156 10492 "GET / HTTP/1.1" 200 51012
+INFO 2025-09-27 23:26:22,296 basehttp 10156 10492 "GET /manager/patient/ HTTP/1.1" 200 58862
+INFO 2025-09-27 23:26:23,391 basehttp 10156 10492 "GET /manager/patient/ HTTP/1.1" 200 58862
+INFO 2025-09-27 23:27:04,386 basehttp 10156 17412 "GET /manager/patient/ HTTP/1.1" 200 58862
+INFO 2025-09-27 23:27:29,037 basehttp 10156 17412 "GET /video/manager/ HTTP/1.1" 200 59839
+INFO 2025-09-27 23:29:06,251 basehttp 10156 4408 "GET /patient/add/ HTTP/1.1" 200 68287
+INFO 2025-09-27 23:29:14,268 basehttp 10156 4408 "GET /manager/patient/ HTTP/1.1" 200 58862
+INFO 2025-09-27 23:37:54,549 basehttp 10156 20116 "GET /manager/patient/ HTTP/1.1" 200 55837
+INFO 2025-09-27 23:37:57,225 basehttp 10156 20116 "GET /manager/patient/ HTTP/1.1" 200 55837
+INFO 2025-09-27 23:38:18,977 basehttp 10156 20116 "GET /manager/assessment/ HTTP/1.1" 200 60872
+INFO 2025-09-27 23:38:20,992 basehttp 10156 20116 "GET /hine/manager/ HTTP/1.1" 200 49927
+INFO 2025-09-27 23:38:42,514 basehttp 10156 20116 "GET /da/manager/ HTTP/1.1" 200 41634
+INFO 2025-09-27 23:38:43,940 basehttp 10156 20116 "GET /manager/assessment/ HTTP/1.1" 200 59036
+INFO 2025-09-27 23:38:46,179 basehttp 10156 20116 "GET /manager/patient/ HTTP/1.1" 200 55409
+INFO 2025-09-27 23:38:47,450 basehttp 10156 20116 "GET /manager/patient/ HTTP/1.1" 200 55409
+INFO 2025-09-27 23:38:49,347 basehttp 10156 20116 "GET /manager/patient/ HTTP/1.1" 200 55409
+INFO 2025-09-27 23:38:58,434 basehttp 10156 20116 "GET /patient/add/ HTTP/1.1" 200 68287
+INFO 2025-09-27 23:39:00,109 basehttp 10156 20116 "GET /patient/add/ HTTP/1.1" 200 68287
+INFO 2025-09-27 23:39:00,980 basehttp 10156 20116 "GET /patient/add/ HTTP/1.1" 200 68287
+INFO 2025-09-27 23:39:02,063 basehttp 10156 20116 "GET /manager/patient/ HTTP/1.1" 200 55409
+INFO 2025-09-27 23:40:13,847 basehttp 10156 20116 "GET /manager/patient/ HTTP/1.1" 200 55409
+INFO 2025-09-27 23:40:17,187 basehttp 10156 20116 "GET /manager/patient/ HTTP/1.1" 200 55409
+INFO 2025-09-27 23:41:03,669 basehttp 10156 2752 "GET /users/logout/ HTTP/1.1" 302 0
+INFO 2025-09-27 23:41:03,684 basehttp 10156 2752 "GET /users/login/ HTTP/1.1" 200 16070
+INFO 2025-09-27 23:41:05,812 basehttp 10156 2752 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-27 23:41:06,014 basehttp 10156 2752 "GET / HTTP/1.1" 200 51012
+INFO 2025-09-27 23:41:08,593 basehttp 10156 2752 "GET /manager/patient/ HTTP/1.1" 200 55409
+INFO 2025-09-27 23:43:43,218 basehttp 10156 16944 "GET /manager/patient/ HTTP/1.1" 200 55409
+INFO 2025-09-27 23:43:46,652 basehttp 10156 16944 "GET /manager/patient/ HTTP/1.1" 200 55409
+INFO 2025-09-27 23:43:49,575 basehttp 10156 16944 "GET /manager/patient/ HTTP/1.1" 200 55409
+INFO 2025-09-27 23:44:03,995 basehttp 10156 16944 "GET /manager/patient/ HTTP/1.1" 200 55409
+INFO 2025-09-27 23:44:09,824 basehttp 10156 16944 "GET /patient/add/ HTTP/1.1" 200 68287
+INFO 2025-09-27 23:44:12,874 basehttp 10156 16944 "GET /manager/patient/ HTTP/1.1" 200 55409
+INFO 2025-09-27 23:44:55,125 basehttp 10156 16944 "GET /manager/patient/ HTTP/1.1" 200 55409
+INFO 2025-09-27 23:45:18,768 basehttp 10156 16944 "GET /manager/patient/ HTTP/1.1" 200 55409
+INFO 2025-09-27 23:49:26,503 basehttp 10156 16944 "GET /manager/patient/ HTTP/1.1" 200 55494
+INFO 2025-09-27 23:50:01,551 basehttp 10156 16944 "GET /users/logout/ HTTP/1.1" 302 0
+INFO 2025-09-27 23:50:01,568 basehttp 10156 16944 "GET /users/login/ HTTP/1.1" 200 16070
+INFO 2025-09-27 23:50:04,681 basehttp 10156 16944 "GET /users/contact-developer/ HTTP/1.1" 200 18148
+INFO 2025-09-27 23:50:07,026 basehttp 10156 16944 "GET /users/login/ HTTP/1.1" 200 15740
+INFO 2025-09-27 23:50:12,190 basehttp 10156 16944 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-27 23:50:12,386 basehttp 10156 16944 "GET / HTTP/1.1" 200 51012
+INFO 2025-09-27 23:50:15,412 basehttp 10156 16944 "GET /manager/patient/ HTTP/1.1" 200 55494
+INFO 2025-09-27 23:50:25,688 basehttp 10156 10092 "GET /manager/assessment/ HTTP/1.1" 200 58097
+INFO 2025-09-27 23:50:28,263 basehttp 10156 10092 "GET /hine/manager/ HTTP/1.1" 200 49927
+INFO 2025-09-27 23:50:31,073 basehttp 10156 10092 "GET /da/manager/ HTTP/1.1" 200 41634
+INFO 2025-09-27 23:50:32,801 basehttp 10156 10092 "GET /cdic/manager/ HTTP/1.1" 200 42207
+INFO 2025-09-27 23:50:35,106 basehttp 10156 13900 "GET /manager/patient/ HTTP/1.1" 200 55494
+INFO 2025-09-27 23:51:42,723 basehttp 10156 18660 "GET /manager/patient/ HTTP/1.1" 200 55494
+INFO 2025-09-27 23:51:43,924 basehttp 10156 14204 "GET /manager/patient/ HTTP/1.1" 200 55494
+INFO 2025-09-27 23:51:45,599 basehttp 10156 14204 "GET /manager/patient/ HTTP/1.1" 200 55494
+INFO 2025-09-27 23:51:47,896 basehttp 10156 14204 "GET /manager/patient/ HTTP/1.1" 200 55494
+INFO 2025-09-27 23:53:50,784 basehttp 10156 14204 "GET /manager/patient/ HTTP/1.1" 200 55494
+INFO 2025-09-27 23:53:52,045 basehttp 10156 14204 "GET /manager/patient/ HTTP/1.1" 200 55494
+INFO 2025-09-27 23:53:53,111 basehttp 10156 14204 "GET /manager/patient/ HTTP/1.1" 200 55494
+INFO 2025-09-27 23:53:53,971 basehttp 10156 14204 "GET /manager/patient/ HTTP/1.1" 200 55494
+INFO 2025-09-27 23:53:54,834 basehttp 10156 14204 "GET /manager/patient/ HTTP/1.1" 200 55494
+INFO 2025-09-27 23:53:55,557 basehttp 10156 14204 "GET /manager/patient/ HTTP/1.1" 200 55494
+INFO 2025-09-27 23:53:56,459 basehttp 10156 14204 "GET /manager/patient/ HTTP/1.1" 200 55494
+INFO 2025-09-27 23:57:19,009 basehttp 10156 14204 "GET /manager/patient/ HTTP/1.1" 200 55479
+INFO 2025-09-27 23:57:19,204 basehttp 10156 18316 "GET /static/css/custom_css.css HTTP/1.1" 200 2900
+INFO 2025-09-27 23:57:19,206 basehttp 10156 15252 "GET /static/css/ndas-sidebar.css HTTP/1.1" 200 3918
+INFO 2025-09-27 23:57:19,206 basehttp 10156 14204 "GET /static/css/social.css HTTP/1.1" 200 2189
+INFO 2025-09-27 23:57:24,469 basehttp 10156 15252 "GET /users/admin/dashboard/ HTTP/1.1" 200 49944
+INFO 2025-09-27 23:57:33,264 basehttp 10156 15252 "GET / HTTP/1.1" 200 50673
+INFO 2025-09-27 23:57:33,304 basehttp 10156 15252 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-27 23:57:33,304 basehttp 10156 14204 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-27 23:57:33,304 basehttp 10156 18316 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-27 23:57:41,166 basehttp 10156 18316 "GET /manager/patient/ HTTP/1.1" 200 55479
+INFO 2025-09-28 00:01:33,242 basehttp 10156 19996 "GET /manager/patient/ HTTP/1.1" 200 55479
+INFO 2025-09-28 00:01:33,313 basehttp 10156 19996 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:01:33,317 basehttp 10156 18076 "GET /static/css/custom_css.css HTTP/1.1" 200 2312
+INFO 2025-09-28 00:01:33,317 basehttp 10156 18944 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:01:35,773 basehttp 10156 18076 "GET /manager/patient/ HTTP/1.1" 200 55479
+INFO 2025-09-28 00:01:39,118 basehttp 10156 18076 "GET /manager/patient/ HTTP/1.1" 200 55479
+INFO 2025-09-28 00:01:39,158 basehttp 10156 18076 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:01:40,503 basehttp 10156 18076 "GET /manager/patient/ HTTP/1.1" 200 55479
+INFO 2025-09-28 00:01:41,528 basehttp 10156 18076 "GET /manager/patient/ HTTP/1.1" 200 55479
+INFO 2025-09-28 00:01:42,508 basehttp 10156 18076 "GET /manager/patient/ HTTP/1.1" 200 55479
+INFO 2025-09-28 00:01:43,875 basehttp 10156 18076 "GET /manager/patient/ HTTP/1.1" 200 55479
+INFO 2025-09-28 00:01:43,915 basehttp 10156 18076 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:01:54,867 basehttp 10156 9744 "GET /manager/patient/ HTTP/1.1" 200 55479
+INFO 2025-09-28 00:01:54,914 basehttp 10156 9744 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:01:55,953 basehttp 10156 9744 "GET /manager/patient/ HTTP/1.1" 200 55479
+INFO 2025-09-28 00:01:56,965 basehttp 10156 9744 "GET /manager/patient/ HTTP/1.1" 200 55479
+INFO 2025-09-28 00:02:36,222 basehttp 10156 9744 "GET /manager/patient/ HTTP/1.1" 200 55479
+INFO 2025-09-28 00:02:36,268 basehttp 10156 9744 "GET /static/css/social.css HTTP/1.1" 200 2079
+INFO 2025-09-28 00:02:36,283 basehttp 10156 1992 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:02:36,285 basehttp 10156 9444 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:02:43,017 basehttp 10156 9444 "GET /users/logout/ HTTP/1.1" 302 0
+INFO 2025-09-28 00:02:43,037 basehttp 10156 9444 "GET /users/login/ HTTP/1.1" 200 16055
+INFO 2025-09-28 00:02:43,100 basehttp 10156 9444 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:02:45,720 basehttp 10156 9444 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-28 00:02:45,912 basehttp 10156 9444 "GET / HTTP/1.1" 200 50997
+INFO 2025-09-28 00:02:45,970 basehttp 10156 9444 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:02:47,718 basehttp 10156 9444 "GET /manager/patient/ HTTP/1.1" 200 55479
+INFO 2025-09-28 00:03:19,056 basehttp 10156 19704 "GET /patient/view/5/ HTTP/1.1" 200 104174
+INFO 2025-09-28 00:03:19,124 basehttp 10156 19704 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:03:19,142 basehttp 10156 19704 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:03:19,145 basehttp 10156 17644 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:04:24,074 basehttp 10156 17644 "GET /patient/view/5/ HTTP/1.1" 200 104174
+INFO 2025-09-28 00:04:24,121 basehttp 10156 17644 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:04:24,122 basehttp 10156 19704 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:04:24,129 basehttp 10156 13156 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:04:25,872 basehttp 10156 13156 "GET /manager/patient/ HTTP/1.1" 200 55479
+INFO 2025-09-28 00:04:27,241 basehttp 10156 13156 "GET /manager/patient/ HTTP/1.1" 200 55479
+INFO 2025-09-28 00:04:31,785 basehttp 10156 13156 "GET /users/logout/ HTTP/1.1" 302 0
+INFO 2025-09-28 00:04:31,804 basehttp 10156 13156 "GET /users/login/ HTTP/1.1" 200 16055
+INFO 2025-09-28 00:04:34,209 basehttp 10156 13156 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-28 00:04:34,398 basehttp 10156 13156 "GET / HTTP/1.1" 200 50997
+INFO 2025-09-28 00:04:36,930 basehttp 10156 13156 "GET /manager/patient/ HTTP/1.1" 200 55479
+INFO 2025-09-28 00:04:38,355 basehttp 10156 13156 "GET /patient/add/ HTTP/1.1" 200 68272
+INFO 2025-09-28 00:04:42,647 basehttp 10156 13156 "GET /manager/patient/ HTTP/1.1" 200 55479
+INFO 2025-09-28 00:04:42,686 basehttp 10156 13156 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:04:48,471 basehttp 10156 12380 "GET /manager/assessment/ HTTP/1.1" 200 58122
+INFO 2025-09-28 00:04:48,528 basehttp 10156 12380 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:05:11,252 basehttp 10156 12380 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:05:11,256 basehttp 10156 11280 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+WARNING 2025-09-28 00:05:12,104 log 10156 12132 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-09-28 00:05:12,108 basehttp 10156 12132 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 15988
+INFO 2025-09-28 00:06:49,913 basehttp 10156 13304 "GET /manager/assessment/ HTTP/1.1" 200 58122
+INFO 2025-09-28 00:06:49,961 basehttp 10156 13304 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:06:49,972 basehttp 10156 13304 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:06:49,979 basehttp 10156 2752 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+WARNING 2025-09-28 00:06:56,035 log 10156 2752 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-09-28 00:06:56,037 basehttp 10156 2752 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 15988
+INFO 2025-09-28 00:07:06,778 basehttp 10156 2752 "GET /manager/patient/ HTTP/1.1" 200 55479
+INFO 2025-09-28 00:07:34,461 basehttp 10156 2752 "GET /manager/patient/ HTTP/1.1" 200 55479
+INFO 2025-09-28 00:07:34,493 basehttp 10156 2752 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:07:34,498 basehttp 10156 2752 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:07:36,566 basehttp 10156 2752 "GET /manager/assessment/ HTTP/1.1" 200 58122
+INFO 2025-09-28 00:07:39,197 basehttp 10156 2752 "GET /hine/manager/ HTTP/1.1" 200 49673
+INFO 2025-09-28 00:07:40,605 basehttp 10156 2752 "GET /da/manager/ HTTP/1.1" 200 41704
+INFO 2025-09-28 00:07:43,016 basehttp 10156 2752 "GET /cdic/manager/ HTTP/1.1" 200 42277
+INFO 2025-09-28 00:07:44,268 basehttp 10156 2752 "GET /video/manager/ HTTP/1.1" 200 60620
+INFO 2025-09-28 00:07:52,398 basehttp 10156 2752 "GET /video/manager/ HTTP/1.1" 200 60620
+INFO 2025-09-28 00:07:55,849 basehttp 10156 2752 "GET /attachment/manager/ HTTP/1.1" 200 70419
+INFO 2025-09-28 00:07:55,904 basehttp 10156 2752 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:07:58,533 basehttp 10156 2752 "GET /manager/bookmarks/ HTTP/1.1" 200 41817
+INFO 2025-09-28 00:08:01,944 basehttp 10156 2752 "GET /manager/patient/ HTTP/1.1" 200 55479
+ERROR 2025-09-28 00:08:25,547 log 10156 2752 Internal Server Error: /manager/patient/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 505, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'endfor'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 155, in patient_manager
+    return render(
+        request, "patients/manager.html", {"patients_page_obj": paginated_pt_list}
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 34, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 175, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 157, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 200, in compile_nodelist
+    return parser.parse()
+           ~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 293, in do_extends
+    nodelist = parser.parse()
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 232, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 954, in do_if
+    nodelist = parser.parse(("elif", "else", "endif"))
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 507, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 558, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 319: 'endfor', expected 'elif', 'else' or 'endif'. Did you forget to register or load this tag?
+ERROR 2025-09-28 00:08:25,586 basehttp 10156 2752 "GET /manager/patient/ HTTP/1.1" 500 251272
+ERROR 2025-09-28 00:10:25,906 log 10156 18488 Internal Server Error: /manager/patient/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 505, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'endfor'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 155, in patient_manager
+    return render(
+        request, "patients/manager.html", {"patients_page_obj": paginated_pt_list}
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 34, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 175, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 157, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 200, in compile_nodelist
+    return parser.parse()
+           ~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 293, in do_extends
+    nodelist = parser.parse()
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 232, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 954, in do_if
+    nodelist = parser.parse(("elif", "else", "endif"))
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 507, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 558, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 320: 'endfor', expected 'elif', 'else' or 'endif'. Did you forget to register or load this tag?
+ERROR 2025-09-28 00:10:25,924 basehttp 10156 18488 "GET /manager/patient/ HTTP/1.1" 500 251240
+ERROR 2025-09-28 00:10:28,926 log 10156 18488 Internal Server Error: /manager/patient/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 505, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'endfor'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 155, in patient_manager
+    return render(
+        request, "patients/manager.html", {"patients_page_obj": paginated_pt_list}
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 34, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 175, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 157, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 200, in compile_nodelist
+    return parser.parse()
+           ~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 293, in do_extends
+    nodelist = parser.parse()
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 232, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 954, in do_if
+    nodelist = parser.parse(("elif", "else", "endif"))
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 507, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 558, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 320: 'endfor', expected 'elif', 'else' or 'endif'. Did you forget to register or load this tag?
+ERROR 2025-09-28 00:10:28,940 basehttp 10156 18488 "GET /manager/patient/ HTTP/1.1" 500 251240
+ERROR 2025-09-28 00:10:37,555 log 10156 18488 Internal Server Error: /manager/patient/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 505, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'endfor'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 155, in patient_manager
+    return render(
+        request, "patients/manager.html", {"patients_page_obj": paginated_pt_list}
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 34, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 175, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 157, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 200, in compile_nodelist
+    return parser.parse()
+           ~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 293, in do_extends
+    nodelist = parser.parse()
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 232, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 954, in do_if
+    nodelist = parser.parse(("elif", "else", "endif"))
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 507, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 558, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 320: 'endfor', expected 'elif', 'else' or 'endif'. Did you forget to register or load this tag?
+ERROR 2025-09-28 00:10:37,569 basehttp 10156 18488 "GET /manager/patient/ HTTP/1.1" 500 251240
+ERROR 2025-09-28 00:12:53,167 log 10156 18488 Internal Server Error: /manager/patient/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 505, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'endfor'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 155, in patient_manager
+    return render(
+        request, "patients/manager.html", {"patients_page_obj": paginated_pt_list}
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 34, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 175, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 157, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 200, in compile_nodelist
+    return parser.parse()
+           ~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 293, in do_extends
+    nodelist = parser.parse()
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 232, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\defaulttags.py", line 954, in do_if
+    nodelist = parser.parse(("elif", "else", "endif"))
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 507, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 558, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 320: 'endfor', expected 'elif', 'else' or 'endif'. Did you forget to register or load this tag?
+ERROR 2025-09-28 00:12:53,181 basehttp 10156 18488 "GET /manager/patient/ HTTP/1.1" 500 251240
+INFO 2025-09-28 00:14:21,673 basehttp 10156 18488 "GET /manager/patient/ HTTP/1.1" 200 55872
+INFO 2025-09-28 00:14:21,727 basehttp 10156 18488 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:14:21,732 basehttp 10156 3416 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:14:21,732 basehttp 10156 3376 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:15:45,783 basehttp 10156 3376 "GET /manager/patient/ HTTP/1.1" 200 55849
+INFO 2025-09-28 00:15:45,838 basehttp 10156 3376 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:15:45,838 basehttp 10156 3416 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:15:47,089 basehttp 10156 3416 "GET /manager/patient/ HTTP/1.1" 200 55849
+INFO 2025-09-28 00:15:58,007 basehttp 10156 1100 "GET /manager/patient/ HTTP/1.1" 200 55840
+INFO 2025-09-28 00:16:00,443 basehttp 10156 1100 "GET /manager/patient/ HTTP/1.1" 200 55840
+INFO 2025-09-28 00:16:01,653 basehttp 10156 20196 "GET /manager/patient/ HTTP/1.1" 200 55840
+INFO 2025-09-28 00:16:33,576 basehttp 10156 20196 "GET /patient/add/ HTTP/1.1" 200 68272
+INFO 2025-09-28 00:16:33,628 basehttp 10156 20196 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:17:36,128 basehttp 10156 20196 "GET /patient/add/ HTTP/1.1" 200 68272
+INFO 2025-09-28 00:17:36,176 basehttp 10156 20196 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:17:36,185 basehttp 10156 13112 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:17:37,262 basehttp 10156 13112 "GET /manager/patient/ HTTP/1.1" 200 55872
+INFO 2025-09-28 00:17:38,337 basehttp 10156 13112 "GET /manager/patient/ HTTP/1.1" 200 55872
+INFO 2025-09-28 00:21:04,327 basehttp 10156 7452 "GET /manager/patient/ HTTP/1.1" 200 55872
+INFO 2025-09-28 00:21:04,391 basehttp 10156 7452 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:21:04,406 basehttp 10156 11156 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:21:04,406 basehttp 10156 2820 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:21:07,287 basehttp 10156 11156 "GET /manager/patient/ HTTP/1.1" 200 55872
+INFO 2025-09-28 00:21:25,488 basehttp 10156 11156 "GET /patient/add/ HTTP/1.1" 200 68272
+INFO 2025-09-28 00:21:33,846 basehttp 10156 11156 "GET /manager/patient/ HTTP/1.1" 200 55913
+INFO 2025-09-28 00:22:27,810 basehttp 10156 11156 "GET /manager/patient/ HTTP/1.1" 200 55913
+INFO 2025-09-28 00:22:28,212 autoreload 15676 2232 Watching for file changes with StatReloader
+INFO 2025-09-28 00:22:50,427 basehttp 10156 11156 "GET /manager/patient/ HTTP/1.1" 200 55913
+INFO 2025-09-28 00:22:55,362 basehttp 10156 11156 "GET /users/logout/ HTTP/1.1" 302 0
+INFO 2025-09-28 00:22:55,383 basehttp 10156 11156 "GET /users/login/ HTTP/1.1" 200 16055
+INFO 2025-09-28 00:22:57,111 basehttp 10156 11156 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-28 00:22:57,339 basehttp 10156 11156 "GET / HTTP/1.1" 200 50997
+INFO 2025-09-28 00:22:59,502 basehttp 10156 11156 "GET /patient/add/ HTTP/1.1" 200 68272
+INFO 2025-09-28 00:22:59,533 basehttp 10156 11156 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:23:01,485 basehttp 10156 11156 "GET /manager/patient/ HTTP/1.1" 200 55913
+INFO 2025-09-28 00:23:46,408 basehttp 10156 11156 "GET /manager/patient/ HTTP/1.1" 200 55913
+INFO 2025-09-28 00:23:46,471 basehttp 10156 2820 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:23:46,472 basehttp 10156 11156 "GET /static/css/custom_css.css HTTP/1.1" 200 2339
+INFO 2025-09-28 00:23:49,246 basehttp 10156 11156 "GET /manager/patient/ HTTP/1.1" 200 55913
+INFO 2025-09-28 00:26:07,379 basehttp 10156 11156 "GET /manager/patient/ HTTP/1.1" 200 55913
+INFO 2025-09-28 00:26:07,436 basehttp 10156 2820 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:26:07,436 basehttp 10156 11156 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:26:08,703 basehttp 10156 11156 "GET /manager/patient/ HTTP/1.1" 200 55913
+INFO 2025-09-28 00:27:15,080 basehttp 10156 11156 "GET /manager/patient/ HTTP/1.1" 200 55913
+INFO 2025-09-28 00:27:15,128 basehttp 10156 11156 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:27:15,128 basehttp 10156 2820 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:27:36,273 basehttp 10156 2820 "GET /manager/patient/ HTTP/1.1" 200 55913
+INFO 2025-09-28 00:27:37,580 basehttp 10156 2820 "GET /manager/patient/ HTTP/1.1" 200 55913
+INFO 2025-09-28 00:28:17,958 basehttp 10156 2820 "GET /manager/patient/ HTTP/1.1" 200 55913
+INFO 2025-09-28 00:28:18,009 basehttp 10156 2820 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:31:19,712 basehttp 10156 2820 "GET /manager/patient/ HTTP/1.1" 200 55931
+INFO 2025-09-28 00:31:19,777 basehttp 10156 2820 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:31:19,781 basehttp 10156 11156 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:31:19,787 basehttp 10156 11312 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:31:23,363 basehttp 10156 19044 "GET /manager/patient/ HTTP/1.1" 200 55931
+INFO 2025-09-28 00:31:26,118 basehttp 10156 19044 "GET /manager/patient/ HTTP/1.1" 200 55931
+INFO 2025-09-28 00:31:52,483 basehttp 10156 19044 "GET /manager/patient/ HTTP/1.1" 200 55869
+INFO 2025-09-28 00:31:54,852 basehttp 10156 19044 "GET /manager/patient/ HTTP/1.1" 200 55961
+INFO 2025-09-28 00:32:38,615 basehttp 10156 19044 "GET /manager/patient/ HTTP/1.1" 200 55955
+INFO 2025-09-28 00:32:38,667 basehttp 10156 19044 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:32:40,622 basehttp 10156 19044 "GET /manager/patient/ HTTP/1.1" 200 55955
+INFO 2025-09-28 00:33:23,575 basehttp 10156 19044 "GET /manager/patient/ HTTP/1.1" 200 57099
+INFO 2025-09-28 00:33:25,071 basehttp 10156 19044 "GET /manager/patient/ HTTP/1.1" 200 57099
+INFO 2025-09-28 00:33:57,380 basehttp 10156 19044 "GET /manager/patient/ HTTP/1.1" 200 57049
+INFO 2025-09-28 00:33:57,432 basehttp 10156 19044 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:33:58,965 basehttp 10156 19044 "GET /manager/patient/ HTTP/1.1" 200 57049
+INFO 2025-09-28 00:34:02,127 basehttp 10156 19044 "GET /manager/patient/ HTTP/1.1" 200 57049
+INFO 2025-09-28 00:34:16,041 basehttp 10156 19044 "GET /manager/patient/ HTTP/1.1" 200 57049
+INFO 2025-09-28 00:34:16,078 basehttp 10156 19044 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:34:16,946 basehttp 10156 19044 "GET /manager/patient/ HTTP/1.1" 200 57049
+INFO 2025-09-28 00:36:52,377 basehttp 10156 19044 "GET /manager/patient/ HTTP/1.1" 200 56826
+INFO 2025-09-28 00:36:52,440 basehttp 10156 19044 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:36:52,454 basehttp 10156 19044 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:37:00,044 basehttp 10156 19044 "GET /manager/patient/ HTTP/1.1" 200 56826
+INFO 2025-09-28 00:37:05,739 basehttp 10156 19044 "GET /manager/patient/ HTTP/1.1" 200 56826
+INFO 2025-09-28 00:37:41,729 basehttp 10156 19044 "GET /manager/patient/ HTTP/1.1" 200 60214
+INFO 2025-09-28 00:37:41,790 basehttp 10156 19044 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:37:44,098 basehttp 10156 19044 "GET /manager/patient/ HTTP/1.1" 200 60214
+INFO 2025-09-28 00:38:27,952 basehttp 10156 19044 "GET /manager/patient/ HTTP/1.1" 200 59797
+INFO 2025-09-28 00:38:28,003 basehttp 10156 19044 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:40:24,607 basehttp 10156 18304 "GET /manager/patient/ HTTP/1.1" 200 58847
+INFO 2025-09-28 00:40:24,658 basehttp 10156 18304 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:41:52,177 basehttp 10156 14576 "GET /manager/patient/ HTTP/1.1" 200 58815
+INFO 2025-09-28 00:41:52,229 basehttp 10156 14576 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:41:52,234 basehttp 10156 7504 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:42:49,688 basehttp 10156 11404 "GET /manager/patient/ HTTP/1.1" 200 58800
+INFO 2025-09-28 00:42:49,817 basehttp 10156 11404 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:43:37,144 basehttp 10156 11404 "GET /manager/patient/ HTTP/1.1" 200 58768
+INFO 2025-09-28 00:47:56,423 basehttp 10156 11404 "GET /manager/patient/ HTTP/1.1" 200 59503
+INFO 2025-09-28 00:47:56,496 basehttp 10156 11404 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:47:56,508 basehttp 10156 12156 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:47:56,514 basehttp 10156 17616 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:48:28,906 basehttp 10156 17616 "GET /manager/patient/ HTTP/1.1" 200 59503
+INFO 2025-09-28 00:49:08,225 basehttp 10156 17616 "GET /manager/patient/ HTTP/1.1" 200 60526
+INFO 2025-09-28 00:49:59,269 basehttp 10156 17616 "GET /manager/patient/ HTTP/1.1" 200 61854
+INFO 2025-09-28 00:50:52,896 basehttp 10156 17616 "GET /manager/patient/ HTTP/1.1" 200 58847
+INFO 2025-09-28 00:50:52,954 basehttp 10156 17616 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:52:47,285 basehttp 10156 8408 "GET /manager/patient/ HTTP/1.1" 200 58847
+INFO 2025-09-28 00:52:47,338 basehttp 10156 8408 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:52:49,975 basehttp 10156 8408 "GET /manager/patient/ HTTP/1.1" 200 58847
+INFO 2025-09-28 00:52:52,672 basehttp 10156 8408 "GET /manager/patient/ HTTP/1.1" 200 58847
+INFO 2025-09-28 00:52:56,065 basehttp 10156 8408 "GET /manager/patient/ HTTP/1.1" 200 58847
+INFO 2025-09-28 00:52:57,483 basehttp 10156 8408 "GET /manager/patient/ HTTP/1.1" 200 58847
+INFO 2025-09-28 00:53:00,027 basehttp 10156 8408 "GET /manager/patient/ HTTP/1.1" 200 58847
+INFO 2025-09-28 00:53:10,653 basehttp 10156 8408 "GET /manager/patient/ HTTP/1.1" 200 58847
+INFO 2025-09-28 00:53:10,684 basehttp 10156 8408 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:53:35,334 basehttp 10156 8408 "GET /manager/patient/ HTTP/1.1" 200 58847
+INFO 2025-09-28 00:53:36,767 basehttp 10156 8408 "GET /manager/patient/ HTTP/1.1" 200 58847
+INFO 2025-09-28 00:53:37,864 basehttp 10156 8408 "GET /manager/patient/ HTTP/1.1" 200 58847
+INFO 2025-09-28 00:54:24,572 basehttp 10156 8408 "GET /manager/patient/ HTTP/1.1" 200 58847
+INFO 2025-09-28 00:54:24,611 basehttp 10156 8408 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:54:43,011 basehttp 10156 8408 "GET /manager/patient/ HTTP/1.1" 200 58847
+INFO 2025-09-28 00:54:44,073 basehttp 10156 8408 "GET /manager/patient/ HTTP/1.1" 200 58847
+INFO 2025-09-28 00:54:44,989 basehttp 10156 8408 "GET /manager/patient/ HTTP/1.1" 200 58847
+INFO 2025-09-28 00:54:46,002 basehttp 10156 8408 "GET /manager/patient/ HTTP/1.1" 200 58847
+INFO 2025-09-28 00:54:46,828 basehttp 10156 8408 "GET /manager/patient/ HTTP/1.1" 200 58847
+INFO 2025-09-28 00:56:11,179 basehttp 10156 8408 "GET /manager/patient/ HTTP/1.1" 200 58794
+INFO 2025-09-28 00:56:12,394 basehttp 10156 8408 "GET /manager/patient/ HTTP/1.1" 200 58794
+INFO 2025-09-28 00:57:03,724 basehttp 10156 8408 "GET /manager/patient/ HTTP/1.1" 200 58828
+INFO 2025-09-28 00:59:39,663 basehttp 10156 8408 "GET /manager/patient/ HTTP/1.1" 200 58828
+INFO 2025-09-28 00:59:39,717 basehttp 10156 8408 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:59:39,722 basehttp 10156 17724 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:59:39,724 basehttp 10156 16992 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-28 00:59:40,837 basehttp 10156 16992 "GET /manager/patient/ HTTP/1.1" 200 58828
+INFO 2025-09-28 00:59:41,954 basehttp 10156 16992 "GET /manager/patient/ HTTP/1.1" 200 58828
+INFO 2025-09-28 00:59:43,099 basehttp 10156 16992 "GET /manager/patient/ HTTP/1.1" 200 58828
+INFO 2025-09-28 00:59:43,927 basehttp 10156 16992 "GET /manager/patient/ HTTP/1.1" 200 58828
+INFO 2025-09-28 00:59:44,709 basehttp 10156 16992 "GET /manager/patient/ HTTP/1.1" 200 58828
+INFO 2025-09-28 00:59:45,579 basehttp 10156 16992 "GET /manager/patient/ HTTP/1.1" 200 58828
+INFO 2025-09-28 01:00:15,181 basehttp 10156 16992 "GET /hine/manager/ HTTP/1.1" 200 47178
+INFO 2025-09-28 01:00:59,928 basehttp 10156 16992 "GET /manager/patient/ HTTP/1.1" 200 58828
+INFO 2025-09-28 01:08:32,759 basehttp 10156 12212 "GET /manager/patient/ HTTP/1.1" 200 58828
+INFO 2025-09-28 01:08:32,814 basehttp 10156 12212 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 01:08:32,821 basehttp 10156 5068 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-28 01:08:32,821 basehttp 10156 5832 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 01:08:34,047 basehttp 10156 5832 "GET /manager/patient/ HTTP/1.1" 200 58828
+INFO 2025-09-28 01:08:35,137 basehttp 10156 5832 "GET /manager/patient/ HTTP/1.1" 200 58828
+WARNING 2025-09-28 01:08:57,227 log 10156 5832 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-09-28 01:08:57,230 basehttp 10156 5832 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 15988
+INFO 2025-09-28 01:10:38,168 basehttp 10156 13064 "GET /manager/patient/ HTTP/1.1" 200 58793
+INFO 2025-09-28 01:11:24,643 basehttp 10156 13064 "GET /manager/patient/ HTTP/1.1" 200 58654
+INFO 2025-09-28 01:12:11,039 basehttp 10156 13064 "GET /manager/patient/ HTTP/1.1" 200 58828
+INFO 2025-09-28 01:13:30,216 basehttp 10156 13064 "GET /manager/patient/ HTTP/1.1" 200 58689
+INFO 2025-09-28 01:13:30,250 basehttp 10156 13064 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 01:15:00,074 basehttp 10156 13064 "GET /manager/patient/ HTTP/1.1" 200 58689
+INFO 2025-09-28 01:15:42,238 basehttp 10156 13064 "GET /manager/patient/ HTTP/1.1" 200 58689
+INFO 2025-09-28 01:15:42,279 basehttp 10156 13064 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 01:15:54,905 basehttp 10156 13064 "GET /patient/add/ HTTP/1.1" 200 68133
+INFO 2025-09-28 01:15:54,947 basehttp 10156 13064 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-28 01:16:19,365 basehttp 10156 13064 "GET /patient/add/ HTTP/1.1" 200 68272
+INFO 2025-09-28 01:16:37,977 basehttp 10156 13064 "GET /manager/patient/ HTTP/1.1" 200 58828
+INFO 2025-09-28 01:17:24,848 basehttp 10156 13064 "GET /manager/patient/ HTTP/1.1" 200 58773
+INFO 2025-09-28 01:18:10,081 basehttp 10156 13064 "GET /manager/assessment/ HTTP/1.1" 200 58122
+INFO 2025-09-28 01:18:53,995 basehttp 10156 13064 "GET /manager/assessment/ HTTP/1.1" 200 58067
+INFO 2025-09-28 01:18:54,049 basehttp 10156 13064 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 01:19:25,148 basehttp 10156 14924 "GET /hine/manager/ HTTP/1.1" 200 47178
+INFO 2025-09-28 01:20:06,340 basehttp 10156 14924 "GET /hine/manager/ HTTP/1.1" 200 47123
+ERROR 2025-09-28 01:20:19,555 log 10156 14924 Internal Server Error: /manager/patient/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 505, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'endfor'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 155, in patient_manager
+    return render(
+        request, "patients/manager.html", {"patients_page_obj": paginated_pt_list}
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 34, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 175, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 157, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 200, in compile_nodelist
+    return parser.parse()
+           ~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 293, in do_extends
+    nodelist = parser.parse()
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 232, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 507, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 558, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 387: 'endfor', expected 'endblock'. Did you forget to register or load this tag?
+ERROR 2025-09-28 01:20:19,605 basehttp 10156 14924 "GET /manager/patient/ HTTP/1.1" 500 227225
+INFO 2025-09-28 01:20:39,032 basehttp 10156 14924 - Broken pipe from ('127.0.0.1', 52494)
+INFO 2025-09-28 01:20:39,058 basehttp 10156 4224 "GET /manager/assessment/ HTTP/1.1" 200 58067
+INFO 2025-09-28 01:20:40,363 basehttp 10156 4224 "GET /hine/manager/ HTTP/1.1" 200 47123
+ERROR 2025-09-28 01:20:41,731 log 10156 4224 Internal Server Error: /manager/patient/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 505, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'endfor'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 155, in patient_manager
+    return render(
+        request, "patients/manager.html", {"patients_page_obj": paginated_pt_list}
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 34, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 175, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 157, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 200, in compile_nodelist
+    return parser.parse()
+           ~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 293, in do_extends
+    nodelist = parser.parse()
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 232, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 507, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 558, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 387: 'endfor', expected 'endblock'. Did you forget to register or load this tag?
+ERROR 2025-09-28 01:20:41,759 basehttp 10156 4224 "GET /manager/patient/ HTTP/1.1" 500 227225
+INFO 2025-09-28 01:21:10,418 basehttp 10156 1904 "GET /manager/patient/ HTTP/1.1" 200 58773
+INFO 2025-09-28 01:21:19,996 basehttp 10156 1904 "GET /manager/assessment/ HTTP/1.1" 200 58067
+INFO 2025-09-28 01:21:21,137 basehttp 10156 1904 "GET /hine/manager/ HTTP/1.1" 200 47123
+INFO 2025-09-28 01:21:23,334 basehttp 10156 1904 "GET /da/manager/ HTTP/1.1" 200 41704
+INFO 2025-09-28 01:21:26,584 basehttp 10156 1904 "GET /cdic/manager/ HTTP/1.1" 200 42277
+INFO 2025-09-28 01:22:05,082 basehttp 10156 16416 "GET /cdic/manager/ HTTP/1.1" 200 42222
+INFO 2025-09-28 01:22:19,367 basehttp 10156 16416 "GET /da/manager/ HTTP/1.1" 200 41704
+INFO 2025-09-28 01:22:42,761 basehttp 10156 16416 "GET /da/manager/ HTTP/1.1" 200 41649
+INFO 2025-09-28 01:22:56,710 basehttp 10156 16416 "GET /da/manager/ HTTP/1.1" 200 41649
+INFO 2025-09-28 01:22:57,831 basehttp 10156 16416 "GET / HTTP/1.1" 200 50673
+INFO 2025-09-28 01:23:07,547 basehttp 10156 16416 "GET /manager/assessment/ HTTP/1.1" 200 58067
+INFO 2025-09-28 01:23:07,584 basehttp 10156 16416 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 01:23:27,926 basehttp 10156 16416 "GET /manager/patient/ HTTP/1.1" 200 58773
+INFO 2025-09-28 01:23:50,175 basehttp 10156 16416 "GET /manager/assessment/ HTTP/1.1" 200 58067
+INFO 2025-09-28 01:23:57,734 basehttp 10156 16416 "GET /hine/manager/ HTTP/1.1" 200 47123
+INFO 2025-09-28 01:23:57,770 basehttp 10156 16416 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-28 01:24:00,122 basehttp 10156 16416 "GET /da/manager/ HTTP/1.1" 200 41649
+INFO 2025-09-28 01:24:01,693 basehttp 10156 16416 "GET /cdic/manager/ HTTP/1.1" 200 42222
+INFO 2025-09-28 01:24:03,473 basehttp 10156 16416 "GET /hine/manager/ HTTP/1.1" 200 47123
+INFO 2025-09-28 01:24:19,395 basehttp 10156 16416 "GET /users/logout/ HTTP/1.1" 302 0
+INFO 2025-09-28 01:24:19,420 basehttp 10156 16416 "GET /users/login/ HTTP/1.1" 200 16055
+INFO 2025-09-28 01:24:21,332 basehttp 10156 16416 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-28 01:24:21,545 basehttp 10156 16416 "GET / HTTP/1.1" 200 50997
+INFO 2025-09-28 01:24:23,267 basehttp 10156 16416 "GET /manager/patient/ HTTP/1.1" 200 58773
+INFO 2025-09-28 01:24:27,027 basehttp 10156 16416 "GET /manager/assessment/ HTTP/1.1" 200 58067
+INFO 2025-09-28 01:24:28,161 basehttp 10156 16416 "GET /hine/manager/ HTTP/1.1" 200 47123
+INFO 2025-09-28 01:24:29,935 basehttp 10156 16416 "GET /da/manager/ HTTP/1.1" 200 41649
+INFO 2025-09-28 01:24:31,109 basehttp 10156 16416 "GET /cdic/manager/ HTTP/1.1" 200 42222
+INFO 2025-09-28 01:24:35,153 basehttp 10156 16416 "GET /manager/patient/ HTTP/1.1" 200 58773
+INFO 2025-09-28 01:25:27,570 basehttp 10156 16416 "GET /manager/patient/ HTTP/1.1" 200 58759
+INFO 2025-09-28 01:25:27,606 basehttp 10156 16416 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 01:25:55,642 basehttp 10156 16416 "GET /manager/patient/ HTTP/1.1" 200 58752
+INFO 2025-09-28 01:28:09,134 basehttp 10156 13232 "GET /manager/patient/ HTTP/1.1" 200 58769
+INFO 2025-09-28 01:28:30,607 basehttp 10156 2272 "GET /manager/patient/ HTTP/1.1" 200 58754
+INFO 2025-09-28 01:28:46,373 basehttp 10156 18284 "GET /manager/patient/ HTTP/1.1" 200 58757
+INFO 2025-09-28 01:29:51,646 basehttp 10156 7744 "GET /manager/patient/ HTTP/1.1" 200 58721
+INFO 2025-09-28 01:30:10,640 basehttp 10156 10688 "GET /manager/patient/ HTTP/1.1" 200 58724
+INFO 2025-09-28 01:30:24,822 basehttp 10156 17460 "GET /manager/patient/ HTTP/1.1" 200 58726
+INFO 2025-09-28 01:30:37,402 basehttp 10156 15552 "GET /manager/patient/ HTTP/1.1" 200 58726
+INFO 2025-09-28 01:30:52,544 basehttp 10156 10068 "GET /manager/patient/ HTTP/1.1" 200 58722
+INFO 2025-09-28 01:32:15,694 basehttp 10156 9944 "GET /manager/patient/ HTTP/1.1" 200 58722
+INFO 2025-09-28 01:32:15,727 basehttp 10156 9944 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 01:32:15,732 basehttp 10156 9944 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 01:32:47,140 basehttp 10156 9944 "GET /manager/patient/ HTTP/1.1" 200 58723
+INFO 2025-09-28 01:32:47,186 basehttp 10156 9944 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-28 01:33:47,514 basehttp 10156 9944 "GET /manager/patient/ HTTP/1.1" 200 58723
+INFO 2025-09-28 01:34:06,259 basehttp 10156 9944 "GET /manager/patient/ HTTP/1.1" 200 58723
+INFO 2025-09-28 01:34:07,495 basehttp 10156 9944 "GET /manager/assessment/ HTTP/1.1" 200 58067
+INFO 2025-09-28 01:34:11,371 basehttp 10156 9944 "GET /manager/patient/ HTTP/1.1" 200 58723
+INFO 2025-09-28 01:34:58,659 basehttp 10156 19808 "GET /manager/patient/ HTTP/1.1" 200 58723
+INFO 2025-09-28 01:35:00,281 basehttp 10156 19808 "GET /manager/patient/ HTTP/1.1" 200 58723
+INFO 2025-09-28 01:35:33,524 basehttp 10156 19228 "GET /manager/patient/ HTTP/1.1" 200 58730
+INFO 2025-09-28 01:35:34,592 basehttp 10156 9844 "GET /manager/patient/ HTTP/1.1" 200 58730
+INFO 2025-09-28 01:35:55,553 basehttp 10156 16620 "GET /manager/patient/ HTTP/1.1" 200 58717
+INFO 2025-09-28 01:35:56,494 basehttp 10156 16620 "GET /manager/patient/ HTTP/1.1" 200 58717
+INFO 2025-09-28 01:35:57,297 basehttp 10156 16620 "GET /manager/patient/ HTTP/1.1" 200 58717
+INFO 2025-09-28 01:35:58,034 basehttp 10156 16620 "GET /manager/patient/ HTTP/1.1" 200 58717
+INFO 2025-09-28 01:36:10,837 basehttp 10156 2588 "GET /manager/patient/ HTTP/1.1" 200 58722
+INFO 2025-09-28 01:36:58,042 basehttp 10156 19144 "GET /manager/patient/ HTTP/1.1" 200 58719
+INFO 2025-09-28 01:37:38,276 basehttp 10156 10556 "GET /manager/patient/ HTTP/1.1" 200 58720
+INFO 2025-09-28 01:37:49,231 basehttp 10156 12104 "GET /manager/patient/ HTTP/1.1" 200 58720
+INFO 2025-09-28 01:37:51,432 basehttp 10156 12104 "GET /manager/patient/ HTTP/1.1" 200 58720
+INFO 2025-09-28 01:37:56,066 basehttp 10156 12104 "GET /manager/assessment/ HTTP/1.1" 200 58067
+INFO 2025-09-28 01:38:24,597 basehttp 10156 4656 "GET /manager/assessment/ HTTP/1.1" 200 57906
+INFO 2025-09-28 01:38:26,126 basehttp 10156 4656 "GET /manager/assessment/ HTTP/1.1" 200 57906
+INFO 2025-09-28 01:38:27,328 basehttp 10156 4656 "GET /manager/assessment/ HTTP/1.1" 200 57906
+INFO 2025-09-28 01:39:07,114 basehttp 10156 19072 "GET /manager/assessment/ HTTP/1.1" 200 58135
+INFO 2025-09-28 01:39:20,949 basehttp 10156 19072 "GET /manager/assessment/ HTTP/1.1" 200 57962
+INFO 2025-09-28 01:39:35,838 basehttp 10156 19072 "GET /manager/assessment/ HTTP/1.1" 200 57962
+INFO 2025-09-28 01:39:35,862 basehttp 10156 19072 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 01:39:37,330 basehttp 10156 19072 "GET /hine/manager/ HTTP/1.1" 200 47123
+INFO 2025-09-28 01:39:39,373 basehttp 10156 19072 "GET /da/manager/ HTTP/1.1" 200 41649
+INFO 2025-09-28 01:39:42,834 basehttp 10156 19072 "GET /cdic/manager/ HTTP/1.1" 200 42222
+INFO 2025-09-28 01:40:24,478 basehttp 10156 6120 "GET /cdic/manager/ HTTP/1.1" 200 42232
+INFO 2025-09-28 01:40:25,707 basehttp 10156 6120 "GET /cdic/manager/ HTTP/1.1" 200 42232
+INFO 2025-09-28 01:40:41,283 basehttp 10156 15488 "GET /da/manager/ HTTP/1.1" 200 41649
+INFO 2025-09-28 01:41:32,651 basehttp 10156 11236 "GET /da/manager/ HTTP/1.1" 200 41649
+INFO 2025-09-28 01:41:32,690 basehttp 10156 11236 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 01:41:34,299 basehttp 10156 11236 "GET /cdic/manager/ HTTP/1.1" 200 42230
+INFO 2025-09-28 01:41:36,445 basehttp 10156 11236 "GET /da/manager/ HTTP/1.1" 200 41649
+INFO 2025-09-28 01:41:38,758 basehttp 10156 11236 "GET /cdic/manager/ HTTP/1.1" 200 42230
+INFO 2025-09-28 01:41:40,429 basehttp 10156 12096 "GET /hine/manager/ HTTP/1.1" 200 47123
+INFO 2025-09-28 01:41:44,195 basehttp 10156 12096 "GET /video/manager/ HTTP/1.1" 200 60620
+INFO 2025-09-28 01:42:24,310 basehttp 10156 9068 "GET /video/manager/?search=&status=&patient=&date_from=&date_to= HTTP/1.1" 200 60620
+INFO 2025-09-28 01:42:43,581 basehttp 10156 12276 "GET /attachment/manager/ HTTP/1.1" 200 67506
+INFO 2025-09-28 01:42:43,649 basehttp 10156 12276 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-28 01:42:46,985 basehttp 10156 17220 "GET /manager/bookmarks/ HTTP/1.1" 200 41817
+INFO 2025-09-28 01:43:17,064 basehttp 10156 13904 "GET /video/manager/ HTTP/1.1" 200 60567
+INFO 2025-09-28 01:43:31,908 basehttp 10156 15396 "GET /attachment/manager/ HTTP/1.1" 200 67506
+INFO 2025-09-28 01:44:15,364 basehttp 10156 15396 "GET /attachment/manager/ HTTP/1.1" 200 67451
+INFO 2025-09-28 01:44:27,600 basehttp 10156 15396 "GET /manager/bookmarks/ HTTP/1.1" 200 41817
+INFO 2025-09-28 01:44:49,456 basehttp 10156 15396 "GET /manager/bookmarks/ HTTP/1.1" 200 41762
+INFO 2025-09-28 01:44:55,617 basehttp 10156 15396 "GET /users/admin/dashboard/ HTTP/1.1" 200 50010
+INFO 2025-09-28 01:44:58,615 basehttp 10156 15396 "GET / HTTP/1.1" 200 50673
+INFO 2025-09-28 01:45:01,317 basehttp 10156 15396 "GET /patient/add/ HTTP/1.1" 200 68272
+INFO 2025-09-28 01:45:25,843 basehttp 10156 15396 "GET /hine/manager/ HTTP/1.1" 200 47123
+INFO 2025-09-28 01:48:30,943 basehttp 10156 15396 "GET /hine/manager/ HTTP/1.1" 200 49032
+INFO 2025-09-28 01:48:30,975 basehttp 10156 15396 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 01:49:09,329 basehttp 10156 15396 "GET /manager/patient/ HTTP/1.1" 200 58720
+INFO 2025-09-28 01:49:19,309 basehttp 10156 15396 "GET /manager/assessment/ HTTP/1.1" 200 57962
+INFO 2025-09-28 01:49:22,328 basehttp 10156 15396 "GET /hine/manager/ HTTP/1.1" 200 49567
+INFO 2025-09-28 01:49:26,062 basehttp 10156 15396 "GET /da/manager/ HTTP/1.1" 200 41649
+INFO 2025-09-28 01:49:27,603 basehttp 10156 15396 "GET /cdic/manager/ HTTP/1.1" 200 42230
+INFO 2025-09-28 01:49:41,562 basehttp 10156 15396 "GET /hine/manager/ HTTP/1.1" 200 49567
+INFO 2025-09-28 01:49:54,356 basehttp 10156 15396 "GET /hine/manager/ HTTP/1.1" 200 48209
+INFO 2025-09-28 01:49:57,569 basehttp 10156 15396 "GET /hine/manager/ HTTP/1.1" 200 48209
+INFO 2025-09-28 01:50:02,085 basehttp 10156 15396 "GET /hine/manager/ HTTP/1.1" 200 48209
+INFO 2025-09-28 01:50:04,146 basehttp 10156 15396 "GET /manager/assessment/ HTTP/1.1" 200 57962
+INFO 2025-09-28 01:50:06,139 basehttp 10156 15396 "GET /hine/manager/ HTTP/1.1" 200 48209
+INFO 2025-09-28 01:50:07,050 basehttp 10156 15396 "GET /da/manager/ HTTP/1.1" 200 41649
+INFO 2025-09-28 01:50:08,722 basehttp 10156 15396 "GET /cdic/manager/ HTTP/1.1" 200 42230
+INFO 2025-09-28 01:50:11,330 basehttp 10156 15396 "GET /manager/patient/ HTTP/1.1" 200 58720
+INFO 2025-09-28 01:50:15,127 basehttp 10156 15396 "GET /video/manager/ HTTP/1.1" 200 60567
+INFO 2025-09-28 01:51:58,456 basehttp 10156 2976 "GET /manager/patient/ HTTP/1.1" 200 58720
+INFO 2025-09-28 01:51:58,519 basehttp 10156 2976 "GET /static/css/social.css HTTP/1.1" 304 0

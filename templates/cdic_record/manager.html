@@ -1,10 +1,9 @@
-{% extends 'src/base.html' %} {% load static %} {% block title %}CDIC Records Manager{% endblock title %} {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/manager.css' %}" />
-{% endblock extra_css %} {% block main_content %}
+{% extends 'src/base.html' %} {% load static %} {% block title %}CDIC Records Manager{% endblock title %}
+{% block main_content %}
 
 <!-- Main content -->
-<div class="content">
-  <div>
+<div class="container-fluid">
+  {% csrf_token %}
 
     <!-- Clean Table Card -->
     <div class="card shadow-sm border-0">
@@ -13,16 +12,14 @@
           <i class="fas fa-clipboard-list mr-2"></i>CDIC Assessment Records{% if patient %} :: Patient > {{patient.baby_name}}{% endif %}
         </h3>
 
-        {% if cdic_record_list %}
-        <span class="badge badge-light ml-3 px-3 py-2">
-          <i class="fas fa-clipboard-check mr-2"></i>
-          {{ cdic_record_list|length }} Total Records
-        </span>
+        {% if cdic_record_list %} <a> &nbsp;:&nbsp;
+           ({{ cdic_record_list|length }})
+        </a>
         {% endif %}
-
+        
         <div class="card-tools d-flex align-items-center">
           <!-- Search Bar -->
-          <div class="input-group input-group-sm mr-3" style="width: 200px">
+          <div class="input-group input-group-sm mr-3 w-search-input">
             <input
               type="text"
               class="form-control form-control-sm"
@@ -50,8 +47,7 @@
               <i class="fas fa-filter"></i>
             </button>
             <div
-              class="dropdown-menu dropdown-menu-right"
-              style="min-width: 220px"
+              class="dropdown-menu dropdown-menu-right w-dropdown-min"
             >
               <h6 class="dropdown-header">Filter Options</h6>
               <a
@@ -109,21 +105,18 @@
                 <th
                   scope="col"
                   class="border-0 text-uppercase text-secondary font-weight-bold"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
                 >
                   INDEX
                 </th>
                 <th
                   scope="col"
                   class="border-0 text-uppercase text-secondary font-weight-bold"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
                 >
                   STATUS
                 </th>
                 <th
                   scope="col"
                   class="border-0 text-uppercase text-secondary font-weight-bold"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
                 >
                   PATIENT NAME
                 </th>
@@ -151,7 +144,6 @@
                 <th
                   scope="col"
                   class="border-0 text-uppercase text-secondary font-weight-bold"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
                 >
                   ACTIONS
                 </th>
@@ -233,7 +225,7 @@
                     data-toggle="tooltip"
                     title="Created by: {{ CDICRecord.created_by.username|default:'Unknown' }} on {{ CDICRecord.created_on|date:'M d, Y'|default:'-' }}{% if CDICRecord.edit_by %} | Last edited: {{ CDICRecord.edit_on|date:'M d, Y'|default:'-' }} by {{ CDICRecord.edit_by.username }}{% endif %}"
                   >
-                    <i class="fas fa-info-circle" style="font-size: 1.1rem"></i>
+                    <i class="fas fa-info-circle fa-icon-lg"></i>
                   </button>
                 </td>
                 <td class="align-middle py-3 px-3 text-center">
@@ -246,7 +238,7 @@
                       aria-expanded="false"
                       title="Actions"
                     >
-                      <i class="fas fa-ellipsis-v" style="font-size: 1.1rem"></i>
+                      <i class="fas fa-ellipsis-v fa-icon-lg"></i>
                     </button>
                     <div class="dropdown-menu dropdown-menu-right">
                       <a class="dropdown-item" href="{% url 'cdic-assessment-view' CDICRecord.id %}">
@@ -342,7 +334,6 @@
       </div>
       {% endif %}
     </div>
-  </div>
 </div>
 
 {% block extra_js %}

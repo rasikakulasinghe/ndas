@@ -2,10 +2,6 @@
 {% load static %}
 {% block title %}{{ page_title|default:"Video Manager" }}{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/manager.css' %}">
-{% endblock extra_css %}
-
 {% block main_content %}
 <!-- Main content wrapper -->
 <div class="container-fluid">
@@ -27,7 +23,7 @@
         </h3>
         <!-- Quick Actions Dropdown -->
         <div class="btn-group" role="group">
-          <i style="cursor: pointer;" class="fas fa-cog dropdown-toggle" id="btnGroupDrop1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></i>
+          <i class="fas fa-cog dropdown-toggle cursor-pointer" id="btnGroupDrop1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></i>
           <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
             <a class="dropdown-item" href="{% url 'video:manager' %}"><i class="fas fa-video"></i> All Videos</a>
             <a class="dropdown-item" href="{% url 'video:manager-new-only' %}"><i class="fas fa-plus-circle"></i> New Videos Only</a>
@@ -96,7 +92,7 @@
         </div>
         <div class="row mt-2">
           <div class="col">
-            <div class="d-flex flex-wrap gap-2">
+            <div class="d-flex flex-wrap">
               {% if patient.bht_no %}<span class="badge badge-primary">BHT: {{ patient.bht_no }}</span>{% endif %}
               {% if patient.nnc_no %}<span class="badge badge-success">NNC: {{ patient.nnc_no }}</span>{% endif %}
               {% if patient.pin %}<span class="badge badge-warning">PIN: {{ patient.pin }}</span>{% endif %}
@@ -126,18 +122,18 @@
     <!-- Responsive Table Wrapper -->
     <div class="table-responsive">
       <table class="table table-hover text-nowrap">
-        <thead class="thead-dark">
+        <thead>
     <tr>
-      <th scope="col" style="width: 5%">ID</th>
-      <th scope="col" style="width: 10%">Status</th>
-      <th scope="col" style="width: 15%">Patient</th>
-      <th scope="col" style="width: 15%">Title</th>
-      <th scope="col" style="width: 10%">Duration</th>
-      <th scope="col" style="width: 10%">Size</th>
-      <th scope="col" style="width: 10%">Recorded</th>
-      <th scope="col" style="width: 10%">Uploaded</th>
-      <th scope="col" style="width: 10%">By</th>
-      <th scope="col" style="width: 5%">Action</th>
+      <th scope="col">ID</th>
+      <th scope="col">Status</th>
+      <th scope="col">Patient</th>
+      <th scope="col">Title</th>
+      <th scope="col" class="d-none d-md-table-cell">Duration</th>
+      <th scope="col" class="d-none d-lg-table-cell">Size</th>
+      <th scope="col" class="d-none d-lg-table-cell">Recorded</th>
+      <th scope="col" class="d-none d-sm-table-cell">Uploaded</th>
+      <th scope="col" class="d-none d-sm-table-cell">By</th>
+      <th scope="col">Action</th>
     </tr>
   </thead>
   <tbody>
@@ -200,7 +196,7 @@
         {% endif %}
       </td>
 
-      <td>
+      <td class="d-none d-md-table-cell">
         <i class="fas fa-play-circle text-danger" data-toggle="tooltip" title="Video File"></i>
         <span class="ml-1">{{video.duration_formatted}}</span>
         {% if video.resolution != "Unknown" %}
@@ -208,27 +204,27 @@
         {% endif %}
       </td>
 
-      <td>
+      <td class="d-none d-lg-table-cell">
         <span>{{video.file_size_mb}} MB</span>
         {% if video.file_extension %}
           <br><small class="text-muted">{{video.file_extension|upper}}</small>
         {% endif %}
       </td>
 
-      <td>
+      <td class="d-none d-lg-table-cell">
         {{video.recorded_on|date:"M d, Y"}}
         <br><small class="text-muted">{{video.recorded_on|date:"H:i"}}</small>
         {% if video.age_on_recording %}
           <br><small class="text-info">{{video.age_on_recording}}</small>
         {% endif %}
       </td>
-      
-      <td>
+
+      <td class="d-none d-sm-table-cell">
         {{video.created_at|date:"M d, Y"}}
         <br><small class="text-muted">{{video.created_at|date:"H:i"}}</small>
       </td>
-      
-      <td>
+
+      <td class="d-none d-sm-table-cell">
         {{video.added_by.get_full_name|default:video.added_by.username}}
         {% if video.updated_by and video.updated_by != video.added_by %}
           <br><small class="text-muted">Modified by: {{video.updated_by.username}}</small>

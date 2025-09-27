@@ -1,10 +1,9 @@
-{% extends 'src/base.html' %} {% load static %} {% block title %}Bookmark Manager{% endblock title %} {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/manager.css' %}" />
-{% endblock extra_css %} {% block main_content %}
+{% extends 'src/base.html' %} {% load static %} {% block title %}Bookmark Manager{% endblock title %}
+{% block main_content %}
 
 <!-- Main content -->
-<div class="content">
-  <div>
+<div class="container-fluid">
+  {% csrf_token %}
 
     <!-- Clean Table Card -->
     <div class="card shadow-sm border-0">
@@ -22,7 +21,7 @@
 
         <div class="card-tools d-flex align-items-center">
           <!-- Search Bar -->
-          <div class="input-group input-group-sm mr-3" style="width: 200px">
+          <div class="input-group input-group-sm mr-3 w-search-input">
             <input
               type="text"
               class="form-control form-control-sm"
@@ -50,8 +49,7 @@
               <i class="fas fa-filter"></i>
             </button>
             <div
-              class="dropdown-menu dropdown-menu-right"
-              style="min-width: 220px"
+              class="dropdown-menu dropdown-menu-right w-dropdown-min"
             >
               <h6 class="dropdown-header">Filter Options</h6>
               <a
@@ -109,21 +107,18 @@
                 <th
                   scope="col"
                   class="border-0 text-uppercase text-secondary font-weight-bold"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
                 >
                   INDEX
                 </th>
                 <th
                   scope="col"
                   class="border-0 text-uppercase text-secondary font-weight-bold"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
                 >
                   TITLE
                 </th>
                 <th
                   scope="col"
                   class="border-0 text-uppercase text-secondary font-weight-bold"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
                 >
                   TYPE
                 </th>
@@ -151,7 +146,6 @@
                 <th
                   scope="col"
                   class="border-0 text-uppercase text-secondary font-weight-bold"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
                 >
                   ACTIONS
                 </th>
@@ -251,7 +245,7 @@
                     data-toggle="tooltip"
                     title="Created: {{ Bookmark.created_on|date:'F d, Y g:i A' }}{% if Bookmark.last_edit_by %} | Last edited: {{ Bookmark.last_edit_on|date:'F d, Y g:i A' }} by {{ Bookmark.last_edit_by.username }}{% endif %}"
                   >
-                    <i class="fas fa-info-circle" style="font-size: 1.1rem"></i>
+                    <i class="fas fa-info-circle fa-icon-lg"></i>
                   </button>
                 </td>
                 <td class="align-middle py-3 px-3 text-center">
@@ -264,7 +258,7 @@
                       aria-expanded="false"
                       title="Actions"
                     >
-                      <i class="fas fa-ellipsis-v" style="font-size: 1.1rem"></i>
+                      <i class="fas fa-ellipsis-v fa-icon-lg"></i>
                     </button>
                     <div class="dropdown-menu dropdown-menu-right">
                       <!-- Quick Access to Bookmarked Item -->
@@ -421,7 +415,7 @@
           {% if bookmark_page_obj.paginator.num_pages > 10 %}
           <div class="d-flex align-items-center">
             <small class="text-muted mr-2">Go to:</small>
-            <input type="number" class="form-control form-control-sm" style="width: 60px;"
+            <input type="number" class="form-control form-control-sm w-page-jump-lg"
                    min="1" max="{{ bookmark_page_obj.paginator.num_pages }}"
                    value="{{ bookmark_page_obj.number }}" id="pageJump">
             <button class="btn btn-sm btn-outline-secondary ml-1" onclick="jumpToPage()">
@@ -433,7 +427,6 @@
       </div>
       {% endif %}
     </div>
-  </div>
 </div>
 
 {% block extra_js %}

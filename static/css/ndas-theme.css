@@ -118,41 +118,33 @@ html, body {
 
 /* ===== COMPONENT CUSTOMIZATIONS ===== */
 
-/* Enhanced card styling */
-.card {
-    border-radius: var(--card-border-radius);
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    transition: box-shadow var(--transition-speed) ease-in-out;
-}
-
+/* Card hover enhancement (Bootstrap provides card styling) */
 .card:hover {
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
 
-/* Enhanced button styling */
+/* Enhanced component styling - minimal overrides */
 .btn {
-    border-radius: var(--card-border-radius);
+    /* Bootstrap handles most button styling */
     transition: all var(--transition-speed) ease-in-out;
 }
 
-/* Form enhancements */
 .form-control {
-    border-radius: var(--card-border-radius);
+    /* Bootstrap handles form styling - only theme colors */
     border-color: var(--ndas-border);
     transition: border-color var(--transition-speed) ease-in-out, box-shadow var(--transition-speed) ease-in-out;
 }
 
 .form-control:focus {
+    /* Bootstrap handles focus states */
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
 /* ===== CUSTOM COMPONENTS ===== */
 
-/* Big checkbox utility */
+/* Big checkbox utility - no Bootstrap equivalent */
 .big-checkbox {
     transform: scale(1.5);
-    margin: 0.5rem;
 }
 
 /* Loading spinner */
@@ -186,18 +178,14 @@ html, body {
     overflow: hidden;
 }
 
-/* Table enhancements */
-.table {
-    margin-bottom: 0;
-}
-
+/* Table theme customizations */
 .table th {
     border-top: none;
     font-weight: 600;
     color: var(--ndas-text);
 }
 
-/* Navigation enhancements */
+/* Sidebar navigation theme */
 .nav-sidebar .nav-link {
     border-radius: var(--card-border-radius);
     margin: 0.125rem 0.5rem;
@@ -210,33 +198,17 @@ html, body {
 
 /* ===== UTILITY CLASSES ===== */
 
-/* Spacing utilities */
-.p-xs { padding: 0.25rem !important; }
-.p-sm { padding: 0.5rem !important; }
-.p-md { padding: 1rem !important; }
-.p-lg { padding: 1.5rem !important; }
-.p-xl { padding: 3rem !important; }
-
-.m-xs { margin: 0.25rem !important; }
-.m-sm { margin: 0.5rem !important; }
-.m-md { margin: 1rem !important; }
-.m-lg { margin: 1.5rem !important; }
-.m-xl { margin: 3rem !important; }
-
-/* Text utilities */
+/* NDAS brand colors (custom utilities not in Bootstrap) */
 .text-ndas-primary { color: var(--ndas-primary) !important; }
 .text-ndas-accent { color: var(--ndas-accent) !important; }
-
-/* Background utilities */
 .bg-ndas-primary { background-color: var(--ndas-primary) !important; }
 .bg-ndas-accent { background-color: var(--ndas-accent) !important; }
-
-/* Border utilities */
 .border-ndas { border-color: var(--ndas-border) !important; }
 
-/* Shadow utilities */
-.shadow-sm-custom { box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important; }
-.shadow-custom { box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important; }
+/* Note: Use Bootstrap spacing utilities instead:
+   .p-xs → .p-1, .p-xl → .p-5
+   .m-xs → .m-1, .m-xl → .m-5
+   .shadow-custom → .shadow or .shadow-lg */
 
 /* ===== ANIMATIONS ===== */
 
