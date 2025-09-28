@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Read(//c/Users/user/Pictures/Screenshots/**)"
+      "Read(//c/Users/user/Pictures/Screenshots/**)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []

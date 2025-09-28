@@ -4,25 +4,6 @@
 
 {% block main_content %}
 <div class="container-fluid">
-  <!-- Content Header -->
-  <div class="content-header">
-    <div class="container-fluid">
-      <div class="row mb-2">
-        <div class="col-sm-6">
-          <h1 class="m-0">Create GM Assessment</h1>
-          <small class="text-muted">Patient: {{ patient.baby_name }}</small>
-        </div>
-        <div class="col-sm-6">
-          <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item"><a href="{% url 'home' %}">Dashboard</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'view-patient' patient.id %}">{{ patient.baby_name }}</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'video:view' file.id %}">{{ file.title }}</a></li>
-            <li class="breadcrumb-item active">New Assessment</li>
-          </ol>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Main content -->
   <section class="content">

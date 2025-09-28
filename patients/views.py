@@ -1123,7 +1123,7 @@ def assessment_view(request, pk):
         
         # Check for existing bookmark
         bookmark = Bookmark.objects.filter(
-            bookmark_type="Assessment",
+            bookmark_type="GMA",
             object_id=assessment.id
         ).first()
         
@@ -1163,7 +1163,7 @@ def assessment_view_by_fileid(request, file_id):
         
         # Check for existing bookmark
         bookmark = Bookmark.objects.filter(
-            bookmark_type="Assessment",
+            bookmark_type="GMA",
             object_id=assessment.id
         ).first()
         

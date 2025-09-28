@@ -141,8 +141,6 @@ Manager{% endblock title%}
           <table class="table table-hover text-nowrap">
             <thead>
               <tr>
-                <th scope="col" class="border-0">INDEX</th>
-                <th scope="col" class="border-0">STATUS</th>
                 <th scope="col" class="border-0">PATIENT NAME</th>
                 <th scope="col" class="border-0 d-none d-md-table-cell">DATE OF ASSESSMENT</th>
                 <th scope="col" class="border-0 d-none d-lg-table-cell">NEXT ASSESSMENT DATE</th>
@@ -156,20 +154,16 @@ Manager{% endblock title%}
 
               {% for Assessment in assessment_page_obj %}
               <tr>
-                <td class="align-middle text-muted font-weight-medium">
-                  {{ Assessment.id }}
-                </td>
-
-                <td class="align-middle">
-                  {% if Assessment.isBookmarked %}
-                  <span class="badge badge-warning px-2 py-1">
-                    <i class="fas fa-star mr-1"></i>BOOKMARKED
-                  </span>
-                  {% endif %}
-                </td>
-
                 <td class="align-middle">
                   <div class="font-weight-medium text-dark">
+                    {% if Assessment.isBookmarked %}
+                    <a href="{% url 'bookmark-view' Assessment.isBookmarked.id %}" 
+                      class="text-primary" 
+                      data-toggle="tooltip" 
+                      title="View bookmark for this assessment">
+                      <i class="fas fa-bookmark mr-1"></i>
+                    </a>
+                  {% endif %}
                     {{ Assessment.patient.baby_name|default:"Unnamed" }}
                   </div>
                   <small class="d-block d-lg-none text-muted mt-1">

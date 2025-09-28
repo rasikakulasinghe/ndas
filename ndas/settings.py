@@ -1,23 +1,18 @@
 from pathlib import Path
 import os
 from django.contrib.messages import constants as messages
-import environ
-
-env = environ.Env(DEBUG=(bool, False))
+from decouple import config, Csv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Take environment variables from .env file
-environ.Env.read_env(BASE_DIR / '.env')
-
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG')
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
 
 # Application definition
 INSTALLED_APPS = [
@@ -71,23 +66,34 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ndas.wsgi.application'
 
-# Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-        'OPTIONS': {
-            'timeout': 120,
-            # 'init_command': (
-            #     'PRAGMA journal_mode=WAL;'
-            #     'PRAGMA synchronous=NORMAL;'
-            #     'PRAGMA cache_size=1000;'
-            #     'PRAGMA temp_store=memory;'
-            #     'PRAGMA mmap_size=268435456;'  # 256MB
-            # ),
-        },
+# Database - PostgreSQL for Production, SQLite for Development
+DB_ENGINE = config('DB_ENGINE', default=None)
+if DB_ENGINE:
+    DATABASES = {
+        'default': {
+            'ENGINE': DB_ENGINE,
+            'NAME': config('DB_NAME'),
+            'USER': config('DB_USER'),
+            'PASSWORD': config('DB_PASSWORD'),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', default=5432, cast=int),
+            'OPTIONS': {
+                'connect_timeout': 60,
+                'options': '-c default_transaction_isolation=serializable'
+            },
+        }
     }
-}
+else:
+    # Fallback to SQLite for development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+            'OPTIONS': {
+                'timeout': 120,
+            },
+        }
+    }
 
 # Database connection pooling for production
 if not DEBUG:
@@ -114,11 +120,23 @@ USE_I18N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = env('STATIC_URL')
-MEDIA_URL = env('MEDIA_URL')
-MEDIA_ROOT = BASE_DIR / 'media'
+STATIC_URL = config('STATIC_URL', default='/static/')
+MEDIA_URL = config('MEDIA_URL', default='/media/')
+
+# Use environment paths if provided, otherwise use defaults
+STATIC_ROOT_ENV = config('STATIC_ROOT', default=None)
+if STATIC_ROOT_ENV:
+    STATIC_ROOT = STATIC_ROOT_ENV
+else:
+    STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+MEDIA_ROOT_ENV = config('MEDIA_ROOT', default=None)
+if MEDIA_ROOT_ENV:
+    MEDIA_ROOT = MEDIA_ROOT_ENV
+else:
+    MEDIA_ROOT = BASE_DIR / 'media'
+
 STATICFILES_DIRS = [BASE_DIR / 'static']
-STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # WhiteNoise configuration for serving static files
 STORAGES = {
@@ -136,14 +154,8 @@ EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-try:
-    EMAIL_HOST_USER = env('EMAIL_HOST_USER')
-except:
-    EMAIL_HOST_USER = ''
-try:
-    EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
-except:
-    EMAIL_HOST_PASSWORD = ''
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = 'noreply@ndas-system.com'
 EMAIL_VERIFICATION_REQUIRED = True
 EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS = 24
@@ -227,10 +239,10 @@ LOGGING = {
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000  # 1 year
-SECURE_HSTS_INCLUDE_SUBDOMAINS = env('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=False)
-SECURE_HSTS_PRELOAD = env('SECURE_HSTS_PRELOAD', default=False)
-SECURE_SSL_REDIRECT = env('SECURE_SSL_REDIRECT', default=False)
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https') if env('USE_SSL_PROXY', default=False) else None
+SECURE_HSTS_INCLUDE_SUBDOMAINS = config('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=False, cast=bool)
+SECURE_HSTS_PRELOAD = config('SECURE_HSTS_PRELOAD', default=False, cast=bool)
+SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https') if config('SECURE_PROXY_SSL_HEADER', default=False, cast=bool) else None
 X_FRAME_OPTIONS = 'DENY'
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
@@ -252,10 +264,10 @@ if DEBUG:
     CSP_FORM_ACTION = ("'self'",)
 else:
     CSP_DEFAULT_SRC = ("'self'",)
-    CSP_SCRIPT_SRC = ("'self'",)
-    CSP_STYLE_SRC = ("'self'",)
-    CSP_IMG_SRC = ("'self'", "data:")
-    CSP_FONT_SRC = ("'self'", "data:")
+    CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'")  # Allow inline scripts for production
+    CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://fonts.googleapis.com")
+    CSP_IMG_SRC = ("'self'", "data:", "https:")
+    CSP_FONT_SRC = ("'self'", "data:", "https://fonts.gstatic.com")
     CSP_CONNECT_SRC = ("'self'",)
     CSP_FRAME_SRC = ("'none'",)
     CSP_OBJECT_SRC = ("'none'",)
@@ -277,9 +289,9 @@ PERMISSIONS_POLICY = {
 # Cookie Security
 SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = env('SESSION_COOKIE_SECURE', default=False)
-CSRF_COOKIE_SECURE = env('CSRF_COOKIE_SECURE', default=False)
-SESSION_COOKIE_AGE = env('SESSION_COOKIE_AGE', default=3600)  # 1 hour default
+SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=False, cast=bool)
+CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=False, cast=bool)
+SESSION_COOKIE_AGE = config('SESSION_COOKIE_AGE', default=3600, cast=int)  # 1 hour default
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
@@ -302,11 +314,12 @@ MEDIA_SUBDIRECTORIES = {
 }
 
 # Cache Configuration
-if env('REDIS_URL', default=None):
+REDIS_URL = config('REDIS_URL', default=None)
+if REDIS_URL:
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-            'LOCATION': env('REDIS_URL'),
+            'LOCATION': REDIS_URL,
             'TIMEOUT': 300,
             'OPTIONS': {
                 'CLIENT_CLASS': 'django_redis.client.DefaultClient',
@@ -335,7 +348,7 @@ SESSION_CACHE_ALIAS = 'default'
 
 # Rate Limiting and Brute Force Protection
 RATELIMIT_USE_CACHE = 'default'
-RATELIMIT_ENABLE = env('RATELIMIT_ENABLE', default=True)
+RATELIMIT_ENABLE = config('RATELIMIT_ENABLE', default=True, cast=bool)
 
 # Performance Optimizations
 USE_ETAGS = True
@@ -366,7 +379,24 @@ SECURE_FILE_UPLOADS = True
 # Additional Security Settings
 SILENCED_SYSTEM_CHECKS = [
     'security.W019',  # Only if using HTTPS proxy
-] if env('USE_SSL_PROXY', default=False) else []
+] if config('SECURE_PROXY_SSL_HEADER', default=False, cast=bool) else []
+
+# Production optimizations
+if not DEBUG:
+    # Enable compression
+    COMPRESS_ENABLED = config('COMPRESS_ENABLED', default=True, cast=bool)
+    COMPRESS_OFFLINE = config('COMPRESS_OFFLINE', default=True, cast=bool)
+
+    # Security enhancements
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+
+    # Database optimizations
+    CONN_MAX_AGE = 300
+
+    # Disable admin docs in production
+    ADMINS = []
+    MANAGERS = []
 
 # Create logs directory if it doesn't exist
 import os

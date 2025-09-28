@@ -11186,3 +11186,212 @@ INFO 2025-09-28 20:14:54,431 basehttp 1500 9276 "GET /manager/assessment/ HTTP/1
 INFO 2025-09-28 20:14:56,583 basehttp 1500 9276 "GET /manager/assessment/ HTTP/1.1" 200 59376
 INFO 2025-09-28 20:14:57,553 basehttp 1500 9276 "GET /manager/assessment/ HTTP/1.1" 200 59376
 INFO 2025-09-28 20:15:01,507 basehttp 1500 9276 "GET /assessment/view/3/ HTTP/1.1" 200 50075
+INFO 2025-09-28 20:59:36,359 basehttp 1500 16732 "GET /manager/assessment/ HTTP/1.1" 200 59376
+INFO 2025-09-28 20:59:47,661 basehttp 1500 16732 "GET /manager/assessment/recent HTTP/1.1" 200 43912
+INFO 2025-09-28 20:59:50,865 basehttp 1500 16732 "GET /manager/assessment/normal HTTP/1.1" 200 55152
+INFO 2025-09-28 20:59:54,817 basehttp 1500 16732 "GET /manager/assessment/abnormal HTTP/1.1" 200 50392
+INFO 2025-09-28 20:59:59,663 basehttp 1500 16732 "GET /manager/assessment/informed HTTP/1.1" 200 50380
+INFO 2025-09-28 21:00:02,397 basehttp 1500 16732 "GET /manager/assessment/not-informed HTTP/1.1" 200 55155
+INFO 2025-09-28 21:04:15,912 basehttp 1500 16732 "GET /manager/assessment/not-informed?search=254 HTTP/1.1" 200 44199
+INFO 2025-09-28 21:04:18,362 basehttp 1500 16732 "GET /manager/assessment/not-informed?search= HTTP/1.1" 200 55155
+INFO 2025-09-28 21:04:21,306 basehttp 1500 16732 "GET /manager/assessment/ HTTP/1.1" 200 59376
+INFO 2025-09-28 21:05:41,804 basehttp 1500 16732 "GET /manager/assessment/ HTTP/1.1" 200 59341
+INFO 2025-09-28 21:05:41,848 basehttp 1500 16732 "GET /static/js/manager.js HTTP/1.1" 304 0
+INFO 2025-09-28 21:07:00,996 basehttp 1500 16732 "GET /manager/assessment/ HTTP/1.1" 200 58822
+INFO 2025-09-28 21:07:18,924 basehttp 1500 16732 "GET /manager/assessment/ HTTP/1.1" 200 58701
+ERROR 2025-09-28 21:07:50,779 log 1500 16732 Internal Server Error: /manager/assessment/
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 505, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'endif'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 1301, in assessment_manager
+    return render(request, "assessment/manager.html", context)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\shortcuts.py", line 24, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\backends\django.py", line 34, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 175, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\engine.py", line 157, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 200, in compile_nodelist
+    return parser.parse()
+           ~~~~~~~~~~~~^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 293, in do_extends
+    nodelist = parser.parse()
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 513, in parse
+    raise self.error(token, e)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 511, in parse
+    compiled_result = compile_func(self, token)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\loader_tags.py", line 232, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 507, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\template\base.py", line 558, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 12: 'endif', expected 'endblock'. Did you forget to register or load this tag?
+ERROR 2025-09-28 21:07:50,794 basehttp 1500 16732 "GET /manager/assessment/ HTTP/1.1" 500 266572
+INFO 2025-09-28 21:08:01,454 basehttp 1500 16732 "GET /manager/assessment/ HTTP/1.1" 200 58701
+INFO 2025-09-28 21:09:26,212 basehttp 1500 16732 "GET /manager/assessment/ HTTP/1.1" 200 58857
+INFO 2025-09-28 21:09:26,250 basehttp 1500 16732 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 21:09:28,559 basehttp 1500 16732 "GET /bookmarks/view/4/ HTTP/1.1" 200 42312
+INFO 2025-09-28 21:09:50,363 basehttp 1500 16732 "GET /manager/assessment/ HTTP/1.1" 200 58857
+INFO 2025-09-28 21:10:15,148 basehttp 1500 16732 "GET /manager/assessment/abnormal HTTP/1.1" 200 50093
+INFO 2025-09-28 21:10:20,640 basehttp 1500 16732 "GET /hine/manager/ HTTP/1.1" 200 48209
+INFO 2025-09-28 21:10:20,686 basehttp 1500 16732 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 21:10:22,041 basehttp 1500 16732 "GET /manager/assessment/ HTTP/1.1" 200 58857
+INFO 2025-09-28 21:10:32,358 basehttp 1500 16732 "GET /video/manager/ HTTP/1.1" 200 59375
+INFO 2025-09-28 21:10:38,827 basehttp 1500 16732 "GET /assessment/add/2/6/ HTTP/1.1" 200 62604
+INFO 2025-09-28 21:11:08,206 basehttp 1500 16732 "GET /assessment/add/2/6/ HTTP/1.1" 200 61854
+INFO 2025-09-28 21:11:08,235 basehttp 1500 16732 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-28 21:12:18,391 basehttp 1500 16732 "POST /assessment/add/2/6/ HTTP/1.1" 200 117
+INFO 2025-09-28 21:12:20,174 basehttp 1500 16732 "GET /assessment/view/4/ HTTP/1.1" 200 51305
+INFO 2025-09-28 21:15:12,345 basehttp 1500 16732 "GET /assessment/view/4/ HTTP/1.1" 200 51201
+INFO 2025-09-28 21:16:18,868 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 51202
+INFO 2025-09-28 21:17:50,633 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 51254
+INFO 2025-09-28 21:19:44,668 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 50779
+INFO 2025-09-28 21:21:54,635 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 50517
+INFO 2025-09-28 21:22:49,010 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 50872
+INFO 2025-09-28 21:23:06,898 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 50394
+INFO 2025-09-28 21:25:47,978 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 50349
+INFO 2025-09-28 21:27:55,389 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 50544
+INFO 2025-09-28 21:28:45,260 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 49752
+INFO 2025-09-28 21:30:05,086 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 49498
+INFO 2025-09-28 21:30:22,573 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 49491
+INFO 2025-09-28 21:31:24,378 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 49261
+INFO 2025-09-28 21:32:07,610 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 49194
+INFO 2025-09-28 21:32:20,699 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 49344
+INFO 2025-09-28 21:34:02,163 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 49194
+INFO 2025-09-28 21:34:46,356 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 48758
+INFO 2025-09-28 21:36:36,523 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 48810
+INFO 2025-09-28 21:37:08,550 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 48840
+INFO 2025-09-28 21:37:49,959 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 48783
+INFO 2025-09-28 21:39:43,731 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 48038
+INFO 2025-09-28 21:40:53,452 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 47379
+INFO 2025-09-28 21:41:31,191 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 45781
+INFO 2025-09-28 21:41:33,328 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 45781
+INFO 2025-09-28 21:41:37,440 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 45781
+INFO 2025-09-28 21:42:42,808 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 45639
+INFO 2025-09-28 21:44:32,120 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 46288
+INFO 2025-09-28 21:45:47,033 basehttp 1500 19092 "GET /assessment/view/4/ HTTP/1.1" 200 46285
+INFO 2025-09-28 21:47:27,246 basehttp 1500 9424 "GET /assessment/view/4/ HTTP/1.1" 200 46052
+INFO 2025-09-28 21:51:08,983 basehttp 1500 9424 "GET /assessment/view/4/ HTTP/1.1" 200 46520
+INFO 2025-09-28 21:51:19,507 basehttp 1500 9424 "GET /bookmarks/add/4/Assessment/ HTTP/1.1" 302 0
+INFO 2025-09-28 21:51:19,711 basehttp 1500 9424 "GET /manager/patient/ HTTP/1.1" 200 60621
+INFO 2025-09-28 21:54:00,263 basehttp 1500 9424 "GET /assessment/view/4/ HTTP/1.1" 200 46524
+INFO 2025-09-28 21:54:01,313 basehttp 1500 9424 "GET /assessment/view/4/ HTTP/1.1" 200 46524
+INFO 2025-09-28 21:54:02,912 basehttp 1500 9424 "GET /assessment/view/4/ HTTP/1.1" 200 46524
+INFO 2025-09-28 21:54:03,853 basehttp 1500 9424 "GET /assessment/view/4/ HTTP/1.1" 200 46524
+INFO 2025-09-28 21:54:04,736 basehttp 1500 9424 "GET /assessment/view/4/ HTTP/1.1" 200 46524
+INFO 2025-09-28 21:54:10,028 basehttp 1500 9424 "GET /bookmarks/add/4/Assessment/ HTTP/1.1" 302 0
+INFO 2025-09-28 21:54:10,266 basehttp 1500 9424 "GET /manager/patient/ HTTP/1.1" 200 60621
+INFO 2025-09-28 21:54:21,639 basehttp 1500 9424 "GET /assessment/view/4/ HTTP/1.1" 200 46524
+INFO 2025-09-28 21:54:23,198 basehttp 1500 9424 "GET /assessment/view/4/ HTTP/1.1" 200 46524
+INFO 2025-09-28 21:54:24,952 basehttp 1500 9424 "GET /bookmarks/add/4/Assessment/ HTTP/1.1" 302 0
+INFO 2025-09-28 21:54:25,157 basehttp 1500 9424 "GET /manager/patient/ HTTP/1.1" 200 60621
+INFO 2025-09-28 21:54:37,526 basehttp 1500 9424 "GET /manager/bookmarks/ HTTP/1.1" 200 62265
+INFO 2025-09-28 21:55:32,979 basehttp 1500 9424 "GET /manager/bookmarks/ HTTP/1.1" 200 62265
+INFO 2025-09-28 21:55:40,523 basehttp 1500 9424 "GET /assessment/view/4/ HTTP/1.1" 200 46524
+INFO 2025-09-28 21:55:55,390 basehttp 1500 9424 "GET /manager/assessment/ HTTP/1.1" 200 63280
+INFO 2025-09-28 21:56:00,087 basehttp 1500 9424 "GET /manager/assessment/patient/2/ HTTP/1.1" 200 49748
+INFO 2025-09-28 21:56:13,896 basehttp 1500 9424 "GET /video/view/6/ HTTP/1.1" 200 49598
+INFO 2025-09-28 21:56:16,511 basehttp 1500 9424 - Broken pipe from ('127.0.0.1', 60752)
+INFO 2025-09-28 21:56:19,779 basehttp 1500 19096 "GET /assessment/edit/4/ HTTP/1.1" 200 56363
+INFO 2025-09-28 21:58:46,511 basehttp 1500 19096 "GET /assessment/view/4/ HTTP/1.1" 200 46524
+INFO 2025-09-28 21:58:48,668 basehttp 1500 19096 "GET /assessment/view/4/ HTTP/1.1" 200 48911
+INFO 2025-09-28 21:58:50,506 basehttp 1500 19096 "GET /assessment/view/4/ HTTP/1.1" 200 48911
+INFO 2025-09-28 21:58:52,637 basehttp 1500 19096 "GET /assessment/view/4/ HTTP/1.1" 200 48911
+INFO 2025-09-28 21:58:54,255 basehttp 1500 19096 "GET /assessment/view/4/ HTTP/1.1" 200 48911
+INFO 2025-09-28 21:58:57,102 basehttp 1500 19096 "GET /assessment/view/4/ HTTP/1.1" 200 48911
+INFO 2025-09-28 21:59:07,448 basehttp 1500 19096 "GET /assessment/view/4/ HTTP/1.1" 200 46457
+INFO 2025-09-28 21:59:08,854 basehttp 1500 19096 "GET /assessment/view/4/ HTTP/1.1" 200 46457
+INFO 2025-09-28 21:59:17,886 basehttp 1500 19096 "GET /assessment/view/4/ HTTP/1.1" 200 46457
+INFO 2025-09-28 21:59:18,993 basehttp 1500 19096 "GET /assessment/view/4/ HTTP/1.1" 200 46457
+INFO 2025-09-28 21:59:19,670 basehttp 1500 19096 "GET /assessment/view/4/ HTTP/1.1" 200 46457
+INFO 2025-09-28 21:59:19,902 basehttp 1500 19096 "GET /assessment/view/4/ HTTP/1.1" 200 46457
+INFO 2025-09-28 21:59:23,030 basehttp 1500 19096 "GET /bookmarks/add/4/Assessment/ HTTP/1.1" 302 0
+INFO 2025-09-28 21:59:23,227 basehttp 1500 19096 "GET /manager/patient/ HTTP/1.1" 200 60621
+INFO 2025-09-28 22:00:21,713 basehttp 1500 19096 "GET /assessment/view/4/ HTTP/1.1" 200 46448
+INFO 2025-09-28 22:03:21,535 basehttp 1500 19096 "GET /assessment/view/4/ HTTP/1.1" 200 46441
+INFO 2025-09-28 22:03:23,218 basehttp 1500 19096 "GET /bookmarks/add/4/GMA/ HTTP/1.1" 200 45390
+INFO 2025-09-28 22:03:31,902 basehttp 1500 19096 "POST /bookmarks/add/4/GMA/ HTTP/1.1" 302 0
+INFO 2025-09-28 22:03:32,083 basehttp 1500 19096 "GET /bookmarks/view/5/ HTTP/1.1" 200 42231
+INFO 2025-09-28 22:03:44,224 basehttp 1500 19096 "GET /assessment/view/4/ HTTP/1.1" 200 46441
+INFO 2025-09-28 22:04:51,202 basehttp 1500 19096 "GET /assessment/view/4/ HTTP/1.1" 200 46441
+INFO 2025-09-28 22:05:15,992 basehttp 1500 19096 "GET /assessment/edit/4/ HTTP/1.1" 200 56363
+INFO 2025-09-28 22:05:29,999 basehttp 1500 19096 "GET /assessment/delete/confirm/4/ HTTP/1.1" 200 39325
+INFO 2025-09-28 22:05:45,842 basehttp 1500 19096 "POST /assessment/delete/4/ HTTP/1.1" 302 0
+INFO 2025-09-28 22:05:46,031 basehttp 1500 19096 "GET /manager/assessment/patient/2/ HTTP/1.1" 200 43900
+INFO 2025-09-28 22:06:00,613 basehttp 1500 19096 "GET /manager/assessment/ HTTP/1.1" 200 58857
+INFO 2025-09-28 22:06:09,488 basehttp 1500 19096 "GET /assessment/view/3/ HTTP/1.1" 200 46370
+INFO 2025-09-28 22:06:12,030 basehttp 1500 19096 "GET /bookmarks/add/3/GMA/ HTTP/1.1" 200 45390
+INFO 2025-09-28 22:08:52,534 autoreload 1500 20328 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py changed, reloading.
+INFO 2025-09-28 22:08:55,581 autoreload 18028 4304 Watching for file changes with StatReloader
+INFO 2025-09-28 22:09:14,150 basehttp 18028 6704 "GET /assessment/view/3/ HTTP/1.1" 302 0
+INFO 2025-09-28 22:09:14,178 basehttp 18028 6704 "GET /users/login/?next=/assessment/view/3/ HTTP/1.1" 200 15725
+INFO 2025-09-28 22:09:14,205 basehttp 18028 6704 "GET /static/css/login.css HTTP/1.1" 304 0
+INFO 2025-09-28 22:09:14,206 basehttp 18028 13728 "GET /static/js/login.js HTTP/1.1" 304 0
+INFO 2025-09-28 22:09:16,673 basehttp 18028 13728 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-28 22:09:16,912 basehttp 18028 13728 "GET / HTTP/1.1" 200 51069
+INFO 2025-09-28 22:09:22,982 basehttp 18028 13728 "GET /manager/assessment/ HTTP/1.1" 200 58857
+INFO 2025-09-28 22:09:26,647 basehttp 18028 13728 "GET /assessment/view/3/ HTTP/1.1" 200 46374
+INFO 2025-09-28 22:09:29,880 basehttp 18028 13728 "GET /bookmarks/view/4/ HTTP/1.1" 200 42312
+INFO 2025-09-28 22:09:37,199 basehttp 18028 13728 "GET /assessment/view/2/ HTTP/1.1" 200 46446
+INFO 2025-09-28 22:09:39,571 basehttp 18028 13728 "GET /bookmarks/add/2/GMA/ HTTP/1.1" 200 45390
+INFO 2025-09-28 22:09:43,330 basehttp 18028 13728 "GET /patient/add/ HTTP/1.1" 200 68272
+INFO 2025-09-28 22:10:15,558 basehttp 18028 13728 "GET /manager/assessment/ HTTP/1.1" 200 58857
+INFO 2025-09-28 22:10:20,724 basehttp 18028 13728 "GET /manager/assessment/informed HTTP/1.1" 200 50081
+INFO 2025-09-28 22:10:23,925 basehttp 18028 13728 "GET /manager/assessment/ HTTP/1.1" 200 58857
+INFO 2025-09-28 22:10:31,204 basehttp 18028 13728 "GET /hine/manager/ HTTP/1.1" 200 48209
+INFO 2025-09-28 22:10:35,844 basehttp 18028 13728 "GET /da/manager/ HTTP/1.1" 200 41649
+INFO 2025-09-28 22:10:37,773 basehttp 18028 13728 "GET /cdic/manager/ HTTP/1.1" 200 42230
+INFO 2025-09-28 22:10:53,811 basehttp 18028 13728 "GET /users/admin/dashboard/ HTTP/1.1" 200 50044
+INFO 2025-09-28 22:11:03,286 basehttp 18028 13728 "GET /users/admin/users/ HTTP/1.1" 200 49560
+INFO 2025-09-28 22:11:27,675 basehttp 18028 13728 "GET /users/admin/users/?search=&position=&is_active=&is_staff= HTTP/1.1" 200 49561
+INFO 2025-09-28 22:11:28,928 basehttp 18028 13728 "GET /users/admin/users/ HTTP/1.1" 200 49561
+INFO 2025-09-28 22:11:31,887 basehttp 18028 13728 "GET /users/admin/users/add/ HTTP/1.1" 200 50555
+INFO 2025-09-28 22:12:13,967 basehttp 18028 13728 "GET /users/admin/activity-logs/ HTTP/1.1" 200 215276
+INFO 2025-09-28 22:12:29,522 basehttp 18028 13728 "GET /users/admin/dashboard/ HTTP/1.1" 200 50045
+INFO 2025-09-28 22:12:32,150 basehttp 18028 13728 "GET /users/admin/users/ HTTP/1.1" 200 49561
+INFO 2025-09-28 22:12:49,959 basehttp 18028 13728 "GET /attachment/manager/ HTTP/1.1" 200 48876
+INFO 2025-09-28 22:12:52,981 basehttp 18028 13728 "GET /attachment/view/3/ HTTP/1.1" 200 60864
+INFO 2025-09-28 22:12:53,643 basehttp 18028 13728 "GET /media/attachments/wqefqwef_video_Rasika__Administrator_2025-08-28_145513.5394690530.mp4 HTTP/1.1" 200 34974399
+INFO 2025-09-28 22:13:01,060 basehttp 18028 13728 "GET /attachment/view/1/ HTTP/1.1" 200 61141
+INFO 2025-09-28 22:13:57,164 basehttp 18028 13728 "GET /manager/assessment/ HTTP/1.1" 200 58857
+INFO 2025-09-28 22:13:59,700 basehttp 18028 13728 "GET /assessment/view/3/ HTTP/1.1" 200 46374
