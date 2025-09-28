@@ -355,7 +355,7 @@ DATABASE_ENGINE_OPTIONS = {
 }
 
 # Static Files Compression
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+# STATICFILES_STORAGE is deprecated in Django 4.2+, using STORAGES instead
 WHITENOISE_USE_FINDERS = True
 WHITENOISE_AUTOREFRESH = DEBUG
 

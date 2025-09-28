@@ -233,9 +233,10 @@ def video_manager(request):
     # Get search and filter parameters with proper defaults
     search_query = request.GET.get("search", "").strip()
     status_filter = request.GET.get("status", "")
-    patient_filter = request.GET.get("patient", "")
+    uploader_filter = request.GET.get("uploader", "")
     date_from = request.GET.get("date_from", "")
     date_to = request.GET.get("date_to", "")
+    bookmarked_filter = request.GET.get("bookmarked_only", "")
     page_number = request.GET.get("page", 1)
 
     # Base queryset with optimized related data loading
@@ -253,18 +254,26 @@ def video_manager(request):
             | Q(description__icontains=search_query)
         )
 
-    # Apply status filter
-    if status_filter:
-        queryset = queryset.filter(processing_status=status_filter)
+    # Apply status filter (new vs assessed videos)
+    if status_filter == "new":
+        # New videos - not used in assessments
+        from patients.models import GMAssessment
+        used_video_ids = GMAssessment.objects.values_list('video_file_id', flat=True)
+        queryset = queryset.exclude(id__in=used_video_ids)
+    elif status_filter == "assessed":
+        # Assessed videos - used in assessments
+        from patients.models import GMAssessment
+        used_video_ids = GMAssessment.objects.values_list('video_file_id', flat=True)
+        queryset = queryset.filter(id__in=used_video_ids)
 
-    # Apply patient filter with proper error handling
-    if patient_filter:
+    # Apply uploader filter with proper error handling
+    if uploader_filter:
         try:
-            patient_id = int(patient_filter)
-            queryset = queryset.filter(patient_id=patient_id)
+            uploader_id = int(uploader_filter)
+            queryset = queryset.filter(added_by_id=uploader_id)
         except (ValueError, TypeError) as e:
-            logger.warning(f"Invalid patient filter value: {patient_filter}")
-            messages.warning(request, "Invalid patient filter. Showing all patients.")
+            logger.warning(f"Invalid uploader filter value: {uploader_filter}")
+            messages.warning(request, "Invalid uploader filter. Showing all uploaders.")
 
     # Apply date range filters with proper error handling
     if date_from:
@@ -291,6 +300,14 @@ def video_manager(request):
                 request, "Invalid 'to' date format. Please use YYYY-MM-DD format."
             )
 
+    # Apply bookmarked filter
+    if bookmarked_filter:
+        from patients.models import Bookmark
+        bookmarked_video_ids = Bookmark.objects.filter(
+            bookmark_type="Video"
+        ).values_list('object_id', flat=True)
+        queryset = queryset.filter(id__in=bookmarked_video_ids)
+
     # Get total count before pagination
     total_count = queryset.count()
 
@@ -302,16 +319,14 @@ def video_manager(request):
         logger.error(f"Pagination error: {str(e)}")
         page_obj = paginator.get_page(1)
 
-    # Get unique patients for filter dropdown (optimized query)
-    patients = (
-        Patient.objects.filter(videos__isnull=False)
+    # Get unique uploaders for filter dropdown (users who have uploaded videos)
+    from users.models import CustomUser
+    uploaders = (
+        CustomUser.objects.filter(video_added__isnull=False)
         .distinct()
-        .only("id", "baby_name")
-        .order_by("baby_name")
+        .only("id", "username", "first_name", "last_name")
+        .order_by("first_name", "last_name")
     )
-
-    # Get processing status choices for filter dropdown
-    status_choices = PROCESSING_STATUS
 
     # Build context dictionary
     context = {
@@ -319,11 +334,11 @@ def video_manager(request):
         "videos": page_obj,
         "search_query": search_query,
         "status_filter": status_filter,
-        "patient_filter": patient_filter,
+        "uploader_filter": uploader_filter,
         "date_from": date_from,
         "date_to": date_to,
-        "patients": patients,
-        "status_choices": status_choices,
+        "bookmarked_filter": bookmarked_filter,
+        "uploaders": uploaders,
         "total_count": total_count,
         "page_title": "Video Manager",
         "breadcrumbs": [
@@ -338,10 +353,13 @@ def video_manager(request):
 @login_required(login_url="user-login")
 def video_manager_new_only(request):
     """Video manager showing only new videos (not used in assessments)"""
-    # Base queryset for new videos only
+    # Base queryset for new videos only - we need to filter using a subquery
+    from patients.models import GMAssessment
+
+    used_video_ids = GMAssessment.objects.values_list('video_file_id', flat=True)
     queryset = (
         Video.objects.select_related("patient", "added_by", "last_edit_by")
-        .filter(is_new_file=True)
+        .exclude(id__in=used_video_ids)
         .order_by("-recorded_on", "-created_at")
     )
 

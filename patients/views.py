@@ -148,130 +148,309 @@ def dashboard(request):
 
 @login_required(login_url="user-login")
 def patient_manager(request):
-    patients_list = Patient.objects.all().order_by("-id")
+    # Get search parameter
+    search_query = request.GET.get('search', '').strip()
+
+    # Filter patients based on search query
+    if search_query:
+        patients_list = Patient.objects.filter(
+            Q(baby_name__icontains=search_query) |
+            Q(mother_name__icontains=search_query) |
+            Q(bht__icontains=search_query) |
+            Q(nnc_no__icontains=search_query)
+        ).order_by("-id")
+    else:
+        patients_list = Patient.objects.all().order_by("-id")
+
     paginator = Paginator(patients_list, 10)
     page_number = request.GET.get("page")
     paginated_pt_list = paginator.get_page(page_number)
-    return render(
-        request, "patients/manager.html", {"patients_page_obj": paginated_pt_list}
-    )
+
+    context = {
+        "patients_page_obj": paginated_pt_list,
+        "search_query": search_query,
+    }
+
+    return render(request, "patients/manager.html", context)
 
 
 @login_required(login_url="user-login")
 def patient_manager_diagnosed_any(request):
-    patients_list = getPatientList(PtStatus.DIAGNOSED).order_by("-id")
+    # Get search parameter
+    search_query = request.GET.get('search', '').strip()
+
+    # Get base filtered list
+    patients_list = getPatientList(PtStatus.DIAGNOSED)
+
+    # Apply search filter if provided
+    if search_query:
+        patients_list = patients_list.filter(
+            Q(baby_name__icontains=search_query) |
+            Q(mother_name__icontains=search_query) |
+            Q(bht__icontains=search_query) |
+            Q(nnc_no__icontains=search_query)
+        )
+
+    patients_list = patients_list.order_by("-id")
     paginator = Paginator(patients_list, 10)
     page_number = request.GET.get("page")
     paginated_pt_list = paginator.get_page(page_number)
-    return render(
-        request,
-        "patients/manager.html",
-        {"patients_page_obj": paginated_pt_list, "type": "DIAGNOSED"},
-    )
+
+    context = {
+        "patients_page_obj": paginated_pt_list,
+        "type": "DIAGNOSED",
+        "search_query": search_query,
+    }
+
+    return render(request, "patients/manager.html", context)
 
 
 @login_required(login_url="user-login")
 def patient_manager_diagnosis_normal(request):
-    patients_list = getPatientList(PtStatus.DX_NORMAL).order_by("-id")
+    # Get search parameter
+    search_query = request.GET.get('search', '').strip()
+
+    # Get base filtered list
+    patients_list = getPatientList(PtStatus.DX_NORMAL)
+
+    # Apply search filter if provided
+    if search_query:
+        patients_list = patients_list.filter(
+            Q(baby_name__icontains=search_query) |
+            Q(mother_name__icontains=search_query) |
+            Q(bht__icontains=search_query) |
+            Q(nnc_no__icontains=search_query)
+        )
+
+    patients_list = patients_list.order_by("-id")
     paginator = Paginator(patients_list, 10)
     page_number = request.GET.get("page")
     paginated_pt_list = paginator.get_page(page_number)
-    return render(
-        request,
-        "patients/manager.html",
-        {"patients_page_obj": paginated_pt_list, "type": "DX_NORMAL"},
-    )
+
+    context = {
+        "patients_page_obj": paginated_pt_list,
+        "type": "DX_NORMAL",
+        "search_query": search_query,
+    }
+
+    return render(request, "patients/manager.html", context)
 
 
 @login_required(login_url="user-login")
 def patient_manager_diagnosed_gma_normal(request):
-    patients_list = getPatientList(PtStatus.DX_GMA_NORMAL).order_by("-id")
+    # Get search parameter
+    search_query = request.GET.get('search', '').strip()
+
+    # Get base filtered list
+    patients_list = getPatientList(PtStatus.DX_GMA_NORMAL)
+
+    # Apply search filter if provided
+    if search_query:
+        patients_list = patients_list.filter(
+            Q(baby_name__icontains=search_query) |
+            Q(mother_name__icontains=search_query) |
+            Q(bht__icontains=search_query) |
+            Q(nnc_no__icontains=search_query)
+        )
+
+    patients_list = patients_list.order_by("-id")
     paginator = Paginator(patients_list, 10)
     page_number = request.GET.get("page")
     paginated_pt_list = paginator.get_page(page_number)
-    return render(
-        request,
-        "patients/manager.html",
-        {"patients_page_obj": paginated_pt_list, "type": "DX_GMA_NORMAL"},
-    )
+
+    context = {
+        "patients_page_obj": paginated_pt_list,
+        "type": "DX_GMA_NORMAL",
+        "search_query": search_query,
+    }
+
+    return render(request, "patients/manager.html", context)
 
 
 @login_required(login_url="user-login")
 def patient_manager_diagnosed_gma_abnormal(request):
-    patients_list = getPatientList(PtStatus.DX_GMA_ABNORMAL).order_by("-id")
+    # Get search parameter
+    search_query = request.GET.get('search', '').strip()
+
+    # Get base filtered list
+    patients_list = getPatientList(PtStatus.DX_GMA_ABNORMAL)
+
+    # Apply search filter if provided
+    if search_query:
+        patients_list = patients_list.filter(
+            Q(baby_name__icontains=search_query) |
+            Q(mother_name__icontains=search_query) |
+            Q(bht__icontains=search_query) |
+            Q(nnc_no__icontains=search_query)
+        )
+
+    patients_list = patients_list.order_by("-id")
     paginator = Paginator(patients_list, 10)
     page_number = request.GET.get("page")
     paginated_pt_list = paginator.get_page(page_number)
-    return render(
-        request,
-        "patients/manager.html",
-        {"patients_page_obj": paginated_pt_list, "type": "DX_GMA_ABNORMAL"},
-    )
+
+    context = {
+        "patients_page_obj": paginated_pt_list,
+        "type": "DX_GMA_ABNORMAL",
+        "search_query": search_query,
+    }
+
+    return render(request, "patients/manager.html", context)
 
 
 @login_required(login_url="user-login")
 def patient_manager_diagnosed_hine(request):
-    patients_list = getPatientList(PtStatus.DX_HINE).order_by("-id")
+    # Get search parameter
+    search_query = request.GET.get('search', '').strip()
+
+    # Get base filtered list
+    patients_list = getPatientList(PtStatus.DX_HINE)
+
+    # Apply search filter if provided
+    if search_query:
+        patients_list = patients_list.filter(
+            Q(baby_name__icontains=search_query) |
+            Q(mother_name__icontains=search_query) |
+            Q(bht__icontains=search_query) |
+            Q(nnc_no__icontains=search_query)
+        )
+
+    patients_list = patients_list.order_by("-id")
     paginator = Paginator(patients_list, 10)
     page_number = request.GET.get("page")
     paginated_pt_list = paginator.get_page(page_number)
-    return render(
-        request,
-        "patients/manager.html",
-        {"patients_page_obj": paginated_pt_list, "type": "DX_HINE"},
-    )
+
+    context = {
+        "patients_page_obj": paginated_pt_list,
+        "type": "DX_HINE",
+        "search_query": search_query,
+    }
+
+    return render(request, "patients/manager.html", context)
 
 
 @login_required(login_url="user-login")
 def patient_manager_da_normal(request):
-    patients_list = getPatientList(PtStatus.DX_DA_NORMAL).order_by("-id")
+    # Get search parameter
+    search_query = request.GET.get('search', '').strip()
+
+    # Get base filtered list
+    patients_list = getPatientList(PtStatus.DX_DA_NORMAL)
+
+    # Apply search filter if provided
+    if search_query:
+        patients_list = patients_list.filter(
+            Q(baby_name__icontains=search_query) |
+            Q(mother_name__icontains=search_query) |
+            Q(bht__icontains=search_query) |
+            Q(nnc_no__icontains=search_query)
+        )
+
+    patients_list = patients_list.order_by("-id")
     paginator = Paginator(patients_list, 10)
     page_number = request.GET.get("page")
     paginated_pt_list = paginator.get_page(page_number)
-    return render(
-        request,
-        "patients/manager.html",
-        {"patients_page_obj": paginated_pt_list, "type": "DX_DA_NORMAL"},
-    )
+
+    context = {
+        "patients_page_obj": paginated_pt_list,
+        "type": "DX_DA_NORMAL",
+        "search_query": search_query,
+    }
+
+    return render(request, "patients/manager.html", context)
 
 
 @login_required(login_url="user-login")
 def patient_manager_da_abnormal(request):
-    patients_list = getPatientList(PtStatus.DX_DA_ABNORMAL).order_by("-id")
+    # Get search parameter
+    search_query = request.GET.get('search', '').strip()
+
+    # Get base filtered list
+    patients_list = getPatientList(PtStatus.DX_DA_ABNORMAL)
+
+    # Apply search filter if provided
+    if search_query:
+        patients_list = patients_list.filter(
+            Q(baby_name__icontains=search_query) |
+            Q(mother_name__icontains=search_query) |
+            Q(bht__icontains=search_query) |
+            Q(nnc_no__icontains=search_query)
+        )
+
+    patients_list = patients_list.order_by("-id")
     paginator = Paginator(patients_list, 10)
     page_number = request.GET.get("page")
     paginated_pt_list = paginator.get_page(page_number)
-    return render(
-        request,
-        "patients/manager.html",
-        {"patients_page_obj": paginated_pt_list, "type": "DX_DA_ABNORMAL"},
-    )
+
+    context = {
+        "patients_page_obj": paginated_pt_list,
+        "type": "DX_DA_ABNORMAL",
+        "search_query": search_query,
+    }
+
+    return render(request, "patients/manager.html", context)
 
 
 @login_required(login_url="user-login")
 def patient_manager_discharged_only(request):
-    patients_list = getPatientList(PtStatus.DISCHARGED).order_by("-id")
+    # Get search parameter
+    search_query = request.GET.get('search', '').strip()
+
+    # Get base filtered list
+    patients_list = getPatientList(PtStatus.DISCHARGED)
+
+    # Apply search filter if provided
+    if search_query:
+        patients_list = patients_list.filter(
+            Q(baby_name__icontains=search_query) |
+            Q(mother_name__icontains=search_query) |
+            Q(bht__icontains=search_query) |
+            Q(nnc_no__icontains=search_query)
+        )
+
+    patients_list = patients_list.order_by("-id")
     paginator = Paginator(patients_list, 10)
     page_number = request.GET.get("page")
     paginated_pt_list = paginator.get_page(page_number)
-    return render(
-        request,
-        "patients/manager.html",
-        {"patients_page_obj": paginated_pt_list, "type": "DISCHARGED"},
-    )
+
+    context = {
+        "patients_page_obj": paginated_pt_list,
+        "type": "DISCHARGED",
+        "search_query": search_query,
+    }
+
+    return render(request, "patients/manager.html", context)
 
 
 @login_required(login_url="user-login")
 def patient_manager_new_only(request):
-    patients_list = Patient.objects.filter(videos__isnull=True).order_by("-id")
+    # Get search parameter
+    search_query = request.GET.get('search', '').strip()
+
+    # Get base filtered list
+    patients_list = Patient.objects.filter(videos__isnull=True)
+
+    # Apply search filter if provided
+    if search_query:
+        patients_list = patients_list.filter(
+            Q(baby_name__icontains=search_query) |
+            Q(mother_name__icontains=search_query) |
+            Q(bht__icontains=search_query) |
+            Q(nnc_no__icontains=search_query)
+        )
+
+    patients_list = patients_list.order_by("-id")
     paginator = Paginator(patients_list, 10)
     page_number = request.GET.get("page")
     paginated_pt_list = paginator.get_page(page_number)
-    return render(
-        request,
-        "patients/manager.html",
-        {"patients_page_obj": paginated_pt_list, "type": "NEW"},
-    )
+
+    context = {
+        "patients_page_obj": paginated_pt_list,
+        "type": "NEW",
+        "search_query": search_query,
+    }
+
+    return render(request, "patients/manager.html", context)
 
 
 @login_required(login_url="user-login")
@@ -1148,15 +1327,20 @@ def bookmark_manager(request):
         var_bookmarks_list = Bookmark.objects.select_related('owner', 'last_edit_by').all().order_by("-id")
         
         # Search and filter functionality
-        search_title = request.GET.get('search_title', '').strip()
+        search_query = request.GET.get('search', '').strip()
+        search_title = request.GET.get('search_title', '').strip()  # Keep for backward compatibility
         bookmark_type = request.GET.get('bookmark_type', '')
         owner = request.GET.get('owner', '').strip()
         date_range = request.GET.get('date_range', '')
-        
+
+        # Use search_query if provided, otherwise fall back to search_title
+        search_term = search_query or search_title
+
         # Apply search filters
-        if search_title:
+        if search_term:
             var_bookmarks_list = var_bookmarks_list.filter(
-                title__icontains=search_title
+                Q(title__icontains=search_term) |
+                Q(description__icontains=search_term)
             )
         
         if bookmark_type:
@@ -1177,16 +1361,16 @@ def bookmark_manager(request):
             now = timezone.now()
             if date_range == 'today':
                 start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
-                var_bookmarks_list = var_bookmarks_list.filter(created_on__gte=start_date)
+                var_bookmarks_list = var_bookmarks_list.filter(created_at__gte=start_date)
             elif date_range == 'week':
                 start_date = now - timedelta(days=7)
-                var_bookmarks_list = var_bookmarks_list.filter(created_on__gte=start_date)
+                var_bookmarks_list = var_bookmarks_list.filter(created_at__gte=start_date)
             elif date_range == 'month':
                 start_date = now - timedelta(days=30)
-                var_bookmarks_list = var_bookmarks_list.filter(created_on__gte=start_date)
+                var_bookmarks_list = var_bookmarks_list.filter(created_at__gte=start_date)
             elif date_range == 'year':
                 start_date = now - timedelta(days=365)
-                var_bookmarks_list = var_bookmarks_list.filter(created_on__gte=start_date)
+                var_bookmarks_list = var_bookmarks_list.filter(created_at__gte=start_date)
         
         # Calculate statistics
         bookmark_stats = {
@@ -1206,6 +1390,7 @@ def bookmark_manager(request):
         context = {
             "bookmark_page_obj": bookmark_page_obj,
             "bookmark_stats": bookmark_stats,
+            "search_query": search_term,
         }
         
         return render(request, "bookmark/manager.html", context)
@@ -1344,13 +1529,8 @@ def bookmark_edit(request, pk):
     if request.method == "POST":
         bm_form_data = BookmarkForm(request.POST, instance=selected_bm)
         if bm_form_data.is_valid():
-            title = bm_form_data.cleaned_data["title"]
-            description = bm_form_data.cleaned_data["description"]
-            selected_bm.title = title
-            selected_bm.description = description
+            selected_bm = bm_form_data.save(commit=False)
             selected_bm.last_edit_by = request.user
-            selected_bm.last_edit_by = request.user
-            selected_bm.save(update_fields=["title", "description", "last_edit_by"])
             selected_bm.save()
             messages.success(request, "Bookmark details are updated succesfully...")
             return redirect("bookmark-view", pk=selected_bm.id)

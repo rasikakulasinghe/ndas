@@ -12,13 +12,6 @@ from ndas.custom_codes.validators import validate_video_file, validate_recording
 from ndas.custom_codes.choice import PROCESSING_STATUS
 
 class Video(TimeStampedModel, UserTrackingMixin):
-    """
-    Video model for storing patient video records with comprehensive metadata.
-    
-    This model stores video files associated with patients, including metadata
-    such as duration, file size, and processing status. It includes methods
-    for calculating patient age at recording time and checking file status.
-    """
 
     video_file = models.FileField(
         upload_to="videos/%Y/%m/",  # Better organization by month
@@ -81,9 +74,7 @@ class Video(TimeStampedModel, UserTrackingMixin):
         verbose_name=_("File Size (bytes)"),
         help_text=_("File size in bytes"),
     )
-    
 
-    
     processing_status = models.CharField(
         max_length=20,
         choices=PROCESSING_STATUS,
@@ -92,30 +83,15 @@ class Video(TimeStampedModel, UserTrackingMixin):
         help_text=_("Current processing status of the video"),
         db_index=True,
     )
-    
-    # Quality/resolution metadata
-    width = models.PositiveSmallIntegerField(
-        null=True,
-        blank=True,
-        verbose_name=_("Width"),
-        help_text=_("Video width in pixels"),
-    )
-    
-    height = models.PositiveSmallIntegerField(
-        null=True,
-        blank=True,
-        verbose_name=_("Height"),
-        help_text=_("Video height in pixels"),
-    )
-    
-    # Medical assessment flags
-    is_assessment_ready = models.BooleanField(
-        default=False,
-        verbose_name=_("Assessment Ready"),
-        help_text=_("Whether this video is ready for medical assessment"),
-        db_index=True,
-    )
 
+    resolution = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        verbose_name=_("Video Resolution"),
+        help_text=_("Video resolution (e.g., 1920x1080)"),
+    )
+    
     class Meta:
         verbose_name = _("Video")
         verbose_name_plural = _("Videos")
@@ -124,8 +100,6 @@ class Video(TimeStampedModel, UserTrackingMixin):
         # Composite indexes for common queries
         indexes = [
             models.Index(fields=['patient', '-recorded_on']),
-            models.Index(fields=['processing_status', '-created_at']),
-            models.Index(fields=['is_assessment_ready', '-recorded_on']),
         ]
         
         # Ensure no duplicate videos for same patient at same time
@@ -140,8 +114,6 @@ class Video(TimeStampedModel, UserTrackingMixin):
         return f"{self.title} - {self.patient} ({self.recorded_on:%Y-%m-%d})"
     
     def get_absolute_url(self):
-        """Get the canonical URL for this video."""
-        # Assuming you have a video detail view
         return reverse('video:detail', kwargs={'pk': self.pk})
     
     def clean(self):
@@ -149,7 +121,7 @@ class Video(TimeStampedModel, UserTrackingMixin):
         super().clean()
         
         # Validate recording date is not in future - only if patient is already assigned
-        if self.recorded_on and self.patient_id and hasattr(self, 'patient'):
+        if self.recorded_on and self.patient and hasattr(self, 'patient'):
             try:
                 if hasattr(self.patient, 'dob_tob') and self.patient.dob_tob:
                     if self.recorded_on.date() < self.patient.dob_tob.date():
@@ -162,7 +134,6 @@ class Video(TimeStampedModel, UserTrackingMixin):
                 pass
     
     def save(self, *args, **kwargs):
-        """Override save to populate metadata if missing."""
         # Auto-populate file size if not set
         if self.video_file and not self.file_size_bytes:
             try:
@@ -176,7 +147,6 @@ class Video(TimeStampedModel, UserTrackingMixin):
 
     @property
     def age_on_recording(self):
-        """Calculate patient's age at the time of recording."""
         if not hasattr(self.patient, 'dob_tob') or not self.recorded_on:
             return None
             
@@ -186,7 +156,6 @@ class Video(TimeStampedModel, UserTrackingMixin):
         )
     
     def _calculate_age_string(self, birth_date, recording_date):
-        """Calculate age string in human-readable format."""
         if recording_date < birth_date:
             return "Invalid: Recording before birth"
             
@@ -229,15 +198,15 @@ class Video(TimeStampedModel, UserTrackingMixin):
         """Check if this video is bookmarked by any user."""
         from patients.models import Bookmark
         return Bookmark.objects.filter(
-            bookmark_type="File", 
+            bookmark_type="Video",
             object_id=self.pk
         ).exists()
-    
+
     def get_bookmark(self):
         """Get the bookmark object if it exists."""
         from patients.models import Bookmark
         return Bookmark.objects.filter(
-            bookmark_type="File", 
+            bookmark_type="Video",
             object_id=self.pk
         ).first()
     
@@ -261,49 +230,13 @@ class Video(TimeStampedModel, UserTrackingMixin):
         """Get formatted duration string (HH:MM:SS)."""
         if not self.duration_seconds:
             return "--:--:--"
-        
+
         hours, remainder = divmod(self.duration_seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
         return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
+    def get_resolution_display(self):
+        return self.resolution or "Unknown"
     
-    @property
-    def resolution(self):
-        """Get resolution string."""
-        if self.width and self.height:
-            return f"{self.width}×{self.height}"
-        return "Unknown"
-    
-    def can_be_processed(self):
-        """Check if video can be processed."""
-        return (
-            self.video_file and 
-            self.processing_status in ['pending', 'failed']
-        )
-    
-    def mark_processing_started(self):
-        """Mark video as being processed."""
-        self.processing_status = 'processing'
-        self.save(update_fields=['processing_status', 'updated_at'])
-    
-    def mark_processing_completed(self, duration=None, width=None, height=None):
-        """Mark video processing as completed with metadata."""
-        self.processing_status = 'completed'
-        self.is_assessment_ready = True
-        
-        if duration:
-            self.duration_seconds = duration
-        if width:
-            self.width = width
-        if height:
-            self.height = height
-            
-        self.save(update_fields=[
-            'processing_status', 'is_assessment_ready', 
-            'duration_seconds', 'width', 'height', 'updated_at'
-        ])
-    
-    def mark_processing_failed(self):
-        """Mark video processing as failed."""
-        self.processing_status = 'failed'
-        self.is_assessment_ready = False
-        self.save(update_fields=['processing_status', 'is_assessment_ready', 'updated_at'])
+    def video_count(self):
+        return Video.objects.filter(video_file=self).count() or "Unknown"

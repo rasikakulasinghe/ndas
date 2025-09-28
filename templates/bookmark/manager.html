@@ -12,28 +12,87 @@
           <i class="fas fa-bookmark mr-2"></i>Bookmark Records
         </h3>
 
-        {% if bookmark_page_obj %}
-        <span class="badge badge-light ml-3 px-3 py-2">
-          <i class="fas fa-star mr-2"></i>
-          {{ bookmark_page_obj.paginator.count }} Total Bookmarks
-        </span>
-        {% endif %}
+        <a> &nbsp;:&nbsp;
+           {% if bookmark_page_obj %}({{ bookmark_page_obj.paginator.count }}){% else %}(0){% endif %}
+
+           {% if request.GET.search %}
+           <small class="text-light ml-2">
+             <i class="fas fa-search"></i> "{{ request.GET.search }}"
+             <a href="{% url 'bookmark-manager' %}" class="text-light ml-1" title="Clear search">
+               <i class="fas fa-times"></i>
+             </a>
+           </small>
+           {% endif %}
+
+           {% if request.GET.bookmark_type %}
+           <small class="text-light ml-2">
+             <i class="fas fa-filter"></i>
+             {% if request.GET.bookmark_type == 'Patient' %}
+               <i class="fas fa-user mr-1"></i>Patient Bookmarks
+             {% elif request.GET.bookmark_type == 'Video' %}
+               <i class="fas fa-video mr-1"></i>Video Bookmarks
+             {% elif request.GET.bookmark_type == 'GMA' %}
+               <i class="fas fa-stethoscope mr-1"></i>GMA Bookmarks
+             {% elif request.GET.bookmark_type == 'HINE' %}
+               <i class="fas fa-brain mr-1"></i>HINE Bookmarks
+             {% elif request.GET.bookmark_type == 'DA' %}
+               <i class="fas fa-child mr-1"></i>DA Bookmarks
+             {% elif request.GET.bookmark_type == 'CDICR' %}
+               <i class="fas fa-clipboard-list mr-1"></i>CDIC Bookmarks
+             {% elif request.GET.bookmark_type == 'Attachment' %}
+               <i class="fas fa-paperclip mr-1"></i>Attachment Bookmarks
+             {% else %}
+               {{ request.GET.bookmark_type }} Bookmarks
+             {% endif %}
+             <a href="{% url 'bookmark-manager' %}" class="text-light ml-1" title="Clear filter">
+               <i class="fas fa-times"></i>
+             </a>
+           </small>
+           {% endif %}
+
+           {% if request.GET.date_range %}
+           <small class="text-light ml-2">
+             <i class="fas fa-calendar"></i>
+             {% if request.GET.date_range == 'today' %}
+               <i class="fas fa-calendar-day mr-1"></i>Today
+             {% elif request.GET.date_range == 'week' %}
+               <i class="fas fa-calendar-week mr-1"></i>This Week
+             {% elif request.GET.date_range == 'month' %}
+               <i class="fas fa-calendar-alt mr-1"></i>This Month
+             {% elif request.GET.date_range == 'year' %}
+               <i class="fas fa-calendar mr-1"></i>This Year
+             {% endif %}
+             <a href="{% url 'bookmark-manager' %}" class="text-light ml-1" title="Clear date filter">
+               <i class="fas fa-times"></i>
+             </a>
+           </small>
+           {% endif %}
+        </a>
 
         <div class="card-tools d-flex align-items-center">
           <!-- Search Bar -->
-          <div class="input-group input-group-sm mr-3 w-search-input">
-            <input
-              type="text"
-              class="form-control form-control-sm"
-              placeholder="Search bookmarks..."
-              id="cardSearchInput"
-            />
-            <div class="input-group-append">
-              <button class="btn btn-outline-light btn-sm" type="button">
-                <i class="fas fa-search"></i>
-              </button>
+          <form method="GET" class="mr-3">
+            {% for key, value in request.GET.items %}
+              {% if key != 'search' and key != 'page' %}
+                <input type="hidden" name="{{ key }}" value="{{ value }}">
+              {% endif %}
+            {% endfor %}
+            <div class="input-group input-group-sm" style="width: 200px">
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                placeholder="Search bookmarks..."
+                name="search"
+                value="{{ request.GET.search|default:'' }}"
+                id="cardSearchInput"
+              />
+              <div class="input-group-append">
+                <button class="btn btn-outline-light btn-sm" type="submit">
+                  <i class="fas fa-search"></i>
+                </button>
+              </div>
             </div>
-          </div>
+          </form>
 
           <!-- Filter Dropdown -->
           <div class="dropdown mr-2">
@@ -53,36 +112,80 @@
             >
               <h6 class="dropdown-header">Filter Options</h6>
               <a
-                class="dropdown-item"
-                href="#"
+                class="dropdown-item{% if not request.GET.bookmark_type %} active{% endif %}"
+                href="{% url 'bookmark-manager' %}"
               >
                 <i class="fas fa-bookmark mr-2"></i>All Bookmarks
               </a>
               <div class="dropdown-divider"></div>
+              <h6 class="dropdown-header">By Type</h6>
               <a
-                class="dropdown-item"
-                href="#"
+                class="dropdown-item{% if request.GET.bookmark_type == 'Patient' %} active{% endif %}"
+                href="?bookmark_type=Patient"
               >
                 <i class="fas fa-user mr-2"></i>Patient Bookmarks
               </a>
               <a
-                class="dropdown-item"
-                href="#"
+                class="dropdown-item{% if request.GET.bookmark_type == 'Video' %} active{% endif %}"
+                href="?bookmark_type=Video"
               >
                 <i class="fas fa-video mr-2"></i>Video Bookmarks
               </a>
               <a
-                class="dropdown-item"
-                href="#"
+                class="dropdown-item{% if request.GET.bookmark_type == 'GMA' %} active{% endif %}"
+                href="?bookmark_type=GMA"
               >
-                <i class="fas fa-clipboard-list mr-2"></i>Assessment Bookmarks
+                <i class="fas fa-stethoscope mr-2"></i>GMA Bookmarks
+              </a>
+              <a
+                class="dropdown-item{% if request.GET.bookmark_type == 'HINE' %} active{% endif %}"
+                href="?bookmark_type=HINE"
+              >
+                <i class="fas fa-brain mr-2"></i>HINE Bookmarks
+              </a>
+              <a
+                class="dropdown-item{% if request.GET.bookmark_type == 'DA' %} active{% endif %}"
+                href="?bookmark_type=DA"
+              >
+                <i class="fas fa-child mr-2"></i>DA Bookmarks
+              </a>
+              <a
+                class="dropdown-item{% if request.GET.bookmark_type == 'CDICR' %} active{% endif %}"
+                href="?bookmark_type=CDICR"
+              >
+                <i class="fas fa-clipboard-list mr-2"></i>CDIC Bookmarks
+              </a>
+              <a
+                class="dropdown-item{% if request.GET.bookmark_type == 'Attachment' %} active{% endif %}"
+                href="?bookmark_type=Attachment"
+              >
+                <i class="fas fa-paperclip mr-2"></i>Attachment Bookmarks
               </a>
               <div class="dropdown-divider"></div>
+              <h6 class="dropdown-header">By Date</h6>
               <a
-                class="dropdown-item"
-                href="#"
+                class="dropdown-item{% if request.GET.date_range == 'today' %} active{% endif %}"
+                href="?date_range=today"
               >
-                <i class="fas fa-clock mr-2"></i>Recent Bookmarks
+                <i class="fas fa-calendar-day mr-2"></i>Today
+              </a>
+              <a
+                class="dropdown-item{% if request.GET.date_range == 'week' %} active{% endif %}"
+                href="?date_range=week"
+              >
+                <i class="fas fa-calendar-week mr-2"></i>This Week
+              </a>
+              <a
+                class="dropdown-item{% if request.GET.date_range == 'month' %} active{% endif %}"
+                href="?date_range=month"
+              >
+                <i class="fas fa-calendar-alt mr-2"></i>This Month
+              </a>
+              <a
+                class="dropdown-item{% if request.GET.date_range == 'year' %} active{% endif %}"
+                href="?date_range=year"
+              >
+                <i class="fas fa-calendar mr-2"></i>This Year
               </a>
             </div>
           </div>
@@ -108,7 +211,7 @@
                   scope="col"
                   class="border-0 text-uppercase text-secondary font-weight-bold"
                 >
-                  INDEX
+                  TYPE
                 </th>
                 <th
                   scope="col"
@@ -120,28 +223,19 @@
                   scope="col"
                   class="border-0 text-uppercase text-secondary font-weight-bold"
                 >
-                  TYPE
-                </th>
-                <th
-                  scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-md-table-cell"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
-                >
                   DESCRIPTION
                 </th>
                 <th
                   scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-sm-table-cell"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
+                  class="border-0 text-uppercase text-secondary font-weight-bold"
                 >
-                  OWNER
+                  CREATED
                 </th>
                 <th
                   scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-lg-table-cell"
-                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
+                  class="border-0 text-uppercase text-secondary font-weight-bold"
                 >
-                  CREATED
+                  LAST EDIT
                 </th>
                 <th
                   scope="col"
@@ -155,10 +249,25 @@
 
               {% for Bookmark in bookmark_page_obj %}
               <tr class="border-bottom">
-                <td
-                  class="align-middle py-3 px-3 text-muted font-weight-medium"
-                >
-                  {{ Bookmark.id }}
+  
+                <td class="align-middle py-3 px-3">
+                  {% if Bookmark.bookmark_type == 'Patient' %}
+                    <span class="badge badge-primary px-2 py-1"><i class="fas fa-user mr-1"></i>PATIENT</span>
+                  {% elif Bookmark.bookmark_type == 'Video' %}
+                    <span class="badge badge-info px-2 py-1"><i class="fas fa-video mr-1"></i>VIDEO</span>
+                  {% elif Bookmark.bookmark_type == 'GMA' %}
+                    <span class="badge badge-success px-2 py-1"><i class="fas fa-stethoscope mr-1"></i>GMA</span>
+                  {% elif Bookmark.bookmark_type == 'HINE' %}
+                    <span class="badge badge-warning px-2 py-1"><i class="fas fa-brain mr-1"></i>HINE</span>
+                  {% elif Bookmark.bookmark_type == 'DA' %}
+                    <span class="badge badge-secondary px-2 py-1"><i class="fas fa-child mr-1"></i>DEV. ASSESSMENT</span>
+                  {% elif Bookmark.bookmark_type == 'CDICR' %}
+                    <span class="badge badge-danger px-2 py-1"><i class="fas fa-clipboard-list mr-1"></i>CDIC</span>
+                  {% elif Bookmark.bookmark_type == 'Attachment' %}
+                    <span class="badge badge-dark px-2 py-1"><i class="fas fa-paperclip mr-1"></i>ATTACHMENT</span>
+                  {% else %}
+                    <span class="badge badge-light px-2 py-1">{{ Bookmark.bookmark_type|upper }}</span>
+                  {% endif %}
                 </td>
 
                 <td class="align-middle py-3 px-3">
@@ -191,26 +300,6 @@
                   </small>
                 </td>
 
-                <td class="align-middle py-3 px-3">
-                  {% if Bookmark.bookmark_type == 'Patient' %}
-                    <span class="badge badge-primary px-2 py-1"><i class="fas fa-user mr-1"></i>PATIENT</span>
-                  {% elif Bookmark.bookmark_type == 'Video' %}
-                    <span class="badge badge-info px-2 py-1"><i class="fas fa-video mr-1"></i>VIDEO</span>
-                  {% elif Bookmark.bookmark_type == 'GMA' %}
-                    <span class="badge badge-success px-2 py-1"><i class="fas fa-stethoscope mr-1"></i>GMA</span>
-                  {% elif Bookmark.bookmark_type == 'HINE' %}
-                    <span class="badge badge-warning px-2 py-1"><i class="fas fa-brain mr-1"></i>HINE</span>
-                  {% elif Bookmark.bookmark_type == 'DA' %}
-                    <span class="badge badge-secondary px-2 py-1"><i class="fas fa-child mr-1"></i>DEV. ASSESSMENT</span>
-                  {% elif Bookmark.bookmark_type == 'CDICR' %}
-                    <span class="badge badge-danger px-2 py-1"><i class="fas fa-clipboard-list mr-1"></i>CDIC</span>
-                  {% elif Bookmark.bookmark_type == 'Attachment' %}
-                    <span class="badge badge-dark px-2 py-1"><i class="fas fa-paperclip mr-1"></i>ATTACHMENT</span>
-                  {% else %}
-                    <span class="badge badge-light px-2 py-1">{{ Bookmark.bookmark_type|upper }}</span>
-                  {% endif %}
-                </td>
-
                 <td
                   class="align-middle py-3 px-3 text-muted d-none d-md-table-cell"
                 >
@@ -227,11 +316,12 @@
                 </td>
 
                 <td
-                  class="align-middle py-3 px-3 d-none d-sm-table-cell"
+                  class="align-middle py-3 px-3 d-none d-sm-table-cell text-center"
                 >
                   <a href="{% url 'user-view-by-username' Bookmark.owner.username %}"
                      class="text-decoration-none text-primary" data-toggle="tooltip"
-                     data-placement="top" title="View user profile">
+                     data-placement="top"
+                     title="Created: {{ Bookmark.created_at|date:'F d, Y g:i A' }} by {{ Bookmark.owner.username }}">
                     <i class="fas fa-user mr-1"></i>{{ Bookmark.owner.username }}
                   </a>
                 </td>
@@ -239,14 +329,20 @@
                 <td
                   class="align-middle py-3 px-3 d-none d-lg-table-cell text-center"
                 >
-                  <button
-                    type="button"
-                    class="btn btn-link p-0 text-primary"
-                    data-toggle="tooltip"
-                    title="Created: {{ Bookmark.created_on|date:'F d, Y g:i A' }}{% if Bookmark.last_edit_by %} | Last edited: {{ Bookmark.last_edit_on|date:'F d, Y g:i A' }} by {{ Bookmark.last_edit_by.username }}{% endif %}"
-                  >
-                    <i class="fas fa-info-circle fa-icon-lg"></i>
-                  </button>
+                  {% if Bookmark.last_edit_by %}
+                    <a href="{% url 'user-view-by-username' Bookmark.last_edit_by.username %}"
+                       class="text-decoration-none text-primary" data-toggle="tooltip"
+                       data-placement="top"
+                       title="Last edited: {{ Bookmark.updated_at|date:'F d, Y g:i A' }} by {{ Bookmark.last_edit_by.username }}">
+                      <i class="fas fa-user-edit mr-1"></i>{{ Bookmark.last_edit_by.username }}
+                    </a>
+                  {% else %}
+                    <span class="text-muted" data-toggle="tooltip"
+                          data-placement="top"
+                          title="Never edited">
+                      <i class="fas fa-minus"></i>
+                    </span>
+                  {% endif %}
                 </td>
                 <td class="align-middle py-3 px-3 text-center">
                   <div class="dropdown">
@@ -431,6 +527,27 @@
 
 {% block extra_js %}
 <script src="{% static 'js/manager.js' %}"></script>
+<script>
+function jumpToPage() {
+    const pageNum = document.getElementById('pageJump').value;
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('page', pageNum);
+    window.location.href = '?' + urlParams.toString();
+}
+
+// Add Enter key support for search input
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('cardSearchInput');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.closest('form').submit();
+            }
+        });
+    }
+});
+</script>
 {% endblock extra_js %}
 
 
