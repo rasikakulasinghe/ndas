@@ -230,14 +230,251 @@ def getCountZeroIfNone(var_value):
     else:
         return var_value.count()
 
+
+def extract_video_metadata(video_file_path):
+    """
+    Extract video metadata including duration using multiple methods
+
+    Args:
+        video_file_path (str): Path to the video file
+
+    Returns:
+        dict: Video metadata containing duration_seconds, resolution, etc.
+        Returns None if extraction fails
+    """
+    import logging
+    import os
+    logger = logging.getLogger(__name__)
+
+    if not os.path.exists(video_file_path):
+        logger.error(f"Video file not found: {video_file_path}")
+        return None
+
+    # Method 1: Try moviepy first (already in requirements)
+    try:
+        from moviepy.editor import VideoFileClip
+
+        with VideoFileClip(video_file_path) as clip:
+            duration_seconds = int(clip.duration) if clip.duration else None
+
+            # Get resolution
+            width, height = clip.size if hasattr(clip, 'size') else (None, None)
+            resolution = f"{width}x{height}" if width and height else None
+
+            return {
+                'duration_seconds': duration_seconds,
+                'resolution': resolution,
+                'width': width,
+                'height': height,
+                'fps': getattr(clip, 'fps', None),
+            }
+
+    except ImportError:
+        logger.warning("moviepy not available, trying ffprobe")
+    except Exception as e:
+        logger.warning(f"moviepy failed for {video_file_path}: {str(e)}, trying ffprobe")
+
+    # Method 2: Fallback to ffprobe if moviepy fails
+    try:
+        import subprocess
+        import json
+
+        # Use ffprobe to extract video metadata
+        cmd = [
+            'ffprobe',
+            '-v', 'quiet',
+            '-print_format', 'json',
+            '-show_format',
+            '-show_streams',
+            video_file_path
+        ]
+
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+
+        if result.returncode != 0:
+            logger.warning(f"ffprobe failed for {video_file_path}: {result.stderr}")
+            return None
+
+        metadata = json.loads(result.stdout)
+
+        # Extract video stream information
+        video_stream = None
+        for stream in metadata.get('streams', []):
+            if stream.get('codec_type') == 'video':
+                video_stream = stream
+                break
+
+        if not video_stream:
+            logger.warning(f"No video stream found in {video_file_path}")
+            return None
+
+        # Extract duration and other metadata
+        duration_seconds = None
+        format_info = metadata.get('format', {})
+
+        # Try to get duration from format first, then from video stream
+        if 'duration' in format_info:
+            duration_seconds = int(float(format_info['duration']))
+        elif 'duration' in video_stream:
+            duration_seconds = int(float(video_stream['duration']))
+
+        # Extract resolution
+        width = video_stream.get('width')
+        height = video_stream.get('height')
+        resolution = f"{width}x{height}" if width and height else None
+
+        return {
+            'duration_seconds': duration_seconds,
+            'resolution': resolution,
+            'width': width,
+            'height': height,
+            'codec': video_stream.get('codec_name'),
+            'bitrate': format_info.get('bit_rate'),
+        }
+
+    except subprocess.TimeoutExpired:
+        logger.error(f"ffprobe timeout for {video_file_path}")
+        return None
+    except FileNotFoundError:
+        logger.warning("ffprobe not found. Install ffmpeg for better metadata extraction.")
+        return None
+    except Exception as e:
+        logger.error(f"Error extracting video metadata with ffprobe: {str(e)}")
+        return None
+
+
+def simple_video_duration_estimate(video_file_path):
+    """
+    Provide a basic duration estimate when advanced tools are not available.
+    This is a fallback that assumes typical video properties for medical videos.
+
+    Args:
+        video_file_path (str): Path to the video file
+
+    Returns:
+        dict: Basic metadata estimate or None
+    """
+    import os
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    try:
+        if not os.path.exists(video_file_path):
+            return None
+
+        # Get file size in bytes
+        file_size = os.path.getsize(video_file_path)
+
+        # Basic estimation for medical videos (typical bitrates 1-5 Mbps)
+        # This is a rough estimate and will not be perfectly accurate
+
+        # Assume average bitrate of 2 Mbps for estimation
+        estimated_bitrate_mbps = 2.0
+        estimated_bitrate_bps = estimated_bitrate_mbps * 1024 * 1024
+
+        # Duration = file_size_bits / bitrate_bps
+        file_size_bits = file_size * 8
+        estimated_duration = file_size_bits / estimated_bitrate_bps
+
+        logger.info(f"Estimated duration for {video_file_path}: {estimated_duration:.0f} seconds (file size: {file_size} bytes)")
+
+        return {
+            'duration_seconds': int(estimated_duration),
+            'resolution': None,  # Cannot estimate resolution from file size
+            'width': None,
+            'height': None,
+            'estimated': True,  # Mark this as an estimate
+        }
+
+    except Exception as e:
+        logger.error(f"Error estimating video duration: {str(e)}")
+        return None
+
+
+def calculate_age_string(start_date, end_date, format_type="detailed"):
+    """
+    Calculate age string between two dates with flexible formatting options.
+
+    Args:
+        start_date (date): The starting date (e.g., birth date, recording date)
+        end_date (date): The ending date (e.g., recording date, current date)
+        format_type (str): Format type - "detailed", "medical", or "simple"
+
+    Returns:
+        str: Formatted age string
+
+    Examples:
+        >>> calculate_age_string(date(2023,1,1), date(2023,1,5), "detailed")
+        "4 days"
+        >>> calculate_age_string(date(2023,1,1), date(2024,2,15), "medical")
+        "1 year and 1 month"
+    """
+    # Input validation
+    if not start_date or not end_date:
+        return "Unknown"
+        
+    if end_date < start_date:
+        return "Invalid: End date before start date"
+        
+    delta = end_date - start_date
+    total_days = delta.days
+    
+    # Same day
+    if total_days == 0:
+        return "Same day" if format_type != "medical" else "0 days"
+    
+    # Less than a week
+    elif total_days < 7:
+        return f"{total_days} day{'s' if total_days != 1 else ''}"
+    
+    # Less than a month (detailed breakdown for medical purposes)
+    elif total_days < 30:
+        weeks, days = divmod(total_days, 7)
+        if days == 0:
+            return f"{weeks} week{'s' if weeks != 1 else ''}"
+        if format_type == "simple":
+            return f"{weeks} week{'s' if weeks != 1 else ''}"
+        return f"{weeks} week{'s' if weeks != 1 else ''} and {days} day{'s' if days != 1 else ''}"
+    
+    # Less than a year
+    elif total_days < 365:
+        months, remaining_days = divmod(total_days, 30)
+        weeks, days = divmod(remaining_days, 7)
+        
+        if format_type == "simple":
+            return f"{months} month{'s' if months != 1 else ''}"
+        elif format_type == "medical" and weeks == 0 and days == 0:
+            return f"{months} month{'s' if months != 1 else ''}"
+        elif days == 0 and weeks > 0:
+            return f"{months} month{'s' if months != 1 else ''} and {weeks} week{'s' if weeks != 1 else ''}"
+        elif days == 0:
+            return f"{months} month{'s' if months != 1 else ''}"
+        elif format_type == "medical":
+            return f"{months} month{'s' if months != 1 else ''} and {days} day{'s' if days != 1 else ''}"
+        return f"{months} month{'s' if months != 1 else ''} and {days} day{'s' if days != 1 else ''}"
+    
+    # One year or more
+    else:
+        years, remaining_days = divmod(total_days, 365)
+        months, days = divmod(remaining_days, 30)
+        
+        if format_type == "simple":
+            return f"{years} year{'s' if years != 1 else ''}"
+        elif months == 0 and days == 0:
+            return f"{years} year{'s' if years != 1 else ''}"
+        elif days == 0:
+            return f"{years} year{'s' if years != 1 else ''} and {months} month{'s' if months != 1 else ''}"
+        elif format_type == "medical":
+            return f"{years} year{'s' if years != 1 else ''} and {months} month{'s' if months != 1 else ''}"
+        return f"{years} year{'s' if years != 1 else ''} and {months} month{'s' if months != 1 else ''}"
+
+
 # get patients according to type
 def getPatientList(pts_type):
     from patients.models import Patient
     
-    try:
-        var_ptl = Patient.objects.all()
-    except:
-        var_ptl = None
+    var_ptl = Patient.objects.all()
 
     if pts_type == PtStatus.ALL:
         return var_ptl

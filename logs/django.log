@@ -10834,3 +10834,355 @@ INFO 2025-09-28 17:04:49,037 basehttp 7660 7616 "POST /users/login/ HTTP/1.1" 30
 INFO 2025-09-28 17:04:49,243 basehttp 7660 7616 "GET / HTTP/1.1" 200 51069
 INFO 2025-09-28 17:04:54,486 basehttp 7660 15128 "GET /video/manager/ HTTP/1.1" 200 58180
 INFO 2025-09-28 17:05:02,335 basehttp 7660 6216 "GET /video/manager/ HTTP/1.1" 200 58180
+INFO 2025-09-28 17:10:13,666 basehttp 7660 5244 "GET /video/manager/ HTTP/1.1" 200 58180
+INFO 2025-09-28 17:10:14,655 basehttp 7660 5244 "GET /video/manager/ HTTP/1.1" 200 58180
+INFO 2025-09-28 17:10:16,184 basehttp 7660 5244 "GET /manager/patient/ HTTP/1.1" 200 60313
+INFO 2025-09-28 17:10:17,631 basehttp 7660 5244 "GET /search/ HTTP/1.1" 200 41896
+INFO 2025-09-28 17:10:19,546 basehttp 7660 5244 "GET /patient/add/ HTTP/1.1" 200 68272
+INFO 2025-09-28 17:10:20,123 basehttp 7660 5244 "GET / HTTP/1.1" 200 50745
+INFO 2025-09-28 17:10:21,896 basehttp 7660 5244 "GET /patient/add/ HTTP/1.1" 200 68272
+INFO 2025-09-28 17:15:27,957 autoreload 16152 15324 Watching for file changes with StatReloader
+INFO 2025-09-28 17:15:36,658 basehttp 16152 460 "GET / HTTP/1.1" 302 0
+INFO 2025-09-28 17:15:36,788 basehttp 16152 460 "GET /users/login/?next=/ HTTP/1.1" 200 15725
+WARNING 2025-09-28 17:15:39,202 log 16152 2136 Not Found: /favicon.ico
+WARNING 2025-09-28 17:15:39,203 basehttp 16152 2136 "GET /favicon.ico HTTP/1.1" 404 15877
+WARNING 2025-09-28 17:15:39,214 log 16152 2136 Not Found: /favicon.ico
+WARNING 2025-09-28 17:15:39,215 basehttp 16152 2136 "GET /favicon.ico HTTP/1.1" 404 15877
+INFO 2025-09-28 17:15:42,323 basehttp 16152 2136 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-28 17:15:43,213 basehttp 16152 2136 "GET / HTTP/1.1" 200 51069
+INFO 2025-09-28 17:15:46,613 basehttp 16152 13376 "GET /video/manager/ HTTP/1.1" 200 57542
+INFO 2025-09-28 17:16:24,072 basehttp 16152 3684 "GET /video/manager/ HTTP/1.1" 200 58598
+INFO 2025-09-28 17:17:12,151 basehttp 16152 10624 "GET /video/manager/ HTTP/1.1" 200 58587
+INFO 2025-09-28 17:17:16,989 basehttp 16152 6700 "GET /bookmarks/view/2/ HTTP/1.1" 200 41888
+INFO 2025-09-28 17:17:48,934 basehttp 16152 16864 "GET /video/manager/ HTTP/1.1" 200 58559
+INFO 2025-09-28 17:18:27,441 basehttp 16152 10916 "GET /video/manager/?search=&status=new&uploader=&date_from=&date_to= HTTP/1.1" 200 50046
+INFO 2025-09-28 17:18:29,156 basehttp 16152 10916 "GET /video/manager/?search=&status=assessed&uploader=&date_from=&date_to= HTTP/1.1" 200 50444
+INFO 2025-09-28 17:19:21,787 basehttp 16152 8352 "GET /video/manager/?search=&status=assessed&uploader=&date_from=2025-08-25&date_to=2025-08-28 HTTP/1.1" 200 45025
+INFO 2025-09-28 17:20:29,712 basehttp 16152 8352 "GET /video/manager/?search=&status=assessed&uploader=&date_from=2025-08-25&date_to=2025-08-28&bookmarked_only=1 HTTP/1.1" 200 45032
+INFO 2025-09-28 17:20:31,819 basehttp 16152 8352 "GET /video/manager/?search=&status=assessed&uploader=&date_from=2025-08-25&date_to=2025-08-28&bookmarked_only=1 HTTP/1.1" 200 45032
+INFO 2025-09-28 17:21:50,123 basehttp 16152 2612 "GET /video/manager/?search=&status=assessed&uploader=&date_from=2025-08-25&date_to=2025-08-28&bookmarked_only=1 HTTP/1.1" 200 45032
+INFO 2025-09-28 17:22:23,403 basehttp 16152 2980 "GET /video/manager/?search=&status=assessed&uploader=&date_from=2025-08-25&date_to=2025-08-28&bookmarked_only=1 HTTP/1.1" 200 45016
+INFO 2025-09-28 17:23:03,812 basehttp 16152 12604 "GET /video/manager/?search=&status=assessed&uploader=&date_from=2025-08-25&date_to=2025-08-28&bookmarked_only=1 HTTP/1.1" 200 45016
+INFO 2025-09-28 17:23:11,880 basehttp 16152 12604 "GET /video/manager/?search=&status=assessed&uploader=&date_from=2025-08-25&date_to=2025-08-28 HTTP/1.1" 200 45009
+INFO 2025-09-28 17:23:15,126 basehttp 16152 12604 "GET /video/manager/?search=&status=assessed&uploader=&date_from=2025-08-25&date_to=2025-08-28 HTTP/1.1" 200 45009
+INFO 2025-09-28 17:24:04,318 autoreload 16152 15324 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 17:24:07,024 autoreload 3056 14604 Watching for file changes with StatReloader
+INFO 2025-09-28 17:24:57,615 autoreload 3056 14604 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 17:24:58,471 autoreload 9380 13508 Watching for file changes with StatReloader
+INFO 2025-09-28 17:25:00,068 autoreload 9380 13508 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 17:25:00,822 autoreload 11628 2200 Watching for file changes with StatReloader
+INFO 2025-09-28 17:25:03,787 basehttp 11628 1032 "GET /video/manager/?search=&status=assessed&uploader=&date_from=2025-08-25&date_to=2025-08-28 HTTP/1.1" 302 0
+INFO 2025-09-28 17:25:03,847 basehttp 11628 1032 "GET /users/login/?next=/video/manager/%3Fsearch%3D%26status%3Dassessed%26uploader%3D%26date_from%3D2025-08-25%26date_to%3D2025-08-28 HTTP/1.1" 200 15725
+INFO 2025-09-28 17:25:06,021 basehttp 11628 1032 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-28 17:25:06,213 basehttp 11628 1032 "GET / HTTP/1.1" 200 51069
+INFO 2025-09-28 17:25:08,113 basehttp 11628 1032 "GET /video/manager/ HTTP/1.1" 200 58507
+INFO 2025-09-28 17:26:55,297 basehttp 11628 14364 "GET /video/manager/ HTTP/1.1" 200 58273
+INFO 2025-09-28 17:26:56,585 basehttp 11628 14364 "GET /video/manager/ HTTP/1.1" 200 58273
+INFO 2025-09-28 17:27:17,712 basehttp 11628 16668 "GET /video/manager/ HTTP/1.1" 200 58273
+INFO 2025-09-28 17:27:18,459 basehttp 11628 16668 "GET /video/manager/ HTTP/1.1" 200 58273
+INFO 2025-09-28 17:27:19,122 basehttp 11628 16668 "GET /video/manager/ HTTP/1.1" 200 58273
+INFO 2025-09-28 17:27:30,649 basehttp 11628 7872 "GET /video/manager/ HTTP/1.1" 200 58195
+INFO 2025-09-28 17:30:30,477 autoreload 11628 2200 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 17:30:31,339 autoreload 13536 10164 Watching for file changes with StatReloader
+INFO 2025-09-28 17:30:34,084 autoreload 13536 10164 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 17:30:34,832 autoreload 4212 17352 Watching for file changes with StatReloader
+INFO 2025-09-28 17:30:36,190 autoreload 4212 17352 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 17:30:36,979 autoreload 11688 11664 Watching for file changes with StatReloader
+INFO 2025-09-28 17:30:38,204 autoreload 11688 11664 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 17:30:38,958 autoreload 11488 13092 Watching for file changes with StatReloader
+INFO 2025-09-28 17:30:43,550 autoreload 11488 13092 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 17:30:44,552 autoreload 10276 15684 Watching for file changes with StatReloader
+INFO 2025-09-28 17:30:46,080 autoreload 10276 15684 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 17:30:46,876 autoreload 11304 2476 Watching for file changes with StatReloader
+INFO 2025-09-28 17:30:50,586 autoreload 11304 2476 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 17:30:51,343 autoreload 6940 4920 Watching for file changes with StatReloader
+INFO 2025-09-28 17:30:54,935 autoreload 6940 4920 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 17:30:55,747 autoreload 11824 5708 Watching for file changes with StatReloader
+INFO 2025-09-28 17:31:00,418 autoreload 11824 5708 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 17:31:01,193 autoreload 10728 17352 Watching for file changes with StatReloader
+INFO 2025-09-28 17:31:03,765 autoreload 10728 17352 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 17:31:04,588 autoreload 5436 1164 Watching for file changes with StatReloader
+INFO 2025-09-28 17:31:07,126 autoreload 5436 1164 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 17:31:07,849 autoreload 13580 7892 Watching for file changes with StatReloader
+INFO 2025-09-28 17:31:26,810 autoreload 13580 7892 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 17:31:27,615 autoreload 6152 16864 Watching for file changes with StatReloader
+INFO 2025-09-28 17:31:29,179 autoreload 6152 16864 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 17:31:29,960 autoreload 15760 11468 Watching for file changes with StatReloader
+INFO 2025-09-28 17:32:31,818 autoreload 15760 11468 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 17:32:32,699 autoreload 9508 10480 Watching for file changes with StatReloader
+INFO 2025-09-28 17:32:34,324 autoreload 9508 10480 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 17:32:35,110 autoreload 17328 7948 Watching for file changes with StatReloader
+INFO 2025-09-28 17:32:41,780 autoreload 17328 7948 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 17:32:42,512 autoreload 5316 8732 Watching for file changes with StatReloader
+INFO 2025-09-28 17:33:54,740 autoreload 5316 8732 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 17:33:55,480 autoreload 17360 12000 Watching for file changes with StatReloader
+INFO 2025-09-28 17:37:38,888 autoreload 17360 12000 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 17:37:41,035 autoreload 9872 2340 Watching for file changes with StatReloader
+INFO 2025-09-28 17:41:31,853 autoreload 9872 2340 D:\Projects\Current Projects\NDAS - Project\NDAS\ndas\custom_codes\custom_methods.py changed, reloading.
+INFO 2025-09-28 17:41:32,734 autoreload 6940 5452 Watching for file changes with StatReloader
+INFO 2025-09-28 17:43:09,641 autoreload 6940 5452 D:\Projects\Current Projects\NDAS - Project\NDAS\ndas\custom_codes\custom_methods.py changed, reloading.
+INFO 2025-09-28 17:43:10,555 autoreload 6540 5300 Watching for file changes with StatReloader
+INFO 2025-09-28 17:43:13,822 autoreload 6540 5300 D:\Projects\Current Projects\NDAS - Project\NDAS\ndas\custom_codes\custom_methods.py changed, reloading.
+INFO 2025-09-28 17:43:14,584 autoreload 13100 4780 Watching for file changes with StatReloader
+INFO 2025-09-28 17:43:17,206 autoreload 13100 4780 D:\Projects\Current Projects\NDAS - Project\NDAS\ndas\custom_codes\custom_methods.py changed, reloading.
+INFO 2025-09-28 17:43:18,027 autoreload 15592 1068 Watching for file changes with StatReloader
+INFO 2025-09-28 17:45:18,732 basehttp 15592 11944 "GET /video/manager/ HTTP/1.1" 302 0
+INFO 2025-09-28 17:45:18,769 basehttp 15592 11944 "GET /users/login/?next=/video/manager/ HTTP/1.1" 200 15725
+INFO 2025-09-28 17:45:21,166 basehttp 15592 11944 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-28 17:45:21,355 basehttp 15592 11944 "GET / HTTP/1.1" 200 51069
+INFO 2025-09-28 17:45:23,954 basehttp 15592 11944 "GET /video/manager/ HTTP/1.1" 200 58195
+INFO 2025-09-28 17:47:36,225 basehttp 15592 8504 "GET /video/manager/ HTTP/1.1" 200 58253
+INFO 2025-09-28 17:48:15,401 autoreload 15592 1068 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 17:48:16,176 autoreload 17204 2992 Watching for file changes with StatReloader
+INFO 2025-09-28 17:50:55,612 basehttp 17204 7908 "GET /video/manager/ HTTP/1.1" 302 0
+INFO 2025-09-28 17:50:55,626 basehttp 17204 7908 "GET /users/login/?next=/video/manager/ HTTP/1.1" 200 15725
+INFO 2025-09-28 17:50:58,366 basehttp 17204 7908 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-28 17:50:58,553 basehttp 17204 7908 "GET / HTTP/1.1" 200 51069
+INFO 2025-09-28 17:51:01,215 basehttp 17204 7908 "GET /video/manager/ HTTP/1.1" 200 58253
+INFO 2025-09-28 17:51:44,789 basehttp 17204 10348 "GET /video/manager/?search=&status=&uploader=&date_from=&date_to=&bookmarked_only=1 HTTP/1.1" 200 44940
+INFO 2025-09-28 17:51:46,572 basehttp 17204 10348 "GET /video/manager/?search=&status=&uploader=&date_from=&date_to= HTTP/1.1" 200 58253
+INFO 2025-09-28 17:53:48,651 basehttp 17204 11104 "GET /video/manager/?search=&status=&uploader=&date_from=&date_to= HTTP/1.1" 200 58334
+INFO 2025-09-28 17:53:56,760 basehttp 17204 11448 "GET /video/manager/?search=&status=&uploader=&date_from=&date_to=&bookmarked_only=1 HTTP/1.1" 200 45021
+INFO 2025-09-28 17:53:58,520 basehttp 17204 11448 "GET /video/manager/?search=&status=&uploader=&date_from=&date_to= HTTP/1.1" 200 58334
+INFO 2025-09-28 17:54:51,873 basehttp 17204 5216 "GET /video/manager/?search=&status=&uploader=&date_from=&date_to= HTTP/1.1" 200 58470
+INFO 2025-09-28 17:54:53,164 basehttp 17204 5216 "GET /video/manager/?search=&status=&uploader=&date_from=&date_to= HTTP/1.1" 200 58470
+INFO 2025-09-28 17:55:03,678 basehttp 17204 16484 "GET /video/manager/?search=&status=&uploader=&date_from=&date_to=&bookmarked_only=1 HTTP/1.1" 200 45157
+INFO 2025-09-28 17:55:05,444 basehttp 17204 532 "GET /video/manager/?search=&status=&uploader=&date_from=&date_to= HTTP/1.1" 200 58470
+INFO 2025-09-28 17:57:06,370 basehttp 17204 3724 "GET /video/manager/?search=&status=&uploader=&date_from=&date_to= HTTP/1.1" 200 58568
+INFO 2025-09-28 17:57:08,516 basehttp 17204 3724 "GET /video/manager/?search=&status=&uploader=&date_from=&date_to= HTTP/1.1" 200 58568
+INFO 2025-09-28 17:57:11,179 basehttp 17204 3724 "GET /video/manager/?search=&status=&uploader=&date_from=&date_to=&bookmarked_only=1 HTTP/1.1" 200 45540
+INFO 2025-09-28 17:57:17,465 basehttp 17204 4044 "GET /video/manager/ HTTP/1.1" 200 58568
+INFO 2025-09-28 17:57:21,831 basehttp 17204 4044 "GET /video/manager/?search=&status=new&uploader=&date_from=&date_to= HTTP/1.1" 200 50541
+INFO 2025-09-28 18:00:07,786 basehttp 17204 4044 "GET /video/manager/?search=&status=new&uploader=&date_from=&date_to= HTTP/1.1" 200 50496
+INFO 2025-09-28 18:00:20,537 basehttp 17204 4044 "GET /video/manager/?search=&status=new&uploader=1&date_from=&date_to= HTTP/1.1" 200 50792
+INFO 2025-09-28 18:00:25,016 basehttp 17204 4044 "GET /video/manager/ HTTP/1.1" 200 58513
+INFO 2025-09-28 18:01:57,271 basehttp 17204 5276 "GET /video/manager/ HTTP/1.1" 200 58540
+INFO 2025-09-28 18:01:59,678 basehttp 17204 5276 "GET /video/manager/?search=&status=new&uploader=&date_from=&date_to= HTTP/1.1" 200 50513
+INFO 2025-09-28 18:02:03,200 basehttp 17204 8360 "GET /video/manager/?search=&status=new&uploader=1&date_from=&date_to= HTTP/1.1" 200 50802
+INFO 2025-09-28 18:02:09,478 basehttp 17204 8360 "GET /video/manager/?search=&status=new&uploader=1&date_from=2025-09-10&date_to= HTTP/1.1" 200 42800
+INFO 2025-09-28 18:02:15,533 basehttp 17204 2416 "GET /video/manager/ HTTP/1.1" 200 58540
+INFO 2025-09-28 18:02:19,417 basehttp 17204 2416 "GET /video/manager/?search=&status=&uploader=&date_from=&date_to= HTTP/1.1" 200 58540
+INFO 2025-09-28 18:02:21,854 basehttp 17204 14568 "GET /video/manager/?search=&status=new&uploader=&date_from=&date_to= HTTP/1.1" 200 50513
+INFO 2025-09-28 18:02:26,327 basehttp 17204 14568 "GET /video/manager/?search=&status=assessed&uploader=&date_from=&date_to= HTTP/1.1" 200 50917
+INFO 2025-09-28 18:05:34,546 autoreload 17204 2992 D:\Projects\Current Projects\NDAS - Project\NDAS\ndas\custom_codes\custom_methods.py changed, reloading.
+INFO 2025-09-28 18:05:35,504 autoreload 4604 1444 Watching for file changes with StatReloader
+INFO 2025-09-28 18:05:45,300 autoreload 4604 1444 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 18:05:46,111 autoreload 17348 2656 Watching for file changes with StatReloader
+INFO 2025-09-28 18:06:04,083 autoreload 17348 2656 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 18:06:05,019 autoreload 3904 6348 Watching for file changes with StatReloader
+INFO 2025-09-28 18:07:38,636 autoreload 3904 6348 D:\Projects\Current Projects\NDAS - Project\NDAS\ndas\custom_codes\custom_methods.py changed, reloading.
+INFO 2025-09-28 18:07:39,612 autoreload 3436 6708 Watching for file changes with StatReloader
+INFO 2025-09-28 18:10:36,191 autoreload 3436 6708 D:\Projects\Current Projects\NDAS - Project\NDAS\ndas\custom_codes\custom_methods.py changed, reloading.
+INFO 2025-09-28 18:10:36,977 autoreload 10008 10068 Watching for file changes with StatReloader
+INFO 2025-09-28 18:10:43,713 autoreload 10008 10068 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 18:10:44,674 autoreload 8504 13328 Watching for file changes with StatReloader
+INFO 2025-09-28 18:10:54,476 autoreload 8504 13328 D:\Projects\Current Projects\NDAS - Project\NDAS\video\models.py changed, reloading.
+INFO 2025-09-28 18:10:55,400 autoreload 1540 12004 Watching for file changes with StatReloader
+INFO 2025-09-28 18:12:50,978 basehttp 1540 16236 "GET /video/manager/?search=&status=assessed&uploader=&date_from=&date_to= HTTP/1.1" 302 0
+INFO 2025-09-28 18:12:51,026 basehttp 1540 16236 "GET /users/login/?next=/video/manager/%3Fsearch%3D%26status%3Dassessed%26uploader%3D%26date_from%3D%26date_to%3D HTTP/1.1" 200 15725
+INFO 2025-09-28 18:12:53,443 basehttp 1540 16236 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-28 18:12:53,606 basehttp 1540 16236 "GET / HTTP/1.1" 200 51069
+INFO 2025-09-28 18:12:56,074 basehttp 1540 16236 "GET /attachment/manager/ HTTP/1.1" 200 67451
+INFO 2025-09-28 18:12:56,980 basehttp 1540 16236 "GET /video/manager/ HTTP/1.1" 200 58540
+INFO 2025-09-28 18:13:13,922 basehttp 1540 16236 "GET /video/view/6/ HTTP/1.1" 200 50393
+INFO 2025-09-28 18:13:29,657 basehttp 1540 16236 - Broken pipe from ('127.0.0.1', 64771)
+INFO 2025-09-28 18:13:44,865 basehttp 1540 6860 "GET /patient/view/2/ HTTP/1.1" 200 107752
+INFO 2025-09-28 18:13:58,663 basehttp 1540 6860 - Broken pipe from ('127.0.0.1', 49904)
+INFO 2025-09-28 18:14:06,016 basehttp 1540 17196 "GET /video/edit/6/ HTTP/1.1" 200 55016
+INFO 2025-09-28 18:14:31,128 basehttp 1540 17196 "POST /video/edit/6/ HTTP/1.1" 200 89
+INFO 2025-09-28 18:14:32,897 basehttp 1540 17196 "GET /video/view/6/ HTTP/1.1" 200 50948
+INFO 2025-09-28 18:14:48,390 basehttp 1540 17196 - Broken pipe from ('127.0.0.1', 60749)
+INFO 2025-09-28 18:16:04,142 basehttp 1540 3508 "GET /video/view/6/ HTTP/1.1" 200 50382
+INFO 2025-09-28 18:16:19,604 basehttp 1540 3508 - Broken pipe from ('127.0.0.1', 54994)
+INFO 2025-09-28 18:16:20,450 basehttp 1540 8708 "GET /bookmarks/add/6/Video/ HTTP/1.1" 200 45394
+INFO 2025-09-28 18:16:24,724 basehttp 1540 8708 "POST /bookmarks/add/6/Video/ HTTP/1.1" 302 0
+INFO 2025-09-28 18:16:24,872 basehttp 1540 8708 "GET /bookmarks/view/3/ HTTP/1.1" 200 42206
+INFO 2025-09-28 18:16:29,619 basehttp 1540 8708 "GET /video/view/6/ HTTP/1.1" 200 50374
+INFO 2025-09-28 18:16:43,375 basehttp 1540 8528 "GET /video/manager/patient/2/ HTTP/1.1" 200 46318
+INFO 2025-09-28 18:16:43,406 basehttp 1540 8708 - Broken pipe from ('127.0.0.1', 54220)
+INFO 2025-09-28 18:16:56,876 basehttp 1540 8528 - Broken pipe from ('127.0.0.1', 61201)
+INFO 2025-09-28 18:17:05,704 basehttp 1540 14980 "GET /media/videos/2025/09/1_-_Introduction_VideoAce_Essays_Foundation_Academic_Writing_Ethical_AI_Prompts.mkv HTTP/1.1" 200 95297306
+INFO 2025-09-28 18:18:17,500 basehttp 1540 14980 "GET /video/view/6/ HTTP/1.1" 200 50312
+INFO 2025-09-28 18:18:29,722 basehttp 1540 1116 - Broken pipe from ('127.0.0.1', 61207)
+INFO 2025-09-28 18:18:32,911 basehttp 1540 14980 - Broken pipe from ('127.0.0.1', 54866)
+INFO 2025-09-28 18:19:48,502 basehttp 1540 1648 "GET /video/view/6/ HTTP/1.1" 200 50341
+INFO 2025-09-28 18:20:04,783 basehttp 1540 1648 - Broken pipe from ('127.0.0.1', 49926)
+INFO 2025-09-28 18:20:11,760 basehttp 1540 6556 "GET /video/view/6/ HTTP/1.1" 200 50309
+INFO 2025-09-28 18:20:31,635 basehttp 1540 6556 - Broken pipe from ('127.0.0.1', 65235)
+INFO 2025-09-28 18:20:36,009 basehttp 1540 1692 "GET /video/view/6/ HTTP/1.1" 200 49652
+INFO 2025-09-28 18:20:44,936 basehttp 1540 3656 "GET /users/contact-developer/ HTTP/1.1" 200 27782
+INFO 2025-09-28 18:20:44,961 basehttp 1540 1692 - Broken pipe from ('127.0.0.1', 54421)
+INFO 2025-09-28 18:21:21,459 basehttp 1540 3656 "GET /video/view/6/ HTTP/1.1" 200 49589
+INFO 2025-09-28 18:21:36,878 basehttp 1540 3656 - Broken pipe from ('127.0.0.1', 58901)
+INFO 2025-09-28 18:21:39,352 basehttp 1540 1708 "GET /video/edit/6/ HTTP/1.1" 200 55003
+INFO 2025-09-28 18:22:20,998 basehttp 1540 1708 "GET /video/edit/6/ HTTP/1.1" 200 54281
+INFO 2025-09-28 18:22:28,466 basehttp 1540 1708 "GET /video/edit/6/ HTTP/1.1" 200 54281
+INFO 2025-09-28 18:22:31,131 basehttp 1540 1708 "GET /video/manager/ HTTP/1.1" 200 58905
+INFO 2025-09-28 19:15:01,122 basehttp 1540 18312 "GET /video/manager/ HTTP/1.1" 200 58905
+INFO 2025-09-28 19:15:01,170 basehttp 1540 18312 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-09-28 19:15:01,171 basehttp 1540 18344 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+INFO 2025-09-28 19:15:01,171 basehttp 1540 18348 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-09-28 19:15:01,175 basehttp 1540 18356 "GET /static/js/manager.js HTTP/1.1" 304 0
+WARNING 2025-09-28 19:15:06,807 log 1540 18356 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-09-28 19:15:06,809 basehttp 1540 18356 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 15988
+INFO 2025-09-28 19:15:13,341 basehttp 1540 18128 "GET /video/manager/ HTTP/1.1" 200 58905
+WARNING 2025-09-28 19:15:13,702 log 1540 18128 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-09-28 19:15:13,703 basehttp 1540 18128 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 15988
+INFO 2025-09-28 19:16:19,287 basehttp 1540 18048 "GET /video/manager/ HTTP/1.1" 200 58905
+WARNING 2025-09-28 19:16:19,498 log 1540 18048 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-09-28 19:16:19,500 basehttp 1540 18048 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 15988
+INFO 2025-09-28 19:17:50,631 basehttp 1540 18048 "GET /video/manager/ HTTP/1.1" 200 59375
+WARNING 2025-09-28 19:17:50,844 log 1540 18048 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-09-28 19:17:50,845 basehttp 1540 18048 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 15988
+INFO 2025-09-28 19:17:58,651 basehttp 1540 18048 "GET /video/manager/?search=&status=new&uploader=&date_from=&date_to= HTTP/1.1" 200 51348
+INFO 2025-09-28 19:18:01,643 basehttp 1540 18048 "GET /video/manager/?search=&status=new&uploader=1&date_from=&date_to= HTTP/1.1" 200 51637
+INFO 2025-09-28 19:18:07,355 basehttp 1540 18048 "GET /video/manager/?search=&status=new&uploader=1&date_from=2025-09-10&date_to= HTTP/1.1" 200 43270
+INFO 2025-09-28 19:18:11,362 basehttp 1540 18048 "GET /video/manager/?search=&status=new&uploader=1&date_from=2025-09-10&date_to=2025-09-03 HTTP/1.1" 200 43289
+INFO 2025-09-28 19:18:11,944 basehttp 1540 18048 "GET /video/manager/?search=&status=new&uploader=1&date_from=2025-09-10&date_to=2025-09-03&bookmarked_only=1 HTTP/1.1" 200 43581
+INFO 2025-09-28 19:18:16,821 basehttp 1540 18048 "GET /video/manager/ HTTP/1.1" 200 59375
+INFO 2025-09-28 19:19:31,297 basehttp 1540 18048 "GET /help/article/ HTTP/1.1" 200 38156
+INFO 2025-09-28 19:19:32,951 basehttp 1540 18048 "GET /manager/bookmarks/ HTTP/1.1" 200 58418
+INFO 2025-09-28 19:19:52,402 basehttp 1540 18048 "GET /attachment/manager/ HTTP/1.1" 200 67451
+INFO 2025-09-28 19:20:01,144 basehttp 1540 18048 "GET /attachment/view/3/ HTTP/1.1" 200 61501
+INFO 2025-09-28 19:20:01,746 basehttp 1540 18048 "GET /media/attachments/wqefqwef_video_Rasika__Administrator_2025-08-28_145513.5394690530.mp4 HTTP/1.1" 200 34974399
+INFO 2025-09-28 19:20:07,597 basehttp 1540 18048 "GET /attachment/manager/ HTTP/1.1" 200 67451
+INFO 2025-09-28 19:23:44,748 autoreload 1540 12004 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py changed, reloading.
+INFO 2025-09-28 19:23:46,950 autoreload 4028 7636 Watching for file changes with StatReloader
+INFO 2025-09-28 19:24:05,941 autoreload 4028 7636 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py changed, reloading.
+INFO 2025-09-28 19:24:06,772 autoreload 18312 2808 Watching for file changes with StatReloader
+INFO 2025-09-28 19:28:51,528 basehttp 18312 9344 "GET /attachment/manager/ HTTP/1.1" 302 0
+INFO 2025-09-28 19:28:51,580 basehttp 18312 9344 "GET /users/login/?next=/attachment/manager/ HTTP/1.1" 200 15725
+INFO 2025-09-28 19:28:51,614 basehttp 18312 9344 "GET /static/css/login.css HTTP/1.1" 304 0
+INFO 2025-09-28 19:28:51,617 basehttp 18312 16896 "GET /static/js/login.js HTTP/1.1" 304 0
+INFO 2025-09-28 19:28:54,473 basehttp 18312 16896 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-28 19:28:54,745 basehttp 18312 16896 "GET / HTTP/1.1" 200 51069
+INFO 2025-09-28 19:28:57,215 basehttp 18312 16896 "GET /attachment/manager/ HTTP/1.1" 200 48876
+INFO 2025-09-28 19:29:05,759 basehttp 18312 16896 "GET /video/manager/ HTTP/1.1" 200 59375
+INFO 2025-09-28 19:29:11,961 basehttp 18312 16896 "GET /video/manager/ HTTP/1.1" 200 59375
+INFO 2025-09-28 19:29:16,387 basehttp 18312 16896 "GET /attachment/manager/ HTTP/1.1" 200 48876
+INFO 2025-09-28 19:29:22,311 basehttp 18312 16896 "GET /manager/bookmarks/ HTTP/1.1" 200 58418
+INFO 2025-09-28 19:29:25,258 basehttp 18312 16896 "GET /attachment/manager/ HTTP/1.1" 200 48876
+INFO 2025-09-28 19:29:29,178 basehttp 18312 16896 "GET /attachment/manager/?search=&type=video&uploader=&date_from=&date_to= HTTP/1.1" 200 46232
+INFO 2025-09-28 19:29:34,204 basehttp 18312 16896 "GET /attachment/manager/?search=&type=video&uploader=1&date_from=&date_to= HTTP/1.1" 200 46526
+INFO 2025-09-28 19:29:36,370 basehttp 18312 16896 "GET /attachment/manager/?search=&type=video&uploader=1&date_from=&date_to=&bookmarked_only=1 HTTP/1.1" 200 43418
+INFO 2025-09-28 19:29:37,697 basehttp 18312 16896 "GET /attachment/manager/?search=&type=video&uploader=1&date_from=&date_to= HTTP/1.1" 200 46526
+INFO 2025-09-28 19:29:42,021 basehttp 18312 16896 "GET /attachment/manager/ HTTP/1.1" 200 48876
+INFO 2025-09-28 19:29:51,759 basehttp 18312 16896 "GET /attachment/edit/3/ HTTP/1.1" 200 60401
+INFO 2025-09-28 19:30:58,363 basehttp 18312 16896 "GET /attachment/edit/3/ HTTP/1.1" 200 59768
+INFO 2025-09-28 19:31:08,402 basehttp 18312 16896 "GET /attachment/view/3/ HTTP/1.1" 200 61501
+INFO 2025-09-28 19:31:09,061 basehttp 18312 16896 "GET /media/attachments/wqefqwef_video_Rasika__Administrator_2025-08-28_145513.5394690530.mp4 HTTP/1.1" 200 34974399
+INFO 2025-09-28 19:32:10,962 basehttp 18312 16896 "GET /attachment/view/3/ HTTP/1.1" 200 60864
+INFO 2025-09-28 19:32:36,780 basehttp 18312 16896 "GET /video/manager/ HTTP/1.1" 200 59375
+INFO 2025-09-28 19:32:39,178 basehttp 18312 16896 "GET /attachment/manager/ HTTP/1.1" 200 48876
+INFO 2025-09-28 19:32:41,562 basehttp 18312 16896 "GET /manager/bookmarks/ HTTP/1.1" 200 58418
+INFO 2025-09-28 19:32:44,773 basehttp 18312 16896 "GET /attachment/manager/ HTTP/1.1" 200 48876
+INFO 2025-09-28 19:32:47,045 basehttp 18312 16896 "GET /video/manager/ HTTP/1.1" 200 59375
+INFO 2025-09-28 19:32:57,562 basehttp 18312 16896 "GET /manager/assessment/ HTTP/1.1" 200 57962
+INFO 2025-09-28 19:33:15,241 basehttp 18312 16896 "GET /manager/assessment/ HTTP/1.1" 200 57962
+INFO 2025-09-28 19:33:16,530 basehttp 18312 16896 "GET /hine/manager/ HTTP/1.1" 200 48209
+INFO 2025-09-28 19:33:24,683 basehttp 18312 16896 "GET /da/manager/ HTTP/1.1" 200 41649
+INFO 2025-09-28 19:33:27,165 basehttp 18312 16896 "GET /cdic/manager/ HTTP/1.1" 200 42230
+INFO 2025-09-28 19:33:29,205 basehttp 18312 16896 "GET /manager/assessment/ HTTP/1.1" 200 57962
+INFO 2025-09-28 19:33:48,322 basehttp 18312 16896 "GET /manager/assessment/ HTTP/1.1" 200 57962
+INFO 2025-09-28 19:33:53,072 basehttp 18312 16896 "GET /assessment/view/3/ HTTP/1.1" 200 50075
+INFO 2025-09-28 19:52:42,228 basehttp 18312 19684 "GET /manager/assessment/ HTTP/1.1" 200 57962
+INFO 2025-09-28 19:58:29,471 autoreload 18312 2808 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py changed, reloading.
+INFO 2025-09-28 19:58:30,456 autoreload 2984 3732 Watching for file changes with StatReloader
+INFO 2025-09-28 19:58:50,491 autoreload 2984 3732 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\urls.py changed, reloading.
+INFO 2025-09-28 19:58:51,227 autoreload 19444 4380 Watching for file changes with StatReloader
+INFO 2025-09-28 20:02:24,561 autoreload 19444 4380 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py changed, reloading.
+INFO 2025-09-28 20:02:25,369 autoreload 11880 19524 Watching for file changes with StatReloader
+INFO 2025-09-28 20:04:09,078 basehttp 11880 19464 "GET /manager/assessment/ HTTP/1.1" 302 0
+INFO 2025-09-28 20:04:09,104 basehttp 11880 19464 "GET /users/login/?next=/manager/assessment/ HTTP/1.1" 200 15725
+INFO 2025-09-28 20:04:11,685 basehttp 11880 19464 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-28 20:04:11,924 basehttp 11880 19464 "GET / HTTP/1.1" 200 51069
+INFO 2025-09-28 20:04:16,134 basehttp 11880 19464 "GET /manager/assessment/ HTTP/1.1" 200 59737
+INFO 2025-09-28 20:04:23,236 basehttp 11880 19464 "GET /manager/assessment/?search=254 HTTP/1.1" 200 43826
+INFO 2025-09-28 20:04:27,190 basehttp 11880 19464 "GET /manager/assessment/ HTTP/1.1" 200 59737
+INFO 2025-09-28 20:04:33,122 basehttp 11880 19464 "GET /manager/assessment/recent HTTP/1.1" 200 43912
+ERROR 2025-09-28 20:04:37,054 log 11880 19464 Internal Server Error: /manager/assessment/normal
+Traceback (most recent call last):
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\contrib\auth\decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py", line 1342, in assessment_manager_normal
+    assessment_list = GMAssessment.objects.filter(isDiagnosisNormal=True)
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\manager.py", line 85, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\query.py", line 1421, in filter
+    return self._filter_or_exclude(False, args, kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\query.py", line 1439, in _filter_or_exclude
+    clone._filter_or_exclude_inplace(negate, args, kwargs)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\query.py", line 1446, in _filter_or_exclude_inplace
+    self._query.add_q(Q(*args, **kwargs))
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1532, in add_q
+    clause, _ = self._add_q(q_object, self.used_aliases)
+                ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1562, in _add_q
+    child_clause, needed_inner = self.build_filter(
+                                 ~~~~~~~~~~~~~~~~~^
+        child,
+        ^^^^^^
+    ...<5 lines>...
+        check_filterable=check_filterable,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1407, in build_filter
+    lookups, parts, reffed_expression = self.solve_lookup_type(arg)
+                                        ~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1217, in solve_lookup_type
+    _, field, _, lookup_parts = self.names_to_path(lookup_splitted, self.get_meta())
+                                ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\Current Projects\NDAS - Project\NDAS\venv\Lib\site-packages\django\db\models\sql\query.py", line 1709, in names_to_path
+    raise FieldError(
+    ...<2 lines>...
+    )
+django.core.exceptions.FieldError: Cannot resolve keyword 'isDiagnosisNormal' into field. Choices are: added_by, added_by_id, created_at, date_of_assessment, diagnosis, diagnosis_conclusion, diagnosis_other, id, last_edit_by, last_edit_by_id, management_plan, next_assessment_date, parent_informed, patient, patient_id, updated_at, video_file, video_file_id
+ERROR 2025-09-28 20:04:37,068 basehttp 11880 19464 "GET /manager/assessment/normal HTTP/1.1" 500 131938
+INFO 2025-09-28 20:06:16,092 autoreload 11880 19524 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\views.py changed, reloading.
+INFO 2025-09-28 20:06:16,902 autoreload 1500 20328 Watching for file changes with StatReloader
+INFO 2025-09-28 20:07:42,116 basehttp 1500 16424 "GET /manager/assessment/normal HTTP/1.1" 302 0
+INFO 2025-09-28 20:07:42,131 basehttp 1500 16424 "GET /users/login/?next=/manager/assessment/normal HTTP/1.1" 200 15725
+INFO 2025-09-28 20:07:44,732 basehttp 1500 16424 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-09-28 20:07:44,904 basehttp 1500 16424 "GET / HTTP/1.1" 200 51069
+INFO 2025-09-28 20:07:47,443 basehttp 1500 16424 "GET /manager/assessment/ HTTP/1.1" 200 59723
+INFO 2025-09-28 20:07:51,264 basehttp 1500 16424 "GET /manager/assessment/recent HTTP/1.1" 200 43912
+INFO 2025-09-28 20:07:55,624 basehttp 1500 16424 "GET /manager/assessment/normal HTTP/1.1" 200 55315
+INFO 2025-09-28 20:08:07,752 basehttp 1500 16424 "GET /manager/assessment/abnormal HTTP/1.1" 200 50576
+INFO 2025-09-28 20:08:18,681 basehttp 1500 16424 "GET /manager/assessment/informed HTTP/1.1" 200 50564
+INFO 2025-09-28 20:08:25,362 basehttp 1500 16424 "GET /manager/assessment/not-informed HTTP/1.1" 200 55318
+INFO 2025-09-28 20:08:32,315 basehttp 1500 16424 "GET /manager/assessment/ HTTP/1.1" 200 59723
+INFO 2025-09-28 20:11:58,140 basehttp 1500 16424 "GET /manager/assessment/ HTTP/1.1" 200 59203
+INFO 2025-09-28 20:11:59,269 basehttp 1500 16424 "GET /manager/assessment/ HTTP/1.1" 200 59203
+INFO 2025-09-28 20:11:59,741 basehttp 1500 16424 "GET /manager/assessment/ HTTP/1.1" 200 59203
+INFO 2025-09-28 20:12:00,041 basehttp 1500 16424 "GET /manager/assessment/ HTTP/1.1" 200 59203
+INFO 2025-09-28 20:12:03,904 basehttp 1500 16424 "GET /bookmarks/add/3/GMA/ HTTP/1.1" 200 45390
+INFO 2025-09-28 20:12:09,043 basehttp 1500 16424 - Broken pipe from ('127.0.0.1', 63078)
+INFO 2025-09-28 20:12:09,179 basehttp 1500 9276 "POST /bookmarks/add/3/GMA/ HTTP/1.1" 200 45814
+INFO 2025-09-28 20:12:16,905 basehttp 1500 9276 "GET /bookmarks/add/3/GMA/ HTTP/1.1" 200 45390
+INFO 2025-09-28 20:12:19,926 basehttp 1500 9276 "GET /manager/bookmarks/ HTTP/1.1" 200 62060
+INFO 2025-09-28 20:12:34,295 basehttp 1500 9276 "GET /assessment/view/3/ HTTP/1.1" 200 50075
+INFO 2025-09-28 20:12:41,209 basehttp 1500 9276 "GET /bookmarks/add/3/Assessment/ HTTP/1.1" 302 0
+INFO 2025-09-28 20:12:41,416 basehttp 1500 9276 "GET /manager/patient/ HTTP/1.1" 200 60627
+INFO 2025-09-28 20:13:06,737 basehttp 1500 9276 "GET /manager/patient/ HTTP/1.1" 200 60313
+INFO 2025-09-28 20:13:08,869 basehttp 1500 9276 "GET /manager/patient/ HTTP/1.1" 200 60313
+INFO 2025-09-28 20:13:12,446 basehttp 1500 9276 "GET /manager/bookmarks/ HTTP/1.1" 200 62060
+INFO 2025-09-28 20:13:20,241 basehttp 1500 9276 "GET /bookmarks/view/4/ HTTP/1.1" 200 41908
+INFO 2025-09-28 20:13:26,305 basehttp 1500 9276 "GET /bookmarks/edit/4/ HTTP/1.1" 200 45310
+INFO 2025-09-28 20:13:53,671 basehttp 1500 9276 "POST /bookmarks/edit/4/ HTTP/1.1" 302 0
+INFO 2025-09-28 20:13:53,795 basehttp 1500 9276 "GET /bookmarks/view/4/ HTTP/1.1" 200 42647
+INFO 2025-09-28 20:14:00,033 basehttp 1500 9276 "GET /manager/bookmarks/ HTTP/1.1" 200 62265
+INFO 2025-09-28 20:14:08,981 basehttp 1500 9276 "GET /manager/assessment/ HTTP/1.1" 200 59376
+INFO 2025-09-28 20:14:19,261 basehttp 1500 9276 "GET /assessment/view/3/ HTTP/1.1" 200 50075
+INFO 2025-09-28 20:14:54,431 basehttp 1500 9276 "GET /manager/assessment/ HTTP/1.1" 200 59376
+INFO 2025-09-28 20:14:56,583 basehttp 1500 9276 "GET /manager/assessment/ HTTP/1.1" 200 59376
+INFO 2025-09-28 20:14:57,553 basehttp 1500 9276 "GET /manager/assessment/ HTTP/1.1" 200 59376
+INFO 2025-09-28 20:15:01,507 basehttp 1500 9276 "GET /assessment/view/3/ HTTP/1.1" 200 50075

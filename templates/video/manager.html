@@ -10,15 +10,74 @@
   <div class="card mb-4">
     <div class="card-header bg-info">
       <div class="d-flex justify-content-between align-items-center">
-        <h3 class="card-title mb-0">
-          <i class="fas fa-video"></i> 
+        <h3 class="card-title text-white">
+          <i class="fas fa-video mr-2"></i>
           {% if patient %}
             Videos for {{ patient.baby_name }}
           {% else %}
             Video Manager
           {% endif %}
-          {% if total_count %}
-            <span class="badge badge-light ml-2">{{ total_count }} video{{ total_count|pluralize }}</span>
+          {% if file_list %}
+            <span class="badge badge-light ml-2">{{ file_list.paginator.count }} video{{ file_list.paginator.count|pluralize }}</span>
+          {% else %}
+            <span class="badge badge-light ml-2">0 videos</span>
+          {% endif %}
+
+          {% if search_query %}
+          <small class="text-light ml-2">
+            <i class="fas fa-search"></i> "{{ search_query }}"
+            <a href="{% if patient %}{% url 'video:manager-by-patient' patient.id %}{% else %}{% url 'video:manager' %}{% endif %}" class="text-light ml-1" title="Clear search">
+              <i class="fas fa-times"></i>
+            </a>
+          </small>
+          {% endif %}
+
+          {% if status_filter %}
+          <small class="text-light ml-2">
+            <i class="fas fa-filter"></i>
+            {% if status_filter == 'new' %}
+              <i class="fas fa-plus mr-1"></i>New Videos
+            {% elif status_filter == 'assessed' %}
+              <i class="fas fa-check mr-1"></i>Assessed Videos
+            {% endif %}
+            <a href="{% if patient %}{% url 'video:manager-by-patient' patient.id %}{% else %}{% url 'video:manager' %}{% endif %}" class="text-light ml-1" title="Clear filter">
+              <i class="fas fa-times"></i>
+            </a>
+          </small>
+          {% endif %}
+
+          {% if uploader_filter %}
+          <small class="text-light ml-2">
+            <i class="fas fa-user"></i> Uploader Filter
+            <a href="{% if patient %}{% url 'video:manager-by-patient' patient.id %}{% else %}{% url 'video:manager' %}{% endif %}" class="text-light ml-1" title="Clear uploader filter">
+              <i class="fas fa-times"></i>
+            </a>
+          </small>
+          {% endif %}
+
+          {% if date_from or date_to %}
+          <small class="text-light ml-2">
+            <i class="fas fa-calendar"></i>
+            {% if date_from and date_to %}
+              {{ date_from }} to {{ date_to }}
+            {% elif date_from %}
+              From {{ date_from }}
+            {% elif date_to %}
+              Until {{ date_to }}
+            {% endif %}
+            <a href="{% if patient %}{% url 'video:manager-by-patient' patient.id %}{% else %}{% url 'video:manager' %}{% endif %}" class="text-light ml-1" title="Clear date filter">
+              <i class="fas fa-times"></i>
+            </a>
+          </small>
+          {% endif %}
+
+          {% if bookmarked_filter %}
+          <small class="text-light ml-2">
+            <i class="fas fa-bookmark"></i> Bookmarked Only
+            <a href="{% if patient %}{% url 'video:manager-by-patient' patient.id %}{% else %}{% url 'video:manager' %}{% endif %}" class="text-light ml-1" title="Clear bookmark filter">
+              <i class="fas fa-times"></i>
+            </a>
+          </small>
           {% endif %}
         </h3>
         <!-- Quick Actions Dropdown -->
@@ -29,7 +88,7 @@
     </div>
     <div class="card-body">
       <form method="get" class="row">
-        <div class="col-md-3 mb-2">
+        <div class="col-md-2 mb-2">
           <input type="text" name="search" class="form-control" placeholder="Search videos..." value="{{search_query}}">
         </div>
         <div class="col-md-2 mb-2">
@@ -53,11 +112,11 @@
         <div class="col-md-2 mb-2">
           <input type="date" name="date_to" class="form-control" placeholder="To Date" value="{{date_to}}">
         </div>
-        <div class="col-md-2 mb-2">
+        <div class="col-md-1 mb-2">
           <div class="form-check mt-2">
-            <input type="checkbox" name="bookmarked_only" class="form-check-input" id="bookmarked_filter" value="1" {% if bookmarked_filter %}checked{% endif %}>
-            <label class="form-check-label" for="bookmarked_filter">
-              <i class="fas fa-bookmark text-primary"></i> Bookmarked Only
+            <input type="checkbox" name="bookmarked_only" class="form-check-input" id="bookmarked_filter" value="1" {% if bookmarked_filter %}checked{% endif %} style="transform: scale(1.5); margin-right: 8px;" data-toggle="tooltip" title="Filter to show only bookmarked videos">
+            <label class="form-check-label" for="bookmarked_filter" style="cursor: pointer;" data-toggle="tooltip" title="Filter to show only bookmarked videos">
+              <i class="fas fa-bookmark text-primary fa-lg"></i>
             </label>
           </div>
         </div>
@@ -132,13 +191,13 @@
         <div class="d-flex align-items-center">
           
           <!-- Assessment Status -->
-          {% comment %} <div class="ml-2">
+          <div class="ml-2">
             {% if video.is_new_file %}
               <span class="badge badge-danger" data-toggle="tooltip" title="New - Not used in assessment">New</span>
             {% else %}
               <span class="badge badge-success" data-toggle="tooltip" title="Used in assessment">Assessed</span>
             {% endif %}
-          </div> {% endcomment %}
+          </div>
 
           <!-- Bookmark Status -->
           {% if video.is_bookmarked %}
@@ -146,13 +205,13 @@
               {% with bookmark=video.get_bookmark %}
                 {% if bookmark %}
                   <a href="{% url 'bookmark-view' bookmark.id %}" class="text-decoration-none">
-                    <span class="badge badge-primary" data-toggle="tooltip" title="Bookmarked - Click to view">
-                      <i class="fas fa-bookmark"></i> Bookmarked
+                    <span data-toggle="tooltip" title="Bookmarked - Click to view">
+                      <i class="fas fa-bookmark"></i>
                     </span>
                   </a>
                 {% else %}
                   <span class="badge badge-primary">
-                    <i class="fas fa-bookmark"></i> Bookmarked
+                    <i class="fas fa-bookmark"></i>
                   </span>
                 {% endif %}
               {% endwith %}
@@ -190,17 +249,18 @@
         {% endif %}
       </td>
 
-      <td class="d-none d-lg-table-cell">
+      <td class="d-none d-sm-table-cell">
         {{video.recorded_on|date:"M d, Y"}}
-        <br><small class="text-muted">{{video.recorded_on|date:"H:i"}}</small>
-        {% if video.age_on_recording %}
-          <br><small class="text-info">{{video.age_on_recording}}</small>
+        {% if video.age_string_recorded %}
+          <br><small class="text-info">{{video.age_string_recorded}}</small>
         {% endif %}
       </td>
 
       <td class="d-none d-sm-table-cell">
         {{video.created_at|date:"M d, Y"}}
-        <br><small class="text-muted">{{video.created_at|date:"H:i"}}</small>
+        {% if video.age_string_uploaded %}
+          <br><small class="text-info">{{video.age_string_uploaded}}</small>
+        {% endif %}
       </td>
 
       <td class="d-none d-sm-table-cell">
@@ -333,21 +393,28 @@
 {% block extra_js %}
 <script src="{% static 'js/manager.js' %}"></script>
 <script>
-// Initialize tooltips
-$(function () {
-  $('[data-toggle="tooltip"]').tooltip();
-});
-
-// Auto-submit search form on Enter key
-$('form input[name="search"]').on('keypress', function(e) {
-  if (e.which === 13) {
-    $(this).closest('form').submit();
+// Wait for document ready and ensure jQuery is available
+$(document).ready(function() {
+  // Check if jQuery is loaded
+  if (typeof $ === 'undefined') {
+    console.error('jQuery not loaded for video manager');
+    return;
   }
-});
 
-// Auto-submit form when filters change
-$('form select, form input[type="checkbox"]').on('change', function() {
-  $(this).closest('form').submit();
+  // Initialize tooltips
+  $('[data-toggle="tooltip"]').tooltip();
+
+  // Auto-submit search form on Enter key
+  $('form input[name="search"]').on('keypress', function(e) {
+    if (e.which === 13) {
+      $(this).closest('form').submit();
+    }
+  });
+
+  // Auto-submit form when filters change
+  $('form select, form input[type="checkbox"]').on('change', function() {
+    $(this).closest('form').submit();
+  });
 });
 </script>
 {% endblock extra_js %}

@@ -1,6 +1,7 @@
 import os
 from datetime import timedelta
 from django.db import models
+from django.utils import timezone
 from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
@@ -8,6 +9,7 @@ from django.urls import reverse
 from django.utils.html import format_html
 from ndas.custom_codes.Custom_abstract_class import TimeStampedModel, UserTrackingMixin
 from ndas.custom_codes.validators import validate_video_file, validate_recording_date
+from ndas.custom_codes.custom_methods import calculate_age_string, extract_video_metadata, simple_video_duration_estimate
         
 from ndas.custom_codes.choice import PROCESSING_STATUS
 
@@ -140,7 +142,70 @@ class Video(TimeStampedModel, UserTrackingMixin):
                 self.file_size_bytes = self.video_file.size
             except (ValueError, OSError):
                 pass
-        
+
+        # Extract video metadata if video file is present and duration not set
+        if self.video_file and not self.duration_seconds:
+            try:
+                # Get the file path - handle both uploaded files and existing files
+                if hasattr(self.video_file, 'path'):
+                    file_path = self.video_file.path
+                elif hasattr(self.video_file, 'temporary_file_path'):
+                    file_path = self.video_file.temporary_file_path()
+                else:
+                    # For uploaded files that haven't been saved yet
+                    import tempfile
+                    import os
+
+                    # Create a temporary file to extract metadata
+                    with tempfile.NamedTemporaryFile(delete=False, suffix='.tmp') as temp_file:
+                        for chunk in self.video_file.chunks():
+                            temp_file.write(chunk)
+                        temp_file.flush()
+                        file_path = temp_file.name
+
+                    try:
+                        metadata = extract_video_metadata(file_path)
+                        if metadata:
+                            if metadata.get('duration_seconds'):
+                                self.duration_seconds = metadata['duration_seconds']
+                            if metadata.get('resolution') and not self.resolution:
+                                self.resolution = metadata['resolution']
+                    finally:
+                        # Clean up temporary file
+                        try:
+                            os.unlink(file_path)
+                        except:
+                            pass
+                    file_path = None  # Skip the normal metadata extraction
+
+                if file_path:
+                    metadata = extract_video_metadata(file_path)
+                    if metadata:
+                        if metadata.get('duration_seconds'):
+                            self.duration_seconds = metadata['duration_seconds']
+                        if metadata.get('resolution') and not self.resolution:
+                            self.resolution = metadata['resolution']
+                    else:
+                        # Try simple estimation as last resort
+                        estimation = simple_video_duration_estimate(file_path)
+                        if estimation and estimation.get('duration_seconds'):
+                            self.duration_seconds = estimation['duration_seconds']
+
+            except Exception as e:
+                # Log the error but don't prevent saving
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Failed to extract video metadata for {self.title}: {str(e)}")
+
+                # Try simple estimation as absolute fallback
+                try:
+                    if hasattr(self.video_file, 'path'):
+                        estimation = simple_video_duration_estimate(self.video_file.path)
+                        if estimation and estimation.get('duration_seconds'):
+                            self.duration_seconds = estimation['duration_seconds']
+                except:
+                    pass  # If estimation also fails, just continue without duration
+
         # Validate before saving
         self.clean()
         super().save(*args, **kwargs)
@@ -150,43 +215,11 @@ class Video(TimeStampedModel, UserTrackingMixin):
         if not hasattr(self.patient, 'dob_tob') or not self.recorded_on:
             return None
             
-        return self._calculate_age_string(
+        return calculate_age_string(
             self.patient.dob_tob.date(), 
-            self.recorded_on.date()
+            self.recorded_on.date(),
+            "medical"
         )
-    
-    def _calculate_age_string(self, birth_date, recording_date):
-        if recording_date < birth_date:
-            return "Invalid: Recording before birth"
-            
-        delta = recording_date - birth_date
-        total_days = delta.days
-        
-        if total_days == 0:
-            return "Same day as birth"
-        elif total_days < 7:
-            return f"{total_days} day{'s' if total_days != 1 else ''}"
-        elif total_days < 30:
-            weeks, days = divmod(total_days, 7)
-            if days == 0:
-                return f"{weeks} week{'s' if weeks != 1 else ''}"
-            return f"{weeks} week{'s' if weeks != 1 else ''} and {days} day{'s' if days != 1 else ''}"
-        elif total_days < 365:
-            months, remaining_days = divmod(total_days, 30)
-            weeks, days = divmod(remaining_days, 7)
-            if weeks == 0 and days == 0:
-                return f"{months} month{'s' if months != 1 else ''}"
-            elif days == 0:
-                return f"{months} month{'s' if months != 1 else ''} and {weeks} week{'s' if weeks != 1 else ''}"
-            return f"{months} month{'s' if months != 1 else ''} and {days} day{'s' if days != 1 else ''}"
-        else:
-            years, remaining_days = divmod(total_days, 365)
-            months, days = divmod(remaining_days, 30)
-            if months == 0 and days == 0:
-                return f"{years} year{'s' if years != 1 else ''}"
-            elif days == 0:
-                return f"{years} year{'s' if years != 1 else ''} and {months} month{'s' if months != 1 else ''}"
-            return f"{years} year{'s' if years != 1 else ''} and {months} month{'s' if months != 1 else ''}"
     
     # Cached properties to avoid repeated database hits
     def is_new_file(self):
@@ -239,4 +272,26 @@ class Video(TimeStampedModel, UserTrackingMixin):
         return self.resolution or "Unknown"
     
     def video_count(self):
-        return Video.objects.filter(video_file=self).count() or "Unknown"
+        return Video.objects.filter(patient=self.patient).count() or "Unknown"
+    
+    def age_string_recorded(self):
+        """Get formatted age string for how long ago the video was recorded."""
+        if not self.recorded_on:
+            return "Unknown"
+        
+        return calculate_age_string(
+            self.recorded_on.date(),
+            timezone.now().date(),
+            "simple"
+        )
+    
+    def age_string_uploaded(self):
+        """Get formatted age string for how long ago the video was uploaded."""
+        if not self.created_at:
+            return "Unknown"
+        
+        return calculate_age_string(
+            self.created_at.date(),
+            timezone.now().date(),
+            "simple"
+        )

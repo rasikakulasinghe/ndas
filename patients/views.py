@@ -1275,29 +1275,216 @@ def assessment_delete(request, pk):
 
 @login_required(login_url="user-login")
 def assessment_manager(request):
-    assessment_list = GMAssessment.objects.all().order_by("-id")
+    # Get search parameter
+    search_query = request.GET.get('search', '').strip()
+
+    # Filter assessments based on search query
+    if search_query:
+        assessment_list = GMAssessment.objects.filter(
+            Q(patient__baby_name__icontains=search_query) |
+            Q(patient__mother_name__icontains=search_query) |
+            Q(patient__bht__icontains=search_query) |
+            Q(patient__nnc_no__icontains=search_query)
+        ).order_by("-id")
+    else:
+        assessment_list = GMAssessment.objects.all().order_by("-id")
+
     paginator = Paginator(assessment_list, 10)
     page_number = request.GET.get("page")
     paginated_assmnt_list = paginator.get_page(page_number)
-    return render(
-        request,
-        "assessment/manager.html",
-        {"assessment_page_obj": paginated_assmnt_list},
-    )
+
+    context = {
+        "assessment_page_obj": paginated_assmnt_list,
+        "search_query": search_query,
+    }
+
+    return render(request, "assessment/manager.html", context)
+
+
+@login_required(login_url="user-login")
+def assessment_manager_recent(request):
+    # Get search parameter
+    search_query = request.GET.get('search', '').strip()
+
+    # Get assessments from last 30 days
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    assessment_list = GMAssessment.objects.filter(created_at__gte=thirty_days_ago)
+
+    # Apply search filter if provided
+    if search_query:
+        assessment_list = assessment_list.filter(
+            Q(patient__baby_name__icontains=search_query) |
+            Q(patient__mother_name__icontains=search_query) |
+            Q(patient__bht__icontains=search_query) |
+            Q(patient__nnc_no__icontains=search_query)
+        )
+
+    assessment_list = assessment_list.order_by("-id")
+    paginator = Paginator(assessment_list, 10)
+    page_number = request.GET.get("page")
+    paginated_assmnt_list = paginator.get_page(page_number)
+
+    context = {
+        "assessment_page_obj": paginated_assmnt_list,
+        "type": "RECENT",
+        "search_query": search_query,
+    }
+
+    return render(request, "assessment/manager.html", context)
+
+
+@login_required(login_url="user-login")
+def assessment_manager_normal(request):
+    # Get search parameter
+    search_query = request.GET.get('search', '').strip()
+
+    # Get assessments with normal diagnosis
+    assessment_list = GMAssessment.objects.filter(diagnosis_conclusion='NORMAL')
+
+    # Apply search filter if provided
+    if search_query:
+        assessment_list = assessment_list.filter(
+            Q(patient__baby_name__icontains=search_query) |
+            Q(patient__mother_name__icontains=search_query) |
+            Q(patient__bht__icontains=search_query) |
+            Q(patient__nnc_no__icontains=search_query)
+        )
+
+    assessment_list = assessment_list.order_by("-id")
+    paginator = Paginator(assessment_list, 10)
+    page_number = request.GET.get("page")
+    paginated_assmnt_list = paginator.get_page(page_number)
+
+    context = {
+        "assessment_page_obj": paginated_assmnt_list,
+        "type": "NORMAL",
+        "search_query": search_query,
+    }
+
+    return render(request, "assessment/manager.html", context)
+
+
+@login_required(login_url="user-login")
+def assessment_manager_abnormal(request):
+    # Get search parameter
+    search_query = request.GET.get('search', '').strip()
+
+    # Get assessments with abnormal diagnosis
+    assessment_list = GMAssessment.objects.filter(diagnosis_conclusion='ABNORMAL')
+
+    # Apply search filter if provided
+    if search_query:
+        assessment_list = assessment_list.filter(
+            Q(patient__baby_name__icontains=search_query) |
+            Q(patient__mother_name__icontains=search_query) |
+            Q(patient__bht__icontains=search_query) |
+            Q(patient__nnc_no__icontains=search_query)
+        )
+
+    assessment_list = assessment_list.order_by("-id")
+    paginator = Paginator(assessment_list, 10)
+    page_number = request.GET.get("page")
+    paginated_assmnt_list = paginator.get_page(page_number)
+
+    context = {
+        "assessment_page_obj": paginated_assmnt_list,
+        "type": "ABNORMAL",
+        "search_query": search_query,
+    }
+
+    return render(request, "assessment/manager.html", context)
+
+
+@login_required(login_url="user-login")
+def assessment_manager_informed(request):
+    # Get search parameter
+    search_query = request.GET.get('search', '').strip()
+
+    # Get assessments where parent is informed
+    assessment_list = GMAssessment.objects.filter(parent_informed=True)
+
+    # Apply search filter if provided
+    if search_query:
+        assessment_list = assessment_list.filter(
+            Q(patient__baby_name__icontains=search_query) |
+            Q(patient__mother_name__icontains=search_query) |
+            Q(patient__bht__icontains=search_query) |
+            Q(patient__nnc_no__icontains=search_query)
+        )
+
+    assessment_list = assessment_list.order_by("-id")
+    paginator = Paginator(assessment_list, 10)
+    page_number = request.GET.get("page")
+    paginated_assmnt_list = paginator.get_page(page_number)
+
+    context = {
+        "assessment_page_obj": paginated_assmnt_list,
+        "type": "INFORMED",
+        "search_query": search_query,
+    }
+
+    return render(request, "assessment/manager.html", context)
+
+
+@login_required(login_url="user-login")
+def assessment_manager_not_informed(request):
+    # Get search parameter
+    search_query = request.GET.get('search', '').strip()
+
+    # Get assessments where parent is not informed
+    assessment_list = GMAssessment.objects.filter(parent_informed=False)
+
+    # Apply search filter if provided
+    if search_query:
+        assessment_list = assessment_list.filter(
+            Q(patient__baby_name__icontains=search_query) |
+            Q(patient__mother_name__icontains=search_query) |
+            Q(patient__bht__icontains=search_query) |
+            Q(patient__nnc_no__icontains=search_query)
+        )
+
+    assessment_list = assessment_list.order_by("-id")
+    paginator = Paginator(assessment_list, 10)
+    page_number = request.GET.get("page")
+    paginated_assmnt_list = paginator.get_page(page_number)
+
+    context = {
+        "assessment_page_obj": paginated_assmnt_list,
+        "type": "NOT_INFORMED",
+        "search_query": search_query,
+    }
+
+    return render(request, "assessment/manager.html", context)
 
 
 @login_required(login_url="user-login")
 def assessment_manager_by_patients(request, pk):
     patient = Patient.objects.get(id=pk)
-    assessment_list = GMAssessment.objects.filter(patient=patient).order_by("-id")
+    # Get search parameter
+    search_query = request.GET.get('search', '').strip()
+
+    # Filter assessments based on search query
+    assessment_list = GMAssessment.objects.filter(patient=patient)
+    if search_query:
+        assessment_list = assessment_list.filter(
+            Q(patient__baby_name__icontains=search_query) |
+            Q(patient__mother_name__icontains=search_query) |
+            Q(patient__bht__icontains=search_query) |
+            Q(patient__nnc_no__icontains=search_query)
+        )
+
+    assessment_list = assessment_list.order_by("-id")
     paginator = Paginator(assessment_list, 10)
     page_number = request.GET.get("page")
     paginated_assmnt_list = paginator.get_page(page_number)
-    return render(
-        request,
-        "assessment/manager.html",
-        {"patient": patient, "assessment_page_obj": paginated_assmnt_list},
-    )
+
+    context = {
+        "patient": patient,
+        "assessment_page_obj": paginated_assmnt_list,
+        "search_query": search_query,
+    }
+
+    return render(request, "assessment/manager.html", context)
 
 
 @login_required(login_url="user-login")
@@ -1551,24 +1738,242 @@ def bookmark_edit(request, pk):
 
 @login_required(login_url="user-login")
 def attachment_manager(request):
-    var_attachment_list = Attachment.objects.order_by("-id")
-    paginator = Paginator(var_attachment_list, 10)
-    page_number = request.GET.get("page")
-    attachment_list = paginator.get_page(page_number)
-    return render(
-        request, "attachment/manager.html", {"attachment_page_obj": attachment_list}
+    """Enhanced attachment manager with filtering, search, and pagination following Django best practices"""
+    # Get search and filter parameters with proper defaults
+    search_query = request.GET.get("search", "").strip()
+    type_filter = request.GET.get("type", "")
+    uploader_filter = request.GET.get("uploader", "")
+    date_from = request.GET.get("date_from", "")
+    date_to = request.GET.get("date_to", "")
+    bookmarked_filter = request.GET.get("bookmarked_only", "")
+    page_number = request.GET.get("page", 1)
+
+    # Base queryset with optimized related data loading
+    queryset = (
+        Attachment.objects.select_related("patient", "added_by", "last_edit_by")
+        .order_by("-created_at")
     )
+
+    # Apply search filter using Q objects for complex queries
+    if search_query:
+        queryset = queryset.filter(
+            Q(title__icontains=search_query)
+            | Q(patient__baby_name__icontains=search_query)
+            | Q(patient__disk_no__icontains=search_query)
+            | Q(description__icontains=search_query)
+            | Q(patient__bht__icontains=search_query)
+        )
+
+    # Apply type filter
+    if type_filter and type_filter != "all":
+        if type_filter == "bookmarked":
+            # Special case for bookmarked filter
+            bookmarked_attachment_ids = Bookmark.objects.filter(
+                bookmark_type="Attachment"
+            ).values_list('object_id', flat=True)
+            queryset = queryset.filter(id__in=bookmarked_attachment_ids)
+        else:
+            queryset = queryset.filter(attachment_type=type_filter)
+
+    # Apply uploader filter with proper error handling
+    if uploader_filter:
+        try:
+            uploader_id = int(uploader_filter)
+            queryset = queryset.filter(added_by_id=uploader_id)
+        except (ValueError, TypeError) as e:
+            logger.warning(f"Invalid uploader filter value: {uploader_filter}")
+            messages.warning(request, "Invalid uploader filter. Showing all uploaders.")
+
+    # Apply date range filters with proper error handling
+    if date_from:
+        try:
+            from datetime import datetime
+            date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d").date()
+            queryset = queryset.filter(created_at__date__gte=date_from_parsed)
+        except ValueError as e:
+            logger.warning(f"Invalid date_from format: {date_from}")
+            messages.warning(
+                request, "Invalid 'from' date format. Please use YYYY-MM-DD format."
+            )
+
+    if date_to:
+        try:
+            from datetime import datetime
+            date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d").date()
+            queryset = queryset.filter(created_at__date__lte=date_to_parsed)
+        except ValueError as e:
+            logger.warning(f"Invalid date_to format: {date_to}")
+            messages.warning(
+                request, "Invalid 'to' date format. Please use YYYY-MM-DD format."
+            )
+
+    # Apply bookmarked filter
+    if bookmarked_filter:
+        bookmarked_attachment_ids = Bookmark.objects.filter(
+            bookmark_type="Attachment"
+        ).values_list('object_id', flat=True)
+        queryset = queryset.filter(id__in=bookmarked_attachment_ids)
+
+    # Get total count before pagination
+    total_count = queryset.count()
+
+    # Pagination with proper error handling
+    paginator = Paginator(queryset, 25)  # Show 25 attachments per page
+    try:
+        page_obj = paginator.get_page(page_number)
+    except Exception as e:
+        logger.error(f"Pagination error: {str(e)}")
+        page_obj = paginator.get_page(1)
+
+    # Get unique uploaders for filter dropdown (users who have uploaded attachments)
+    uploaders = (
+        CustomUser.objects.filter(attachment_added__isnull=False)
+        .distinct()
+        .only("id", "username", "first_name", "last_name")
+        .order_by("first_name", "last_name")
+    )
+
+    # Build context dictionary
+    context = {
+        "attachment_page_obj": page_obj,  # Keep for template compatibility
+        "attachments": page_obj,
+        "search_query": search_query,
+        "type": type_filter,
+        "uploader_filter": uploader_filter,
+        "date_from": date_from,
+        "date_to": date_to,
+        "bookmarked_filter": bookmarked_filter,
+        "uploaders": uploaders,
+        "total_count": total_count,
+        "page_title": "Attachment Manager",
+        "breadcrumbs": [
+            {"name": "Dashboard", "url": reverse("home")},
+            {"name": "Attachment Manager", "url": None},
+        ],
+    }
+
+    return render(request, "attachment/manager.html", context)
 
 
 @login_required(login_url="user-login")
 def attachment_manager_patient(request, pid):
-    var_attachment_list = Attachment.objects.filter(patient=pid).order_by("-id")
-    paginator = Paginator(var_attachment_list, 10)
-    page_number = request.GET.get("page")
-    attachment_list = paginator.get_page(page_number)
-    return render(
-        request, "attachment/manager.html", {"attachment_page_obj": attachment_list}
+    """Enhanced patient-specific attachment manager with filtering and search"""
+    patient = Patient.objects.get(pk=pid)
+
+    # Get search and filter parameters with proper defaults
+    search_query = request.GET.get("search", "").strip()
+    type_filter = request.GET.get("type", "")
+    uploader_filter = request.GET.get("uploader", "")
+    date_from = request.GET.get("date_from", "")
+    date_to = request.GET.get("date_to", "")
+    bookmarked_filter = request.GET.get("bookmarked_only", "")
+    page_number = request.GET.get("page", 1)
+
+    # Base queryset with optimized related data loading
+    queryset = (
+        Attachment.objects.filter(patient=pid)
+        .select_related("patient", "added_by", "last_edit_by")
+        .order_by("-created_at")
     )
+
+    # Apply search filter using Q objects for complex queries
+    if search_query:
+        queryset = queryset.filter(
+            Q(title__icontains=search_query)
+            | Q(description__icontains=search_query)
+        )
+
+    # Apply type filter
+    if type_filter and type_filter != "all":
+        if type_filter == "bookmarked":
+            # Special case for bookmarked filter
+            bookmarked_attachment_ids = Bookmark.objects.filter(
+                bookmark_type="Attachment"
+            ).values_list('object_id', flat=True)
+            queryset = queryset.filter(id__in=bookmarked_attachment_ids)
+        else:
+            queryset = queryset.filter(attachment_type=type_filter)
+
+    # Apply uploader filter with proper error handling
+    if uploader_filter:
+        try:
+            uploader_id = int(uploader_filter)
+            queryset = queryset.filter(added_by_id=uploader_id)
+        except (ValueError, TypeError) as e:
+            logger.warning(f"Invalid uploader filter value: {uploader_filter}")
+            messages.warning(request, "Invalid uploader filter. Showing all uploaders.")
+
+    # Apply date range filters with proper error handling
+    if date_from:
+        try:
+            from datetime import datetime
+            date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d").date()
+            queryset = queryset.filter(created_at__date__gte=date_from_parsed)
+        except ValueError as e:
+            logger.warning(f"Invalid date_from format: {date_from}")
+            messages.warning(
+                request, "Invalid 'from' date format. Please use YYYY-MM-DD format."
+            )
+
+    if date_to:
+        try:
+            from datetime import datetime
+            date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d").date()
+            queryset = queryset.filter(created_at__date__lte=date_to_parsed)
+        except ValueError as e:
+            logger.warning(f"Invalid date_to format: {date_to}")
+            messages.warning(
+                request, "Invalid 'to' date format. Please use YYYY-MM-DD format."
+            )
+
+    # Apply bookmarked filter
+    if bookmarked_filter:
+        bookmarked_attachment_ids = Bookmark.objects.filter(
+            bookmark_type="Attachment"
+        ).values_list('object_id', flat=True)
+        queryset = queryset.filter(id__in=bookmarked_attachment_ids)
+
+    # Get total count before pagination
+    total_count = queryset.count()
+
+    # Pagination with proper error handling
+    paginator = Paginator(queryset, 25)  # Show 25 attachments per page
+    try:
+        page_obj = paginator.get_page(page_number)
+    except Exception as e:
+        logger.error(f"Pagination error: {str(e)}")
+        page_obj = paginator.get_page(1)
+
+    # Get unique uploaders for filter dropdown (users who have uploaded attachments for this patient)
+    uploaders = (
+        CustomUser.objects.filter(attachment_added__patient=pid)
+        .distinct()
+        .only("id", "username", "first_name", "last_name")
+        .order_by("first_name", "last_name")
+    )
+
+    # Build context dictionary
+    context = {
+        "attachment_page_obj": page_obj,  # Keep for template compatibility
+        "attachments": page_obj,
+        "patient": patient,
+        "search_query": search_query,
+        "type": type_filter,
+        "uploader_filter": uploader_filter,
+        "date_from": date_from,
+        "date_to": date_to,
+        "bookmarked_filter": bookmarked_filter,
+        "uploaders": uploaders,
+        "total_count": total_count,
+        "page_title": f"Attachments for {patient.baby_name}",
+        "breadcrumbs": [
+            {"name": "Dashboard", "url": reverse("home")},
+            {"name": "Patients", "url": reverse("view-patient", args=[pid])},
+            {"name": f"Attachments for {patient.baby_name}", "url": None},
+        ],
+    }
+
+    return render(request, "attachment/manager.html", context)
 
 
 @csrf_exempt

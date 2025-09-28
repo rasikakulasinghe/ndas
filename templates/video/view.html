@@ -4,24 +4,6 @@
 
 {% block main_content %}
 <div class="container-fluid">
-  <!-- Content Header -->
-  <div class="content-header">
-    <div class="container-fluid">
-      <div class="row mb-2">
-        <div class="col-sm-6">
-          <h1 class="m-0">{{ video.title }}</h1>
-          <small class="text-muted">Patient: {{ patient.baby_name }}</small>
-        </div>
-        <div class="col-sm-6">
-          <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item"><a href="{% url 'home' %}">Dashboard</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'view-patient' patient.id %}">{{ patient.baby_name }}</a></li>
-            <li class="breadcrumb-item active">{{ video.title }}</li>
-          </ol>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Main content -->
   <section class="content">
@@ -32,7 +14,7 @@
           <div class="card card-primary">
             <div class="card-header">
               <h3 class="card-title">
-                <i class="fas fa-play mr-2"></i>Video Player
+                Video : {{ video.title }} - {{ patient.baby_name }}
                 {% if video.is_new_file %}
                   <span class="badge badge-warning ml-2">New</span>
                 {% else %}
@@ -40,9 +22,7 @@
                 {% endif %}
               </h3>
               <div class="card-tools">
-                <span class="badge badge-info">{{ video.duration_formatted }}</span>
                 <span class="badge badge-secondary">{{ video.file_size_mb }} MB</span>
-                <span class="badge badge-primary">{{ video.resolution }}</span>
               </div>
             </div>
             <div class="card-body p-0">
@@ -113,19 +93,6 @@
                     <span class="badge badge-warning">Awaiting Assessment</span>
                   {% else %}
                     <span class="badge badge-success">Assessment Complete</span>
-                  {% endif %}
-                </dd>
-                
-                <dt class="col-sm-5">Processing:</dt>
-                <dd class="col-sm-7">
-                  {% if video.processing_status == 'completed' %}
-                    <span class="badge badge-success">Ready</span>
-                  {% elif video.processing_status == 'processing' %}
-                    <span class="badge badge-warning">Processing</span>
-                  {% elif video.processing_status == 'failed' %}
-                    <span class="badge badge-danger">Failed</span>
-                  {% else %}
-                    <span class="badge badge-info">Pending</span>
                   {% endif %}
                 </dd>
                 
