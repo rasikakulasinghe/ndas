@@ -11395,3 +11395,18 @@ INFO 2025-09-28 22:12:53,643 basehttp 18028 13728 "GET /media/attachments/wqefqw
 INFO 2025-09-28 22:13:01,060 basehttp 18028 13728 "GET /attachment/view/1/ HTTP/1.1" 200 61141
 INFO 2025-09-28 22:13:57,164 basehttp 18028 13728 "GET /manager/assessment/ HTTP/1.1" 200 58857
 INFO 2025-09-28 22:13:59,700 basehttp 18028 13728 "GET /assessment/view/3/ HTTP/1.1" 200 46374
+INFO 2025-09-29 20:52:45,562 autoreload 12720 14868 Watching for file changes with StatReloader
+WARNING 2025-09-29 20:54:25,262 log 12720 15480 Not Found: /loan/view/settle-pending/
+WARNING 2025-09-29 20:54:25,271 log 12720 16692 Not Found: /user/route/routenames/
+WARNING 2025-09-29 20:54:25,276 log 12720 17232 Not Found: /dashboard/
+WARNING 2025-09-29 20:54:25,281 log 12720 16900 Not Found: /dashboard/
+WARNING 2025-09-29 20:54:25,288 log 12720 8012 Not Found: /home/ALL/ALL/
+WARNING 2025-09-29 20:54:25,294 log 12720 7748 Not Found: /loan/view/settle-rejected/
+WARNING 2025-09-29 20:54:25,295 basehttp 12720 15480 "OPTIONS /loan/view/settle-pending/ HTTP/1.1" 404 16973
+WARNING 2025-09-29 20:54:25,295 basehttp 12720 16692 "OPTIONS /user/route/routenames/ HTTP/1.1" 404 16964
+WARNING 2025-09-29 20:54:25,296 basehttp 12720 16900 "OPTIONS /dashboard/ HTTP/1.1" 404 16928
+WARNING 2025-09-29 20:54:25,296 basehttp 12720 8012 "OPTIONS /home/ALL/ALL/ HTTP/1.1" 404 16937
+WARNING 2025-09-29 20:54:25,296 basehttp 12720 17232 "OPTIONS /dashboard/?include_details=true HTTP/1.1" 404 16949
+WARNING 2025-09-29 20:54:25,297 basehttp 12720 7748 "OPTIONS /loan/view/settle-rejected/ HTTP/1.1" 404 16976
+WARNING 2025-09-29 20:54:25,311 log 12720 15480 Not Found: /home/ALL/ALL/
+WARNING 2025-09-29 20:54:25,342 basehttp 12720 15480 "OPTIONS /home/ALL/ALL/ HTTP/1.1" 404 16937

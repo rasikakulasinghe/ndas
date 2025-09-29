@@ -263,11 +263,12 @@ if DEBUG:
     CSP_BASE_URI = ("'self'",)
     CSP_FORM_ACTION = ("'self'",)
 else:
+    # Production CSP - Allow required CDN sources for Bootstrap, AdminLTE, etc.
     CSP_DEFAULT_SRC = ("'self'",)
-    CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'")  # Allow inline scripts for production
-    CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://fonts.googleapis.com")
-    CSP_IMG_SRC = ("'self'", "data:", "https:")
-    CSP_FONT_SRC = ("'self'", "data:", "https://fonts.gstatic.com")
+    CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://unpkg.com", "https://vjs.zencdn.net")
+    CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "https://vjs.zencdn.net")
+    CSP_IMG_SRC = ("'self'", "data:", "blob:", "https:")
+    CSP_FONT_SRC = ("'self'", "data:", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com")
     CSP_CONNECT_SRC = ("'self'",)
     CSP_FRAME_SRC = ("'none'",)
     CSP_OBJECT_SRC = ("'none'",)

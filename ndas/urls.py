@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
-from . import settings
+from . import settings, views
 from django.conf.urls.static import static
 from django.conf import settings
 
@@ -14,6 +14,7 @@ urlpatterns = [
     path("", include("patients.urls")),
     path("djrichtextfield/", include("djrichtextfield.urls")),
     path("video/", include("video.urls")),
+    path("debug/bootstrap/", views.debug_bootstrap, name="debug-bootstrap"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Custom error handlers

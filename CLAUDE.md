@@ -210,3 +210,141 @@ file_field = models.FileField(
 - **File Processing**: FFmpeg, Pillow for image handling
 - **PDF Generation**: ReportLab for medical reports
 - **Production**: PostgreSQL, Redis, Celery, Gunicorn, WhiteNoise
+
+## Environment and Tooling
+
+### Development Environment
+- **Platform**: Windows (uses `venv\Scripts\activate` for virtualenv)
+- **Python**: Django 4.2.16 LTS with comprehensive security configuration
+- **Database**: SQLite for development (`db.sqlite3`), PostgreSQL production-ready
+- **Frontend Testing**: Playwright with Node.js setup in `node_modules/`
+
+### Additional Development Commands
+- **Activate virtual environment**: `venv\Scripts\activate` (Windows) or `source venv/bin/activate` (Unix)
+- **Install frontend deps**: `npm install` (for Playwright testing)
+- **Run Playwright tests**: `npx playwright test`
+- **Database shell**: `python manage.py dbshell`
+- **Check migrations**: `python manage.py showmigrations`
+- **Load fixtures**: `python manage.py loaddata [fixture_file]`
+
+## Advanced Architecture Details
+
+### Security Middleware Stack (Complete Order)
+1. `SecurityMiddleware` - Basic Django security
+2. `WhiteNoiseMiddleware` - Static file serving
+3. `CSPMiddleware` - Content Security Policy enforcement
+4. `SessionMiddleware` - Session handling
+5. `CommonMiddleware` - Common processing
+6. `CsrfViewMiddleware` - CSRF protection
+7. `AuthenticationMiddleware` - User authentication
+8. `UserActivityMiddleware` - Custom activity tracking (users/middleware.py)
+9. `MessageMiddleware` - Django messages framework
+10. `XFrameOptionsMiddleware` - X-Frame-Options header
+11. `UserAgentMiddleware` - User agent parsing
+
+### Model Inheritance Architecture (Critical Pattern)
+**All models MUST inherit from BOTH base classes in this exact order**:
+```python
+from ndas.custom_codes.Custom_abstract_class import TimeStampedModel, UserTrackingMixin
+
+class MyModel(TimeStampedModel, UserTrackingMixin):
+    # Model fields here
+    class Meta:
+        # Meta configuration
+```
+
+The `UserActivityMiddleware` automatically populates `added_by` and `last_edit_by` fields during save operations.
+
+### Validation System Architecture
+- **Choice Standardization**: All choices defined in `ndas/custom_codes/choice.py` using Django TextChoices
+- **Field Validation**: Custom validators in `ndas/custom_codes/validators.py` for medical data integrity
+- **File Upload Security**: Comprehensive validation with size limits, type checking, and security scanning
+- **Medical Data Validation**: Specialized validators for birth weights (300g-8000g), APGAR scores (0-10), POG weeks (20-44)
+
+### Template Architecture and Naming Conventions
+- **Base Templates**:
+  - `src/base.html` - Main layout for authenticated users (AdminLTE structure)
+  - `src/basic_plane.html` - Layout for authentication pages
+- **Partial Templates**: Organized in `templates/src/` for reusable components:
+  - `main_sidebar_menu.html` - Navigation structure
+  - `messages.html` - Django messages display
+  - `form_error.html` - Consistent error handling
+- **App-Specific Templates**: Organized by Django app with consistent naming:
+  - `manager.html` - List/management views
+  - `add.html` - Creation forms
+  - `edit.html` - Update forms
+  - `view.html` - Detail views
+  - `delete-confirm.html` - Deletion confirmation
+
+### URL Routing Structure
+```
+Root URLconf (ndas/urls.py):
+├── admin/ → Django admin interface
+├── users/ → Authentication, profiles, admin functions
+├── video/ → Video management and processing
+├── djrichtextfield/ → Rich text editor integration
+└── "" (empty) → patients/ app (primary interface)
+```
+
+### Error Handling and Production Features
+- **Custom Error Pages**: 404 and 500 handlers defined in `ndas.views`
+- **Logging Configuration**: Comprehensive logging to `logs/` directory with rotation
+  - `django.log` - General application logs
+  - `security.log` - Security-related events
+- **Environment Configuration**: Uses `python-decouple` for secure environment variable management
+- **Production Security**: HSTS, CSP, Permissions Policy, session security configured
+
+### File Organization Standards
+- **Media Files**: Organized by type and date (`media/videos/%Y/%m/`, etc.)
+- **Static Files**: WhiteNoise serving with compression enabled in production
+- **Custom JavaScript**: Organized in `static/js/` with utilities in `app-utils.js`
+- **CSS Framework**: AdminLTE 3.2 + Bootstrap 4.6 with custom overrides
+
+## Development Anti-Patterns to Avoid
+
+### Model Development
+- **Never** create models without inheriting from both base classes
+- **Never** add choices directly in models - use `ndas/custom_codes/choice.py`
+- **Never** skip field validation - use or create appropriate validators
+- **Never** ignore indexing on searchable fields (`db_index=True`)
+
+### Template Development
+- **Never** create templates without extending `src/base.html` or `src/basic_plane.html`
+- **Never** forget CSRF tokens in forms within `container-fluid` divs
+- **Never** hardcode Bootstrap classes - follow existing form patterns
+- **Never** create inconsistent navigation - use established sidebar structure
+
+### Security Considerations
+- **Never** bypass the security middleware stack order
+- **Never** disable CSRF protection or other security features
+- **Never** store sensitive configuration in code - use `.env` file
+- **Never** upload files without validation through custom validators
+
+## Critical Development Workflows
+
+### Adding New Model Workflow
+1. Create model inheriting from `TimeStampedModel, UserTrackingMixin`
+2. Add any new choices to `ndas/custom_codes/choice.py`
+3. Create/reference validators in `ndas/custom_codes/validators.py`
+4. Add `db_index=True` for searchable fields
+5. Include comprehensive `help_text` for medical fields
+6. Run `python manage.py makemigrations [app_name]`
+7. Review generated migration before applying
+8. Apply with `python manage.py migrate`
+
+### Template Creation Workflow
+1. Determine if authenticated (extend `src/base.html`) or public (extend `src/basic_plane.html`)
+2. Follow established naming conventions (`manager.html`, `add.html`, etc.)
+3. Include proper block structure (`title`, `main_content`)
+4. Add CSRF token in `container-fluid` div
+5. Use consistent Bootstrap form classes from existing examples
+6. Test responsive behavior on mobile devices
+
+### File Upload Implementation Workflow
+1. Use appropriate validator from `ndas/custom_codes/validators.py`
+2. Set proper `upload_to` path with date organization (`"%Y/%m/"`)
+3. Configure size limits appropriate to file type
+4. Test upload with various file types and sizes
+5. Verify security restrictions are enforced
+
+This architecture ensures consistency, security, and maintainability across the entire NDAS system while following Django best practices and medical data handling requirements.

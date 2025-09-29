@@ -17,11 +17,11 @@ scratch. This page gets rid of all links and provides the needed markup only.
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <!-- Bootstrap 4 (required for AdminLTE 3.x) -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-  
-  <!-- AdminLTE Theme style (Stable version 3.2) -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+  <!-- Bootstrap 4 (required for AdminLTE 3.x) with fallback -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/css/bootstrap.min.css'">
+
+  <!-- AdminLTE Theme style (Stable version 3.2) with fallback -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css'">
   
   <!-- Custom CSS files (keeping essential local only) -->
   <link rel="stylesheet" href="{% static 'css/social.css' %}">
@@ -56,51 +56,90 @@ if (typeof jQuery === 'undefined') {
     document.write('<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"><\/script>');
 }
 </script>
-<!-- Bootstrap 4 -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-<!-- AdminLTE App -->
-<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+<!-- Bootstrap 4 with fallback -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" onerror="document.write('<script src=\"https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js\"><\/script>')"></script>
+<!-- AdminLTE App with fallback -->
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js" onerror="document.write('<script src=\"https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js\"><\/script>')"></script>
 <!-- HTMX from CDN -->
 <script src="https://unpkg.com/htmx.org@1.9.12"></script>
 
 <!-- Select2 from CDN -->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-<!-- Bootstrap 4 initialization script -->
+<!-- Bootstrap 4 initialization script with enhanced error handling -->
 <script>
-// Wait for DOM and ensure jQuery is loaded
+// Wait for DOM and ensure all dependencies are loaded
 document.addEventListener('DOMContentLoaded', function() {
-    if (typeof $ === 'undefined') {
-        console.error('❌ jQuery not loaded - Navigation menu may not work properly');
-        return;
-    }
-    
-    $(document).ready(function() {
-        try {
-            // Initialize Bootstrap 4 tooltips
-            $('[data-toggle="tooltip"]').tooltip();
-            
-            // Initialize popovers
-            $('[data-toggle="popover"]').popover();
-            
-            // Initialize Select2
-            $('.select2').select2();
-            
-            console.log('✅ Bootstrap components initialized successfully');
-            
-            // Re-initialize for dynamically loaded content
-            if (typeof window.htmx !== 'undefined') {
-                document.addEventListener('htmx:afterSwap', function() {
-                    // Re-initialize Bootstrap components after HTMX content swap
-                    $('[data-toggle="tooltip"]').tooltip();
-                    $('[data-toggle="popover"]').popover();
-                    $('.select2').select2();
-                });
-            }
-        } catch (error) {
-            console.error('❌ Failed to initialize Bootstrap components:', error);
+    // Comprehensive dependency check
+    function checkDependencies() {
+        const checks = {
+            'jQuery': typeof $ !== 'undefined',
+            'Bootstrap': typeof $.fn !== 'undefined' && typeof $.fn.modal !== 'undefined',
+            'AdminLTE': typeof $.AdminLTE !== 'undefined',
+            'Select2': typeof $.fn.select2 !== 'undefined'
+        };
+
+        const failed = Object.entries(checks).filter(([name, loaded]) => !loaded).map(([name]) => name);
+
+        if (failed.length > 0) {
+            console.error('❌ Missing dependencies:', failed.join(', '));
+            console.warn('⚠️ Bootstrap styling may not work properly');
+            return false;
         }
-    });
+
+        console.log('✅ All dependencies loaded successfully');
+        return true;
+    }
+
+    // Initialize with retry mechanism
+    function initializeComponents() {
+        if (!checkDependencies()) {
+            // Retry after 500ms
+            setTimeout(initializeComponents, 500);
+            return;
+        }
+
+        $(document).ready(function() {
+            try {
+                // Initialize Bootstrap 4 components
+                if (typeof $.fn.tooltip === 'function') {
+                    $('[data-toggle="tooltip"]').tooltip();
+                }
+
+                if (typeof $.fn.popover === 'function') {
+                    $('[data-toggle="popover"]').popover();
+                }
+
+                // Initialize Select2
+                if (typeof $.fn.select2 === 'function') {
+                    $('.select2').select2();
+                }
+
+                console.log('✅ Bootstrap components initialized successfully');
+
+                // Re-initialize for dynamically loaded content
+                if (typeof window.htmx !== 'undefined') {
+                    document.addEventListener('htmx:afterSwap', function() {
+                        // Re-initialize Bootstrap components after HTMX content swap
+                        if (typeof $.fn.tooltip === 'function') {
+                            $('[data-toggle="tooltip"]').tooltip();
+                        }
+                        if (typeof $.fn.popover === 'function') {
+                            $('[data-toggle="popover"]').popover();
+                        }
+                        if (typeof $.fn.select2 === 'function') {
+                            $('.select2').select2();
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('❌ Failed to initialize Bootstrap components:', error);
+            }
+        });
+    }
+
+    // Start initialization
+    initializeComponents();
 });
 </script>
 
