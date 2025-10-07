@@ -490,19 +490,19 @@ def patient_add(request):
 
             # Validate birth weight
             birth_weight = cleaned_data.get("birth_weight")
-            if birth_weight and (birth_weight < 300 or birth_weight > 6000):
+            if birth_weight and (birth_weight < 200 or birth_weight > 8000):
                 data_form.add_error(
-                    "birth_weight", "Birth weight must be between 300g and 6000g"
+                    "birth_weight", "Birth weight must be between 200g and 8000g"
                 )
 
             # Validate measurements
             length = cleaned_data.get("length")
-            if length and (length < 20 or length > 70):
-                data_form.add_error("length", "Length must be between 20cm and 70cm")
+            if length and (length < 10 or length > 90):
+                data_form.add_error("length", "Length must be between 10cm and 90cm")
 
             ofc = cleaned_data.get("ofc")
-            if ofc and (ofc < 20 or ofc > 50):
-                data_form.add_error("ofc", "OFC must be between 20cm and 50cm")
+            if ofc and (ofc < 15 or ofc > 70):
+                data_form.add_error("ofc", "OFC must be between 15cm and 70cm")
 
             # Check for duplicate BHT
             bht = cleaned_data.get("bht")
