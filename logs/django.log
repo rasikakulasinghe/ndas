@@ -11704,3 +11704,27 @@ INFO 2025-10-09 12:37:04,973 basehttp 6856 2216 "POST /patient/add/ HTTP/1.1" 30
 INFO 2025-10-09 12:37:05,308 basehttp 6856 2216 "GET /patient/view/8/ HTTP/1.1" 200 107334
 INFO 2025-10-09 12:47:13,450 basehttp 6856 9116 "GET / HTTP/1.1" 200 53770
 INFO 2025-10-09 12:47:15,072 basehttp 6856 9116 "GET / HTTP/1.1" 200 53770
+INFO 2025-10-09 12:54:57,959 basehttp 6856 12964 "GET /patient/add/ HTTP/1.1" 200 73015
+INFO 2025-10-09 13:01:58,443 basehttp 6856 17160 - Broken pipe from ('127.0.0.1', 55901)
+INFO 2025-10-09 13:01:59,337 basehttp 6856 12664 "GET /patient/add/ HTTP/1.1" 200 72256
+INFO 2025-10-09 13:02:41,940 basehttp 6856 12664 "GET /patient/add/ HTTP/1.1" 200 72256
+INFO 2025-10-09 13:03:14,258 basehttp 6856 12664 "GET /patient/add/ HTTP/1.1" 200 72256
+INFO 2025-10-09 13:03:49,516 basehttp 6856 12664 "GET /patient/add/ HTTP/1.1" 200 72256
+INFO 2025-10-09 13:04:11,893 basehttp 6856 12664 "GET /users/logout/ HTTP/1.1" 302 0
+INFO 2025-10-09 13:04:12,145 basehttp 6856 12664 "GET /users/login/ HTTP/1.1" 200 18106
+INFO 2025-10-09 13:04:39,480 basehttp 6856 12664 - Broken pipe from ('127.0.0.1', 57375)
+INFO 2025-10-09 13:04:44,506 basehttp 6856 8372 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-10-09 13:04:45,136 basehttp 6856 8372 "GET / HTTP/1.1" 200 54094
+INFO 2025-10-09 13:04:49,835 basehttp 6856 8372 "GET /patient/add/ HTTP/1.1" 200 72256
+INFO 2025-10-09 13:08:39,025 autoreload 6856 7648 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\models.py changed, reloading.
+INFO 2025-10-09 13:08:57,783 autoreload 488 6808 Watching for file changes with StatReloader
+INFO 2025-10-09 13:10:36,169 basehttp 488 6152 "GET /patient/add/ HTTP/1.1" 302 0
+INFO 2025-10-09 13:10:36,363 basehttp 488 6152 "GET /users/login/?next=/patient/add/ HTTP/1.1" 200 17776
+INFO 2025-10-09 13:10:39,102 basehttp 488 6152 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-10-09 13:10:39,544 basehttp 488 6152 "GET / HTTP/1.1" 200 54094
+INFO 2025-10-09 13:10:41,887 basehttp 488 6152 "GET /patient/add/ HTTP/1.1" 200 72255
+INFO 2025-10-09 13:10:55,606 basehttp 488 6152 "GET /manager/patient/ HTTP/1.1" 200 71016
+INFO 2025-10-09 13:10:55,699 basehttp 488 6152 "GET /static/js/manager.js HTTP/1.1" 304 0
+INFO 2025-10-09 13:10:58,231 basehttp 488 6152 "GET /patient/view/8/ HTTP/1.1" 200 106965
+INFO 2025-10-09 13:11:03,588 basehttp 488 6152 "GET /patient/edit/8/ HTTP/1.1" 200 74947
+INFO 2025-10-09 13:46:31,352 basehttp 488 13564 "GET /patient/edit/8/ HTTP/1.1" 200 77871

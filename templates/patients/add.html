@@ -4,47 +4,10 @@
 
 {% block extra_css %}
 <style>
+  /* Conditional field containers using AdminLTE callout component */
   #resuscitation-note,
   #gma-other-note {
     display: none;
-    background-color: #fff3cd;
-    border: 1px solid #ffeaa7;
-    border-radius: 0.375rem;
-    padding: 1rem;
-    margin-top: 0.75rem;
-    transition: all 0.3s ease;
-  }
-
-  #resuscitation-note label,
-  #gma-other-note label {
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: #856404;
-  }
-
-  #resuscitation-note .form-control,
-  #gma-other-note .form-control {
-    border-color: #ffeaa7;
-  }
-
-  #resuscitation-note .form-control:focus,
-  #gma-other-note .form-control:focus {
-    border-color: #f39c12;
-    box-shadow: 0 0 0 0.2rem rgba(243, 156, 18, 0.25);
-  }
-  
-  .form-check-input {
-    margin-top: 0.3rem;
-  }
-  
-  .form-check-label {
-    margin-left: 0.5rem;
-    font-weight: 500;
-  }
-  
-  .form-check-input:checked {
-    background-color: #28a745;
-    border-color: #28a745;
   }
 </style>
 {% endblock extra_css %}
@@ -282,7 +245,7 @@
                       {% endif %}
 
                       <!-- Resuscitation Notes - appears directly below checkbox -->
-                      <div id="resuscitation-note" class="mt-3">
+                      <div id="resuscitation-note" class="callout callout-warning mt-3">
                         <div class="form-group mb-0">
                           <label for="id_resustn_note">Resuscitation Notes <span class="text-danger">*</span></label>
                           {{form.resustn_note}}
@@ -369,7 +332,7 @@
                       {% if form.birth_weight.errors %}
                         <div class="text-danger small">{{ form.birth_weight.errors.0 }}</div>
                       {% endif %}
-                      <small class="form-text text-muted">Normal: 2500-4000g</small>
+                      <small class="form-text text-muted">Normal: 300-8000g</small>
                     </div>
                   </div>
                   <div class="col-md-6">
@@ -384,7 +347,7 @@
                       {% if form.length.errors %}
                         <div class="text-danger small">{{ form.length.errors.0 }}</div>
                       {% endif %}
-                      <small class="form-text text-muted">Normal: 45-55cm</small>
+                      <small class="form-text text-muted">Normal: 20-70cm</small>
                     </div>
                   </div>
                 </div>
@@ -400,7 +363,7 @@
                   {% if form.ofc.errors %}
                     <div class="text-danger small">{{ form.ofc.errors.0 }}</div>
                   {% endif %}
-                  <small class="form-text text-muted">Occipital Frontal Circumference: Normal 32-37cm</small>
+                  <small class="form-text text-muted">Occipital Frontal Circumference: Normal 20-50cm</small>
                 </div>
               </div>
             </div>
@@ -509,7 +472,7 @@
                   <small class="form-text text-muted">Select all applicable indications</small>
 
                   <!-- Other GMA Indication Details - appears when "Other" is selected -->
-                  <div id="gma-other-note">
+                  <div id="gma-other-note" class="callout callout-warning mt-3">
                     <div class="form-group mb-0">
                       <label for="id_indecation_for_gma_other">Other Indication Details <span class="text-danger">*</span></label>
                       {{form.indecation_for_gma_other}}
@@ -575,57 +538,53 @@ function initializeElementCache() {
 
 // Update resuscitation note visibility
 function updateResuscitationVisibility() {
-  const elements = cachedElements;
-  if (!elements.resuscitationCheckbox) return;
+  const { resuscitationCheckbox, resuscitationNote, resuscitationTextArea } = cachedElements;
+  if (!resuscitationCheckbox) return;
 
-  const isChecked = elements.resuscitationCheckbox.checked;
+  const isChecked = resuscitationCheckbox.checked;
+  resuscitationNote.style.display = isChecked ? 'block' : 'none';
 
   if (isChecked) {
-    elements.resuscitationNote.style.display = 'block';
-    elements.resuscitationTextArea.setAttribute('required', 'required');
-    elements.resuscitationTextArea.focus();
+    resuscitationTextArea.setAttribute('required', 'required');
+    resuscitationTextArea.focus();
   } else {
-    elements.resuscitationNote.style.display = 'none';
-    elements.resuscitationTextArea.removeAttribute('required');
-    elements.resuscitationTextArea.value = '';
+    resuscitationTextArea.removeAttribute('required');
+    resuscitationTextArea.value = '';
   }
 }
 
 // Update GMA other note visibility
 function updateGMAOtherVisibility() {
-  const elements = cachedElements;
-  if (!elements.gmaOtherCheckbox) return;
+  const { gmaOtherCheckbox, gmaOtherContainer, gmaOtherTextArea } = cachedElements;
+  if (!gmaOtherCheckbox) return;
 
-  const isChecked = elements.gmaOtherCheckbox.checked;
+  const isChecked = gmaOtherCheckbox.checked;
+  gmaOtherContainer.style.display = isChecked ? 'block' : 'none';
 
   if (isChecked) {
-    elements.gmaOtherContainer.style.display = 'block';
-    elements.gmaOtherTextArea.setAttribute('required', 'required');
-    elements.gmaOtherTextArea.focus();
+    gmaOtherTextArea.setAttribute('required', 'required');
+    gmaOtherTextArea.focus();
   } else {
-    elements.gmaOtherContainer.style.display = 'none';
-    elements.gmaOtherTextArea.removeAttribute('required');
-    elements.gmaOtherTextArea.value = '';
+    gmaOtherTextArea.removeAttribute('required');
+    gmaOtherTextArea.value = '';
   }
 }
 
 // Validate form before submission
 function validateForm() {
-  const elements = cachedElements;
+  const { resuscitationCheckbox, resuscitationTextArea, gmaOtherCheckbox, gmaOtherTextArea } = cachedElements;
 
   // Resuscitation validation
-  if (elements.resuscitationCheckbox?.checked &&
-      !elements.resuscitationTextArea?.value.trim()) {
+  if (resuscitationCheckbox?.checked && !resuscitationTextArea?.value.trim()) {
     alert('Please provide resuscitation notes when "Required Resuscitation" is checked.');
-    elements.resuscitationTextArea.focus();
+    resuscitationTextArea.focus();
     return false;
   }
 
   // GMA Other validation
-  if (elements.gmaOtherCheckbox?.checked &&
-      !elements.gmaOtherTextArea?.value.trim()) {
+  if (gmaOtherCheckbox?.checked && !gmaOtherTextArea?.value.trim()) {
     alert('Please provide details when "Other" GMA indication is selected.');
-    elements.gmaOtherTextArea.focus();
+    gmaOtherTextArea.focus();
     return false;
   }
 
@@ -634,26 +593,27 @@ function validateForm() {
 
 // Disable submit button and show loading state
 function disableSubmitButton() {
-  const btn = cachedElements.submitBtn;
-  if (!btn) return;
+  const { submitBtn } = cachedElements;
+  if (!submitBtn) return;
 
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 }
 
 // Initialize all form functionality
 document.addEventListener('DOMContentLoaded', function() {
   // Cache all DOM elements once
   cachedElements = initializeElementCache();
+  const { resuscitationCheckbox, gmaOtherCheckbox, patientForm, bhtInput } = cachedElements;
 
   // Initialize resuscitation toggle
-  if (cachedElements.resuscitationCheckbox) {
-    cachedElements.resuscitationCheckbox.addEventListener('change', updateResuscitationVisibility);
+  if (resuscitationCheckbox) {
+    resuscitationCheckbox.addEventListener('change', updateResuscitationVisibility);
     updateResuscitationVisibility(); // Set initial state
   }
 
   // Initialize GMA toggle with event delegation
-  const gmaFieldContainer = cachedElements.gmaOtherCheckbox?.closest('.form-group');
+  const gmaFieldContainer = gmaOtherCheckbox?.closest('.form-group');
   if (gmaFieldContainer) {
     gmaFieldContainer.addEventListener('change', function(e) {
       if (e.target.name === 'indecation_for_gma') {
@@ -664,19 +624,16 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Form validation and submission
-  if (cachedElements.patientForm) {
-    cachedElements.patientForm.addEventListener('submit', function(e) {
-      if (!validateForm()) {
-        e.preventDefault();
-        return false;
-      }
-
-      disableSubmitButton();
-    });
-  }
+  patientForm?.addEventListener('submit', function(e) {
+    if (!validateForm()) {
+      e.preventDefault();
+      return false;
+    }
+    disableSubmitButton();
+  });
 
   // Set focus on first input
-  cachedElements.bhtInput?.focus();
+  bhtInput?.focus();
 });
 </script>
 

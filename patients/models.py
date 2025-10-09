@@ -202,7 +202,7 @@ class Patient(TimeStampedModel, UserTrackingMixin):
         validators=[MinValueValidator(20), MaxValueValidator(50)],
         verbose_name=_("Occipital Frontal Circumference (cm)"),
         help_text=_("Head circumference measurement in centimeters"),
-    )
+    ) 
 
     # Contact and location information
     address = models.TextField(
