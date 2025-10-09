@@ -257,6 +257,12 @@ class Patient(TimeStampedModel, UserTrackingMixin):
         verbose_name=_("Indications for GMA"),
         help_text=_("Medical indications for General Movement Assessment"),
     )
+    indecation_for_gma_other = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name=_("Other GMA Indication Details"),
+        help_text=_("Specify other indication details when 'Other' is selected"),
+    )
 
     # Medical history fields
     antenatal_hx = models.TextField(

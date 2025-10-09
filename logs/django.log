@@ -11536,3 +11536,171 @@ INFO 2025-10-07 16:37:23,053 basehttp 19084 16968 "GET /patient/add/ HTTP/1.1" 2
 INFO 2025-10-07 16:37:41,537 basehttp 19084 16968 "GET /patient/add/ HTTP/1.1" 200 81957
 INFO 2025-10-07 16:37:43,877 basehttp 19084 16968 "GET /patient/add/ HTTP/1.1" 200 81957
 INFO 2025-10-07 16:38:43,344 basehttp 19084 16968 "GET /patient/add/ HTTP/1.1" 200 81957
+INFO 2025-10-07 21:17:23,008 autoreload 20152 4104 Watching for file changes with StatReloader
+INFO 2025-10-07 21:21:13,648 basehttp 20152 7096 "GET /patient/add/ HTTP/1.1" 302 0
+INFO 2025-10-07 21:21:13,719 basehttp 20152 7096 "GET /users/login/?next=/patient/add/ HTTP/1.1" 200 17776
+WARNING 2025-10-07 21:21:14,131 log 20152 7096 Not Found: /favicon.ico
+WARNING 2025-10-07 21:21:14,133 basehttp 20152 7096 "GET /favicon.ico HTTP/1.1" 404 17067
+INFO 2025-10-07 21:21:16,341 basehttp 20152 7096 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-10-07 21:21:16,689 basehttp 20152 7096 "GET / HTTP/1.1" 200 53446
+INFO 2025-10-07 21:21:18,833 basehttp 20152 7096 "GET /patient/add/ HTTP/1.1" 200 80477
+INFO 2025-10-07 21:22:10,888 basehttp 20152 7096 "GET /patient/add/ HTTP/1.1" 200 80472
+INFO 2025-10-07 21:22:35,310 basehttp 20152 7096 "GET /patient/add/ HTTP/1.1" 200 80000
+INFO 2025-10-07 21:25:07,175 basehttp 20152 7096 "POST /patient/add/ HTTP/1.1" 200 83459
+INFO 2025-10-07 21:26:03,965 basehttp 20152 7096 "POST /patient/add/ HTTP/1.1" 302 0
+INFO 2025-10-07 21:26:04,171 basehttp 20152 7096 "GET /patient/view/7/ HTTP/1.1" 200 106502
+INFO 2025-10-07 21:29:23,358 basehttp 20152 7096 "POST /patient/add/ HTTP/1.1" 200 83156
+INFO 2025-10-07 21:29:36,131 basehttp 20152 7096 "GET /patient/add/ HTTP/1.1" 200 79697
+INFO 2025-10-07 21:33:05,039 basehttp 20152 8696 "GET /patient/add/ HTTP/1.1" 200 68435
+INFO 2025-10-07 21:33:07,969 basehttp 20152 8696 "GET /patient/add/ HTTP/1.1" 200 68435
+INFO 2025-10-07 21:36:01,309 basehttp 20152 8696 "GET /manager/patient/ HTTP/1.1" 200 68138
+INFO 2025-10-07 21:36:01,374 basehttp 20152 8696 "GET /static/js/manager.js HTTP/1.1" 304 0
+INFO 2025-10-07 21:36:06,809 basehttp 20152 8696 "GET /patient/view/7/ HTTP/1.1" 200 106129
+INFO 2025-10-07 21:36:15,546 basehttp 20152 8696 "GET /video/add/7/ HTTP/1.1" 200 56225
+INFO 2025-10-07 21:36:26,156 basehttp 20152 8696 "GET /attachment/add/7/ HTTP/1.1" 200 55587
+INFO 2025-10-07 21:36:33,820 basehttp 20152 8696 "GET /cdic/add/7/ HTTP/1.1" 200 53411
+INFO 2025-10-07 21:36:46,701 basehttp 20152 8696 "GET /da/add/7/ HTTP/1.1" 200 57298
+INFO 2025-10-07 21:37:28,969 basehttp 20152 8696 "GET /bookmarks/add/7/Patient/ HTTP/1.1" 200 47449
+INFO 2025-10-07 21:37:31,150 autoreload 20152 4104 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\forms.py changed, reloading.
+INFO 2025-10-07 21:37:32,224 autoreload 8940 18868 Watching for file changes with StatReloader
+INFO 2025-10-07 21:38:09,253 basehttp 8940 6616 "GET /patient/add/ HTTP/1.1" 302 0
+INFO 2025-10-07 21:38:09,270 basehttp 8940 6616 "GET /users/login/?next=/patient/add/ HTTP/1.1" 200 17776
+INFO 2025-10-07 21:38:11,808 basehttp 8940 6616 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-10-07 21:38:12,000 basehttp 8940 6616 "GET / HTTP/1.1" 200 53772
+INFO 2025-10-07 21:38:13,747 basehttp 8940 6616 "GET /patient/add/ HTTP/1.1" 200 68411
+INFO 2025-10-07 21:40:19,143 autoreload 11164 19212 Watching for file changes with StatReloader
+INFO 2025-10-07 21:40:29,811 basehttp 11164 17280 "GET /?id=3399184c-ab99-447d-ae81-77624f8e6d24&vscodeBrowserReqId=1759853429771 HTTP/1.1" 302 0
+INFO 2025-10-07 21:40:29,857 basehttp 11164 17280 "GET /users/login/?next=/%3Fid%3D3399184c-ab99-447d-ae81-77624f8e6d24%26vscodeBrowserReqId%3D1759853429771 HTTP/1.1" 200 17776
+INFO 2025-10-07 21:40:57,110 autoreload 11164 19212 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\forms.py changed, reloading.
+INFO 2025-10-07 21:40:57,940 autoreload 10512 16212 Watching for file changes with StatReloader
+INFO 2025-10-07 21:41:09,977 autoreload 10512 16212 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\forms.py changed, reloading.
+INFO 2025-10-07 21:41:10,889 autoreload 17572 17808 Watching for file changes with StatReloader
+INFO 2025-10-07 21:43:12,697 autoreload 17572 17808 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\forms.py changed, reloading.
+INFO 2025-10-07 21:43:13,611 autoreload 2200 15832 Watching for file changes with StatReloader
+INFO 2025-10-07 21:43:39,574 autoreload 3828 19420 Watching for file changes with StatReloader
+INFO 2025-10-07 21:43:52,368 basehttp 3828 6416 "GET /patient/add/ HTTP/1.1" 302 0
+INFO 2025-10-07 21:43:52,383 basehttp 3828 6416 "GET /users/login/?next=/patient/add/ HTTP/1.1" 200 17776
+INFO 2025-10-07 21:43:54,756 basehttp 3828 6416 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-10-07 21:43:54,930 basehttp 3828 6416 "GET / HTTP/1.1" 200 53772
+INFO 2025-10-07 21:43:56,435 basehttp 3828 6416 "GET /patient/add/ HTTP/1.1" 200 68411
+INFO 2025-10-07 21:47:33,816 basehttp 3828 6416 "GET /patient/add/ HTTP/1.1" 200 68411
+INFO 2025-10-07 21:49:06,639 basehttp 3828 6416 "GET /patient/add/ HTTP/1.1" 200 68613
+INFO 2025-10-07 22:00:19,111 basehttp 3828 19284 "GET /patient/add/ HTTP/1.1" 200 70121
+INFO 2025-10-07 22:00:38,245 basehttp 3828 19284 "GET /patient/add/ HTTP/1.1" 200 70121
+WARNING 2025-10-07 22:00:45,619 log 3828 19284 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-10-07 22:00:45,620 basehttp 3828 19284 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 17178
+INFO 2025-10-07 22:01:14,469 basehttp 3828 19284 "GET /patient/add/ HTTP/1.1" 200 70121
+INFO 2025-10-07 22:02:08,624 autoreload 11308 13816 Watching for file changes with StatReloader
+INFO 2025-10-07 22:02:19,398 basehttp 11308 16212 "GET /patient/add/ HTTP/1.1" 302 0
+INFO 2025-10-07 22:02:19,550 basehttp 11308 16212 "GET /users/login/?next=/patient/add/ HTTP/1.1" 200 17776
+INFO 2025-10-07 22:02:21,774 basehttp 11308 16212 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-10-07 22:02:22,107 basehttp 11308 16212 "GET / HTTP/1.1" 200 53772
+INFO 2025-10-07 22:02:24,245 basehttp 11308 16212 "GET /patient/add/ HTTP/1.1" 200 70121
+WARNING 2025-10-07 22:03:14,841 log 11308 16212 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-10-07 22:03:14,843 basehttp 11308 16212 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 17178
+INFO 2025-10-07 22:03:36,632 autoreload 17144 9220 Watching for file changes with StatReloader
+INFO 2025-10-07 22:04:05,930 autoreload 17144 9220 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\forms.py changed, reloading.
+INFO 2025-10-07 22:04:06,319 autoreload 11308 13816 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\forms.py changed, reloading.
+INFO 2025-10-07 22:04:06,780 autoreload 14936 4296 Watching for file changes with StatReloader
+INFO 2025-10-07 22:04:07,282 autoreload 12116 7084 Watching for file changes with StatReloader
+INFO 2025-10-07 22:04:45,608 basehttp 14936 4892 "GET /patient/add/ HTTP/1.1" 302 0
+INFO 2025-10-07 22:04:45,674 basehttp 14936 4892 "GET /users/login/?next=/patient/add/ HTTP/1.1" 200 17776
+WARNING 2025-10-07 22:04:45,852 log 14936 4892 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-10-07 22:04:45,854 basehttp 14936 4892 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 17178
+INFO 2025-10-07 22:04:48,692 basehttp 14936 4892 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-10-07 22:04:48,904 basehttp 14936 4892 "GET / HTTP/1.1" 200 53772
+WARNING 2025-10-07 22:04:49,130 log 14936 4892 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-10-07 22:04:49,132 basehttp 14936 4892 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 17178
+INFO 2025-10-07 22:04:53,231 basehttp 14936 4892 "GET /patient/add/ HTTP/1.1" 200 71702
+INFO 2025-10-07 22:05:19,049 basehttp 14936 11120 "GET /patient/add/?id=4f148d07-69b6-4487-aef3-ae978dd411a3&vscodeBrowserReqId=1759854919021 HTTP/1.1" 302 0
+INFO 2025-10-07 22:05:19,081 basehttp 14936 11120 "GET /users/login/?next=/patient/add/%3Fid%3D4f148d07-69b6-4487-aef3-ae978dd411a3%26vscodeBrowserReqId%3D1759854919021 HTTP/1.1" 200 17776
+INFO 2025-10-07 22:05:44,955 basehttp 14936 4892 "GET /patient/add/ HTTP/1.1" 200 71702
+INFO 2025-10-07 22:05:54,027 autoreload 12116 7084 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\forms.py changed, reloading.
+INFO 2025-10-07 22:05:54,217 autoreload 14936 4296 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\forms.py changed, reloading.
+INFO 2025-10-07 22:05:55,078 autoreload 7452 3952 Watching for file changes with StatReloader
+INFO 2025-10-07 22:05:55,234 autoreload 16252 16316 Watching for file changes with StatReloader
+INFO 2025-10-07 22:07:43,047 basehttp 7452 10456 "GET /patient/add/ HTTP/1.1" 302 0
+INFO 2025-10-07 22:07:43,063 basehttp 7452 10456 "GET /users/login/?next=/patient/add/ HTTP/1.1" 200 17776
+INFO 2025-10-07 22:07:45,914 basehttp 7452 10456 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-10-07 22:07:46,101 basehttp 7452 10456 "GET / HTTP/1.1" 200 53772
+INFO 2025-10-07 22:07:48,621 basehttp 7452 10456 "GET /patient/add/ HTTP/1.1" 200 72315
+INFO 2025-10-07 22:07:59,679 basehttp 7452 10456 "GET /patient/add/ HTTP/1.1" 200 72315
+INFO 2025-10-07 22:08:30,958 basehttp 7452 10456 "GET /patient/add/ HTTP/1.1" 200 72748
+INFO 2025-10-07 22:08:39,815 basehttp 7452 10456 "GET /patient/add/ HTTP/1.1" 200 72748
+INFO 2025-10-07 22:09:07,130 basehttp 7452 10456 "GET /patient/add/ HTTP/1.1" 200 72911
+INFO 2025-10-07 22:11:09,810 basehttp 7452 16360 "GET /patient/add/ HTTP/1.1" 302 0
+INFO 2025-10-07 22:11:09,819 basehttp 7452 16360 "GET /users/login/?next=/patient/add/ HTTP/1.1" 200 17776
+INFO 2025-10-07 22:11:09,995 basehttp 7452 16360 "GET /static/css/social.css HTTP/1.1" 200 2079
+INFO 2025-10-07 22:11:10,003 basehttp 7452 15084 "GET /static/css/custom_css.css HTTP/1.1" 200 2339
+INFO 2025-10-07 22:11:10,008 basehttp 7452 4556 "GET /static/css/ndas-sidebar.css HTTP/1.1" 200 3918
+INFO 2025-10-07 22:11:10,010 basehttp 7452 16360 "GET /static/js/utils.js HTTP/1.1" 304 0
+INFO 2025-10-07 22:11:10,013 basehttp 7452 20316 "GET /static/js/login.js HTTP/1.1" 200 2964
+INFO 2025-10-07 22:11:10,020 basehttp 7452 15084 "GET /static/js/main.js HTTP/1.1" 304 0
+INFO 2025-10-07 22:11:10,033 basehttp 7452 20316 "GET /static/js/zoomrotate.js HTTP/1.1" 304 0
+INFO 2025-10-07 22:11:10,034 basehttp 7452 4556 "GET /static/js/rotate.js HTTP/1.1" 304 0
+INFO 2025-10-07 22:11:10,043 basehttp 7452 3932 "GET /static/js/videojs-failsafe.js HTTP/1.1" 304 0
+INFO 2025-10-07 22:11:10,045 basehttp 7452 16360 "GET /static/js/debug.js HTTP/1.1" 304 0
+INFO 2025-10-07 22:11:10,185 basehttp 7452 4796 "GET /static/css/login.css HTTP/1.1" 200 6852
+WARNING 2025-10-07 22:11:11,147 log 7452 4796 Not Found: /favicon.ico
+WARNING 2025-10-07 22:11:11,149 basehttp 7452 4796 "GET /favicon.ico HTTP/1.1" 404 17067
+INFO 2025-10-07 22:11:43,531 basehttp 7452 19632 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-10-07 22:11:43,719 basehttp 7452 19632 "GET / HTTP/1.1" 200 53772
+INFO 2025-10-07 22:11:45,723 basehttp 7452 19632 "GET /patient/add/ HTTP/1.1" 200 72911
+INFO 2025-10-07 22:12:53,325 basehttp 7452 10456 "GET /patient/add/ HTTP/1.1" 200 76196
+INFO 2025-10-07 22:12:54,815 basehttp 7452 10456 "GET /patient/add/ HTTP/1.1" 200 76196
+INFO 2025-10-07 22:14:09,316 basehttp 7452 10456 "GET /patient/add/ HTTP/1.1" 200 72911
+INFO 2025-10-07 22:20:56,811 autoreload 7452 3952 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\forms.py changed, reloading.
+INFO 2025-10-07 22:20:57,827 autoreload 6140 4864 Watching for file changes with StatReloader
+INFO 2025-10-07 22:21:12,923 autoreload 6140 4864 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\models.py changed, reloading.
+INFO 2025-10-07 22:21:14,373 autoreload 21320 11168 Watching for file changes with StatReloader
+INFO 2025-10-07 22:21:22,297 autoreload 21320 11168 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\forms.py changed, reloading.
+INFO 2025-10-07 22:21:23,193 autoreload 16476 11372 Watching for file changes with StatReloader
+INFO 2025-10-07 22:21:28,888 autoreload 16476 11372 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\forms.py changed, reloading.
+INFO 2025-10-07 22:21:29,861 autoreload 19036 16680 Watching for file changes with StatReloader
+INFO 2025-10-07 22:22:58,276 autoreload 19036 16680 D:\Projects\Current Projects\NDAS - Project\NDAS\patients\forms.py changed, reloading.
+INFO 2025-10-07 22:22:59,224 autoreload 13964 8812 Watching for file changes with StatReloader
+INFO 2025-10-07 22:23:38,171 basehttp 13964 15500 "GET /patient/add/ HTTP/1.1" 302 0
+INFO 2025-10-07 22:23:38,186 basehttp 13964 15500 "GET /users/login/?next=/patient/add/ HTTP/1.1" 200 17776
+INFO 2025-10-07 22:23:40,572 basehttp 13964 15500 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-10-07 22:23:40,795 basehttp 13964 15500 "GET / HTTP/1.1" 200 53772
+INFO 2025-10-07 22:23:42,776 basehttp 13964 15500 "GET /patient/add/ HTTP/1.1" 200 72791
+INFO 2025-10-07 22:24:43,171 basehttp 13964 15500 "GET /patient/add/ HTTP/1.1" 200 72791
+INFO 2025-10-07 22:24:44,613 basehttp 13964 15500 "GET /patient/add/ HTTP/1.1" 200 72791
+INFO 2025-10-07 22:25:47,588 basehttp 13964 15500 "GET / HTTP/1.1" 200 53448
+INFO 2025-10-07 22:25:49,638 basehttp 13964 15500 "GET /patient/add/ HTTP/1.1" 200 72791
+INFO 2025-10-07 22:32:39,354 basehttp 13964 10676 "GET /patient/add/ HTTP/1.1" 200 73166
+INFO 2025-10-07 22:35:22,035 basehttp 13964 10676 "GET /patient/add/ HTTP/1.1" 200 73166
+INFO 2025-10-07 22:35:38,585 basehttp 13964 10676 "GET /patient/add/ HTTP/1.1" 200 73166
+INFO 2025-10-07 22:35:39,469 basehttp 13964 10676 "GET /patient/add/ HTTP/1.1" 200 73166
+INFO 2025-10-07 22:36:15,645 basehttp 13964 10676 "GET /attachment/manager/ HTTP/1.1" 200 50927
+INFO 2025-10-07 22:36:21,160 basehttp 13964 10676 "GET /manager/patient/ HTTP/1.1" 200 68138
+INFO 2025-10-07 22:36:23,652 basehttp 13964 10676 "GET /patient/view/7/ HTTP/1.1" 200 106129
+INFO 2025-10-07 22:36:28,528 basehttp 13964 10676 "GET /attachment/add/7/ HTTP/1.1" 200 57772
+INFO 2025-10-07 22:37:20,771 basehttp 13964 10676 "GET /patient/add/ HTTP/1.1" 200 73166
+INFO 2025-10-07 22:40:38,773 basehttp 13964 10676 "GET /patient/add/ HTTP/1.1" 200 73015
+INFO 2025-10-07 22:40:41,134 basehttp 13964 10676 "GET /patient/add/ HTTP/1.1" 200 73015
+INFO 2025-10-07 22:41:16,861 basehttp 13964 10676 "GET /patient/add/ HTTP/1.1" 200 73015
+INFO 2025-10-09 12:32:18,066 autoreload 6856 7648 Watching for file changes with StatReloader
+INFO 2025-10-09 12:32:30,545 basehttp 6856 14368 "GET / HTTP/1.1" 302 0
+INFO 2025-10-09 12:32:30,933 basehttp 6856 14368 "GET /users/login/?next=/ HTTP/1.1" 200 17776
+INFO 2025-10-09 12:32:31,088 basehttp 6856 14368 "GET /static/css/social.css HTTP/1.1" 304 0
+INFO 2025-10-09 12:32:31,089 basehttp 6856 11524 "GET /static/css/ndas-sidebar.css HTTP/1.1" 304 0
+INFO 2025-10-09 12:32:31,089 basehttp 6856 13056 "GET /static/css/login.css HTTP/1.1" 304 0
+INFO 2025-10-09 12:32:31,109 basehttp 6856 13056 "GET /static/js/main.js HTTP/1.1" 304 0
+INFO 2025-10-09 12:32:31,112 basehttp 6856 19632 "GET /static/js/login.js HTTP/1.1" 304 0
+INFO 2025-10-09 12:32:31,112 basehttp 6856 5596 "GET /static/js/videojs-failsafe.js HTTP/1.1" 304 0
+INFO 2025-10-09 12:32:31,114 basehttp 6856 11524 "GET /static/js/debug.js HTTP/1.1" 304 0
+INFO 2025-10-09 12:32:31,124 basehttp 6856 5596 "GET /static/js/zoomrotate.js HTTP/1.1" 304 0
+INFO 2025-10-09 12:32:31,128 basehttp 6856 11524 "GET /static/js/rotate.js HTTP/1.1" 304 0
+INFO 2025-10-09 12:32:31,176 basehttp 6856 14368 "GET /static/js/utils.js HTTP/1.1" 304 0
+INFO 2025-10-09 12:32:31,457 basehttp 6856 2216 "GET /static/css/custom_css.css HTTP/1.1" 200 2339
+WARNING 2025-10-09 12:32:32,283 log 6856 2216 Not Found: /favicon.ico
+WARNING 2025-10-09 12:32:32,284 basehttp 6856 2216 "GET /favicon.ico HTTP/1.1" 404 17067
+INFO 2025-10-09 12:32:34,454 basehttp 6856 2216 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-10-09 12:32:35,173 basehttp 6856 2216 "GET / HTTP/1.1" 200 53772
+INFO 2025-10-09 12:32:38,986 basehttp 6856 2216 "GET /patient/add/ HTTP/1.1" 200 73015
+INFO 2025-10-09 12:36:34,770 basehttp 6856 2216 "POST /patient/add/ HTTP/1.1" 200 74467
+INFO 2025-10-09 12:37:04,973 basehttp 6856 2216 "POST /patient/add/ HTTP/1.1" 302 0
+INFO 2025-10-09 12:37:05,308 basehttp 6856 2216 "GET /patient/view/8/ HTTP/1.1" 200 107334
+INFO 2025-10-09 12:47:13,450 basehttp 6856 9116 "GET / HTTP/1.1" 200 53770
+INFO 2025-10-09 12:47:15,072 basehttp 6856 9116 "GET / HTTP/1.1" 200 53770

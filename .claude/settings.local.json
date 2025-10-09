@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Read(//c/Users/user/Pictures/Screenshots/**)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "mcp__ide__getDiagnostics"
     ],
     "deny": [],
     "ask": []

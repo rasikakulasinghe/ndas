@@ -87,6 +87,7 @@ class PatientForm(forms.ModelForm):
             "phm_area",
             "problems",
             "indecation_for_gma",
+            "indecation_for_gma_other",
             "antenatal_hx",
             "intranatal_hx",
             "postnatal_hx",
@@ -162,9 +163,9 @@ class PatientForm(forms.ModelForm):
             ),
             "resuscitated": forms.CheckboxInput(
                 attrs={
-                    "class": "big-checkbox",
+                    "class": "form-check-input",
                     "id": "id_resuscitated",
-                    "onchange": "toggleresuscitated()",
+                    "onchange": "toggleResuscitationNote()",
                 }
             ),
             "resustn_note": forms.Textarea(
@@ -246,6 +247,13 @@ class PatientForm(forms.ModelForm):
                 }
             ),
             "indecation_for_gma": forms.CheckboxSelectMultiple(attrs={"class": ""}),
+            "indecation_for_gma_other": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": "3",
+                    "placeholder": "Please specify other indication details",
+                }
+            ),
             "antenatal_hx": forms.Textarea(
                 attrs={
                     "class": "form-control",
@@ -524,6 +532,22 @@ class PatientForm(forms.ModelForm):
                     )
                 }
             )
+
+        # Validate GMA other indication details if "Other" is selected
+        indecation_for_gma = cleaned_data.get("indecation_for_gma")
+        indecation_for_gma_other = cleaned_data.get("indecation_for_gma_other")
+
+        if indecation_for_gma:
+            # Check if "Other" indication (ID 27) is selected
+            other_indication_ids = [indication.id for indication in indecation_for_gma if indication.id == 27]
+            if other_indication_ids and not indecation_for_gma_other:
+                raise ValidationError(
+                    {
+                        "indecation_for_gma_other": _(
+                            "Please provide details when 'Other' GMA indication is selected."
+                        )
+                    }
+                )
 
         return cleaned_data
 

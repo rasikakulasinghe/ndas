@@ -2,115 +2,60 @@
 {% load static %}
 {% block title %}Patient - Add New | NDAS{% endblock %}
 
-{% block main_content %}
+{% block extra_css %}
 <style>
-  .form-group label {
+  #resuscitation-note,
+  #gma-other-note {
+    display: none;
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-top: 0.75rem;
+    transition: all 0.3s ease;
+  }
+
+  #resuscitation-note label,
+  #gma-other-note label {
     font-weight: 600;
-    color: #495057;
     margin-bottom: 0.5rem;
+    color: #856404;
+  }
+
+  #resuscitation-note .form-control,
+  #gma-other-note .form-control {
+    border-color: #ffeaa7;
+  }
+
+  #resuscitation-note .form-control:focus,
+  #gma-other-note .form-control:focus {
+    border-color: #f39c12;
+    box-shadow: 0 0 0 0.2rem rgba(243, 156, 18, 0.25);
   }
   
-  .card-header .card-title {
-    font-size: 1.1rem;
-    font-weight: 600;
+  .form-check-input {
+    margin-top: 0.3rem;
   }
   
-  .progress-steps small {
-    font-size: 0.8rem;
+  .form-check-label {
+    margin-left: 0.5rem;
     font-weight: 500;
   }
   
-  .custom-control-label {
-    padding-left: 0.5rem;
-  }
-  
-  .input-group-text {
-    font-size: 0.9rem;
-    background-color: #f8f9fa;
-  }
-  
-  .text-danger.small {
-    font-size: 0.8rem;
-    margin-top: 0.25rem;
-    display: block;
-  }
-  
-  .card-outline {
-    border-top: 3px solid;
-  }
-  
-  .card-primary.card-outline {
-    border-top-color: #007bff;
-  }
-  
-  .card-info.card-outline {
-    border-top-color: #17a2b8;
-  }
-  
-  .card-success.card-outline {
-    border-top-color: #28a745;
-  }
-  
-  .card-warning.card-outline {
-    border-top-color: #ffc107;
-  }
-  
-  .card-secondary.card-outline {
-    border-top-color: #6c757d;
-  }
-  
-  .card-danger.card-outline {
-    border-top-color: #dc3545;
-  }
-  
-  .form-control:focus {
-    border-color: #80bdff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-  }
-  
-  .is-invalid {
-    border-color: #dc3545;
-    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
-  }
-  
-  .btn {
-    border-radius: 0.25rem;
-    font-weight: 500;
-  }
-  
-  @media (max-width: 768px) {
-    .progress-steps {
-      display: none;
-    }
-    
-    .card-body {
-      padding: 1rem;
-    }
+  .form-check-input:checked {
+    background-color: #28a745;
+    border-color: #28a745;
   }
 </style>
+{% endblock extra_css %}
+
+{% block main_content %}
 
 <div class="container-fluid">
   {% csrf_token %}
   
   <!-- Display Form Errors -->
   {% include 'src/form_error.html' %}
-  
-  <!-- Header Section -->
-  <div class="row mb-4">
-    <div class="col-12">
-      <div class="card card-outline card-primary">
-        <div class="card-header">
-          <h3 class="card-title">
-            <i class="fas fa-user-plus mr-2"></i>
-            Add New Patient
-          </h3>
-          <div class="card-tools">
-            <span class="badge badge-info">Required fields marked with *</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Form Container -->
   <div class="row justify-content-center">
@@ -118,50 +63,21 @@
       <form action="{% url 'add-patient' %}" method="POST" id="patient-form">
         {% csrf_token %}
 
-        <!-- Progress Steps -->
-        <div class="card card-outline card-secondary mb-3 progress-steps">
-          <div class="card-body p-3">
-            <div class="row text-center">
-              <div class="col-sm-2 col-4 mb-2 mb-sm-0">
-                <small class="text-primary d-block">
-                  <i class="fas fa-id-card d-block mb-1"></i> 
-                  <span class="d-none d-md-inline">Records</span>
-                </small>
-              </div>
-              <div class="col-sm-2 col-4 mb-2 mb-sm-0">
-                <small class="text-muted d-block">
-                  <i class="fas fa-user d-block mb-1"></i> 
-                  <span class="d-none d-md-inline">Personal</span>
-                </small>
-              </div>
-              <div class="col-sm-2 col-4 mb-2 mb-sm-0">
-                <small class="text-muted d-block">
-                  <i class="fas fa-baby d-block mb-1"></i> 
-                  <span class="d-none d-md-inline">Birth</span>
-                </small>
-              </div>
-              <div class="col-sm-2 col-4 mb-2 mb-sm-0">
-                <small class="text-muted d-block">
-                  <i class="fas fa-ruler d-block mb-1"></i> 
-                  <span class="d-none d-md-inline">Measurements</span>
-                </small>
-              </div>
-              <div class="col-sm-2 col-4 mb-2 mb-sm-0">
-                <small class="text-muted d-block">
-                  <i class="fas fa-address-book d-block mb-1"></i> 
-                  <span class="d-none d-md-inline">Contact</span>
-                </small>
-              </div>
-              <div class="col-sm-2 col-4 mb-2 mb-sm-0">
-                <small class="text-muted d-block">
-                  <i class="fas fa-notes-medical d-block mb-1"></i> 
-                  <span class="d-none d-md-inline">Medical</span>
-                </small>
+        <div class="row">
+          <div class="col-12">
+            <div class="card card-outline card-primary">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <i class="fas fa-user-plus mr-2"></i>
+                  Add New Patient
+                </h3>
+                <div class="card-tools">
+                  <span class="badge badge-info">Required fields marked with *</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-
+  </div>
         <div class="row">
           <!-- Left Column -->
           <div class="col-lg-6">
@@ -355,27 +271,75 @@
                 <div class="row">
                   <div class="col-12">
                     <div class="form-group">
-                      <div class="custom-control custom-checkbox">
+                      <div class="form-check">
                         {{form.resuscitated}}
-                        <label class="custom-control-label" for="id_resuscitated">
-                          Required Resuscitation
+                        <label class="form-check-label" for="id_resuscitated">
+                          <strong>Required Resuscitation</strong>
                         </label>
                       </div>
                       {% if form.resuscitated.errors %}
                         <div class="text-danger small">{{ form.resuscitated.errors.0 }}</div>
                       {% endif %}
+
+                      <!-- Resuscitation Notes - appears directly below checkbox -->
+                      <div id="resuscitation-note" class="mt-3">
+                        <div class="form-group mb-0">
+                          <label for="id_resustn_note">Resuscitation Notes <span class="text-danger">*</span></label>
+                          {{form.resustn_note}}
+                          {% if form.resustn_note.errors %}
+                            <div class="text-danger small">{{ form.resustn_note.errors.0 }}</div>
+                          {% endif %}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
 
-                <div id="resuscitation-note" style="display: none;">
-                  <div class="form-group">
-                    <label for="id_resustn_note">Resuscitation Notes</label>
-                    {{form.resustn_note}}
-                    {% if form.resustn_note.errors %}
-                      <div class="text-danger small">{{ form.resustn_note.errors.0 }}</div>
-                    {% endif %}
-                  </div>
+            <!-- Medical History -->
+            <div class="card card-light card-outline">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <i class="fas fa-history"></i> Medical History (Optional)
+                </h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label for="id_antenatal_hx">Antenatal History</label>
+                  {{form.antenatal_hx}}
+                  {% if form.antenatal_hx.errors %}
+                    <div class="text-danger small">{{ form.antenatal_hx.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+                <div class="form-group">
+                  <label for="id_intranatal_hx">Intranatal History</label>
+                  {{form.intranatal_hx}}
+                  {% if form.intranatal_hx.errors %}
+                    <div class="text-danger small">{{ form.intranatal_hx.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+                <div class="form-group">
+                  <label for="id_postnatal_hx">Postnatal History</label>
+                  {{form.postnatal_hx}}
+                  {% if form.postnatal_hx.errors %}
+                    <div class="text-danger small">{{ form.postnatal_hx.errors.0 }}</div>
+                  {% endif %}
+                </div>
+
+                <div class="form-group">
+                  <label for="id_other_relavent_details">Other Relevant Details</label>
+                  {{form.other_relavent_details}}
+                  {% if form.other_relavent_details.errors %}
+                    <div class="text-danger small">{{ form.other_relavent_details.errors.0 }}</div>
+                  {% endif %}
                 </div>
               </div>
             </div>
@@ -543,50 +507,15 @@
                     <div class="text-danger small">{{ form.indecation_for_gma.errors.0 }}</div>
                   {% endif %}
                   <small class="form-text text-muted">Select all applicable indications</small>
-                </div>
 
-                <!-- Medical History Accordion -->
-                <div class="card card-light">
-                  <div class="card-header">
-                    <h4 class="card-title w-100">
-                      <a class="d-block w-100" data-toggle="collapse" href="#medical-history">
-                        <i class="fas fa-history mr-2"></i>Medical History (Optional)
-                      </a>
-                    </h4>
-                  </div>
-                  <div id="medical-history" class="collapse">
-                    <div class="card-body">
-                      <div class="form-group">
-                        <label for="id_antenatal_hx">Antenatal History</label>
-                        {{form.antenatal_hx}}
-                        {% if form.antenatal_hx.errors %}
-                          <div class="text-danger small">{{ form.antenatal_hx.errors.0 }}</div>
-                        {% endif %}
-                      </div>
-
-                      <div class="form-group">
-                        <label for="id_intranatal_hx">Intranatal History</label>
-                        {{form.intranatal_hx}}
-                        {% if form.intranatal_hx.errors %}
-                          <div class="text-danger small">{{ form.intranatal_hx.errors.0 }}</div>
-                        {% endif %}
-                      </div>
-
-                      <div class="form-group">
-                        <label for="id_postnatal_hx">Postnatal History</label>
-                        {{form.postnatal_hx}}
-                        {% if form.postnatal_hx.errors %}
-                          <div class="text-danger small">{{ form.postnatal_hx.errors.0 }}</div>
-                        {% endif %}
-                      </div>
-
-                      <div class="form-group">
-                        <label for="id_other_relavent_details">Other Relevant Details</label>
-                        {{form.other_relavent_details}}
-                        {% if form.other_relavent_details.errors %}
-                          <div class="text-danger small">{{ form.other_relavent_details.errors.0 }}</div>
-                        {% endif %}
-                      </div>
+                  <!-- Other GMA Indication Details - appears when "Other" is selected -->
+                  <div id="gma-other-note">
+                    <div class="form-group mb-0">
+                      <label for="id_indecation_for_gma_other">Other Indication Details <span class="text-danger">*</span></label>
+                      {{form.indecation_for_gma_other}}
+                      {% if form.indecation_for_gma_other.errors %}
+                        <div class="text-danger small">{{ form.indecation_for_gma_other.errors.0 }}</div>
+                      {% endif %}
                     </div>
                   </div>
                 </div>
@@ -595,28 +524,7 @@
           </div>
         </div>
 
-        <!-- Quick Review Summary -->
-        <div class="row">
-          <div class="col-12">
-            <div class="card card-outline card-info" id="summary-card" style="display: none;">
-              <div class="card-header">
-                <h3 class="card-title">
-                  <i class="fas fa-clipboard-check"></i> Quick Review
-                </h3>
-                <div class="card-tools">
-                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                    <i class="fas fa-minus"></i>
-                  </button>
-                </div>
-              </div>
-              <div class="card-body">
-                <div class="row" id="summary-content">
-                  <!-- Summary content will be populated by JavaScript -->
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+
 
         <!-- Action Buttons -->
         <div class="row">
@@ -628,14 +536,8 @@
                     <button type="button" class="btn btn-default" onclick="window.history.back()">
                       <i class="fas fa-arrow-left"></i> Back
                     </button>
-                    <button type="button" class="btn btn-outline-info ml-2" id="preview-btn">
-                      <i class="fas fa-eye"></i> Preview
-                    </button>
                   </div>
                   <div class="col-sm-6 text-right">
-                    <button type="button" class="btn btn-info mr-2" id="validate-btn">
-                      <i class="fas fa-check-circle"></i> Validate Form
-                    </button>
                     <button type="submit" class="btn btn-success" id="submit-btn">
                       <i class="fas fa-save"></i> Add Patient
                     </button>
@@ -653,339 +555,128 @@
 
 
 <script>
-$(document).ready(function() {
-  const form = $('#patient-form');
-  const submitBtn = $('#submit-btn');
-  const validateBtn = $('#validate-btn');
-  
-  // Initialize form
-  initializeForm();
-  
-  // Resuscitation toggle
-  $('#id_resuscitated').change(function() {
-    toggleResuscitationNote();
-  });
-  
-  // Form validation on submit
-  form.submit(function(e) {
-    if (!validateForm()) {
-      e.preventDefault();
-      showValidationAlert();
-      return false;
-    }
-    
-    // Show loading state
-    submitBtn.prop('disabled', true)
-           .html('<i class="fas fa-spinner fa-spin"></i> Saving...');
-  });
-  
-  // Validate form button
-  validateBtn.click(function() {
-    if (validateForm()) {
-      if (typeof toastr !== 'undefined') {
-        toastr.success('Form validation passed! Ready to submit.');
-      }
-    } else {
-      if (typeof toastr !== 'undefined') {
-        toastr.error('Please check the highlighted fields.');
-      }
-    }
-  });
-  
-  // Preview button
-  $('#preview-btn').click(function() {
-    generatePreview();
-  });
-  
-  // Real-time field validation
-  setupRealTimeValidation();
-  
-  // GMA indicators feedback
-  setupGMAFeedback();
-  
-  // Progress indicator
-  setupProgressIndicator();
-  
-  // Card collapse functionality
-  $('[data-card-widget="collapse"]').CardWidget('collapse');
-  
-  function initializeForm() {
-    // Initialize resuscitation toggle
-    toggleResuscitationNote();
-    
-    // Add Bootstrap classes to form elements if not present
-    $('.form-control').each(function() {
-      if (!$(this).hasClass('form-control')) {
-        $(this).addClass('form-control');
-      }
-    });
-    
-    // Initialize tooltips
-    $('[data-toggle="tooltip"]').tooltip();
-    
-    // Set focus on first input
-    $('#id_bht').focus();
+// Cache for DOM elements - initialized once on page load
+let cachedElements = null;
+
+// Initialize element cache
+function initializeElementCache() {
+  return {
+    resuscitationCheckbox: document.getElementById('id_resuscitated'),
+    resuscitationNote: document.getElementById('resuscitation-note'),
+    resuscitationTextArea: document.getElementById('id_resustn_note'),
+    gmaOtherContainer: document.getElementById('gma-other-note'),
+    gmaOtherTextArea: document.getElementById('id_indecation_for_gma_other'),
+    gmaOtherCheckbox: document.querySelector('input[name="indecation_for_gma"][value="27"]'),
+    patientForm: document.getElementById('patient-form'),
+    submitBtn: document.getElementById('submit-btn'),
+    bhtInput: document.getElementById('id_bht')
+  };
+}
+
+// Update resuscitation note visibility
+function updateResuscitationVisibility() {
+  const elements = cachedElements;
+  if (!elements.resuscitationCheckbox) return;
+
+  const isChecked = elements.resuscitationCheckbox.checked;
+
+  if (isChecked) {
+    elements.resuscitationNote.style.display = 'block';
+    elements.resuscitationTextArea.setAttribute('required', 'required');
+    elements.resuscitationTextArea.focus();
+  } else {
+    elements.resuscitationNote.style.display = 'none';
+    elements.resuscitationTextArea.removeAttribute('required');
+    elements.resuscitationTextArea.value = '';
   }
-  
-  function toggleResuscitationNote() {
-    const isChecked = $('#id_resuscitated').is(':checked');
-    const noteContainer = $('#resuscitation-note');
-    
-    if (isChecked) {
-      noteContainer.slideDown(300);
-      $('#id_resustn_note').attr('required', true);
-    } else {
-      noteContainer.slideUp(300);
-      $('#id_resustn_note').removeAttr('required').val('');
-    }
+}
+
+// Update GMA other note visibility
+function updateGMAOtherVisibility() {
+  const elements = cachedElements;
+  if (!elements.gmaOtherCheckbox) return;
+
+  const isChecked = elements.gmaOtherCheckbox.checked;
+
+  if (isChecked) {
+    elements.gmaOtherContainer.style.display = 'block';
+    elements.gmaOtherTextArea.setAttribute('required', 'required');
+    elements.gmaOtherTextArea.focus();
+  } else {
+    elements.gmaOtherContainer.style.display = 'none';
+    elements.gmaOtherTextArea.removeAttribute('required');
+    elements.gmaOtherTextArea.value = '';
   }
-  
-  function validateForm() {
-    let isValid = true;
-    
-    // Clear previous validation states
-    $('.is-invalid').removeClass('is-invalid');
-    $('.text-danger').hide();
-    
-    // Required fields validation
-    const requiredFields = {
-      'id_bht': 'BHT Number is required',
-      'id_baby_name': 'Baby Name is required', 
-      'id_mother_name': "Mother's Name is required",
-      'id_gender': 'Gender selection is required',
-      'id_dob_tob': 'Date and Time of Birth is required',
-      'id_pog_wks': 'Gestational weeks is required',
-      'id_pog_days': 'Gestational days is required',
-      'id_birth_weight': 'Birth Weight is required',
-      'id_ofc': 'OFC measurement is required',
-      'id_tp_mobile': 'Mobile phone is required'
-    };
-    
-    Object.keys(requiredFields).forEach(fieldId => {
-      const field = $(`#${fieldId}`);
-      if (field.length && !field.val().trim()) {
-        markFieldAsInvalid(field, requiredFields[fieldId]);
-        isValid = false;
+}
+
+// Validate form before submission
+function validateForm() {
+  const elements = cachedElements;
+
+  // Resuscitation validation
+  if (elements.resuscitationCheckbox?.checked &&
+      !elements.resuscitationTextArea?.value.trim()) {
+    alert('Please provide resuscitation notes when "Required Resuscitation" is checked.');
+    elements.resuscitationTextArea.focus();
+    return false;
+  }
+
+  // GMA Other validation
+  if (elements.gmaOtherCheckbox?.checked &&
+      !elements.gmaOtherTextArea?.value.trim()) {
+    alert('Please provide details when "Other" GMA indication is selected.');
+    elements.gmaOtherTextArea.focus();
+    return false;
+  }
+
+  return true;
+}
+
+// Disable submit button and show loading state
+function disableSubmitButton() {
+  const btn = cachedElements.submitBtn;
+  if (!btn) return;
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+}
+
+// Initialize all form functionality
+document.addEventListener('DOMContentLoaded', function() {
+  // Cache all DOM elements once
+  cachedElements = initializeElementCache();
+
+  // Initialize resuscitation toggle
+  if (cachedElements.resuscitationCheckbox) {
+    cachedElements.resuscitationCheckbox.addEventListener('change', updateResuscitationVisibility);
+    updateResuscitationVisibility(); // Set initial state
+  }
+
+  // Initialize GMA toggle with event delegation
+  const gmaFieldContainer = cachedElements.gmaOtherCheckbox?.closest('.form-group');
+  if (gmaFieldContainer) {
+    gmaFieldContainer.addEventListener('change', function(e) {
+      if (e.target.name === 'indecation_for_gma') {
+        updateGMAOtherVisibility();
       }
     });
-    
-    // Specific validations
-    if (!validatePOG()) isValid = false;
-    if (!validateAPGAR()) isValid = false;
-    if (!validateMeasurements()) isValid = false;
-    if (!validatePhone()) isValid = false;
-    
-    return isValid;
+    updateGMAOtherVisibility(); // Set initial state
   }
-  
-  function validatePOG() {
-    const weeks = parseInt($('#id_pog_wks').val());
-    const days = parseInt($('#id_pog_days').val());
-    let isValid = true;
-    
-    if (weeks < 20 || weeks > 44) {
-      markFieldAsInvalid($('#id_pog_wks'), 'Weeks must be between 20-44');
-      isValid = false;
-    }
-    
-    if (days < 0 || days > 6) {
-      markFieldAsInvalid($('#id_pog_days'), 'Days must be between 0-6');
-      isValid = false;
-    }
-    
-    return isValid;
-  }
-  
-  function validateAPGAR() {
-    const apgarFields = ['id_apgar_1', 'id_apgar_5', 'id_apgar_10'];
-    let isValid = true;
-    
-    apgarFields.forEach(fieldId => {
-      const field = $(`#${fieldId}`);
-      const value = parseInt(field.val());
-      
-      if (field.val() && (value < 0 || value > 10)) {
-        markFieldAsInvalid(field, 'APGAR score must be 0-10');
-        isValid = false;
+
+  // Form validation and submission
+  if (cachedElements.patientForm) {
+    cachedElements.patientForm.addEventListener('submit', function(e) {
+      if (!validateForm()) {
+        e.preventDefault();
+        return false;
       }
-    });
-    
-    return isValid;
-  }
-  
-  function validateMeasurements() {
-    let isValid = true;
-    
-    const birthWeight = parseInt($('#id_birth_weight').val());
-    if (birthWeight && (birthWeight < 300 || birthWeight > 8000)) {
-      markFieldAsInvalid($('#id_birth_weight'), 'Birth weight must be 300-8000g');
-      isValid = false;
-    }
-    
-    const length = parseInt($('#id_length').val());
-    if (length && (length < 20 || length > 70)) {
-      markFieldAsInvalid($('#id_length'), 'Length must be 20-70cm');
-      isValid = false;
-    }
-    
-    const ofc = parseInt($('#id_ofc').val());
-    if (ofc && (ofc < 20 || ofc > 50)) {
-      markFieldAsInvalid($('#id_ofc'), 'OFC must be 20-50cm');
-      isValid = false;
-    }
-    
-    return isValid;
-  }
-  
-  function validatePhone() {
-    const mobile = $('#id_tp_mobile').val();
-    const phonePattern = /^[+]?[0-9\s\-()]{9,15}$/;
-    
-    if (mobile && !phonePattern.test(mobile)) {
-      markFieldAsInvalid($('#id_tp_mobile'), 'Invalid phone number format');
-      return false;
-    }
-    
-    return true;
-  }
-  
-  function markFieldAsInvalid(field, message) {
-    field.addClass('is-invalid');
-    field.closest('.form-group').find('.text-danger').text(message).show();
-    
-    // Scroll to first invalid field
-    if ($('.is-invalid').length === 1) {
-      $('html, body').animate({
-        scrollTop: field.offset().top - 100
-      }, 500);
-    }
-  }
-  
-  function setupRealTimeValidation() {
-    // Numeric fields
-    $('.numeric-only').on('input', function() {
-      this.value = this.value.replace(/[^0-9.]/g, '');
-    });
-    
-    // Phone fields
-    $('#id_tp_mobile, #id_tp_lan').on('input', function() {
-      this.value = this.value.replace(/[^0-9+\-() ]/g, '');
-    });
-    
-    // BHT validation
-    $('#id_bht').on('blur', function() {
-      const bht = $(this).val().trim();
-      if (bht) {
-        // Check format
-        if (!/^[A-Za-z0-9\-/]+$/.test(bht)) {
-          markFieldAsInvalid($(this), 'BHT can only contain letters, numbers, hyphens, and slashes');
-        }
-      }
+
+      disableSubmitButton();
     });
   }
-  
-  function setupGMAFeedback() {
-    $('input[name="indecation_for_gma"]').change(function() {
-      const checkedCount = $('input[name="indecation_for_gma"]:checked').length;
-      const container = $(this).closest('.border');
-      
-      if (checkedCount > 0) {
-        container.removeClass('bg-light')
-                .addClass('bg-info text-white');
-        container.find('label').addClass('text-white');
-      } else {
-        container.removeClass('bg-info text-white')
-                .addClass('bg-light');
-        container.find('label').removeClass('text-white');
-      }
-    });
-  }
-  
-  function setupProgressIndicator() {
-    // Update progress steps based on completed cards
-    const cards = [
-      { selector: '#id_bht', step: 0, color: 'primary' },
-      { selector: '#id_baby_name', step: 1, color: 'info' },
-      { selector: '#id_dob_tob', step: 2, color: 'success' },
-      { selector: '#id_birth_weight', step: 3, color: 'warning' },
-      { selector: '#id_tp_mobile', step: 4, color: 'secondary' },
-      { selector: '#id_problems', step: 5, color: 'danger' }
-    ];
-    
-    $('input, select, textarea').on('input change', function() {
-      updateProgressSteps(cards);
-    });
-    
-    // Initial update
-    updateProgressSteps(cards);
-  }
-  
-  function updateProgressSteps(cards) {
-    $('.progress-steps small').removeClass('text-primary text-success')
-                               .addClass('text-muted');
-    
-    cards.forEach((card, index) => {
-      const field = $(card.selector);
-      const stepElement = $(`.progress-steps .row > div:eq(${index}) small`);
-      
-      if (field.val() && field.val().trim()) {
-        stepElement.removeClass('text-muted')
-                   .addClass('text-success');
-      }
-    });
-  }
-  
-  function generatePreview() {
-    const summaryData = {
-      'BHT': $('#id_bht').val(),
-      'Baby Name': $('#id_baby_name').val(),
-      "Mother's Name": $('#id_mother_name').val(),
-      'Gender': $('#id_gender option:selected').text(),
-      'Date of Birth': $('#id_dob_tob').val() ? new Date($('#id_dob_tob').val()).toLocaleString() : '',
-      'POG': `${$('#id_pog_wks').val() || '0'} weeks ${$('#id_pog_days').val() || '0'} days`,
-      'Birth Weight': $('#id_birth_weight').val() ? `${$('#id_birth_weight').val()}g` : '',
-      'OFC': $('#id_ofc').val() ? `${$('#id_ofc').val()}cm` : '',
-      'Mobile': $('#id_tp_mobile').val()
-    };
-    
-    let summaryHtml = '';
-    Object.keys(summaryData).forEach(key => {
-      if (summaryData[key]) {
-        summaryHtml += `
-          <div class="col-md-6 mb-2">
-            <small class="text-muted">${key}:</small>
-            <div class="font-weight-bold">${summaryData[key]}</div>
-          </div>
-        `;
-      }
-    });
-    
-    if (summaryHtml) {
-      $('#summary-content').html(summaryHtml);
-      $('#summary-card').slideDown();
-    } else {
-      if (typeof toastr !== 'undefined') {
-        toastr.info('Please fill in some basic information to generate a preview.');
-      }
-    }
-  }
-  
-  function showValidationAlert() {
-    const invalidCount = $('.is-invalid').length;
-    if (typeof toastr !== 'undefined') {
-      toastr.error(`Please correct ${invalidCount} field${invalidCount > 1 ? 's' : ''} before submitting.`, 'Validation Error');
-    }
-  }
-  
-  // Initialize toastr for notifications
-  if (typeof toastr !== 'undefined') {
-    toastr.options = {
-      "closeButton": true,
-      "progressBar": true,
-      "timeOut": "3000",
-      "positionClass": "toast-top-right"
-    };
-  }
+
+  // Set focus on first input
+  cachedElements.bhtInput?.focus();
 });
 </script>
 

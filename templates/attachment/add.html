@@ -24,6 +24,7 @@
       <!-- Patient Information Card -->
       <div class="row">
         <div class="col-md-4">
+          <!-- Patient Information Card -->
           <div class="card card-info">
             <div class="card-header">
               <h3 class="card-title"><i class="fas fa-user"></i> Patient Information</h3>
@@ -42,6 +43,65 @@
               </a>
             </div>
           </div>
+
+          <!-- Birth Information Card -->
+          <div class="card card-primary">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-baby"></i> Birth Information</h3>
+            </div>
+            <div class="card-body">
+              <dl class="row mb-0">
+                <dt class="col-sm-5">Date of Birth:</dt>
+                <dd class="col-sm-7">{{ patient.dob_tob|date:"d M Y, h:i A" }}</dd>
+
+                <dt class="col-sm-5">Gender:</dt>
+                <dd class="col-sm-7">{{ patient.get_gender_display }}</dd>
+
+                <dt class="col-sm-5">Birth Weight:</dt>
+                <dd class="col-sm-7">{{ patient.birth_weight }}g</dd>
+
+                <dt class="col-sm-5">POG:</dt>
+                <dd class="col-sm-7">{{ patient.pog_wks }}+{{ patient.pog_days }} weeks</dd>
+
+                <dt class="col-sm-5">Mode of Delivery:</dt>
+                <dd class="col-sm-7">{{ patient.get_mo_delivery_display }}</dd>
+
+                <dt class="col-sm-5">APGAR Scores:</dt>
+                <dd class="col-sm-7">{{ patient.apgar_1 }}/{{ patient.apgar_5 }}/{{ patient.apgar_10 }}</dd>
+              </dl>
+            </div>
+          </div>
+
+          <!-- Medical History Card (Optional) -->
+          {% if patient.antenatal_hx or patient.intranatal_hx or patient.postnatal_hx %}
+          <div class="card card-secondary">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-notes-medical"></i> Medical History (Optional)</h3>
+            </div>
+            <div class="card-body">
+              {% if patient.antenatal_hx %}
+              <div class="mb-3">
+                <strong class="d-block mb-1"><i class="fas fa-user-pregnant"></i> Antenatal History:</strong>
+                <p class="text-muted mb-0">{{ patient.antenatal_hx|linebreaks }}</p>
+              </div>
+              {% endif %}
+
+              {% if patient.intranatal_hx %}
+              <div class="mb-3">
+                <strong class="d-block mb-1"><i class="fas fa-heartbeat"></i> Intranatal History:</strong>
+                <p class="text-muted mb-0">{{ patient.intranatal_hx|linebreaks }}</p>
+              </div>
+              {% endif %}
+
+              {% if patient.postnatal_hx %}
+              <div class="mb-0">
+                <strong class="d-block mb-1"><i class="fas fa-baby-carriage"></i> Postnatal History:</strong>
+                <p class="text-muted mb-0">{{ patient.postnatal_hx|linebreaks }}</p>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          {% endif %}
         </div>
 
         <!-- Upload Form Card -->
