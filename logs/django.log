@@ -11791,3 +11791,19 @@ WARNING 2025-10-10 10:14:16,230 basehttp 12604 7992 "GET /.well-known/appspecifi
 INFO 2025-10-10 10:14:27,311 basehttp 12604 7992 "GET /users/login/ HTTP/1.1" 200 10296
 WARNING 2025-10-10 10:14:27,347 log 12604 7992 Not Found: /.well-known/appspecific/com.chrome.devtools.json
 WARNING 2025-10-10 10:14:27,349 basehttp 12604 7992 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 17178
+INFO 2025-10-10 10:18:22,921 autoreload 21208 8156 Watching for file changes with StatReloader
+INFO 2025-10-10 10:18:32,032 basehttp 21208 15332 "GET /users/login/ HTTP/1.1" 200 10296
+INFO 2025-10-10 10:18:32,070 basehttp 21208 15332 "GET /static/js/app-utils.js HTTP/1.1" 304 0
+WARNING 2025-10-10 10:18:32,349 log 21208 20748 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-10-10 10:18:32,350 basehttp 21208 20748 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 17178
+INFO 2025-10-10 10:18:33,885 basehttp 21208 20748 "GET /users/login/ HTTP/1.1" 200 10296
+WARNING 2025-10-10 10:18:33,944 log 21208 20748 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-10-10 10:18:33,949 basehttp 21208 20748 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 17178
+INFO 2025-10-10 10:18:35,073 basehttp 21208 20748 "GET /users/login/ HTTP/1.1" 200 10296
+WARNING 2025-10-10 10:18:35,110 log 21208 20748 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-10-10 10:18:35,111 basehttp 21208 20748 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 17178
+INFO 2025-10-10 10:18:40,960 basehttp 21208 20748 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-10-10 10:18:41,287 basehttp 21208 20748 "GET / HTTP/1.1" 200 46614
+WARNING 2025-10-10 10:18:41,449 log 21208 20748 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-10-10 10:18:41,451 basehttp 21208 20748 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 17178
+INFO 2025-10-10 10:27:01,743 autoreload 18756 17796 Watching for file changes with StatReloader

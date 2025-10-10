@@ -1,34 +1,27 @@
-console.log('zoomrotate: Start');
-
-// Add global error handler for debugging
-window.addEventListener('error', function(e) {
-    if (e.filename && e.filename.includes('zoomrotate.js')) {
-        console.error('zoomrotate: Global error caught:', e.message, 'at line', e.lineno);
-        console.error('zoomrotate: videojs state:', typeof videojs, videojs);
-    }
-});
+/**
+ * Video.js Zoom Rotate Plugin
+ * Optimized version with reduced console logging
+ */
 
 (function(){
+    'use strict';
+
     // Check if videojs is available
     if (typeof videojs === 'undefined') {
-        console.warn('zoomrotate: Video.js not available, skipping plugin registration');
-        return;
+        return; // Silent fail if Video.js not available
     }
 
-    // Wait a moment for Video.js to be fully loaded
+    // Register the zoomrotate plugin
     function registerZoomRotatePlugin() {
-        // Double-check that videojs is available and not null
         if (typeof videojs === 'undefined' || !videojs) {
-            console.error('zoomrotate: Cannot register plugin - videojs is not available');
             return;
         }
-        
+
         var defaults, extend;
-        console.log('zoomrotate: Init defaults');
         defaults = {
           zoom: 1,
           rotate: 0,
-          debug: true
+          debug: false // Set to false for production
         };
         extend = function() {
           var args, target, i, object, property;
@@ -97,25 +90,14 @@ window.addEventListener('error', function(e) {
         };
 
         // Try new API first (Video.js 7+), then fall back to old API
-        // Add null check for videojs before accessing its properties
         try {
             if (videojs && typeof videojs.registerPlugin === 'function') {
-                console.log('zoomrotate: Using new registerPlugin API');
                 videojs.registerPlugin('zoomrotate', pluginFunction);
             } else if (videojs && typeof videojs.plugin === 'function') {
-                console.log('zoomrotate: Using legacy plugin API');
                 videojs.plugin('zoomrotate', pluginFunction);
-            } else {
-                console.warn('zoomrotate: Neither registerPlugin nor plugin function available on videojs object');
-                if (videojs) {
-                    console.log('zoomrotate: Available videojs methods:', Object.keys(videojs));
-                } else {
-                    console.log('zoomrotate: videojs is null or undefined');
-                }
             }
         } catch (error) {
-            console.error('zoomrotate: Error during plugin registration:', error);
-            console.error('zoomrotate: videojs state during error:', typeof videojs, videojs);
+            // Silent fail - plugin registration failed
         }
     }
 
@@ -123,7 +105,7 @@ window.addEventListener('error', function(e) {
     if (typeof videojs !== 'undefined' && videojs && (typeof videojs.registerPlugin === 'function' || typeof videojs.plugin === 'function')) {
         registerZoomRotatePlugin();
     } else {
-        // Wait for Video.js to be fully loaded
+        // Wait for Video.js to be fully loaded (silent retry)
         var attempts = 0;
         var maxAttempts = 50; // Wait up to 5 seconds
         var checkInterval = setInterval(function() {
@@ -133,11 +115,8 @@ window.addEventListener('error', function(e) {
                 registerZoomRotatePlugin();
             } else if (attempts >= maxAttempts) {
                 clearInterval(checkInterval);
-                console.error('zoomrotate: Timeout waiting for Video.js to be ready');
-                console.log('zoomrotate: Final videojs state:', typeof videojs, videojs);
+                // Silent timeout - plugin not registered
             }
         }, 100);
     }
 })();
-
-console.log('zoomrotate: End');
