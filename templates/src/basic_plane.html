@@ -66,96 +66,8 @@ if (typeof jQuery === 'undefined') {
 <!-- Select2 from CDN -->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-<!-- Bootstrap 4 initialization script with enhanced error handling -->
-<script>
-// Wait for DOM and ensure all dependencies are loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Comprehensive dependency check
-    function checkDependencies() {
-        const checks = {
-            'jQuery': typeof $ !== 'undefined',
-            'Bootstrap': typeof $.fn !== 'undefined' && typeof $.fn.modal !== 'undefined',
-            'AdminLTE': typeof $.AdminLTE !== 'undefined',
-            'Select2': typeof $.fn.select2 !== 'undefined'
-        };
-
-        const failed = Object.entries(checks).filter(([name, loaded]) => !loaded).map(([name]) => name);
-
-        if (failed.length > 0) {
-            console.error('❌ Missing dependencies:', failed.join(', '));
-            console.warn('⚠️ Bootstrap styling may not work properly');
-            return false;
-        }
-
-        console.log('✅ All dependencies loaded successfully');
-        return true;
-    }
-
-    // Initialize with limited retry mechanism
-    var retryCount = 0;
-    var maxRetries = 3;
-
-    function initializeComponents() {
-        var depsCheck = checkDependencies();
-
-        if (!depsCheck && retryCount < maxRetries) {
-            // Retry after 500ms, up to maxRetries times
-            retryCount++;
-            console.log('⚠️ Retrying dependency check... (' + retryCount + '/' + maxRetries + ')');
-            setTimeout(initializeComponents, 500);
-            return;
-        }
-
-        if (!depsCheck && retryCount >= maxRetries) {
-            console.warn('⚠️ Some dependencies failed to load after ' + maxRetries + ' retries. Proceeding with partial initialization.');
-        }
-
-        $(document).ready(function() {
-            try {
-                // Initialize Bootstrap 4 components (only if available)
-                if (typeof $.fn !== 'undefined') {
-                    if (typeof $.fn.tooltip === 'function') {
-                        $('[data-toggle="tooltip"]').tooltip();
-                    }
-
-                    if (typeof $.fn.popover === 'function') {
-                        $('[data-toggle="popover"]').popover();
-                    }
-
-                    if (typeof $.fn.select2 === 'function') {
-                        $('.select2').select2();
-                    }
-                }
-
-                console.log('✅ Bootstrap components initialized successfully');
-
-                // Re-initialize for dynamically loaded content
-                if (typeof window.htmx !== 'undefined') {
-                    document.addEventListener('htmx:afterSwap', function() {
-                        // Re-initialize Bootstrap components after HTMX content swap
-                        if (typeof $.fn !== 'undefined') {
-                            if (typeof $.fn.tooltip === 'function') {
-                                $('[data-toggle="tooltip"]').tooltip();
-                            }
-                            if (typeof $.fn.popover === 'function') {
-                                $('[data-toggle="popover"]').popover();
-                            }
-                            if (typeof $.fn.select2 === 'function') {
-                                $('.select2').select2();
-                            }
-                        }
-                    });
-                }
-            } catch (error) {
-                console.error('❌ Failed to initialize Bootstrap components:', error);
-            }
-        });
-    }
-
-    // Start initialization
-    initializeComponents();
-});
-</script>
+<!-- Bootstrap initialization is now handled by main.js (NDASApp) -->
+<!-- Removed duplicate initialization code for cleaner, more maintainable codebase -->
 
 <!-- If you'd like to support IE8 (for Video.js versions prior to v7) -->
 <!-- Removed duplicate script: script src="https://vjs.zencdn.net/ie8/1.1.2/videojs-ie8.min.js" -->
@@ -175,19 +87,8 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Custom rotate functionality -->
 <script type="text/javascript" src="{% static 'js/rotate.js' %}" defer></script>
 
-<!-- Ensure Video.js is loaded before plugins -->
-<script type="text/javascript">
-// Wait for Video.js to be fully loaded before initializing plugins
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof videojs === 'undefined') {
-        console.warn('❌ Video.js not loaded, video functionality will be limited');
-        return;
-    }
-    console.log('✅ Video.js loaded successfully');
-});
-</script>
-
 <!-- Video.js initialization handled by video-manager.js -->
+<!-- Video.js loading verification removed - handled by video-manager.js -->
 
 <!-- NDAS utility functions -->
 <script type="text/javascript" src="{% static 'js/app-utils.js' %}"></script>
@@ -198,68 +99,11 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Main application JavaScript -->
 <script type="text/javascript" src="{% static 'js/main.js' %}"></script>
 
-<!-- Standard AdminLTE 3.x Sidebar Navigation -->
-<script>
-$(document).ready(function() {
-    console.log('✅ Initializing AdminLTE 3.x standard sidebar');
-    
-    // Verify AdminLTE is loaded
-    if (typeof $.AdminLTE === 'undefined') {
-        console.warn('❌ AdminLTE 3 library not detected');
-        return;
-    }
-    
-    // Standard AdminLTE menu highlighting
-    function highlightActiveMenu() {
-        const currentUrl = window.location.href;
-        const currentPath = window.location.pathname;
-        
-        // Remove existing active states
-        $('.nav-sidebar .nav-link').removeClass('active');
-        $('.nav-sidebar .nav-item').removeClass('menu-open');
-        
-        // Find and highlight active menu item
-        $('.nav-sidebar .nav-link[href]').each(function() {
-            const linkHref = $(this).attr('href');
-            
-            // Skip hash links
-            if (!linkHref || linkHref === '#') return;
-            
-            // Check for exact match or path contains link
-            if (currentUrl === linkHref || 
-                (linkHref !== '/' && currentPath.includes(linkHref))) {
-                
-                // Add active class to link
-                $(this).addClass('active');
-                
-                // Open parent menu if this is a submenu item
-                const $parentNavItem = $(this).closest('.nav-treeview').closest('.nav-item');
-                if ($parentNavItem.length) {
-                    $parentNavItem.addClass('menu-open');
-                    $parentNavItem.find('> .nav-link').addClass('active');
-                }
-                
-                return false; // Stop iteration on first match
-            }
-        });
-    }
-    
-    // Initialize menu highlighting
-    highlightActiveMenu();
-    
-    // Re-highlight on HTMX page changes
-    if (typeof window.htmx !== 'undefined') {
-        document.addEventListener('htmx:afterSwap', function() {
-            setTimeout(highlightActiveMenu, 100);
-        });
-    }
-    
-    console.log('✅ AdminLTE sidebar initialized');
-});
-</script>
+<!-- AdminLTE sidebar navigation is now handled by main.js (NDASApp.initAdminLTE) -->
+<!-- Removed duplicate sidebar initialization for cleaner codebase -->
 
-<!-- Debug script (can be removed after fixing issues) -->
-<script type="text/javascript" src="{% static 'js/debug.js' %}"></script>
+<!-- Debug script - COMMENTED OUT FOR PRODUCTION -->
+<!-- Uncomment only for debugging: <script type="text/javascript" src="{% static 'js/debug.js' %}"></script> -->
 
 {% block extra_js %}
 {% endblock extra_js %}

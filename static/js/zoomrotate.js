@@ -141,5 +141,3 @@ window.addEventListener('error', function(e) {
 })();
 
 console.log('zoomrotate: End');
-
-console.log('zoomrotate: End');

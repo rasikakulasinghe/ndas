@@ -415,19 +415,32 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     `;
     document.head.appendChild(style);
-    
-    // Reinitialize Select2 after any dynamic content changes
-    $(document).on('DOMNodeInserted', '.table-responsive', function() {
-        setTimeout(function() {
-            $('.patient-actions-select:not(.select2-hidden-accessible)').each(function() {
-                $(this).select2({
-                    placeholder: 'More Actions...',
-                    allowClear: true,
-                    width: '160px',
-                    dropdownAutoWidth: true
-                });
-            });
-        }, 100);
+
+    // Reinitialize Select2 after any dynamic content changes using MutationObserver (modern approach)
+    const tableObserver = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes.length > 0) {
+                setTimeout(function() {
+                    $('.patient-actions-select:not(.select2-hidden-accessible)').each(function() {
+                        $(this).select2({
+                            placeholder: 'More Actions...',
+                            allowClear: true,
+                            width: '160px',
+                            dropdownAutoWidth: true
+                        });
+                    });
+                }, 100);
+            }
+        });
+    });
+
+    // Observe table-responsive containers for dynamic content
+    const tableContainers = document.querySelectorAll('.table-responsive');
+    tableContainers.forEach(function(container) {
+        tableObserver.observe(container, {
+            childList: true,
+            subtree: true
+        });
     });
 
     // Enhanced dropdown positioning for table containers

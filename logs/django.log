@@ -11769,3 +11769,25 @@ INFO 2025-10-10 10:05:04,916 basehttp 12604 13364 "GET /static/js/app-utils.js H
 INFO 2025-10-10 10:05:08,782 basehttp 12604 13364 "POST /users/login/ HTTP/1.1" 302 0
 INFO 2025-10-10 10:05:08,974 basehttp 12604 13364 "GET / HTTP/1.1" 200 52244
 INFO 2025-10-10 10:05:11,467 basehttp 12604 13364 "GET /manager/patient/ HTTP/1.1" 200 69166
+WARNING 2025-10-10 10:05:30,748 log 12604 13364 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-10-10 10:05:30,749 basehttp 12604 13364 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 17178
+INFO 2025-10-10 10:05:36,286 basehttp 12604 13364 "GET /manager/patient/ HTTP/1.1" 200 69166
+INFO 2025-10-10 10:05:36,321 basehttp 12604 13364 "GET /static/js/app-utils.js HTTP/1.1" 304 0
+WARNING 2025-10-10 10:05:36,823 log 12604 7648 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-10-10 10:05:36,825 basehttp 12604 7648 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 17178
+INFO 2025-10-10 10:13:30,076 basehttp 12604 7992 "GET /manager/patient/ HTTP/1.1" 200 63536
+INFO 2025-10-10 10:13:30,241 basehttp 12604 6372 "GET /static/js/app-utils.js HTTP/1.1" 200 8905
+WARNING 2025-10-10 10:13:30,462 log 12604 7992 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-10-10 10:13:30,463 basehttp 12604 7992 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 17178
+INFO 2025-10-10 10:13:34,491 basehttp 12604 7992 "GET /manager/patient/ HTTP/1.1" 200 63536
+WARNING 2025-10-10 10:13:34,718 log 12604 7992 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-10-10 10:13:34,719 basehttp 12604 7992 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 17178
+INFO 2025-10-10 10:14:09,811 basehttp 12604 7992 "GET /users/logout/ HTTP/1.1" 302 0
+INFO 2025-10-10 10:14:09,846 basehttp 12604 7992 "GET /users/login/ HTTP/1.1" 200 10626
+INFO 2025-10-10 10:14:09,897 basehttp 12604 7992 "GET /static/js/app-utils.js HTTP/1.1" 304 0
+INFO 2025-10-10 10:14:13,760 basehttp 12604 7992 "GET /users/login/ HTTP/1.1" 200 10296
+WARNING 2025-10-10 10:14:16,229 log 12604 7992 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-10-10 10:14:16,230 basehttp 12604 7992 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 17178
+INFO 2025-10-10 10:14:27,311 basehttp 12604 7992 "GET /users/login/ HTTP/1.1" 200 10296
+WARNING 2025-10-10 10:14:27,347 log 12604 7992 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-10-10 10:14:27,349 basehttp 12604 7992 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 17178

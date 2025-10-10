@@ -40,30 +40,15 @@
         },
         
         /**
-         * Initialize Bootstrap components (safe version with existence checks)
+         * Initialize Bootstrap components (DEPRECATED - use NDASApp.initBootstrapComponents)
+         * Kept for backward compatibility only
          */
         initBootstrap: function() {
-            if (typeof $ === 'undefined' || typeof $.fn === 'undefined') {
-                console.warn('jQuery or jQuery.fn not available for Bootstrap initialization');
-                return;
+            console.warn('NDASUtils.initBootstrap is deprecated. Bootstrap initialization is handled by main.js (NDASApp)');
+            // Delegate to main app if available
+            if (typeof window.NDASApp !== 'undefined' && typeof window.NDASApp.initBootstrapComponents === 'function') {
+                window.NDASApp.initBootstrapComponents();
             }
-
-            // Initialize tooltips
-            if (typeof $.fn.tooltip === 'function') {
-                $('[data-toggle="tooltip"]').tooltip();
-            }
-
-            // Initialize popovers
-            if (typeof $.fn.popover === 'function') {
-                $('[data-toggle="popover"]').popover();
-            }
-
-            // Initialize Select2
-            if (typeof $.fn.select2 === 'function') {
-                $('.select2').select2();
-            }
-
-            console.log('NDASUtils: Bootstrap components initialized');
         },
         
         /**
@@ -244,15 +229,7 @@
         window.NDASUtils.init();
     });
 
-    // Re-initialize Bootstrap components after HTMX content swaps (if needed)
-    // Note: basic_plane.html already handles this, but keeping for pages that might not use it
-    if (typeof window.htmx !== 'undefined') {
-        document.addEventListener('htmx:afterSwap', function() {
-            // Only initialize if not already handled by basic_plane.html
-            setTimeout(function() {
-                window.NDASUtils.initBootstrap();
-            }, 50);
-        });
-    }
-    
+    // NOTE: HTMX integration is handled by main.js (NDASApp.initHTMXIntegration)
+    // Removed duplicate HTMX afterSwap handler to prevent multiple Bootstrap initializations
+
 })();
