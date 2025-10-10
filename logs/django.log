@@ -11728,3 +11728,44 @@ INFO 2025-10-09 13:10:55,699 basehttp 488 6152 "GET /static/js/manager.js HTTP/1
 INFO 2025-10-09 13:10:58,231 basehttp 488 6152 "GET /patient/view/8/ HTTP/1.1" 200 106965
 INFO 2025-10-09 13:11:03,588 basehttp 488 6152 "GET /patient/edit/8/ HTTP/1.1" 200 74947
 INFO 2025-10-09 13:46:31,352 basehttp 488 13564 "GET /patient/edit/8/ HTTP/1.1" 200 77871
+INFO 2025-10-10 09:54:55,952 autoreload 10328 6580 Watching for file changes with StatReloader
+INFO 2025-10-10 09:55:43,468 basehttp 10328 17612 "GET / HTTP/1.1" 302 0
+INFO 2025-10-10 09:55:43,671 basehttp 10328 17612 "GET /users/login/?next=/ HTTP/1.1" 200 17776
+INFO 2025-10-10 09:55:43,971 basehttp 10328 17612 "GET /static/css/custom_css.css HTTP/1.1" 304 0
+WARNING 2025-10-10 09:55:47,050 log 10328 17100 Not Found: /favicon.ico
+WARNING 2025-10-10 09:55:47,053 basehttp 10328 17100 "GET /favicon.ico HTTP/1.1" 404 17067
+WARNING 2025-10-10 09:55:53,256 log 10328 12064 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-10-10 09:55:53,258 basehttp 10328 12064 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 17178
+INFO 2025-10-10 10:03:28,308 basehttp 10328 8260 "GET /users/login/?next=/ HTTP/1.1" 200 15926
+WARNING 2025-10-10 10:03:28,408 log 10328 17268 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-10-10 10:03:28,410 basehttp 10328 17268 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 17178
+INFO 2025-10-10 10:03:28,504 basehttp 10328 9684 "GET /static/js/video-manager.js HTTP/1.1" 200 6764
+INFO 2025-10-10 10:03:28,507 basehttp 10328 8260 "GET /static/js/app-utils.js HTTP/1.1" 200 9557
+INFO 2025-10-10 10:03:32,163 basehttp 10328 8260 "GET /users/login/?next=/ HTTP/1.1" 200 15926
+WARNING 2025-10-10 10:03:32,233 log 10328 8260 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-10-10 10:03:32,234 basehttp 10328 8260 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 17178
+INFO 2025-10-10 10:03:39,147 basehttp 10328 8260 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-10-10 10:03:39,730 basehttp 10328 8260 "GET / HTTP/1.1" 200 52244
+INFO 2025-10-10 10:03:39,773 basehttp 10328 9684 "GET /static/js/app-utils.js HTTP/1.1" 304 0
+WARNING 2025-10-10 10:03:39,927 log 10328 8260 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-10-10 10:03:39,928 basehttp 10328 8260 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 17178
+INFO 2025-10-10 10:03:56,110 basehttp 10328 8260 "GET / HTTP/1.1" 200 51920
+INFO 2025-10-10 10:03:56,136 basehttp 10328 8260 "GET /static/js/app-utils.js HTTP/1.1" 304 0
+WARNING 2025-10-10 10:03:56,272 log 10328 8260 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-10-10 10:03:56,273 basehttp 10328 8260 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 17178
+WARNING 2025-10-10 10:04:00,364 log 10328 8260 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-10-10 10:04:00,365 basehttp 10328 8260 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 17178
+INFO 2025-10-10 10:04:25,484 basehttp 10328 8260 "GET /manager/patient/ HTTP/1.1" 200 69166
+INFO 2025-10-10 10:04:25,533 basehttp 10328 9684 "GET /static/js/app-utils.js HTTP/1.1" 304 0
+WARNING 2025-10-10 10:04:25,666 log 10328 8260 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-10-10 10:04:25,668 basehttp 10328 8260 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 17178
+INFO 2025-10-10 10:04:31,823 basehttp 10328 8260 "GET /manager/patient/ HTTP/1.1" 200 69166
+WARNING 2025-10-10 10:04:31,992 log 10328 8260 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-10-10 10:04:31,993 basehttp 10328 8260 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 17178
+INFO 2025-10-10 10:04:58,048 autoreload 12604 2496 Watching for file changes with StatReloader
+INFO 2025-10-10 10:05:04,821 basehttp 12604 13364 "GET / HTTP/1.1" 302 0
+INFO 2025-10-10 10:05:04,842 basehttp 12604 13364 "GET /users/login/?next=/ HTTP/1.1" 200 15926
+INFO 2025-10-10 10:05:04,916 basehttp 12604 13364 "GET /static/js/app-utils.js HTTP/1.1" 304 0
+INFO 2025-10-10 10:05:08,782 basehttp 12604 13364 "POST /users/login/ HTTP/1.1" 302 0
+INFO 2025-10-10 10:05:08,974 basehttp 12604 13364 "GET / HTTP/1.1" 200 52244
+INFO 2025-10-10 10:05:11,467 basehttp 12604 13364 "GET /manager/patient/ HTTP/1.1" 200 69166

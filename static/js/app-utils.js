@@ -40,19 +40,30 @@
         },
         
         /**
-         * Initialize Bootstrap components
+         * Initialize Bootstrap components (safe version with existence checks)
          */
         initBootstrap: function() {
+            if (typeof $ === 'undefined' || typeof $.fn === 'undefined') {
+                console.warn('jQuery or jQuery.fn not available for Bootstrap initialization');
+                return;
+            }
+
             // Initialize tooltips
-            $('[data-toggle="tooltip"]').tooltip();
-            
+            if (typeof $.fn.tooltip === 'function') {
+                $('[data-toggle="tooltip"]').tooltip();
+            }
+
             // Initialize popovers
-            $('[data-toggle="popover"]').popover();
-            
+            if (typeof $.fn.popover === 'function') {
+                $('[data-toggle="popover"]').popover();
+            }
+
             // Initialize Select2
-            $('.select2').select2();
-            
-            console.log('Bootstrap components initialized');
+            if (typeof $.fn.select2 === 'function') {
+                $('.select2').select2();
+            }
+
+            console.log('NDASUtils: Bootstrap components initialized');
         },
         
         /**
@@ -220,10 +231,11 @@
          * Initialize all NDAS utilities
          */
         init: function() {
-            this.initBootstrap();
+            // Note: Bootstrap components are initialized in basic_plane.html
+            // This only sets up form validation and lazy loading
             this.setupFormValidation();
             this.lazyLoadImages();
-            console.log('NDAS utilities initialized');
+            console.log('NDASUtils: Utilities initialized');
         }
     };
     
@@ -231,11 +243,15 @@
     document.addEventListener('DOMContentLoaded', function() {
         window.NDASUtils.init();
     });
-    
-    // Re-initialize Bootstrap components after HTMX content swaps
+
+    // Re-initialize Bootstrap components after HTMX content swaps (if needed)
+    // Note: basic_plane.html already handles this, but keeping for pages that might not use it
     if (typeof window.htmx !== 'undefined') {
         document.addEventListener('htmx:afterSwap', function() {
-            window.NDASUtils.initBootstrap();
+            // Only initialize if not already handled by basic_plane.html
+            setTimeout(function() {
+                window.NDASUtils.initBootstrap();
+            }, 50);
         });
     }
     

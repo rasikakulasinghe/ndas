@@ -91,28 +91,40 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     }
 
-    // Initialize with retry mechanism
+    // Initialize with limited retry mechanism
+    var retryCount = 0;
+    var maxRetries = 3;
+
     function initializeComponents() {
-        if (!checkDependencies()) {
-            // Retry after 500ms
+        var depsCheck = checkDependencies();
+
+        if (!depsCheck && retryCount < maxRetries) {
+            // Retry after 500ms, up to maxRetries times
+            retryCount++;
+            console.log('⚠️ Retrying dependency check... (' + retryCount + '/' + maxRetries + ')');
             setTimeout(initializeComponents, 500);
             return;
         }
 
+        if (!depsCheck && retryCount >= maxRetries) {
+            console.warn('⚠️ Some dependencies failed to load after ' + maxRetries + ' retries. Proceeding with partial initialization.');
+        }
+
         $(document).ready(function() {
             try {
-                // Initialize Bootstrap 4 components
-                if (typeof $.fn.tooltip === 'function') {
-                    $('[data-toggle="tooltip"]').tooltip();
-                }
+                // Initialize Bootstrap 4 components (only if available)
+                if (typeof $.fn !== 'undefined') {
+                    if (typeof $.fn.tooltip === 'function') {
+                        $('[data-toggle="tooltip"]').tooltip();
+                    }
 
-                if (typeof $.fn.popover === 'function') {
-                    $('[data-toggle="popover"]').popover();
-                }
+                    if (typeof $.fn.popover === 'function') {
+                        $('[data-toggle="popover"]').popover();
+                    }
 
-                // Initialize Select2
-                if (typeof $.fn.select2 === 'function') {
-                    $('.select2').select2();
+                    if (typeof $.fn.select2 === 'function') {
+                        $('.select2').select2();
+                    }
                 }
 
                 console.log('✅ Bootstrap components initialized successfully');
@@ -121,14 +133,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (typeof window.htmx !== 'undefined') {
                     document.addEventListener('htmx:afterSwap', function() {
                         // Re-initialize Bootstrap components after HTMX content swap
-                        if (typeof $.fn.tooltip === 'function') {
-                            $('[data-toggle="tooltip"]').tooltip();
-                        }
-                        if (typeof $.fn.popover === 'function') {
-                            $('[data-toggle="popover"]').popover();
-                        }
-                        if (typeof $.fn.select2 === 'function') {
-                            $('.select2').select2();
+                        if (typeof $.fn !== 'undefined') {
+                            if (typeof $.fn.tooltip === 'function') {
+                                $('[data-toggle="tooltip"]').tooltip();
+                            }
+                            if (typeof $.fn.popover === 'function') {
+                                $('[data-toggle="popover"]').popover();
+                            }
+                            if (typeof $.fn.select2 === 'function') {
+                                $('.select2').select2();
+                            }
                         }
                     });
                 }
@@ -173,83 +187,15 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- Video.js initialization and custom scripts -->
-<script type="text/javascript">
-// Improved Video.js initialization with better error handling
-document.addEventListener('DOMContentLoaded', function() {
-    // Check if Video.js is loaded
-    if (typeof videojs === 'undefined') {
-        console.warn('Video.js library not loaded');
-        return;
-    }
-    
-    // Find all video elements with video-js class
-    var videoElements = document.querySelectorAll('video.video-js');
-    if (videoElements.length === 0) {
-        // No video players on this page, skip initialization
-        console.log('No video elements found on this page');
-        return;
-    }
-    
-    // Initialize each video player
-    videoElements.forEach(function(videoElement) {
-        // Check if player is already initialized
-        if (videoElement.player) {
-            console.log('Video player already initialized for element:', videoElement.id);
-            return;
-        }
-        
-        // Make sure the element has an ID
-        if (!videoElement.id) {
-            console.warn('Video element missing ID, skipping initialization');
-            return;
-        }
-        
-        try {
-            // Initialize video player
-            var player = videojs(videoElement.id, {
-                controlBar: {
-                    'volumePanel': false,
-                },
-                fluid: true,
-                responsive: true
-            });
-            
-            // Mute the player by default
-            player.muted(true);
-            
-            // Load custom video scripts after player is ready
-            player.ready(function() {
-                console.log('Video.js player ready for:', videoElement.id);
-                
-                // Import rotate functionality if available
-                if (typeof window.rotate === 'function') {
-                    try {
-                        window.rotate(player);
-                        console.log('Rotate functionality loaded for:', videoElement.id);
-                    } catch (rotateError) {
-                        console.warn('Failed to load rotate functionality for ' + videoElement.id + ':', rotateError);
-                    }
-                } else {
-                    console.log('Rotate functionality not available for:', videoElement.id);
-                }
-            });
-            
-            // Handle player errors
-            player.on('error', function() {
-                var error = player.error();
-                console.warn('Video.js player error for ' + videoElement.id + ':', error);
-            });
-            
-        } catch (error) {
-            console.error('Video.js player initialization failed for ' + videoElement.id + ':', error);
-        }
-    });
-});
-</script>
+<!-- Video.js initialization handled by video-manager.js -->
+
+<!-- NDAS utility functions -->
+<script type="text/javascript" src="{% static 'js/app-utils.js' %}"></script>
+
+<!-- Video Manager (handles all video initialization) -->
+<script type="text/javascript" src="{% static 'js/video-manager.js' %}"></script>
 
 <!-- Main application JavaScript -->
-<script type="text/javascript" src="{% static 'js/utils.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/main.js' %}"></script>
 
 <!-- Standard AdminLTE 3.x Sidebar Navigation -->
