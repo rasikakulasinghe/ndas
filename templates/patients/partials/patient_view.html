@@ -1,1204 +1,787 @@
-<!-- Enhanced Page Header -->
-<div class="card bg-gradient-primary shadow-sm patient-status-ribbon">
-  
-  {% if patient.isNewPatient %}
-    <div class="ribbon bg-warning">New</div>
-  {% elif patient.isDischarged %}
-    <div class="ribbon bg-secondary">Discharged</div>
-  {% endif %}
+﻿<!-- Compact Patient Header -->
+<div class="row">
+  <div class="col-12">
+    {% include 'patients/partials/patient_identification_details.html' %}
+  </div>
 </div>
 
-<!-- Identification Details -->
-{% include 'patients/partials/patient_identification_details.html' %}
+<!-- Patient Details Card -->
+<div class="row">
+  <div class="col-12">
+    <div class="card card-secondary card-outline">
+      <div class="card-header p-0">
+        <ul class="nav nav-tabs" id="details-tabs" role="tablist">
+          <li class="nav-item">
+            <a class="nav-link active" id="overview-tab" data-toggle="pill" href="#overview-section" role="tab">
+              <i class="fas fa-info-circle"></i> Overview
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="birth-tab" data-toggle="pill" href="#birth-section" role="tab">
+              <i class="fas fa-baby"></i> Birth Info
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="medical-tab" data-toggle="pill" href="#medical-section" role="tab">
+              <i class="fas fa-notes-medical"></i> Medical History
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="contact-tab" data-toggle="pill" href="#contact-section" role="tab">
+              <i class="fas fa-address-book"></i> Contact
+            </a>
+          </li>
+        </ul>
+      </div>
+      <div class="card-body">
+        <div class="tab-content" id="details-tabContent">
 
-          <!-- Enhanced Details Summary -->
-          <div class="card shadow-sm">
-            <div class="card-header p-0 border-bottom-0">
-            <ul class="nav nav-tabs professional-tabs" id="custom-tabs-four-tab" role="tablist">
-            <li class="nav-item">
-              <a class="nav-link active" id="custom-tabs-four-summary-tab" data-toggle="pill" href="#summary" role="tab" aria-controls="custom-tabs-four-summary" aria-selected="true">
-                <i class="fas fa-chart-pie mr-2"></i>
-                <span class="d-none d-md-inline">Summary</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" id="custom-tabs-four-birth-tab" data-toggle="pill" href="#birth" role="tab" aria-controls="custom-tabs-four-birth" aria-selected="false">
-                <i class="fas fa-baby mr-2"></i>
-                <span class="d-none d-md-inline">Birth History</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" id="custom-tabs-four-contact-tab" data-toggle="pill" href="#contact" role="tab" aria-controls="custom-tabs-four-contact" aria-selected="false">
-                <i class="fas fa-address-book mr-2"></i>
-                <span class="d-none d-md-inline">Contacts</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" id="custom-tabs-four-medical-tab" data-toggle="pill" href="#medical-history" role="tab" aria-controls="custom-tabs-four-medical" aria-selected="false">
-                <i class="fas fa-notes-medical mr-2"></i>
-                <span class="d-none d-md-inline">Medical History</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" id="custom-tabs-four-video-tab" data-toggle="pill" href="#video" role="tab" aria-controls="custom-tabs-four-video" aria-selected="false">
-                <i class="fas fa-video mr-2"></i>
-                <span class="d-none d-md-inline">Videos</span>
-                <span class="badge badge-secondary ml-1">{{file_video_count}}</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" id="custom-tabs-four-gm-tab" data-toggle="pill" href="#assessment-gm" role="tab" aria-controls="custom-tabs-four-gm" aria-selected="false">
-                <i class="fas fa-stethoscope mr-2"></i>
-                <span class="d-none d-md-inline">GMA Record</span>
-                <span class="badge badge-info ml-1">{{gm_assessments_count}}</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" id="custom-tabs-four-hine-tab" data-toggle="pill" href="#assessment-hine" role="tab" aria-controls="custom-tabs-four-hine" aria-selected="false">
-                <i class="fas fa-brain mr-2"></i>
-                <span class="d-none d-md-inline">HINE Record</span>
-                <span class="badge badge-warning ml-1">{{hine_assessments_count}}</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" id="custom-tabs-four-da-nd-tab" data-toggle="pill" href="#assessment-da" role="tab" aria-controls="custom-tabs-four-da" aria-selected="false">
-                <i class="fas fa-child mr-2"></i>
-                <span class="d-none d-md-inline">Developmental</span>
-                <span class="badge badge-success ml-1">{{da_assessments_count}}</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" id="custom-tabs-four-cdic-tab" data-toggle="pill" href="#interventions-cdic" role="tab" aria-controls="custom-tabs-four-cdic" aria-selected="false">
-                <i class="fas fa-hands-helping mr-2"></i>
-                <span class="d-none d-md-inline">CDIC Records</span>
-                <span class="badge badge-primary ml-1">{{cdic_record_count}}</span>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" id="custom-tabs-four-attachment-tab" data-toggle="pill" href="#attachments" role="tab" aria-controls="custom-tabs-four-attachment" aria-selected="false">
-                <i class="fas fa-paperclip mr-2"></i>
-                <span class="d-none d-md-inline">Attachments</span>
-                <span class="badge badge-dark ml-1">{{file_attachment_count}}</span>
-              </a>
-            </li>
-            </ul>
-          </div>
-
-            <div class="card-body">
-            <div class="tab-content" id="custom-tabs-four-tabContent">
-
-            <div class="tab-pane fade active show" id="summary" role="tabpanel" aria-labelledby="custom-tabs-four-summary-tab">
-              <!-- Enhanced Summary Section -->
-              
-              <!-- Age Information Cards -->
-              <div class="summary-stats mb-4">
-                <div class="stat-card">
-                  <div class="stat-value">{{patient.getCurrentAge}}</div>
-                  <div class="stat-label">Current Age</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-value">{{patient.getCorrectedAge}}</div>
-                  <div class="stat-label">Corrected Age</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-value">{{patient.getPOG}}</div>
-                  <div class="stat-label">Period of Gestation</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-value">{{patient.getCorrectedGestationalAge}}</div>
-                  <div class="stat-label">Corrected Gestational Age</div>
-                </div>
-              </div>
-
-              <!-- Quick Access Information -->
-              <div class="enhanced-info-box">
-                <h6 class="mb-3 text-primary">
-                  <i class="fas fa-info-circle mr-2"></i>
-                  Quick Access Information
-                </h6>
-                
-                <div class="info-item">
-                  <div class="info-icon">
-                    <i class="fas fa-paperclip"></i>
-                  </div>
-                  <div class="info-content">
-                    <div class="info-label">Attachments</div>
-                    <div class="info-value">
-                      {% if file_attachment_count == 0 %}
-                        <span class="text-muted">No Attachments</span>
-                      {% else %}
-                        <a href="{% url 'attachment-manager-patient' patient.id %}" target="_blank" class="btn btn-sm btn-outline-primary">
-                          <i class="far fa-eye mr-1"></i> View ({{file_attachment_count}})
-                        </a>
-                      {% endif %}
-                    </div>
-                  </div>
-                </div>
-
-                <div class="info-item">
-                  <div class="info-icon">
-                    <i class="fas fa-video"></i>
-                  </div>
-                  <div class="info-content">
-                    <div class="info-label">Videos</div>
-                    <div class="info-value">
-                      {% if file_video_count == 0 %}
-                        <span class="text-muted">No Videos</span>
-                      {% else %}
-                        <a href="{% url 'video:manager-by-patient' patient.id %}" target="_blank" class="btn btn-sm btn-outline-primary">
-                          <i class="far fa-eye mr-1"></i> View ({{file_video_count}})
-                        </a>
-                      {% endif %}
-                    </div>
-                  </div>
-                </div>
-
-                <div class="info-item">
-                  <div class="info-icon">
-                    <i class="fas fa-bookmark"></i>
-                  </div>
-                  <div class="info-content">
-                    <div class="info-label">Bookmark Status</div>
-                    <div class="info-value">
-                      {% if bookmark %}
-                        <a href="{% url 'bookmark-view' bookmark.id %}" target="_blank" class="btn btn-sm btn-outline-success">
-                          <i class="far fa-bookmark mr-1"></i> View Bookmark
-                        </a>
-                      {% else %}
-                        <span class="text-muted">No Bookmark</span>
-                      {% endif %}
-                    </div>
-                  </div>
-                </div>
-
-                <div class="info-item">
-                  <div class="info-icon">
-                    <i class="fas fa-chart-line"></i>
-                  </div>
-                  <div class="info-content">
-                    <div class="info-label">Assessment Summary</div>
-                    <div class="info-value">
-                      <div class="d-flex flex-wrap">
-                        <span class="badge badge-primary mr-2 mb-1">GMA: {{patient.getDiagnosisList.0}}</span>
-                        <span class="badge badge-warning mr-2 mb-1">HINE: {{patient.getDiagnosisList.1}}</span>
-                        <span class="badge badge-success mb-1">DA: {{patient.getDiagnosisList.2}}</span>
-                      </div>
-                    </div>
+          <!-- Overview -->
+          <div class="tab-pane fade show active" id="overview-section" role="tabpanel">
+            <div class="row">
+              <div class="col-md-6 col-lg-3 mb-2">
+                <div class="info-box bg-info">
+                  <span class="info-box-icon"><i class="fas fa-birthday-cake"></i></span>
+                  <div class="info-box-content">
+                    <span class="info-box-text">Current Age</span>
+                    <span class="info-box-number">{{patient.getCurrentAge}}</span>
                   </div>
                 </div>
               </div>
-
-              <!-- Recommendations Section -->
-              {% if patient.getRC %}
-                <div class="card border-warning">
-                  <div class="card-header bg-warning text-dark">
-                    <h6 class="mb-0">
-                      <i class="fas fa-exclamation-triangle mr-2"></i>
-                      Recommendations
-                    </h6>
-                  </div>
-                  <div class="card-body">
-                    {% for item in patient.getRC %}
-                      {% if item.display %}
-                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                          <i class="fas fa-lightbulb mr-2"></i>
-                          {{ item.msg }}
-                          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                          </button>
-                        </div>
-                      {% endif %}
-                    {% endfor %}
+              <div class="col-md-6 col-lg-3 mb-2">
+                <div class="info-box bg-success">
+                  <span class="info-box-icon"><i class="fas fa-calendar-alt"></i></span>
+                  <div class="info-box-content">
+                    <span class="info-box-text">Corrected Age</span>
+                    <span class="info-box-number">{{patient.getCorrectedAge}}</span>
                   </div>
                 </div>
-              {% endif %}
-
-              <!-- /end enhanced summary -->
+              </div>
+              <div class="col-md-6 col-lg-3 mb-2">
+                <div class="info-box bg-warning">
+                  <span class="info-box-icon"><i class="fas fa-clock"></i></span>
+                  <div class="info-box-content">
+                    <span class="info-box-text">POG</span>
+                    <span class="info-box-number">{{patient.getPOG}}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-3 mb-2">
+                <div class="info-box bg-secondary">
+                  <span class="info-box-icon"><i class="fas fa-hourglass-half"></i></span>
+                  <div class="info-box-content">
+                    <span class="info-box-text">Corrected GA</span>
+                    <span class="info-box-number">{{patient.getCorrectedGestationalAge}}</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div class="tab-pane fade" id="birth" role="tabpanel" aria-labelledby="custom-tabs-four-birth-tab">
-              <!-- Enhanced Birth History -->
-              <div class="enhanced-info-box">
-                <h6 class="mb-3 text-primary">
-                  <i class="fas fa-baby mr-2"></i>
-                  Birth Information
-                </h6>
-                
-                <div class="row">
-                  <div class="col-lg-6">
-                    <div class="info-item">
-                      <div class="info-icon bg-primary">
-                        <i class="fas fa-venus-mars"></i>
-                      </div>
-                      <div class="info-content">
-                        <div class="info-label">Gender</div>
-                        <div class="info-value">{{patient.gender}}</div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="col-lg-6">
-                    <div class="info-item">
-                      <div class="info-icon bg-info">
-                        <i class="fas fa-calendar-alt"></i>
-                      </div>
-                      <div class="info-content">
-                        <div class="info-label">Date and Time of Birth</div>
-                        <div class="info-value">{{patient.dob_tob}}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="row">
-                  <div class="col-lg-6">
-                    <div class="info-item">
-                      <div class="info-icon bg-success">
-                        <i class="fas fa-clock"></i>
-                      </div>
-                      <div class="info-content">
-                        <div class="info-label">Period of Gestation (POG)</div>
-                        <div class="info-value">{{patient.getPOG}}</div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="col-lg-6">
-                    <div class="info-item">
-                      <div class="info-icon bg-warning">
-                        <i class="fas fa-procedures"></i>
-                      </div>
-                      <div class="info-content">
-                        <div class="info-label">Mode of Delivery</div>
-                        <div class="info-value">{{patient.mo_delivery}}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="row">
-                  <div class="col-lg-6">
-                    <div class="info-item">
-                      <div class="info-icon bg-danger">
-                        <i class="fas fa-heartbeat"></i>
-                      </div>
-                      <div class="info-content">
-                        <div class="info-label">APGAR Score</div>
-                        <div class="info-value">{{patient.getAPGAR}}</div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="col-lg-6">
-                    <div class="info-item">
-                      <div class="info-icon bg-secondary">
-                        <i class="fas fa-lungs"></i>
-                      </div>
-                      <div class="info-content">
-                        <div class="info-label">Resuscitation Status</div>
-                        <div class="info-value">{{patient.getResuscitationState}}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
+            {% if patient.getRC %}
+            <div class="alert alert-warning">
+              <h6 class="mb-2"><i class="fas fa-exclamation-triangle"></i> Recommendations</h6>
+              {% for item in patient.getRC %}
+                {% if item.display %}
+                <div class="mb-1"><i class="fas fa-lightbulb"></i> {{ item.msg }}</div>
+                {% endif %}
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Birth Information -->
+          <div class="tab-pane fade" id="birth-section" role="tabpanel">
+            <div class="row">
+              <div class="col-md-6">
+                <table class="table table-sm">
+                  <tr>
+                    <th width="40%">Gender</th>
+                    <td>{{patient.gender}}</td>
+                  </tr>
+                  <tr>
+                    <th>Date and Time of Birth</th>
+                    <td>{{patient.dob_tob}}</td>
+                  </tr>
+                  <tr>
+                    <th>Mode of Delivery</th>
+                    <td>{{patient.mo_delivery}}</td>
+                  </tr>
+                  <tr>
+                    <th>APGAR Score</th>
+                    <td>{{patient.getAPGAR}}</td>
+                  </tr>
+                </table>
+              </div>
+              <div class="col-md-6">
+                <table class="table table-sm">
+                  <tr>
+                    <th width="40%">Birth Weight (g)</th>
+                    <td>{{patient.birth_weight}}</td>
+                  </tr>
+                  <tr>
+                    <th>OFC (cm)</th>
+                    <td>{{patient.ofc}}</td>
+                  </tr>
+                  <tr>
+                    <th>Length (cm)</th>
+                    <td>{{patient.length}}</td>
+                  </tr>
+                  <tr>
+                    <th>Resuscitation Status</th>
+                    <td>{{patient.getResuscitationState}}</td>
+                  </tr>
+                </table>
                 {% if patient.resuscitated %}
-                <div class="info-item">
-                  <div class="info-icon bg-warning">
-                    <i class="fas fa-notes-medical"></i>
-                  </div>
-                  <div class="info-content">
-                    <div class="info-label">Resuscitation Note</div>
-                    <div class="info-value">{{patient.resustn_note|default:"---"}}</div>
-                  </div>
+                <div class="form-group">
+                  <label class="small font-weight-bold">Resuscitation Note</label>
+                  <textarea class="form-control form-control-sm" rows="2" readonly>{{patient.resustn_note|default:"---"}}</textarea>
                 </div>
                 {% endif %}
               </div>
-              
-              <div class="enhanced-info-box">
-                <h6 class="mb-3 text-success">
-                  <i class="fas fa-weight mr-2"></i>
-                  Physical Measurements
-                </h6>
-                
-                <div class="row">
-                  <div class="col-lg-4">
-                    <div class="info-item">
-                      <div class="info-icon bg-primary">
-                        <i class="fas fa-weight"></i>
-                      </div>
-                      <div class="info-content">
-                        <div class="info-label">Birth Weight</div>
-                        <div class="info-value">{{patient.birth_weight}} g</div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="col-lg-4">
-                    <div class="info-item">
-                      <div class="info-icon bg-info">
-                        <i class="fas fa-circle"></i>
-                      </div>
-                      <div class="info-content">
-                        <div class="info-label">OFC (Head Circumference)</div>
-                        <div class="info-value">{{patient.ofc}} cm</div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="col-lg-4">
-                    <div class="info-item">
-                      <div class="info-icon bg-success">
-                        <i class="fas fa-ruler-vertical"></i>
-                      </div>
-                      <div class="info-content">
-                        <div class="info-label">Length</div>
-                        <div class="info-value">{{patient.length}} cm</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            </div>
+          </div>
 
-              <!-- /end text for birth -->
+          <!-- Medical History -->
+          <div class="tab-pane fade" id="medical-section" role="tabpanel">
+            <div class="form-group">
+              <label class="small font-weight-bold">Current Problems</label>
+              <textarea class="form-control form-control-sm" rows="2" readonly>{{patient.problems|default:"No specific problems noted"}}</textarea>
             </div>
 
-            <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="custom-tabs-four-contact-tab">
-              <!-- Enhanced Contact Information -->
-              <div class="enhanced-info-box">
-                <h6 class="mb-3 text-primary">
-                  <i class="fas fa-address-book mr-2"></i>
-                  Contact Information
-                </h6>
-                
-                <div class="info-item">
-                  <div class="info-icon bg-primary">
-                    <i class="fas fa-home"></i>
-                  </div>
-                  <div class="info-content">
-                    <div class="info-label">Address</div>
-                    <div class="info-value">{{patient.address|default:"Not specified"}}</div>
-                  </div>
-                </div>
-                
-                <div class="row">
-                  <div class="col-lg-6">
-                    <div class="info-item">
-                      <div class="info-icon bg-success">
-                        <i class="fas fa-mobile-alt"></i>
-                      </div>
-                      <div class="info-content">
-                        <div class="info-label">Mobile Phone</div>
-                        <div class="info-value">
-                          {% if patient.tp_mobile %}
-                            <a href="tel:{{patient.tp_mobile}}" class="text-primary">{{patient.tp_mobile}}</a>
-                          {% else %}
-                            Not specified
-                          {% endif %}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="col-lg-6">
-                    <div class="info-item">
-                      <div class="info-icon bg-info">
-                        <i class="fas fa-phone"></i>
-                      </div>
-                      <div class="info-content">
-                        <div class="info-label">Landline Phone</div>
-                        <div class="info-value">
-                          {% if patient.tp_lan %}
-                            <a href="tel:{{patient.tp_lan}}" class="text-primary">{{patient.tp_lan}}</a>
-                          {% else %}
-                            Not specified
-                          {% endif %}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="row">
-                  <div class="col-lg-6">
-                    <div class="info-item">
-                      <div class="info-icon bg-warning">
-                        <i class="fas fa-hospital"></i>
-                      </div>
-                      <div class="info-content">
-                        <div class="info-label">MOH Area</div>
-                        <div class="info-value">{{patient.moh_area|default:"Not specified"}}</div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="col-lg-6">
-                    <div class="info-item">
-                      <div class="info-icon bg-secondary">
-                        <i class="fas fa-user-md"></i>
-                      </div>
-                      <div class="info-content">
-                        <div class="info-label">PHM Area</div>
-                        <div class="info-value">{{patient.phm_area|default:"Not specified"}}</div>
-                      </div>
-                    </div>
-                  </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="small font-weight-bold">Date of Admission</label>
+                  <input type="text" class="form-control form-control-sm" value="{{patient.do_admission|default:'Not specified'}}" readonly>
                 </div>
               </div>
-              <!-- /end enhanced contact -->
-            </div>
-
-            <div class="tab-pane fade" id="medical-history" role="tabpanel" aria-labelledby="custom-tabs-four-medical-tab">
-              <!-- Enhanced Medical History -->
-              <div class="enhanced-info-box">
-                <h6 class="mb-3 text-primary">
-                  <i class="fas fa-notes-medical mr-2"></i>
-                  Current Medical Status
-                </h6>
-                
-                <div class="info-item">
-                  <div class="info-icon bg-danger">
-                    <i class="fas fa-exclamation-circle"></i>
-                  </div>
-                  <div class="info-content">
-                    <div class="info-label">Current Problems</div>
-                    <div class="info-value">{{patient.problems|default:"No specific problems noted"}}</div>
-                  </div>
-                </div>
-                
-                <div class="row">
-                  <div class="col-lg-6">
-                    <div class="info-item">
-                      <div class="info-icon bg-success">
-                        <i class="fas fa-calendar-plus"></i>
-                      </div>
-                      <div class="info-content">
-                        <div class="info-label">Date of Admission</div>
-                        <div class="info-value">{{patient.do_admission|default:"Not specified"}}</div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div class="col-lg-6">
-                    <div class="info-item">
-                      <div class="info-icon bg-warning">
-                        <i class="fas fa-calendar-minus"></i>
-                      </div>
-                      <div class="info-content">
-                        <div class="info-label">Date of Discharge</div>
-                        <div class="info-value">{{patient.do_discharge|default:"Not discharged"}}</div>
-                      </div>
-                    </div>
-                  </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="small font-weight-bold">Date of Discharge</label>
+                  <input type="text" class="form-control form-control-sm" value="{{patient.do_discharge|default:'Not discharged'}}" readonly>
                 </div>
               </div>
+            </div>
 
-              <div class="enhanced-info-box">
-                <h6 class="mb-3 text-success">
-                  <i class="fas fa-history mr-2"></i>
-                  Medical History Timeline
-                </h6>
-                
-                <div class="info-item">
-                  <div class="info-icon bg-primary">
-                    <i class="fas fa-pregnant"></i>
-                  </div>
-                  <div class="info-content">
-                    <div class="info-label">Antenatal History</div>
-                    <div class="info-value">
-                      <div class="text-justify">{{patient.antenatal_hx|default:"No antenatal complications noted"|linebreaks}}</div>
-                    </div>
-                  </div>
-                </div>
+            <div class="form-group">
+              <label class="small font-weight-bold">Antenatal History</label>
+              <textarea class="form-control form-control-sm" rows="2" readonly>{{patient.antenatal_hx|default:"No antenatal complications noted"}}</textarea>
+            </div>
 
-                <div class="info-item">
-                  <div class="info-icon bg-warning">
-                    <i class="fas fa-baby"></i>
-                  </div>
-                  <div class="info-content">
-                    <div class="info-label">Intranatal History</div>
-                    <div class="info-value">
-                      <div class="text-justify">{{patient.intranatal_hx|default:"Normal delivery process"|linebreaks}}</div>
-                    </div>
-                  </div>
-                </div>
+            <div class="form-group">
+              <label class="small font-weight-bold">Intranatal History</label>
+              <textarea class="form-control form-control-sm" rows="2" readonly>{{patient.intranatal_hx|default:"Normal delivery process"}}</textarea>
+            </div>
 
-                <div class="info-item">
-                  <div class="info-icon bg-success">
-                    <i class="fas fa-child"></i>
-                  </div>
-                  <div class="info-content">
-                    <div class="info-label">Postnatal History</div>
-                    <div class="info-value">
-                      <div class="text-justify">{{patient.postnatal_hx|default:"Normal postnatal period"|linebreaks}}</div>
-                    </div>
-                  </div>
-                </div>
+            <div class="form-group">
+              <label class="small font-weight-bold">Postnatal History</label>
+              <textarea class="form-control form-control-sm" rows="2" readonly>{{patient.postnatal_hx|default:"Normal postnatal period"}}</textarea>
+            </div>
 
-                <div class="info-item">
-                  <div class="info-icon bg-secondary">
-                    <i class="fas fa-clipboard-list"></i>
-                  </div>
-                  <div class="info-content">
-                    <div class="info-label">Other Relevant Details</div>
-                    <div class="info-value">
-                      <div class="text-justify">{{patient.other_relavent_details|default:"No additional details noted"|linebreaks}}</div>
-                    </div>
-                  </div>
+            <div class="form-group">
+              <label class="small font-weight-bold">Other Relevant Details</label>
+              <textarea class="form-control form-control-sm" rows="2" readonly>{{patient.other_relavent_details|default:"No additional details noted"}}</textarea>
+            </div>
+          </div>
+
+          <!-- Contact Information -->
+          <div class="tab-pane fade" id="contact-section" role="tabpanel">
+            <div class="form-group">
+              <label class="small font-weight-bold">Address</label>
+              <textarea class="form-control form-control-sm" rows="2" readonly>{{patient.address|default:"Not specified"}}</textarea>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="small font-weight-bold">Mobile Phone</label>
+                  <input type="text" class="form-control form-control-sm" value="{{patient.tp_mobile|default:'Not specified'}}" readonly>
                 </div>
               </div>
-              <!-- /end enhanced medical history -->
-            </div>
-          
-            <div class="tab-pane fade" id="assessment-gm" role="tabpanel" aria-labelledby="custom-tabs-four-gma-tab">
-              <!-- Text for GMA -->
-
-                <div class="row">
-                    <div class="col-md-3 col-sm-6 col-12">
-                    <div class="info-box">
-                    <div class="info-box-content">
-                    <span class="info-box-number">GM Video Assessments :</span>
-                    <span class="info-box-text">{% if file_video_count == 0 %}No Video Assessments{% else %}
-                      Total: {{gm_assessments_count}} </br> New : {{gm_assessments_new}} </br> Completed : {{gm_assessments_completed}} </br> Last assessment was done on : </br> {{gm_last_assessment.date_of_assessment|date}} </br> Result : {{gm_last_assessment.getDiagnosis}} </br> Next action planed : {{gm_last_assessment.managment_plan}}
-                      {% endif %}</span>
-                    </div>
-                    </div>
-                    </div>
-
-                    <div class="col">
-
-                        {% if gm_assessments %}
-                  <div class="table-responsive">
-                    <table class="table table-hover table-striped">
-                      <thead class="thead-light">
-                        <tr>
-                          <th class="text-center">#</th>
-                          <th>Assessment Details</th>
-                          <th class="text-center">Status</th>
-                          <th class="text-center">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {% for Assessment in gm_assessments %}
-                        <tr>
-                          <td class="text-center align-middle">
-                            <span class="badge badge-primary">{{ Assessment.id }}</span>
-                          </td>
-                          <td class="align-middle">
-                            <div class="assessment-details">
-                              <h6 class="mb-1">{{ Assessment.patient.baby_name }}</h6>
-                              <small class="text-muted d-block">
-                                <i class="fas fa-calendar mr-1"></i>{{ Assessment.date_of_assessment }}
-                              </small>
-                              <small class="text-muted d-block">
-                                <i class="fas fa-clock mr-1"></i>Age: {{ Assessment.patient.getCorrectedAge }}
-                              </small>
-                            </div>
-                          </td>
-                          <td class="text-center align-middle">
-                            {% if Assessment.isDiagnosisNormal %}
-                              <span class="badge badge-success" data-toggle="tooltip" title="Normal Assessment">
-                                <i class="fas fa-check-circle"></i> Normal
-                              </span>
-                            {% else %}
-                              <span class="badge badge-danger" data-toggle="tooltip" title="{% for dx in Assessment.diagnosis.all %}{{dx.title}}{% endfor %}">
-                                <i class="fas fa-times-circle"></i> Abnormal
-                              </span>
-                            {% endif %}
-                          </td>
-                          <td class="text-center align-middle">
-                            <div class="action-buttons-horizontal">
-                              <a href="{% url 'assessment-view' Assessment.id %}" class="btn btn-sm btn-outline-info" data-toggle="tooltip" title="View Details">
-                                <i class="fas fa-eye"></i>
-                              </a>
-                              <a href="{% url 'assessment-edit' Assessment.id %}" class="btn btn-sm btn-outline-warning" data-toggle="tooltip" title="Edit Assessment">
-                                <i class="fas fa-edit"></i>
-                              </a>
-                              {% if Assessment.video_file and Assessment.video_file.id %}
-                              <a href="{% url 'video:view' Assessment.video_file.id %}" class="btn btn-sm btn-outline-success" data-toggle="tooltip" title="Play Video">
-                                <i class="fas fa-play"></i>
-                              </a>
-                              {% endif %}
-                              <a href="{% url 'assessment-delete_start' Assessment.id %}" class="btn btn-sm btn-outline-danger" data-toggle="tooltip" title="Delete Assessment">
-                                <i class="fas fa-trash"></i>
-                              </a>
-                            </div>
-                            {% if Assessment.added_by and Assessment.added_by.username %}
-                            <div class="mt-1">
-                              <a href="{% url 'user-view-by-username' Assessment.added_by.username %}" class="btn btn-xs btn-outline-secondary" data-toggle="tooltip" title="View Creator: {{ Assessment.added_by.username }}">
-                                <i class="fas fa-user"></i>
-                              </a>
-                            </div>
-                            {% endif %}
-                          </td>
-                        </tr>
-                        {% endfor %}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <div class="text-center">
-                  <hr>
-                    {% if file_assessments_count > 5 %}<a href="{% url 'assessment-manager-patient' patient.id %}" class="btn btn-link"><i class="fas fa-eye"></i>  View All</a>{% endif %}
-                  </div>
-                  
-                  {% else %}
-                  <div class="alert alert-secondary" role="alert">There are no any GM assessments for this patient yet... !</div>
-                  {% endif %}
-
-                      </span>
-
-                      </div>
-                      
-                  </div>
-
-              <!-- /end text for gma -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="small font-weight-bold">Landline Phone</label>
+                  <input type="text" class="form-control form-control-sm" value="{{patient.tp_lan|default:'Not specified'}}" readonly>
+                </div>
+              </div>
             </div>
 
-            <div class="tab-pane fade" id="assessment-hine" role="tabpanel" aria-labelledby="custom-tabs-four-hine-tab">
-              <!-- Text for hine -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="small font-weight-bold">MOH Area</label>
+                  <input type="text" class="form-control form-control-sm" value="{{patient.moh_area|default:'Not specified'}}" readonly>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="small font-weight-bold">PHM Area</label>
+                  <input type="text" class="form-control form-control-sm" value="{{patient.phm_area|default:'Not specified'}}" readonly>
+                </div>
+              </div>
+            </div>
+          </div>
 
-              {% if hine_assessments_count > 0 %}
-              <table class="table table-hover">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Assessments Card -->
+<div class="row">
+  <div class="col-12">
+    <div class="card card-primary card-outline">
+      <div class="card-header p-0">
+        <ul class="nav nav-tabs" id="assessment-tabs-main" role="tablist">
+          <li class="nav-item">
+            <a class="nav-link active" id="gma-indicator-tab" data-toggle="pill" href="#gma-indicator-section" role="tab">
+              <i class="fas fa-list-ul"></i> Indications for GMA
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="gm-tab" data-toggle="pill" href="#gm-assessment-section" role="tab">
+              <i class="fas fa-stethoscope"></i> GMA <span class="badge badge-light">{{gm_assessments_count}}</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="hine-tab" data-toggle="pill" href="#hine-assessment-section" role="tab">
+              <i class="fas fa-brain"></i> HINE <span class="badge badge-light">{{hine_assessments_count}}</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="da-tab" data-toggle="pill" href="#da-assessment-section" role="tab">
+              <i class="fas fa-child"></i> Developmental <span class="badge badge-light">{{da_assessments_count}}</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="cdic-tab" data-toggle="pill" href="#cdic-section" role="tab">
+              <i class="fas fa-hands-helping"></i> CDIC <span class="badge badge-light">{{cdic_record_count}}</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="diagnosis-tab" data-toggle="pill" href="#diagnosis-section" role="tab">
+              <i class="fas fa-diagnoses"></i> Latest Diagnosis
+            </a>
+          </li>
+        </ul>
+      </div>
+      <div class="card-body">
+        <div class="tab-content" id="assessment-tabContent-main">
+
+          <!-- Indications for GMA -->
+          <div class="tab-pane fade show active" id="gma-indicator-section" role="tabpanel">
+            <div class="card card-info card-outline mb-0">
+              <div class="card-body p-2">
+                {% if patient.indecation_for_gma.all %}
+                <div class="d-flex flex-wrap">
+                  {% for gmamodel in patient.indecation_for_gma.all %}
+                  <span class="badge badge-info p-2 m-1">
+                    {{ gmamodel.title }}
+                    <a href="#" data-toggle="tooltip" title="{{gmamodel.description}}" class="text-white ml-1">
+                      <i class="fa fa-question-circle"></i>
+                    </a>
+                  </span>
+                  {% endfor %}
+                </div>
+                {% else %}
+                <small class="text-muted"><i class="fas fa-info-circle"></i> No indications recorded</small>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <!-- GMA Assessments -->
+          <div class="tab-pane fade" id="gm-assessment-section" role="tabpanel">
+            {% if gm_assessments %}
+            <div class="table-responsive">
+              <table class="table table-hover table-sm">
                 <thead>
                   <tr>
-                    <th>Index</th>
-                    <th>Date of Assessment</th>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Age</th>
+                    <th>Diagnosis</th>
+                    <th>Done By</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for Assessment in gm_assessments %}
+                  <tr>
+                    <td>{{Assessment.id}}</td>
+                    <td>{{Assessment.date_of_assessment|date}}</td>
+                    <td>{{Assessment.getAgeOnAssessment}}</td>
+                    <td><span class="badge badge-info">{{Assessment.getDiagnosis}}</span></td>
+                    <td>{{Assessment.assessment_done_by}}</td>
+                    <td>
+                      <div class="btn-group btn-group-sm">
+                        <a href="{% url 'assessment-view' Assessment.id %}" class="btn btn-info btn-sm" title="View">
+                          <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{% url 'assessment-edit' Assessment.id %}" class="btn btn-warning btn-sm" title="Edit">
+                          <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'assessment-delete_start' Assessment.id %}" class="btn btn-danger btn-sm" title="Delete">
+                          <i class="fas fa-trash"></i>
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% if gm_assessments_count > 5 %}
+            <div class="text-center mt-2">
+              <a href="{% url 'assessment-manager-patient' patient.id %}" class="btn btn-primary btn-sm">
+                <i class="fas fa-eye"></i> View All ({{gm_assessments_count}})
+              </a>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="alert alert-light mb-0">
+              <i class="fas fa-info-circle"></i> No GM assessments recorded yet.
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- HINE Assessments -->
+          <div class="tab-pane fade" id="hine-assessment-section" role="tabpanel">
+            {% if hine_assessments %}
+            <div class="table-responsive">
+              <table class="table table-hover table-sm">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Date</th>
                     <th>Score</th>
-                    <th>Done by</th>
-                    <th>Created by</th>
-                    <th>Comment</th>
+                    <th>Done By</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for HINE in hine_assessments %}
-                <tr>
-                  <td>{{HINE.id }}</td>
-                  <td>{{HINE.date_of_assessment }}</td>
-                  <td>{{HINE.score}}</td>
-                  <td>{{HINE.assessment_done_by}}</td>
-                  <td>{{HINE.added_by}}</td>
-                  <td>{{HINE.comment}}</td>
-                  <td>
-                    <div class=" btn-group" role="group">
-                      <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
-                      <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
-                        <a class="dropdown-item" href="{% url 'hine-assessment-view' HINE.id %}"><i class="fas fa-eye"></i> View</a>
-                        <a class="dropdown-item" href="{% url 'hine-assessment-edit' HINE.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
-                        <a class="dropdown-item" href="{% url 'hine-assessment-delete_start' HINE.id %}"><i class="far fa-trash-alt"></i> Delete</a>
-                        {% if HINE.added_by and HINE.added_by.username %}
-                        <a class="dropdown-item" href="{% url 'user-view-by-username' HINE.added_by.username %}"><i class="fas fa-eye"></i> View Created User</a>
-                        {% endif %}
-
+                  <tr>
+                    <td>{{HINE.id}}</td>
+                    <td>{{HINE.date_of_assessment}}</td>
+                    <td><span class="badge badge-warning">{{HINE.score}}</span></td>
+                    <td>{{HINE.assessment_done_by}}</td>
+                    <td>
+                      <div class="btn-group btn-group-sm">
+                        <a href="{% url 'hine-assessment-view' HINE.id %}" class="btn btn-info btn-sm" title="View">
+                          <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{% url 'hine-assessment-edit' HINE.id %}" class="btn btn-warning btn-sm" title="Edit">
+                          <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'hine-assessment-delete_start' HINE.id %}" class="btn btn-danger btn-sm" title="Delete">
+                          <i class="fas fa-trash"></i>
+                        </a>
                       </div>
-                    </div>
-                  </div>
-                </td>
-
-                </tr>
-                {% endfor %}
+                    </td>
+                  </tr>
+                  {% endfor %}
                 </tbody>
               </table>
-
-              <div class="text-center">
-              <hr>
-                {% if hine_assessments_count > 5 %}<a href="{% url 'hine-assessment-manager-patient' patient.id %}" class="btn btn-link"><i class="fas fa-eye"></i>  View All</a>{% endif %}
-              </div>
-              
-              {% else %}
-              <div class="alert alert-secondary" role="alert">There are no any HINE assessments for this patient yet... !</div>
-              {% endif %}
-
-              <!-- /end text for hine -->
             </div>
+            {% if hine_assessments_count > 5 %}
+            <div class="text-center mt-2">
+              <a href="{% url 'hine-assessment-manager-patient' patient.id %}" class="btn btn-warning btn-sm">
+                <i class="fas fa-eye"></i> View All ({{hine_assessments_count}})
+              </a>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="alert alert-light mb-0">
+              <i class="fas fa-info-circle"></i> No HINE assessments recorded yet.
+            </div>
+            {% endif %}
+          </div>
 
-            <div class="tab-pane fade" id="assessment-da" role="tabpanel" aria-labelledby="custom-tabs-four-hine-tab">
-              <!-- Text for Developmental Assessment -->
-
-              {% if da_assessments %}
-              <table class="table table-hover">
+          <!-- Developmental Assessments -->
+          <div class="tab-pane fade" id="da-assessment-section" role="tabpanel">
+            {% if da_assessments %}
+            <div class="table-responsive">
+              <table class="table table-hover table-sm">
                 <thead>
                   <tr>
-                    <th>Index</th>
-                    <th>Date of Assessment</th>
-                    <th>Done at age (in Months)</th>
-                    <th>Diagnosis Normal</th>
-                    <th>Done by</th>
-                    <th>Comment</th>
-                    <th>Created</th>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Age (Months)</th>
+                    <th>Normal</th>
+                    <th>Done By</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for DA in da_assessments %}
-                <tr>
-                  <td>{{ DA.id }}</td>
-                  <td>{{ DA.date_of_assessment }}</td>
-                  <td>{{ DA.getAssessmentAgeInMonths }}</td>
-                  <td>{{ DA.isNormal }}</td>
-                  <td>{{ DA.assessment_done_by }}</td>
-                  <td>{{ DA.comment }}</td>
-                  <td>
-                    <div style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="Created by : {{ DA.added_by }}, on {{ DA.added_on }}" class="fas fa-info-circle" style="color: #3d7deb;"></i></div>
-                  </td>
-                  <td>
-                    <div class=" btn-group" role="group">
-                      <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
-                      <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
-                        <a class="dropdown-item" href="{% url 'da-assessment-view' DA.id %}"><i class="fas fa-eye"></i> View</a>
-                        <a class="dropdown-item" href="{% url 'da-assessment-edit' DA.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
-                        <a class="dropdown-item" href="{% url 'da-assessment-delete_start' DA.id %}"><i class="far fa-trash-alt"></i> Delete</a>
-                        {% if DA.added_by and DA.added_by.username %}
-                        <a class="dropdown-item" href="{% url 'user-view-by-username' DA.added_by.username %}"><i class="fas fa-eye"></i> View Created User</a>
-                        {% endif %}
-
+                  <tr>
+                    <td>{{DA.id}}</td>
+                    <td>{{DA.date_of_assessment}}</td>
+                    <td>{{DA.getAssessmentAgeInMonths}}</td>
+                    <td><span class="badge badge-{% if DA.isNormal %}success{% else %}danger{% endif %}">{{DA.isNormal}}</span></td>
+                    <td>{{DA.assessment_done_by}}</td>
+                    <td>
+                      <div class="btn-group btn-group-sm">
+                        <a href="{% url 'da-assessment-view' DA.id %}" class="btn btn-info btn-sm" title="View">
+                          <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{% url 'da-assessment-edit' DA.id %}" class="btn btn-warning btn-sm" title="Edit">
+                          <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'da-assessment-delete_start' DA.id %}" class="btn btn-danger btn-sm" title="Delete">
+                          <i class="fas fa-trash"></i>
+                        </a>
                       </div>
-                    </div>
-                  </div>
-                </td>
-
-                </tr>
-                {% endfor %}
+                    </td>
+                  </tr>
+                  {% endfor %}
                 </tbody>
               </table>
-
-              <div class="text-center">
-              <hr>
-                {% if da_assessments_count > 5 %}<a href="{% url 'da-assessment-manager-patient' patient.id %}" class="btn btn-link"><i class="fas fa-eye"></i>  View All</a>{% endif %}
-              </div>
-              
-              {% else %}
-              <div class="alert alert-secondary" role="alert">There are no any developmental assessment for this patient yet... !</div>
-              {% endif %}
-
-              <!-- /end text for Developmental Assessment -->
             </div>
+            {% if da_assessments_count > 5 %}
+            <div class="text-center mt-2">
+              <a href="{% url 'da-assessment-manager-patient' patient.id %}" class="btn btn-success btn-sm">
+                <i class="fas fa-eye"></i> View All ({{da_assessments_count}})
+              </a>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="alert alert-light mb-0">
+              <i class="fas fa-info-circle"></i> No developmental assessments recorded yet.
+            </div>
+            {% endif %}
+          </div>
 
-            <div class="tab-pane fade" id="interventions-cdic" role="tabpanel" aria-labelledby="custom-tabs-four-cdic-tab">
-              <!-- Text for cdic -->
-
-              {% if cdic_record %}
-              <table class="table table-hover">
+          <!-- CDIC Records -->
+          <div class="tab-pane fade" id="cdic-section" role="tabpanel">
+            {% if cdic_record %}
+            <div class="table-responsive">
+              <table class="table table-hover table-sm">
                 <thead>
                   <tr>
-                    <th>Index</th>
-                    <th>Date of Assessment</th>
-                    <th>Next Appoinment Date</th>
-                    <th>Today Actions</th>
-                    <th>Assessment Done By</th>
-                    <th>Created</th>
+                    <th>#</th>
+                    <th>Assessment Date</th>
+                    <th>Next Appointment</th>
+                    <th>Done By</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for CDIC in cdic_record %}
-                <tr>
-                  <td>{{ CDIC.id }}</td>
-                  <td>{{ CDIC.assessment_date }}</td>
-                  <td>{{ CDIC.next_appointment_date }}</td>
-                  <td>{{ CDIC.today_interventions }}</td>
-                  <td>{{ CDIC.assessment_done_by }}</td>
-                  <td><div style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="Created by : {{ CDIC.created_by }}, on {{ CDIC.created_on }}" class="fas fa-info-circle" style="color: #3d7deb;"></i></div></td>
-                  <td>
-                    <div class=" btn-group" role="group">
-                      <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
-                      <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
-                        <a class="dropdown-item" href="{% url 'cdic-assessment-view' CDIC.id %}"><i class="fas fa-eye"></i> View</a>
-                        <a class="dropdown-item" href="{% url 'cdic-assessment-edit' CDIC.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
-                        <a class="dropdown-item" href="{% url 'cdic-assessment-delete_start' CDIC.id %}"><i class="far fa-trash-alt"></i> Delete</a>
-                        {% if CDIC.created_by and CDIC.created_by.username %}
-                        <a class="dropdown-item" href="{% url 'user-view-by-username' CDIC.created_by.username %}"><i class="fas fa-eye"></i> View Created User</a>
-                        {% endif %}
-
+                  <tr>
+                    <td>{{CDIC.id}}</td>
+                    <td>{{CDIC.assessment_date}}</td>
+                    <td>{{CDIC.next_appointment_date}}</td>
+                    <td>{{CDIC.assessment_done_by}}</td>
+                    <td>
+                      <div class="btn-group btn-group-sm">
+                        <a href="{% url 'cdic-assessment-view' CDIC.id %}" class="btn btn-info btn-sm" title="View">
+                          <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{% url 'cdic-assessment-edit' CDIC.id %}" class="btn btn-warning btn-sm" title="Edit">
+                          <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'cdic-assessment-delete_start' CDIC.id %}" class="btn btn-danger btn-sm" title="Delete">
+                          <i class="fas fa-trash"></i>
+                        </a>
                       </div>
-                    </div>
-                  </div>
-                </td>
-
-                </tr>
-                {% endfor %}
+                    </td>
+                  </tr>
+                  {% endfor %}
                 </tbody>
               </table>
-
-              <div class="text-center">
-              <hr>
-                {% if cdic_record_count > 5 %}<a href="{% url 'da-assessment-manager-patient' patient.id %}" class="btn btn-link"><i class="fas fa-eye"></i>  View All</a>{% endif %}
-              </div>
-              
-              {% else %}
-              <div class="alert alert-secondary" role="alert">There are no any CDIC records for this patient yet... !</div>
-              {% endif %}
-
-              <!-- /end text for cdic -->
             </div>
+            {% if cdic_record_count > 5 %}
+            <div class="text-center mt-2">
+              <a href="{% url 'cdic-assessment-manager-patient' patient.id %}" class="btn btn-primary btn-sm">
+                <i class="fas fa-eye"></i> View All ({{cdic_record_count}})
+              </a>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="alert alert-light mb-0">
+              <i class="fas fa-info-circle"></i> No CDIC records yet.
+            </div>
+            {% endif %}
+          </div>
 
-            <div class="tab-pane fade" id="video" role="tabpanel" aria-labelledby="custom-tabs-four-video-tab">
-              <!-- Text for summary -->
+          <!-- Diagnosis Summary -->
+          <div class="tab-pane fade" id="diagnosis-section" role="tabpanel">
+            <div class="card card-secondary card-outline mb-0">
+              <div class="card-body p-2">
+                <span class="badge badge-primary p-2 mr-2">GMA: {{patient.getDiagnosisList.0}}</span>
+                <span class="badge badge-warning p-2 mr-2">HINE: {{patient.getDiagnosisList.1}}</span>
+                <span class="badge badge-success p-2">DA: {{patient.getDiagnosisList.2}}</span>
+              </div>
+            </div>
+          </div>
 
-              {% if file_videos %}
-              <table class="table table-hover">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Media Card -->
+<div class="row">
+  <div class="col-12">
+    <div class="card card-info card-outline">
+      <div class="card-header p-0">
+        <ul class="nav nav-tabs" id="media-tabs-main" role="tablist">
+          <li class="nav-item">
+            <a class="nav-link active" id="videos-tab" data-toggle="pill" href="#videos-section" role="tab">
+              <i class="fas fa-video"></i> Videos <span class="badge badge-light">{{file_video_count}}</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="attachments-tab" data-toggle="pill" href="#attachments-section" role="tab">
+              <i class="fas fa-paperclip"></i> Attachments <span class="badge badge-light">{{file_attachment_count}}</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+      <div class="card-body">
+        <div class="tab-content" id="media-tabContent-main">
+
+          <!-- Videos -->
+          <div class="tab-pane fade show active" id="videos-section" role="tabpanel">
+            {% if file_videos %}
+            <div class="table-responsive">
+              <table class="table table-hover table-sm">
                 <thead>
                   <tr>
-                    <th scope="col">Index</th>
-                    <th scope="col">Caption</th>
-                    <th scope="col">Age of Record (PNA)</th>
-                    <th scope="col">Recorded On</th>
-                    <th scope="col">Uploaded On</th>
-                    <th scope="col">Uploaded by</th>
-                    <th scope="col">Action</th>
+                    <th>#</th>
+                    <th>Caption</th>
+                    <th>Age (PNA)</th>
+                    <th>Recorded On</th>
+                    <th>Uploaded By</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for video in file_videos %}
                   <tr>
-                    <th scope="row">{{video.id}}
-                      {% if video.isNewFile %}<span class="right badge badge-danger" data-toggle="tooltip" data-placement="top" title="New record">New</span>{% endif %}
-                    </th>
+                    <td>
+                      {{video.id}}
+                      {% if video.isNewFile %}
+                      <span class="badge badge-danger">New</span>
+                      {% endif %}
+                    </td>
                     <td>{{video.caption}}</td>
                     <td>{{video.getAgeOnRecord}}</td>
                     <td>{{video.recorded_on}}</td>
-                    <td>{{video.uploaded_on}}</td>
                     <td>{{video.uploaded_by}}</td>
                     <td>
-                      <div class=" btn-group" role="group">
-                        <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
-                        <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
-                          {% if video.id %}
-                            <a class="dropdown-item" href="{% url 'video:view' video.id %}"><i class="fas fa-eye"></i> Play</a>
-                            <a class="dropdown-item" href="{% url 'video:edit' video.id %}"><i class="fas fa-pencil-alt"></i> Modify record</a>
-                            <a class="dropdown-item" href="{% url 'video:delete-confirm' video.id %}"><i class="far fa-trash-alt"></i> Delete</a>
-                            {% if video.isNewFile %}<a class="dropdown-item" href="{% url 'assessment-add' video.patient.id video.id %}"><i class="fas fa-circle fa-plus"></i> Add New Assessment</a>
-                            {% else %}
-                            <a class="dropdown-item" href="{% url 'assessment-view-by-file-id' video.id %}"><i class="fas fa-eye"></i> View Assessment</a>
-                            {% endif %}
-                          {% else %}
-                            <span class="dropdown-item-text text-muted">Invalid video record</span>
-                          {% endif %}
-                          {% if video.uploaded_by and video.uploaded_by.username %}
-                          <a class="dropdown-item" href="{% url 'user-view-by-username' video.uploaded_by.username %}"><i class="fas fa-eye"></i> View Uploaded User</a>
-                          {% endif %}
-                        </div>
+                      <div class="btn-group btn-group-sm">
+                        <a href="{% url 'video:view' video.id %}" class="btn btn-success btn-sm" title="Play">
+                          <i class="fas fa-play"></i>
+                        </a>
+                        <a href="{% url 'video:edit' video.id %}" class="btn btn-warning btn-sm" title="Edit">
+                          <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'video:delete_start' video.id %}" class="btn btn-danger btn-sm" title="Delete">
+                          <i class="fas fa-trash"></i>
+                        </a>
                       </div>
                     </td>
                   </tr>
-                    {% endfor %}
+                  {% endfor %}
                 </tbody>
               </table>
-              {% else %}
-              <div class="alert alert-secondary" role="alert">There are no any videos for this patient... !</div>
-              {% endif %}
-              <!-- /end text for summary -->
             </div>
+            {% if file_video_count > 5 %}
+            <div class="text-center mt-2">
+              <a href="{% url 'video:manager-by-patient' patient.id %}" class="btn btn-primary btn-sm">
+                <i class="fas fa-eye"></i> View All ({{file_video_count}})
+              </a>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="alert alert-light mb-0">
+              <i class="fas fa-info-circle"></i> No videos for this patient yet.
+            </div>
+            {% endif %}
+          </div>
 
-            <div class="tab-pane fade" id="attachments" role="tabpanel" aria-labelledby="custom-tabs-four-attachment-tab">
-              <!-- attachments Details -->
-              {% if file_attachment %}
-              <table class="table table-hover">
+          <!-- Attachments -->
+          <div class="tab-pane fade" id="attachments-section" role="tabpanel">
+            {% if file_attachment %}
+            <div class="table-responsive">
+              <table class="table table-hover table-sm">
                 <thead>
                   <tr>
                     <th>Type</th>
                     <th>Title</th>
                     <th>Description</th>
-                    <th>Created</th>
-                    <th>Action</th>
+                    <th>Uploaded On</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {% for Attachment in file_attachment %}
                   <tr>
-                    <td>{% if Attachment.attachment_type == 'Video' %}
-                      <i data-toggle="tooltip" data-placement="top" title="Video" class="fas fa-play-circle" style="color: #ff0000;"></i>
+                    <td>
+                      {% if Attachment.attachment_type == 'Video' %}
+                      <i class="fas fa-play-circle text-danger"></i>
                       {% elif Attachment.attachment_type == 'Image' %}
-                      <i data-toggle="tooltip" data-placement="top" title="Image" class="far fa-image" style="color: #ff0000;"></i>
+                      <i class="far fa-image text-primary"></i>
                       {% elif Attachment.attachment_type == 'PDF' %}
-                      <i data-toggle="tooltip" data-placement="top" title="PDF" class="far fa-file-pdf" style="color: #ff0000;"></i>
+                      <i class="far fa-file-pdf text-danger"></i>
                       {% endif %}
-                      {% if Attachment.isBookmarked %}&nbsp;<div class="d-inline-block"><a href="{% url 'bookmark-view' Attachment.isBookmarked.id %}" data-toggle="tooltip" data-placement="top" title="Bookmarked" class="far fa-bookmark" style="color: #3d7deb;"></a></div>{% endif %}
+                      {% if Attachment.isBookmarked %}
+                      <i class="far fa-bookmark text-warning"></i>
+                      {% endif %}
                     </td>
-
-                    <td>{{ Attachment.title }}</td>
-
-                    <td>{{ Attachment.description }}</td>
-                    <td><div style="cursor: pointer;"><i data-toggle="tooltip" data-placement="top" title="Uploaded on : {{ Attachment.uploaded_on }} by : {{ Attachment.uploaded_by.username }}, {% if Attachment.last_edit_by %} last edited on {{ Attachment.last_edit_on }} by {{ Attachment.last_edit_by.username }}{% endif %}" class="fas fa-info-circle" style="color: #3d7deb;"></i></div></td>
-                    
-                    <td><div style="cursor: pointer;" class=" btn-group" role="group">
-                        <a id="btnGroupDrop1" class="fas fa-walking" data-toggle="dropdown" aria-haspopup="false" aria-expanded="true"> Action</a>
-                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
-                          {% if Attachment.attachment_type == 'Image' %}
-                          <a class="dropdown-item" href="{% url 'attachment-view' Attachment.id %}"><i class="fas fa-eye"></i> View Attached Image</a>
-                          {% elif Attachment.attachment_type == 'PDF' %}
-                          <a class="dropdown-item" href="{% url 'attachment-view' Attachment.id %}"><i class="fas fa-eye"></i> Read Attached PDF</a>
-                          {% elif Attachment.attachment_type == 'Video' %}
-                          <a class="dropdown-item" href="{% url 'attachment-view' Attachment.id %}"><i class="fas fa-eye"></i> Play Attached Video</a>
-                          {% else %}
-                          {% endif %}
-
-                            <div><hr></div>
-                            <a class="dropdown-item" href="{% url 'attachment-edit' Attachment.id %}"><i class="fas fa-pencil-alt"></i> Edit</a>
-                            <a class="dropdown-item" href="javascript:void(0)" onclick="openDeleteAttachmentModal({
-                              id: '{{ Attachment.id }}',
-                              title: '{{ Attachment.title|escapejs }}',
-                              patient_name: '{{ Attachment.patient.baby_name|escapejs }}',
-                              patient_bht: '{{ Attachment.patient.bht|escapejs }}',
-                              patient_gender: '{{ Attachment.patient.get_gender_display|escapejs }}',
-                              attachment_type: '{{ Attachment.attachment_type }}',
-                              created_at: '{{ Attachment.created_at|date:"M d, Y H:i" }}',
-                              added_by: '{{ Attachment.added_by.get_full_name|default:Attachment.added_by.username|escapejs }}',
-                              description: '{{ Attachment.description|escapejs }}'
-                            })"><i class="far fa-trash-alt"></i> Delete</a>
-                            {% if Attachment.uploaded_by and Attachment.uploaded_by.username %}
-                            <a class="dropdown-item" href="{% url 'user-view-by-username' Attachment.uploaded_by.username %}"><i class="fas fas fa-eye"></i> View Uploaded user</a>
-                            {% endif %}
-                            {% if Attachment.isBookmarked %}
-                            <a class="dropdown-item" href="{% url 'bookmark-view' Attachment.isBookmarked.id %}"><i class="fas fas fa-eye"></i> View Bookmark</a>
-                            {% endif %}
-                            </div>
-                        </div>
+                    <td>{{Attachment.title}}</td>
+                    <td>{{Attachment.description|truncatewords:15}}</td>
+                    <td>{{Attachment.uploaded_on|date}}</td>
+                    <td>
+                      <div class="btn-group btn-group-sm">
+                        <a href="{% url 'attachment-view' Attachment.id %}" class="btn btn-info btn-sm" title="View">
+                          <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{% url 'attachment-edit' Attachment.id %}" class="btn btn-warning btn-sm" title="Edit">
+                          <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'attachment-delete_start' Attachment.id %}" class="btn btn-danger btn-sm" title="Delete">
+                          <i class="fas fa-trash"></i>
+                        </a>
                       </div>
                     </td>
                   </tr>
-                {% endfor %}
+                  {% endfor %}
                 </tbody>
               </table>
-
-              <div class="text-center">
-              <hr>
-                {% if file_attachment_count > 5 %}<a href="{% url 'attachment-manager-patient' Attachment.patient.id %}" class="btn btn-link"><i class="fas fa-eye"></i>  View All</a>{% endif %}
-              </div>
-              
-              {% else %}
-              <div class="alert alert-secondary" role="alert">There are no any attachments for this patient... !</div>
-              {% endif %}
-              <!-- /end text for attachments -->
             </div>
-          
-          </div></div></div>
-          <!-- / End Details attachments -->
-
-      <!-- New card -->
-      <div class="card">
-        <div class="card-header"><h3 class="card-title">Indications for GMA</h3></div>
-        <div class="card-body">
-          {% if patient.indecation_for_gma.all %}
-            {% for gmamodel in patient.indecation_for_gma.all %}
-            <div class="row mb-2">
-              <div class="col-sm-11">
-                <span class="badge badge-info mr-2">{{ gmamodel.title }}</span>
-                <a href="#" data-toggle="tooltip" data-placement="top" title="{{gmamodel.description}}">
-                  <i class="fa fa-question-circle text-info"></i>
-                </a>
-              </div>
+            {% if file_attachment_count > 5 %}
+            <div class="text-center mt-2">
+              <a href="{% url 'attachment-manager-patient' patient.id %}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-eye"></i> View All ({{file_attachment_count}})
+              </a>
             </div>
-            {% endfor %}
+            {% endif %}
+            {% else %}
+            <div class="alert alert-light mb-0">
+              <i class="fas fa-info-circle"></i> No attachments for this patient yet.
+            </div>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Actions Card -->
+<div class="row">
+  <div class="col-12">
+    <div class="card card-success card-outline">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-4 col-sm-6 mb-2">
+            <a class="btn btn-success btn-block" href="{% url 'video:add' patient.id %}">
+              <i class="fas fa-video"></i> New Video
+            </a>
+          </div>
+          <div class="col-md-4 col-sm-6 mb-2">
+            <a class="btn btn-secondary btn-block" href="{% url 'attachment-add' patient.id %}">
+              <i class="fas fa-paperclip"></i> New Attachment
+            </a>
+          </div>
+          <div class="col-md-4 col-sm-6 mb-2">
+            <a class="btn btn-info btn-block" href="{% url 'hine-assessment-add' patient.id %}">
+              <i class="fas fa-list-alt"></i> New HINE Record
+            </a>
+          </div>
+          <div class="col-md-4 col-sm-6 mb-2">
+            <a class="btn btn-warning btn-block" href="{% url 'cdic-assessment-add' patient.id %}">
+              <i class="fas fa-list-ul"></i> New CDIC Record
+            </a>
+          </div>
+          <div class="col-md-4 col-sm-6 mb-2">
+            <a class="btn btn-dark btn-block" href="{% url 'da-assessment-add' patient.id %}">
+              <i class="fas fa-chart-bar"></i> New Assessment
+            </a>
+          </div>
+
+          <div class="col-md-4 col-sm-6 mb-2">
+            <a class="btn btn-primary btn-block" href="{% url 'edit-patient' patient.id %}">
+              <i class="fas fa-edit"></i> Update Patient
+            </a>
+          </div>
+          {% if bookmark %}
+          <div class="col-md-4 col-sm-6 mb-2">
+            <a class="btn btn-outline-success btn-block" href="{% url 'bookmark-view' bookmark.id %}">
+              <i class="fas fa-bookmark"></i> View Bookmark
+            </a>
+          </div>
           {% else %}
-            <div class="alert alert-secondary" role="alert">
-              <i class="fas fa-info-circle"></i> No indications for GMA have been recorded for this patient.
-            </div>
+          <div class="col-md-4 col-sm-6 mb-2">
+            <a class="btn btn-outline-success btn-block" href="{% url 'bookmark-add' patient.id 'Patient' %}">
+              <i class="fas fa-bookmark"></i> Add Bookmark
+            </a>
+          </div>
+          {% endif %}
+          {% if user.is_superuser %}
+          <div class="col-md-4 col-sm-6 mb-2">
+            <button class="btn btn-danger btn-block" onclick="confirmPatientDeletion()" type="button">
+              <i class="fas fa-trash-alt"></i> Delete Patient
+            </button>
+          </div>
           {% endif %}
         </div>
       </div>
-        <!-- /.card-body -->
+    </div>
+  </div>
+</div>
 
-      <!-- New card -->
-      <div class="card">
+<!-- Record Metadata -->
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body p-2">
+        <small class="text-muted">
+          <i class="fas fa-user-plus"></i> Created by: <strong>{{patient.added_by.get_full_name|default:patient.added_by.username}}</strong> on {{patient.added_on|date:'Y-m-d'}} at {{patient.added_on|time:'H:i:s'}}
+          {% if patient.last_edit_by %}
+          <br><i class="fas fa-user-edit"></i> Modified by: <strong>{{patient.last_edit_by.get_full_name|default:patient.last_edit_by.username}}</strong> on {{patient.last_edit_on|date:'Y-m-d'}} at {{patient.last_edit_on|time:'H:i:s'}}>
+          {% endif %}
+        </small>
+      </div>
+    </div>
+  </div>
+</div>
 
-        <!-- /.card-header -->
-        <div class="card-header"><h3 class="card-title">Infomations</h3></div>
-
-        <div class="card-body">
-
-          <dl class="row">
-
-            <dt class="col-sm-2">Problems :</dt>
-            <dd class="col-sm-10">{{patient.problems}}</dd>
-
-            <dt class="col-sm-2">Antenatal History :</dt>
-            <dd class="col-sm-10">{{patient.antenatal_hx}}</dd>
-
-            <dt class="col-sm-2">Intranatal History :</dt>
-            <dd class="col-sm-10">{{patient.intranatal_hx}}</dd>
-
-            <dt class="col-sm-2">Postnatal History :</dt>
-            <dd class="col-sm-10">{{patient.postnatal_hx}}</dd>
-
-            <dt class="col-sm-2">Other relevent details :</dt>
-            <dd class="col-sm-10">{{patient.other_relavent_details}}</dd>
-
-          </dl>
-
-      </br>
-
-    </div></div>
-        <!-- /.card-body -->
- 
-
-        <!-- Enhanced Action Panel -->
-        <div class="card shadow-sm">
-          <div class="card-header bg-light d-flex align-items-center">
-            <i class="fas fa-bolt mr-2 text-warning"></i>
-            <h6 class="mb-0">Quick Actions</h6>
-          </div>
-          <div class="card-body p-4">
-
-            <!-- Top Row: Add New Records -->
-            <div class="row mb-3">
-              <div class="col-lg col-md-4 col-sm-6 mb-2">
-                <a class="btn btn-success btn-block d-flex align-items-center justify-content-center py-2" href="{% url 'video:add' patient.id %}">
-                  <i class="fas fa-video mr-2"></i>
-                  <span>New Video</span>
-                </a>
-              </div>
-              <div class="col-lg col-md-4 col-sm-6 mb-2">
-                <a class="btn btn-secondary btn-block d-flex align-items-center justify-content-center py-2" href="{% url 'attachment-add' patient.id %}">
-                  <i class="fas fa-paperclip mr-2"></i>
-                  <span>New Attachment</span>
-                </a>
-              </div>
-              <div class="col-lg col-md-4 col-sm-6 mb-2">
-                <a class="btn btn-info btn-block d-flex align-items-center justify-content-center py-2" href="{% url 'hine-assessment-add' patient.id %}">
-                  <i class="fas fa-list-alt mr-2"></i>
-                  <span>New HINE Record</span>
-                </a>
-              </div>
-              <div class="col-lg col-md-4 col-sm-6 mb-2">
-                <a class="btn btn-warning btn-block d-flex align-items-center justify-content-center py-2" href="{% url 'cdic-assessment-add' patient.id %}">
-                  <i class="fas fa-list-ul mr-2"></i>
-                  <span>New CDIC Record</span>
-                </a>
-              </div>
-              <div class="col-lg col-md-4 col-sm-6 mb-2">
-                <a class="btn btn-dark btn-block d-flex align-items-center justify-content-center py-2" href="{% url 'da-assessment-add' patient.id %}">
-                  <i class="fas fa-chart-bar mr-2"></i>
-                  <span class="d-none d-lg-inline">New Developmental Assessment</span>
-                  <span class="d-lg-none">New Assessment</span>
-                </a>
-              </div>
-            </div>
-
-            <!-- Middle Row: View Actions -->
-            <div class="row mb-3">
-              <div class="col-lg-4 col-md-4 col-sm-12 mb-2">
-                {% if file_videos %}
-                <a class="btn btn-outline-primary btn-block d-flex align-items-center justify-content-center py-2" href="{% url 'video:manager-by-patient' patient.id %}">
-                  <i class="fas fa-play-circle mr-2"></i>
-                  <span>View Videos</span>
-                  <span class="badge badge-primary ml-2">{{file_video_count}}</span>
-                </a>
-                {% else %}
-                <button class="btn btn-outline-primary btn-block d-flex align-items-center justify-content-center py-2" disabled>
-                  <i class="fas fa-play-circle mr-2"></i>
-                  <span>View Videos</span>
-                  <span class="badge badge-light ml-2">0</span>
-                </button>
-                {% endif %}
-              </div>
-              <div class="col-lg-4 col-md-4 col-sm-12 mb-2">
-                {% if file_attachment %}
-                <a class="btn btn-outline-secondary btn-block d-flex align-items-center justify-content-center py-2" href="{% url 'attachment-manager-patient' patient.id %}">
-                  <i class="fas fa-file-alt mr-2"></i>
-                  <span>View Attachments</span>
-                  <span class="badge badge-secondary ml-2">{{file_attachment_count}}</span>
-                </a>
-                {% else %}
-                <button class="btn btn-outline-secondary btn-block d-flex align-items-center justify-content-center py-2" disabled>
-                  <i class="fas fa-file-alt mr-2"></i>
-                  <span>View Attachments</span>
-                  <span class="badge badge-light ml-2">0</span>
-                </button>
-                {% endif %}
-              </div>
-              <div class="col-lg-4 col-md-4 col-sm-12 mb-2">
-                {% if bookmark %}
-                <a class="btn btn-outline-success btn-block d-flex align-items-center justify-content-center py-2" href="{% url 'bookmark-view' bookmark.id %}">
-                  <i class="fas fa-bookmark mr-2"></i>
-                  <span>View Bookmark</span>
-                </a>
-                {% else %}
-                <a class="btn btn-outline-success btn-block d-flex align-items-center justify-content-center py-2" href="{% url 'bookmark-add' patient.id 'Patient' %}">
-                  <i class="fas fa-bookmark mr-2"></i>
-                  <span>Add Bookmark</span>
-                </a>
-                {% endif %}
-              </div>
-            </div>
-
-            <!-- Bottom Row: Management Actions -->
-            <div class="row">
-              <div class="col-lg-6 col-md-6 col-sm-12 mb-2">
-                <a class="btn btn-primary btn-block d-flex align-items-center justify-content-center py-2" href="{% url 'edit-patient' patient.id %}">
-                  <i class="fas fa-edit mr-2"></i>
-                  <span>Update Patient</span>
-                </a>
-              </div>
-              {% if user.is_superuser %}
-              <div class="col-lg-6 col-md-6 col-sm-12 mb-2">
-                <button class="btn btn-danger btn-block d-flex align-items-center justify-content-center py-2" onclick="confirmPatientDeletion()" type="button">
-                  <i class="fas fa-trash-alt mr-2"></i>
-                  <span>Delete Patient</span>
-                </button>
-              </div>
-              {% else %}
-              <div class="col-lg-6 col-md-6 col-sm-12 mb-2">
-                <!-- Empty space for alignment when delete button is not shown -->
-              </div>
-              {% endif %}
-            </div>
-
-          </div>
-        </div>
-          </div>
-
-          <!-- Record Details -->
-        <div class="card"><div class="card-header">
-          <div class="container">
-          <dive class="float-right">
-              <div style="display: flex; align-items: center; gap: 2em;">
-                <span>Created by : {{patient.added_by.get_full_name|default:patient.added_by.username}} (Administrator), on {{patient.added_on|date:'Y-m-d'}} {{patient.added_on|time:'H:i:s'}}</span>
-                {% if patient.last_edit_by %}
-                  <span>Modified by : {{patient.last_edit_by.get_full_name|default:patient.last_edit_by.username}} (Administrator), on {{patient.last_edit_on|date:'Y-m-d'}} {{patient.last_edit_on|time:'H:i:s'}}</span>
-                {% endif %}
-              </div>
-          </div>
-        </div>
-        </div>
-
-<!-- Patient Deletion Confirmation Modal -->
-<div class="modal fade" id="deletePatientModal" tabindex="-1" role="dialog" aria-labelledby="deletePatientModalLabel" aria-hidden="true">
+<!-- Patient Deletion Modal -->
+<div class="modal fade" id="deletePatientModal" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
-      <div class="modal-header bg-danger text-white">
-        <h5 class="modal-title" id="deletePatientModalLabel">
+      <div class="modal-header bg-danger">
+        <h5 class="modal-title">
           <i class="fas fa-exclamation-triangle"></i> Confirm Patient Deletion
         </h5>
-        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>&times;</span>
         </button>
       </div>
       <div class="modal-body">
         <div class="alert alert-danger">
           <h6><strong>Warning: This action cannot be undone!</strong></h6>
-          <p>You are about to permanently delete this patient and ALL associated records including:</p>
-          <ul>
-            <li>All video files and assessments</li>
-            <li>All medical records and attachments</li>
-            <li>All CDIC records and bookmarks</li>
-            <li>All developmental assessments</li>
-          </ul>
+          <p>You are about to permanently delete this patient and ALL associated records.</p>
         </div>
-        
-        <div class="patient-info bg-light p-3 rounded">
+
+        <div class="callout callout-info">
           <h6><strong>Patient Details:</strong></h6>
-          <p><strong>Name:</strong> {{patient.baby_name}}</p>
-          <p><strong>Mother:</strong> {{patient.mother_name}}</p>
-          <p><strong>BHT:</strong> {{patient.bht}}</p>
-          <p><strong>Gender:</strong> {{patient.gender}}</p>
-          {% if patient.clinic_no %}<p><strong>Clinic Number:</strong> {{patient.clinic_no}}</p>{% endif %}
+          <p class="mb-1"><strong>Name:</strong> {{patient.baby_name}}</p>
+          <p class="mb-1"><strong>Mother:</strong> {{patient.mother_name}}</p>
+          <p class="mb-0"><strong>BHT:</strong> {{patient.bht}}</p>
         </div>
-        
-        <div class="mt-3">
-          <p><strong>To confirm deletion, please enter your password:</strong></p>
-          <input type="password" class="form-control" id="deletePassword" placeholder="Enter your password">
+
+        <div class="form-group">
+          <label>Enter your password to confirm:</label>
+          <input type="password" class="form-control" id="deletePassword" placeholder="Password">
           <div id="deleteError" class="text-danger mt-2" style="display: none;"></div>
         </div>
       </div>
@@ -1225,18 +808,16 @@ function executePatientDeletion() {
     const deleteBtn = $('#confirmDeleteBtn');
     const spinner = $('#deleteSpinner');
     const errorDiv = $('#deleteError');
-    
+
     if (!password) {
         errorDiv.text('Please enter your password').show();
         return;
     }
-    
-    // Show loading state
+
     deleteBtn.prop('disabled', true);
     spinner.show();
     errorDiv.hide();
-    
-    // Make AJAX request
+
     $.ajax({
         url: '{% url "delete-patient" patient.id %}',
         type: 'DELETE',
@@ -1244,25 +825,16 @@ function executePatientDeletion() {
             'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val(),
             'Content-Type': 'application/json',
         },
-        data: JSON.stringify({
-            'password': password
-        }),
+        data: JSON.stringify({'password': password}),
         success: function(response) {
             if (response.success) {
-                // Show success message and redirect
                 $('#deletePatientModal').modal('hide');
-                
-                // Show success alert
                 $('body').prepend(`
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <div class="alert alert-success alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
                         <i class="fas fa-check-circle"></i> ${response.message}
-                        <button type="button" class="close" data-dismiss="alert">
-                            <span>&times;</span>
-                        </button>
                     </div>
                 `);
-                
-                // Redirect after a short delay
                 setTimeout(function() {
                     window.location.href = response.redirect_url || '/manager/patient/';
                 }, 1500);
@@ -1272,7 +844,6 @@ function executePatientDeletion() {
         },
         error: function(xhr) {
             let errorMessage = 'An error occurred while deleting the patient.';
-            
             if (xhr.responseJSON) {
                 errorMessage = xhr.responseJSON.message || xhr.responseJSON.error || errorMessage;
             } else if (xhr.status === 403) {
@@ -1280,23 +851,23 @@ function executePatientDeletion() {
             } else if (xhr.status === 404) {
                 errorMessage = 'Patient not found.';
             }
-            
             errorDiv.text(errorMessage).show();
         },
         complete: function() {
-            // Hide loading state
             deleteBtn.prop('disabled', false);
             spinner.hide();
         }
     });
 }
 
-// Handle Enter key in password field
 $(document).ready(function() {
     $('#deletePassword').keypress(function(e) {
-        if (e.which === 13) { // Enter key
+        if (e.which === 13) {
             executePatientDeletion();
         }
     });
+
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
 });
 </script>
