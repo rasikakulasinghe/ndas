@@ -43,22 +43,64 @@ html, body {
     z-index: 999;
 }
 
-/* Responsive adjustments for AdminLTE 4 */
+/* Responsive adjustments for AdminLTE 4 - CONSOLIDATED */
 @media (max-width: 768px) {
-    .content-wrapper,
-    .main-footer {
-        margin-left: 0;
+    /* Reset body and wrapper constraints to prevent empty space */
+    body {
+        padding-top: 0 !important;
+        height: auto !important;
     }
-    
-    .main-sidebar {
-        position: relative !important;
-        height: auto;
+
+    .wrapper {
         min-height: auto !important;
+        margin-top: 0 !important;
+        padding-top: 0 !important;
     }
-    
+
+    /* Reset content-wrapper to natural height on mobile */
+    .content-wrapper {
+        min-height: auto !important;
+        margin-left: 0 !important;
+        margin-top: 0 !important;
+        padding-top: 0;
+    }
+
+    .main-footer {
+        margin-left: 0 !important;
+        margin-top: 0 !important;
+    }
+
+    /* Hide sidebar off-screen by default on mobile */
+    .main-sidebar {
+        position: fixed !important;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        z-index: 1050;
+        top: 0;
+        left: 0;
+    }
+
+    /* Show sidebar when menu is opened */
+    .sidebar-open .main-sidebar {
+        transform: translateX(0);
+    }
+
     .main-sidebar .sidebar {
-        height: auto;
-        padding-bottom: 0;
+        height: 100vh;
+        overflow-y: auto;
+        padding-bottom: 60px;
+    }
+
+    /* Ensure navbar is properly positioned on mobile */
+    .main-header {
+        position: sticky;
+        top: 0;
+        z-index: 1040;
+    }
+
+    /* Remove any unwanted spacing at the top */
+    .content-header {
+        padding-top: 15px;
     }
 }
 

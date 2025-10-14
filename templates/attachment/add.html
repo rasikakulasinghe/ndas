@@ -197,30 +197,42 @@
           </div>
         </div>
       </div>
+{% endblock main_content %}
 
-
+{% block extra_js %}
 <script>
-$(document).ready(function() {
-  // Initialize custom file input
-  bsCustomFileInput.init();
-  
-  // File input change handler
-  $('#id_attachment').on('change', function() {
-    const file = this.files[0];
-    if (file) {
-      validateFile(file);
-    }
-  });
-  
-  // Title validation
-  $('#id_title').on('input', function() {
-    validateTitle($(this).val());
-  });
-  
-  // Description character count
-  $('#id_description').on('input', function() {
-    const remaining = 1000 - $(this).val().length;
-    $(this).next('.form-text').text(`${remaining} characters remaining`);
+// Wait for document and all dependencies to be ready
+document.addEventListener('DOMContentLoaded', function() {
+  // Verify jQuery is loaded
+  if (typeof $ === 'undefined') {
+    console.error('jQuery is not loaded');
+    return;
+  }
+
+  $(document).ready(function() {
+    // File input change handler - update label and validate
+    $('#id_attachment').on('change', function() {
+      // Update custom file input label
+      if (this.files && this.files.length > 0) {
+        const fileName = this.files[0].name;
+        $(this).next('.custom-file-label').text(fileName);
+        // Validate the file
+        validateFile(this.files[0]);
+      } else {
+        $(this).next('.custom-file-label').text('Choose file...');
+      }
+    });
+
+    // Title validation
+    $('#id_title').on('input', function() {
+      validateTitle($(this).val());
+    });
+
+    // Description character count
+    $('#id_description').on('input', function() {
+      const remaining = 1000 - $(this).val().length;
+      $(this).next('.form-text').text(`${remaining} characters remaining`);
+    });
   });
 });
 
@@ -453,21 +465,4 @@ function onFormSubmit(event) {
   xhr.send(formData);
 }
 </script>
-
-
-<!-- Additional script for enhanced file input handling -->
-<script>
-// Enhanced file input handling specifically for this form
-$(document).ready(function() {
-  // Ensure file input label updates when file is selected
-  $('#id_attachment').on('change', function(e) {
-    if (this.files && this.files.length > 0) {
-      const fileName = this.files[0].name;
-      $(this).next('.custom-file-label').text(fileName);
-    } else {
-      $(this).next('.custom-file-label').text('Choose file...');
-    }
-  });
-});
-</script>
-{% endblock main_content %}
+{% endblock extra_js %}

@@ -1,11 +1,13 @@
 /**
  * NDAS Main Application JavaScript
  * Consolidated initialization and coordination of all components
- * Version: 2.0 - Optimized and Deduplicated
+ * Version: 3.0 - Optimized with reduced logging
  */
 
 (function() {
     'use strict';
+
+    const DEBUG = false; // Set to true to enable detailed logging
 
     // Single centralized initialization manager
     const NDASApp = {
@@ -16,11 +18,9 @@
          */
         init: function() {
             if (this.initialized) {
-                console.warn('NDASApp already initialized, skipping duplicate initialization');
+                if (DEBUG) console.warn('NDASApp already initialized, skipping');
                 return;
             }
-
-            console.log('🚀 Initializing NDAS Application...');
 
             // Check critical dependencies
             if (!this.checkDependencies()) {
@@ -33,31 +33,29 @@
             this.initAdminLTE();
             this.initHTMXIntegration();
 
+            // Initialize utilities if available
+            if (window.NDASUtils && typeof window.NDASUtils.init === 'function') {
+                window.NDASUtils.init();
+            }
+
             this.initialized = true;
-            console.log('✅ NDAS Application initialized successfully');
+            if (DEBUG) console.log('✅ NDAS Application initialized');
         },
 
         /**
          * Check if all required dependencies are loaded
          */
         checkDependencies: function() {
-            const deps = {
-                'jQuery': typeof $ !== 'undefined',
-                'Bootstrap': typeof $.fn !== 'undefined' && typeof $.fn.modal !== 'undefined',
-                'AdminLTE': typeof $.AdminLTE !== 'undefined',
-                'HTMX': typeof htmx !== 'undefined'
-            };
+            const missing = [];
 
-            const missing = Object.entries(deps)
-                .filter(([name, loaded]) => !loaded)
-                .map(([name]) => name);
+            if (typeof $ === 'undefined') missing.push('jQuery');
+            if (typeof $.fn === 'undefined' || typeof $.fn.modal === 'undefined') missing.push('Bootstrap');
 
             if (missing.length > 0) {
                 console.error('❌ Missing dependencies:', missing.join(', '));
                 return false;
             }
 
-            console.log('✅ All dependencies loaded');
             return true;
         },
 
@@ -84,7 +82,7 @@
                     $('.select2').select2();
                 }
 
-                console.log('✅ Bootstrap components initialized');
+                if (DEBUG) console.log('✅ Bootstrap components initialized');
             } catch (error) {
                 console.error('❌ Bootstrap initialization error:', error);
             }
@@ -95,7 +93,6 @@
          */
         initAdminLTE: function() {
             try {
-                // Standard AdminLTE menu highlighting
                 const currentPath = window.location.pathname;
 
                 // Remove existing active states
@@ -125,7 +122,7 @@
                     }
                 });
 
-                console.log('✅ AdminLTE sidebar initialized');
+                if (DEBUG) console.log('✅ AdminLTE sidebar initialized');
             } catch (error) {
                 console.error('❌ AdminLTE initialization error:', error);
             }
@@ -140,14 +137,11 @@
             // Re-initialize components after HTMX content swap
             document.addEventListener('htmx:afterSwap', () => {
                 this.initBootstrapComponents();
-
-                // Re-highlight sidebar if navigation occurred
                 this.initAdminLTE();
-
-                console.log('✅ Components re-initialized after HTMX swap');
+                if (DEBUG) console.log('✅ Components re-initialized after HTMX');
             });
 
-            console.log('✅ HTMX integration configured');
+            if (DEBUG) console.log('✅ HTMX integration configured');
         },
 
         /**
@@ -165,7 +159,6 @@
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => NDASApp.init());
     } else {
-        // DOM already loaded
         NDASApp.init();
     }
 

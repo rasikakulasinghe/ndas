@@ -31,8 +31,8 @@ scratch. This page gets rid of all links and provides the needed markup only.
   <!-- Select2 CSS from CDN -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
 
-  <!-- CSS for Video Js -->
-  <link href="https://vjs.zencdn.net/8.0.4/video-js.css" rel="stylesheet" />
+  <!-- Video.js CSS from CDN -->
+  <link rel="stylesheet" href="https://vjs.zencdn.net/8.10.0/video-js.css">
 
   {% block extra_css %}
   {% endblock extra_css %}
@@ -47,66 +47,86 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
 <!-- REQUIRED SCRIPTS -->
 
-<!-- jQuery -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script>
-// Verify jQuery loaded before proceeding
-if (typeof jQuery === 'undefined') {
-    console.error('❌ jQuery failed to load!');
-    document.write('<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"><\/script>');
-}
-</script>
-<!-- Bootstrap 4 with fallback -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" onerror="document.write('<script src=\"https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.6.2/js/bootstrap.bundle.min.js\"><\/script>')"></script>
-<!-- AdminLTE App with fallback -->
-<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js" onerror="document.write('<script src=\"https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js\"><\/script>')"></script>
+<!-- jQuery (Critical - load first, synchronously) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"
+        integrity="sha512-pumBsjNRGGqkPzKHndZMaAG+bir374sORyzM3uulLV14lN5LyykqNk8eEeUlUkB3U0M4FApyaHraT65ihJhDpQ=="
+        crossorigin="anonymous"></script>
+
+<!-- Bootstrap 4 (Required for AdminLTE) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct"
+        crossorigin="anonymous"></script>
+
+<!-- AdminLTE App from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+
 <!-- HTMX from CDN -->
-<script src="https://unpkg.com/htmx.org@1.9.12"></script>
+<script src="https://unpkg.com/htmx.org@1.9.12"
+        integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2XoQrxeTUQyRjrOnlCoYta87iKBWq3EsdM2"
+        crossorigin="anonymous"></script>
 
 <!-- Select2 from CDN -->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-<!-- Bootstrap initialization is now handled by main.js (NDASApp) -->
-<!-- Removed duplicate initialization code for cleaner, more maintainable codebase -->
-
-<!-- If you'd like to support IE8 (for Video.js versions prior to v7) -->
-<!-- Removed duplicate script: script src="https://vjs.zencdn.net/ie8/1.1.2/videojs-ie8.min.js" -->
-
-<!-- Library for Chart Js (using UMD version to avoid module import errors) -->
+<!-- Chart.js from CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
 
-<!-- Library for Video Js -->
-<script src="https://vjs.zencdn.net/8.0.4/video.min.js"></script>
+<!-- Video.js from CDN -->
+<script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 
-<!-- Video.js failsafe wrapper to prevent initialization errors -->
-<script type="text/javascript" src="{% static 'js/videojs-failsafe.js' %}"></script>
+<!-- Video.js plugins -->
+<script src="{% static 'js/videojs-failsafe.js' %}"></script>
+<script src="{% static 'js/zoomrotate.js' %}" defer></script>
+<script src="{% static 'js/rotate.js' %}" defer></script>
 
-<!-- Video.js zoom rotate plugin -->
-<script type="text/javascript" src="{% static 'js/zoomrotate.js' %}" defer></script>
+<!-- NDAS Application Scripts (with defer for optimal loading) -->
+<script src="{% static 'js/app-utils.js' %}" defer></script>
+<script src="{% static 'js/video-manager.js' %}" defer></script>
+<script src="{% static 'js/main.js' %}" defer></script>
+<script src="{% static 'js/logout-modal.js' %}" defer></script>
 
-<!-- Custom rotate functionality -->
-<script type="text/javascript" src="{% static 'js/rotate.js' %}" defer></script>
+<!-- CDN Health Check (runs after all scripts load) -->
+<script>
+// Wait for window.load to ensure all external scripts are fully loaded
+window.addEventListener('load', function() {
+    // Additional delay to ensure script execution completes
+    setTimeout(function() {
+        const errors = [];
+        const warnings = [];
 
-<!-- Video.js initialization handled by video-manager.js -->
-<!-- Video.js loading verification removed - handled by video-manager.js -->
+        // Check critical dependencies only
+        if (typeof jQuery === 'undefined' || typeof $ === 'undefined') {
+            errors.push('jQuery');
+        }
+        if (typeof $.fn === 'undefined' || typeof $.fn.modal === 'undefined') {
+            errors.push('Bootstrap');
+        }
 
-<!-- NDAS utility functions -->
-<script type="text/javascript" src="{% static 'js/app-utils.js' %}"></script>
+        // Optional dependencies - warn but don't fail
+        if (typeof window.htmx === 'undefined') {
+            warnings.push('HTMX');
+        }
+        if (typeof window.videojs === 'undefined') {
+            warnings.push('Video.js');
+        }
 
-<!-- Video Manager (handles all video initialization) -->
-<script type="text/javascript" src="{% static 'js/video-manager.js' %}"></script>
+        // Show critical errors
+        if (errors.length > 0) {
+            console.error('❌ Critical CDN Failures:', errors.join(', '));
+            document.body.insertAdjacentHTML('afterbegin',
+                '<div class="alert alert-danger alert-dismissible m-3">' +
+                '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                '<strong>Critical Error:</strong> Essential resources failed to load (' + errors.join(', ') + '). Please refresh the page.</div>'
+            );
+        }
 
-<!-- Main application JavaScript -->
-<script type="text/javascript" src="{% static 'js/main.js' %}"></script>
-
-<!-- Logout modal functionality -->
-<script type="text/javascript" src="{% static 'js/logout-modal.js' %}"></script>
-
-<!-- AdminLTE sidebar navigation is now handled by main.js (NDASApp.initAdminLTE) -->
-<!-- Removed duplicate sidebar initialization for cleaner codebase -->
-
-<!-- Debug script - COMMENTED OUT FOR PRODUCTION -->
-<!-- Uncomment only for debugging: <script type="text/javascript" src="{% static 'js/debug.js' %}"></script> -->
+        // Log optional warnings (not shown to user)
+        if (warnings.length > 0) {
+            console.warn('⚠️ Optional resources not loaded:', warnings.join(', '));
+        }
+    }, 150);
+});
+</script>
 
 {% block extra_js %}
 {% endblock extra_js %}

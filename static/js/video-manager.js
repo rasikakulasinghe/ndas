@@ -1,11 +1,13 @@
 /**
  * NDAS Video Manager - Consolidated Video.js Management
- * Replaces multiple video-related scripts with unified approach
+ * Version: 2.0 - Optimized with reduced logging
  */
 
 (function() {
     'use strict';
-    
+
+    const DEBUG = false; // Set to true to enable detailed logging
+
     // Video Manager Configuration
     const VideoManager = {
         defaultOptions: {
@@ -92,19 +94,19 @@
             if (typeof window.rotate === 'function') {
                 try {
                     window.rotate(player);
-                    console.log(`Rotate functionality loaded for: ${elementId}`);
+                    if (DEBUG) console.log(`Rotate loaded: ${elementId}`);
                 } catch (error) {
-                    console.warn(`Failed to load rotate functionality for ${elementId}:`, error);
+                    console.warn(`Failed to load rotate for ${elementId}:`, error);
                 }
             }
-            
+
             // Load zoom/rotate plugin if available
             if (typeof window.zoomRotate === 'function') {
                 try {
                     window.zoomRotate(player);
-                    console.log(`Zoom/rotate plugin loaded for: ${elementId}`);
+                    if (DEBUG) console.log(`Zoom/rotate loaded: ${elementId}`);
                 } catch (error) {
-                    console.warn(`Failed to load zoom/rotate plugin for ${elementId}:`, error);
+                    console.warn(`Failed to load zoom/rotate for ${elementId}:`, error);
                 }
             }
         },
@@ -114,20 +116,20 @@
          */
         autoInit: function() {
             const videoElements = document.querySelectorAll('video.video-js');
-            
+
             if (videoElements.length === 0) {
-                console.log('No video elements found on this page');
+                if (DEBUG) console.log('No video elements on page');
                 return;
             }
-            
+
             videoElements.forEach(videoElement => {
                 if (!videoElement.id) {
-                    console.warn('Video element missing ID, skipping initialization');
+                    console.warn('Video element missing ID, skipping');
                     return;
                 }
-                
+
                 this.init(videoElement.id).catch(error => {
-                    console.error(`Auto-initialization failed for ${videoElement.id}:`, error);
+                    console.error(`Video init failed for ${videoElement.id}:`, error);
                 });
             });
         },
@@ -152,32 +154,26 @@
                     player.dispose();
                     this.players.delete(elementId);
                     this.initialized.delete(elementId);
-                    console.log(`Player disposed: ${elementId}`);
+                    if (DEBUG) console.log(`Player disposed: ${elementId}`);
                 } catch (error) {
                     console.error(`Error disposing player ${elementId}:`, error);
                 }
             }
         }
     };
-    
+
     // Expose VideoManager globally
     window.NDASVideoManager = VideoManager;
-    
+
     // Auto-initialize when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
         // Small delay to ensure all scripts are loaded
-        setTimeout(() => {
-            VideoManager.autoInit();
-        }, 100);
+        setTimeout(() => VideoManager.autoInit(), 100);
     });
-    
-    // Re-initialize after HTMX content swaps
-    if (typeof window.htmx !== 'undefined') {
-        document.addEventListener('htmx:afterSwap', function() {
-            setTimeout(() => {
-                VideoManager.autoInit();
-            }, 100);
-        });
-    }
-    
+
+    // Re-initialize after HTMX content swaps (handled by main.js)
+    document.addEventListener('htmx:afterSwap', function() {
+        setTimeout(() => VideoManager.autoInit(), 100);
+    });
+
 })();

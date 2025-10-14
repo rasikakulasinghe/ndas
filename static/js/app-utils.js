@@ -39,17 +39,6 @@
             });
         },
         
-        /**
-         * Initialize Bootstrap components (DEPRECATED - use NDASApp.initBootstrapComponents)
-         * Kept for backward compatibility only
-         */
-        initBootstrap: function() {
-            console.warn('NDASUtils.initBootstrap is deprecated. Bootstrap initialization is handled by main.js (NDASApp)');
-            // Delegate to main app if available
-            if (typeof window.NDASApp !== 'undefined' && typeof window.NDASApp.initBootstrapComponents === 'function') {
-                window.NDASApp.initBootstrapComponents();
-            }
-        },
         
         /**
          * Format phone number
@@ -216,20 +205,13 @@
          * Initialize all NDAS utilities
          */
         init: function() {
-            // Note: Bootstrap components are initialized in basic_plane.html
-            // This only sets up form validation and lazy loading
+            // Setup form validation and lazy loading
             this.setupFormValidation();
             this.lazyLoadImages();
-            console.log('NDASUtils: Utilities initialized');
         }
     };
-    
-    // Auto-initialize when DOM is ready
-    document.addEventListener('DOMContentLoaded', function() {
-        window.NDASUtils.init();
-    });
 
-    // NOTE: HTMX integration is handled by main.js (NDASApp.initHTMXIntegration)
-    // Removed duplicate HTMX afterSwap handler to prevent multiple Bootstrap initializations
+    // NOTE: Initialization is called by main.js (NDASApp) to ensure proper order
+    // No auto-initialization here to prevent race conditions
 
 })();
