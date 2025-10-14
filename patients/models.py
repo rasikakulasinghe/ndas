@@ -2137,19 +2137,25 @@ class HINEAssessment(TimeStampedModel, UserTrackingMixin):
             )
 
         # Validate assessment date is not before patient's birth
-        if (
-            self.date_of_assessment
-            and self.patient
-            and self.patient.dob_tob
-            and self.date_of_assessment < self.patient.dob_tob
-        ):
-            raise ValidationError(
-                {
-                    "date_of_assessment": _(
-                        "Assessment date cannot be before patient birth date."
+        # Only validate if patient is already set (skip during form validation)
+        if self.patient_id:
+            try:
+                if (
+                    self.date_of_assessment
+                    and self.patient
+                    and self.patient.dob_tob
+                    and self.date_of_assessment < self.patient.dob_tob
+                ):
+                    raise ValidationError(
+                        {
+                            "date_of_assessment": _(
+                                "Assessment date cannot be before patient birth date."
+                            )
+                        }
                     )
-                }
-            )
+            except Patient.DoesNotExist:
+                # Patient relationship not yet established, skip validation
+                pass
 
     @property
     def assessment_age_in_months(self):

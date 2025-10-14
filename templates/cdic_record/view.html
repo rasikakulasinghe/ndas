@@ -68,13 +68,13 @@
 
     <div class="form-group row d-flex align-items-center">
         <label class="col-form-label col-sm-2">Record Create : </label>
-        <div class="col-sm-10">by {{CDICRecord.created_by}} on {{CDICRecord.created_on}}</div>
+        <div class="col-sm-10">by {{CDICRecord.created_by}} on {{CDICRecord.created_on|date:"F d, Y g:i A"}}</div>
     </div>
 
     {% if CDICRecord.edit_by %}
         <div class="form-group row d-flex align-items-center">
             <label class="col-form-label col-sm-2">Record Edit : </label>
-            <div class="col-sm-10">by {{CDICRecord.edit_by}} on {{CDICRecord.edit_on}}</div>
+            <div class="col-sm-10">by {{CDICRecord.edit_by}} on {{CDICRecord.edit_on|date:"F d, Y g:i A"}}</div>
         </div>
     {% endif %}
 

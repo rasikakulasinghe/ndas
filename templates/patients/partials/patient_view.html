@@ -138,15 +138,21 @@
                   </tr>
                   <tr>
                     <th>Resuscitation Status</th>
-                    <td>{{patient.getResuscitationState}}</td>
+                    <td>
+                      {% if patient.resuscitated %}
+                        <span class="badge badge-warning">Yes</span>
+                      {% else %}
+                        <span class="badge badge-success">No</span>
+                      {% endif %}
+                    </td>
                   </tr>
+                  {% if patient.resuscitated %}
+                  <tr>
+                    <th>Description</th>
+                    <td>{{patient.resustn_note|default:"No details provided"}}</td>
+                  </tr>
+                  {% endif %}
                 </table>
-                {% if patient.resuscitated %}
-                <div class="form-group">
-                  <label class="small font-weight-bold">Resuscitation Note</label>
-                  <textarea class="form-control form-control-sm" rows="2" readonly>{{patient.resustn_note|default:"---"}}</textarea>
-                </div>
-                {% endif %}
               </div>
             </div>
           </div>
@@ -241,12 +247,12 @@
 
           <!-- Indications for GMA -->
           <div class="tab-pane fade" id="gma-indicator-section" role="tabpanel">
-            <div class="card card-info card-outline mb-0">
+            <div class="mb-0">
               <div class="card-body p-2">
                 {% if patient.indecation_for_gma.all %}
                 <div class="d-flex flex-wrap">
                   {% for gmamodel in patient.indecation_for_gma.all %}
-                  <span class="badge badge-info p-2 m-1">
+                  <span class="badge badge-info p-2 m-1" style="font-size: 1rem;">
                     {{ gmamodel.title }}
                     <a href="#" data-toggle="tooltip" title="{{gmamodel.description}}" class="text-white ml-1">
                       <i class="fa fa-question-circle"></i>
@@ -263,7 +269,7 @@
 
           <!-- Diagnosis Summary -->
           <div class="tab-pane fade" id="diagnosis-section" role="tabpanel">
-            <div class="card card-secondary card-outline mb-0">
+            <div class="mb-0">
               <div class="card-body p-2">
                 <span class="badge badge-primary p-2 mr-2">GMA: {{patient.getDiagnosisList.0}}</span>
                 <span class="badge badge-warning p-2 mr-2">HINE: {{patient.getDiagnosisList.1}}</span>

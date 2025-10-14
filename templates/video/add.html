@@ -349,28 +349,18 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleUploadSuccess(response) {
         progressBar.classList.remove('progress-bar-animated');
         progressBar.classList.add('bg-success');
-        progressText.textContent = 'Video uploaded successfully!';
-        
-        // Show success buttons
-        cancelBtn.classList.add('d-none');
-        viewBtn.classList.remove('d-none');
-        addAnotherBtn.classList.remove('d-none');
-        
-        // Set up view button
-        viewBtn.onclick = function() {
+        progressText.textContent = 'Video uploaded successfully! Redirecting...';
+
+        showAlert('Video uploaded successfully! Redirecting to video page...', 'success');
+
+        // Automatically redirect to the video view page after a brief delay
+        setTimeout(function() {
             if (response.redirect_url) {
                 window.location.href = response.redirect_url;
             } else {
                 window.location.href = `/video/view/${response.f_id}/`;
             }
-        };
-        
-        // Set up add another button
-        addAnotherBtn.onclick = function() {
-            window.location.reload();
-        };
-        
-        showAlert('Video uploaded successfully!', 'success');
+        }, 1500); // 1.5 second delay to show success message
     }
     
     function handleUploadError(errors) {

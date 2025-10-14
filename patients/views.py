@@ -846,87 +846,121 @@ def search_start(request):
 
 @login_required(login_url="user-login")
 def search_results(request):
-    combo_record_type = request.POST.get("combo_record_type", None)
-    combo_pt_param_type = request.POST.get("combo_pt_param_type", None)
-    como_user_username = request.POST.get("combo_users", None)
-    pagn = ""
-    search_text = request.POST.get("search_text", None)
+    """
+    Enhanced search results view with improved error handling and performance optimization.
+    Supports patient and user searches with comprehensive validation.
+    """
+    # Early validation for POST method
+    if request.method != "POST":
+        messages.warning(request, "Please use the search form to perform searches.")
+        return redirect("search-start")
 
-    # search patients --------------------------------------------------------------
+    # Get search parameters
+    combo_record_type = request.POST.get("combo_record_type", "").strip()
+    combo_pt_param_type = request.POST.get("combo_pt_param_type", "").strip()
+    combo_user_username = request.POST.get("combo_users", "").strip()
+    search_text = request.POST.get("search_text", "").strip()
+    pagn = ""
+
+    # Validate required parameters
+    if not combo_record_type:
+        messages.error(request, "Please select a record type.")
+        username_list = CustomUser.objects.all()
+        return render(request, "patients/search.html", {"username_list": username_list})
+
+    # Search patients --------------------------------------------------------------
     if combo_record_type == "rtype_pt":
-        patient = Patient()
+        # Validate patient search parameters
+        if not combo_pt_param_type:
+            messages.error(request, "Please select a patient search parameter.")
+            username_list = CustomUser.objects.all()
+            return render(request, "patients/search.html", {"username_list": username_list})
+
+        if not search_text:
+            messages.error(request, "Please enter search text.")
+            username_list = CustomUser.objects.all()
+            return render(request, "patients/search.html", {"username_list": username_list})
+
+        # Search by BHT
         if combo_pt_param_type == "pts_bht" and BHT_validation(request, search_text):
-            pagn = " : Patients > BHT > " + str(search_text)
+            pagn = f"Patients > BHT > {search_text}"
             try:
-                pagn = " : Patients > BHT > " + str(search_text)
                 patient = Patient.objects.get(bht=search_text)
-                messages.success(request, "Search results for : %s" % pagn)
+                messages.success(request, f"Found patient with BHT: {search_text}")
                 return render(
                     request, "patients/view.html", {"patient": patient, "pgn": pagn}
                 )
-            except patient.DoesNotExist:
-                pagn = " : Patients > BHT > " + str(search_text)
+            except Patient.DoesNotExist:
+                messages.warning(request, f"No patient found with BHT: {search_text}")
                 return render(
                     request,
                     "patients/search_notfound.html",
-                    {"patient": patient, "pgn": pagn},
+                    {"pgn": pagn},
                 )
 
+        # Search by PHN
         elif combo_pt_param_type == "pts_phn" and PHN_validation(request, search_text):
-            pagn = " : Patients > PHN > " + str(search_text)
+            pagn = f"Patients > PHN > {search_text}"
             try:
                 patient = Patient.objects.get(pin=search_text)
-                messages.success(request, "Search results for : %s" % pagn)
-                return render(request, "patients/view.html", {"patient": patient})
-            except patient.DoesNotExist:
-                return render(
-                    request,
-                    "patients/search_notfound.html",
-                    {"patient": patient, "pgn": pagn},
-                )
-
-        elif combo_pt_param_type == "pts_nnc_no" and NNC_validation(
-            request, search_text
-        ):
-            try:
-                patient = Patient.objects.get(nnc_no=search_text)
-                messages.success(request, "Search results for : %s" % pagn)
+                messages.success(request, f"Found patient with PHN: {search_text}")
                 return render(
                     request, "patients/view.html", {"patient": patient, "pgn": pagn}
                 )
-            except patient.DoesNotExist:
+            except Patient.DoesNotExist:
+                messages.warning(request, f"No patient found with PHN: {search_text}")
                 return render(
                     request,
                     "patients/search_notfound.html",
-                    {"patient": patient, "pgn": pagn},
+                    {"pgn": pagn},
                 )
 
-        elif combo_pt_param_type == "pts_name_baby" and Name_baby_validation(
-            request, search_text
-        ):
-            pagn = " : Patients > Name of the baby > " + str(search_text)
+        # Search by NNC number
+        elif combo_pt_param_type == "pts_nnc_no" and NNC_validation(request, search_text):
+            pagn = f"Patients > Clinic Number > {search_text}"
             try:
-                patient = Patient.objects.filter(
-                    Q(baby_name__startswith=search_text)
-                    | Q(baby_name__icontains=search_text)
+                patient = Patient.objects.get(nnc_no=search_text)
+                messages.success(request, f"Found patient with clinic number: {search_text}")
+                return render(
+                    request, "patients/view.html", {"patient": patient, "pgn": pagn}
                 )
-            except patient.DoesNotExist:
+            except Patient.DoesNotExist:
+                messages.warning(request, f"No patient found with clinic number: {search_text}")
+                return render(
+                    request,
+                    "patients/search_notfound.html",
+                    {"pgn": pagn},
+                )
+
+        # Search by baby name
+        elif combo_pt_param_type == "pts_name_baby" and Name_baby_validation(request, search_text):
+            pagn = f"Patients > Baby Name > {search_text}"
+            # Use indexed fields for better performance
+            patients = Patient.objects.filter(
+                Q(baby_name__istartswith=search_text) | Q(baby_name__icontains=search_text)
+            ).order_by("baby_name")
+
+            if not patients.exists():
+                messages.warning(request, f"No patients found with baby name containing: {search_text}")
                 return render(request, "patients/search_notfound.html", {"pgn": pagn})
-            if len(patient) == 1:
-                messages.success(request, "Search results for : %s" % pagn)
+
+            if patients.count() == 1:
+                messages.success(request, f"Found 1 patient with baby name: {search_text}")
                 return render(
                     request,
                     "patients/view.html",
                     {
-                        "patient": patient.first(),
+                        "patient": patients.first(),
                         "patients_page_obj": None,
                         "pgn": pagn,
                     },
                 )
-            if len(patient) > 1:
-                paginator = Paginator(patient, 10)
-                page_number = request.GET.get("page")
+            else:
+                # Multiple results - paginate
+                paginator = Paginator(patients, 10)
+                page_number = request.GET.get("page", 1)
                 paginated_pt_list = paginator.get_page(page_number)
+                messages.success(request, f"Found {patients.count()} patients with baby name containing: {search_text}")
                 return render(
                     request,
                     "patients/results.html",
@@ -936,36 +970,36 @@ def search_results(request):
                         "pgn": pagn,
                     },
                 )
-            else:
+
+        # Search by mother name
+        elif combo_pt_param_type == "pts_name_mother" and Name_mother_validation(request, search_text):
+            pagn = f"Patients > Mother Name > {search_text}"
+            # Use indexed fields for better performance
+            patients = Patient.objects.filter(
+                Q(mother_name__istartswith=search_text) | Q(mother_name__icontains=search_text)
+            ).order_by("mother_name")
+
+            if not patients.exists():
+                messages.warning(request, f"No patients found with mother name containing: {search_text}")
                 return render(request, "patients/search_notfound.html", {"pgn": pagn})
 
-        elif combo_pt_param_type == "pts_name_mother" and Name_mother_validation(
-            request, search_text
-        ):
-            pagn = " : Patients > Name of the mother > " + str(search_text)
-            try:
-                patient = Patient.objects.filter(
-                    Q(mother_name__startswith=search_text)
-                    | Q(mother_name__icontains=search_text)
-                )
-            except patient.DoesNotExist:
-                return render(request, "patients/search_notfound.html", {"pgn": pagn})
-
-            if len(patient) == 1:
-                messages.success(request, "Search results for : %s" % pagn)
+            if patients.count() == 1:
+                messages.success(request, f"Found 1 patient with mother name: {search_text}")
                 return render(
                     request,
                     "patients/view.html",
                     {
-                        "patient": patient.first(),
+                        "patient": patients.first(),
                         "patients_page_obj": None,
                         "pgn": pagn,
                     },
                 )
-            if len(patient) > 1:
-                paginator = Paginator(patient, 10)
-                page_number = request.GET.get("page")
+            else:
+                # Multiple results - paginate
+                paginator = Paginator(patients, 10)
+                page_number = request.GET.get("page", 1)
                 paginated_pt_list = paginator.get_page(page_number)
+                messages.success(request, f"Found {patients.count()} patients with mother name containing: {search_text}")
                 return render(
                     request,
                     "patients/results.html",
@@ -974,29 +1008,31 @@ def search_results(request):
                         "patients_page_obj": paginated_pt_list,
                         "pgn": pagn,
                     },
-                )
-            else:
-                return render(
-                    request,
-                    "patients/results.html",
-                    {"patient": patient, "patients_page_obj": None, "pgn": pagn},
                 )
         else:
+            # Validation failed
+            messages.error(request, "Invalid search parameters. Please check your input and try again.")
             username_list = CustomUser.objects.all()
             return render(
                 request, "patients/search.html", {"username_list": username_list}
             )
 
-    # search users --------------------------------------------------------------
+    # Search users --------------------------------------------------------------
     elif combo_record_type == "rtype_user":
-        pagn = " : Users > by username > " + como_user_username
-        messages.success(request, "Search results for : %s" % pagn)
-        return userViewByUsername(request, como_user_username)
+        if not combo_user_username:
+            messages.error(request, "Please select a user.")
+            username_list = CustomUser.objects.all()
+            return render(request, "patients/search.html", {"username_list": username_list})
+
+        pagn = f"Users > Username > {combo_user_username}"
+        messages.success(request, f"Viewing user profile: {combo_user_username}")
+        return userViewByUsername(request, combo_user_username)
+
+    # Invalid record type
     else:
-        messages.success(
-            request, "No search results, please use appropriate option and try again..."
-        )
-        return render(request, "patients/search_notfound.html")
+        messages.error(request, "Invalid record type selected. Please try again.")
+        username_list = CustomUser.objects.all()
+        return render(request, "patients/search.html", {"username_list": username_list})
 
 
 # methods for assessment operations ------------------------------------------------------------------------------
@@ -2511,13 +2547,11 @@ def hine_assessment_add(request, pid):
         messages.error(request, "Patient not found.")
         return redirect("manage-patients")
     
-    hine_form = HINEAssessmentForm()
-    
     if request.method == "POST":
-        hine_form_data = HINEAssessmentForm(request.POST)
-        if hine_form_data.is_valid():
+        hine_form = HINEAssessmentForm(request.POST, patient=sp)
+        if hine_form.is_valid():
             try:
-                hine_record = hine_form_data.save(commit=False)
+                hine_record = hine_form.save(commit=False)
                 hine_record.patient = sp
                 hine_record.added_by = request.user
                 hine_record.save()
@@ -2526,48 +2560,79 @@ def hine_assessment_add(request, pid):
             except Exception as e:
                 messages.error(request, f"Error saving HINE record: {str(e)}")
                 return render(
-                    request, "hine/add.html", {"patient": sp, "hine_form": hine_form_data}
+                    request, "hine/add.html", {"patient": sp, "hine_form": hine_form}
                 )
         else:
             # Format errors for better user experience
             error_messages = []
-            for field, errors in hine_form_data.errors.items():
-                field_name = hine_form_data.fields[field].label or field.replace('_', ' ').title()
-                for error in errors:
-                    error_messages.append(f"{field_name}: {error}")
+            for field, errors in hine_form.errors.items():
+                if field != '__all__':
+                    field_name = hine_form.fields.get(field, None)
+                    if field_name:
+                        field_name = field_name.label or field.replace('_', ' ').title()
+                    else:
+                        field_name = field.replace('_', ' ').title()
+                    for error in errors:
+                        error_messages.append(f"{field_name}: {error}")
+                else:
+                    for error in errors:
+                        error_messages.append(str(error))
             
             if error_messages:
                 messages.error(request, "Please correct the following errors: " + "; ".join(error_messages))
             
             return render(
-                request, "hine/add.html", {"patient": sp, "hine_form": hine_form_data}
+                request, "hine/add.html", {"patient": sp, "hine_form": hine_form}
             )
     else:
+        hine_form = HINEAssessmentForm(patient=sp)
         return render(request, "hine/add.html", {"patient": sp, "hine_form": hine_form})
 
 
 @login_required(login_url="user-login")
 def hine_assessment_edit(request, hine_id):
-    shr = HINEAssessment.objects.get(pk=hine_id)
-    sp = shr.patient
-    hine_form = HINEAssessmentForm(instance=shr)
+    try:
+        shr = HINEAssessment.objects.get(pk=hine_id)
+        sp = shr.patient
+    except HINEAssessment.DoesNotExist:
+        messages.error(request, "HINE assessment not found.")
+        return redirect("hine-assessment-manager")
+    
     if request.method == "POST":
-        hine_form_data = HINEAssessmentForm(request.POST, instance=shr)
-        if hine_form_data.is_valid():
-            hine_record = hine_form_data.save(commit=False)
+        hine_form = HINEAssessmentForm(request.POST, instance=shr, patient=sp)
+        if hine_form.is_valid():
+            hine_record = hine_form.save(commit=False)
             hine_record.patient = sp
             hine_record.last_edit_by = request.user
             hine_record.save()
-            messages.success(request, "New HINE record created successfully...")
+            messages.success(request, "HINE record updated successfully.")
             return redirect("hine-assessment-view", hine_record.id)
         else:
-            messages.error(request, hine_form_data.errors)
+            # Format errors for better user experience
+            error_messages = []
+            for field, errors in hine_form.errors.items():
+                if field != '__all__':
+                    field_name = hine_form.fields.get(field, None)
+                    if field_name:
+                        field_name = field_name.label or field.replace('_', ' ').title()
+                    else:
+                        field_name = field.replace('_', ' ').title()
+                    for error in errors:
+                        error_messages.append(f"{field_name}: {error}")
+                else:
+                    for error in errors:
+                        error_messages.append(str(error))
+            
+            if error_messages:
+                messages.error(request, "Please correct the following errors: " + "; ".join(error_messages))
+            
             return render(
                 request,
                 "hine/edit.html",
-                {"patient": sp, "shr": shr, "hine_form": hine_form_data},
+                {"patient": sp, "shr": shr, "hine_form": hine_form},
             )
     else:
+        hine_form = HINEAssessmentForm(instance=shr, patient=sp)
         return render(
             request,
             "hine/edit.html",

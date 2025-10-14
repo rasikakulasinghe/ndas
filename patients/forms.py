@@ -748,11 +748,24 @@ class CDICRecordForm(forms.ModelForm):
 
 class HINEAssessmentForm(forms.ModelForm):
     
+    def __init__(self, *args, **kwargs):
+        """Initialize form with optional patient instance for validation"""
+        self.patient = kwargs.pop('patient', None)
+        super().__init__(*args, **kwargs)
+    
     def clean_date_of_assessment(self):
         """Validate and make timezone-aware the assessment date"""
         date_of_assessment = self.cleaned_data.get("date_of_assessment")
         if date_of_assessment and timezone.is_naive(date_of_assessment):
             date_of_assessment = timezone.make_aware(date_of_assessment)
+        
+        # Validate against patient's birth date if patient is provided
+        if date_of_assessment and self.patient and self.patient.dob_tob:
+            if date_of_assessment < self.patient.dob_tob:
+                raise forms.ValidationError(
+                    _("Assessment date cannot be before patient birth date.")
+                )
+        
         return date_of_assessment
     
     class Meta:

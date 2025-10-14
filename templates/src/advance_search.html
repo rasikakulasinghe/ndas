@@ -1,147 +1,325 @@
-<div class="row">
-  <div class="col-md-12 offset-md-1">
-    <div class="row">
-      <div class="col-6">
-        <div class="form-group">
-          <label>Result Type:</label>
-          <select
-            class="select2 select2-hidden-accessible"
-            multiple=""
-            data-placeholder="Any"
-            style="width: 100%"
-            data-select2-id="1"
-            tabindex="-1"
-            aria-hidden="true"
-          >
-            <option data-select2-id="14">Text only</option>
-            <option data-select2-id="15">Images</option>
-            <option data-select2-id="16">Video</option></select
-          ><span
-            class="select2 select2-container select2-container--default select2-container--below"
-            dir="ltr"
-            data-select2-id="2"
-            style="width: 100%"
-            ><span class="selection"
-              ><span
-                class="select2-selection select2-selection--multiple"
-                role="combobox"
-                aria-haspopup="true"
-                aria-expanded="false"
-                tabindex="-1"
-                aria-disabled="false"
-                ><ul class="select2-selection__rendered">
-                  <li class="select2-search select2-search--inline">
-                    <input
-                      class="select2-search__field"
-                      type="search"
-                      tabindex="0"
-                      autocomplete="off"
-                      autocorrect="off"
-                      autocapitalize="none"
-                      spellcheck="false"
-                      role="searchbox"
-                      aria-autocomplete="list"
-                      placeholder="Any"
-                      style="width: 493.562px"
-                    />
-                  </li></ul></span></span
-            ><span class="dropdown-wrapper" aria-hidden="true"></span
-          ></span>
+{% extends 'src/base.html' %}
+{% load static %}
+{% block title %}Advanced Search | NDAS{% endblock title %}
+
+{% block main_content %}
+<div class="container-fluid">
+  {% csrf_token %}
+
+  <!-- Content Header -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0"><i class="fas fa-search mr-2"></i>Advanced Search</h1>
         </div>
-      </div>
-      <div class="col-3">
-        <div class="form-group">
-          <label>Sort Order:</label>
-          <select
-            class="select2 select2-hidden-accessible"
-            style="width: 100%"
-            data-select2-id="3"
-            tabindex="-1"
-            aria-hidden="true"
-          >
-            <option selected="" data-select2-id="5">ASC</option>
-            <option data-select2-id="18">DESC</option></select
-          ><span
-            class="select2 select2-container select2-container--default select2-container--below"
-            dir="ltr"
-            data-select2-id="4"
-            style="width: 100%"
-            ><span class="selection"
-              ><span
-                class="select2-selection select2-selection--single"
-                role="combobox"
-                aria-haspopup="true"
-                aria-expanded="false"
-                tabindex="0"
-                aria-disabled="false"
-                aria-labelledby="select2-76cg-container"
-                ><span
-                  class="select2-selection__rendered"
-                  id="select2-76cg-container"
-                  role="textbox"
-                  aria-readonly="true"
-                  title="ASC"
-                  >ASC</span
-                ><span class="select2-selection__arrow" role="presentation"
-                  ><b role="presentation"></b></span></span></span
-            ><span class="dropdown-wrapper" aria-hidden="true"></span
-          ></span>
-        </div>
-      </div>
-      <div class="col-3">
-        <div class="form-group">
-          <label>Order By:</label>
-          <select
-            class="select2 select2-hidden-accessible"
-            style="width: 100%"
-            data-select2-id="6"
-            tabindex="-1"
-            aria-hidden="true"
-          >
-            <option selected="" data-select2-id="8">Title</option>
-            <option data-select2-id="20">Date</option></select
-          ><span
-            class="select2 select2-container select2-container--default select2-container--below"
-            dir="ltr"
-            data-select2-id="7"
-            style="width: 100%"
-            ><span class="selection"
-              ><span
-                class="select2-selection select2-selection--single"
-                role="combobox"
-                aria-haspopup="true"
-                aria-expanded="false"
-                tabindex="0"
-                aria-disabled="false"
-                aria-labelledby="select2-6uh6-container"
-                ><span
-                  class="select2-selection__rendered"
-                  id="select2-6uh6-container"
-                  role="textbox"
-                  aria-readonly="true"
-                  title="Title"
-                  >Title</span
-                ><span class="select2-selection__arrow" role="presentation"
-                  ><b role="presentation"></b></span></span></span
-            ><span class="dropdown-wrapper" aria-hidden="true"></span
-          ></span>
-        </div>
-      </div>
-    </div>
-    <div class="form-group">
-      <div class="input-group input-group-lg">
-        <input
-          type="search"
-          class="form-control form-control-lg"
-          placeholder="Type your keywords here"
-          value="Lorem ipsum"
-        />
-        <div class="input-group-append">
-          <button type="submit" class="btn btn-lg btn-default">
-            <i class="fa fa-search"></i>
-          </button>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+            <li class="breadcrumb-item active">Advanced Search</li>
+          </ol>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Main Content -->
+  <section class="content">
+    <div class="container-fluid">
+      <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+
+          <!-- Search Card -->
+          <div class="card card-primary card-outline">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-filter mr-2"></i>Search Parameters</h3>
+              <div class="card-tools">
+                <span class="badge badge-info">Multi-criteria Search</span>
+              </div>
+            </div>
+
+            <form action="{% url 'search-results' %}" method="POST">
+              {% csrf_token %}
+
+              <div class="card-body">
+
+                <!-- Record Type Selection -->
+                <div class="form-group">
+                  <label for="combo_record_type">
+                    <i class="fas fa-database mr-1"></i>Record Type
+                    <span class="text-danger">*</span>
+                  </label>
+                  <select
+                    class="form-control select2"
+                    id="combo_record_type"
+                    name="combo_record_type"
+                    onchange="handleRecordTypeChange(this)"
+                    required
+                    data-placeholder="Select record type..."
+                    style="width: 100%;">
+                    <option value="">-- Select Record Type --</option>
+                    <option value="rtype_pt">
+                      <i class="fas fa-user-injured"></i> Patient Records
+                    </option>
+                    <option value="rtype_user">
+                      <i class="fas fa-user"></i> User Accounts
+                    </option>
+                  </select>
+                  <small class="form-text text-muted">
+                    Choose the type of record you want to search for
+                  </small>
+                </div>
+
+                <!-- Patient Parameters (Hidden by default) -->
+                <div id="patient_params_container" style="display:none;">
+                  <div class="form-group">
+                    <label for="combo_pt_param_type">
+                      <i class="fas fa-list-ul mr-1"></i>Search By
+                      <span class="text-danger">*</span>
+                    </label>
+                    <select
+                      class="form-control select2"
+                      id="combo_pt_param_type"
+                      name="combo_pt_param_type"
+                      onchange="handlePatientParamChange(this)"
+                      data-placeholder="Select search parameter..."
+                      style="width: 100%;">
+                      <option value="">-- Select Search Parameter --</option>
+                      <option value="pts_bht">BHT Number</option>
+                      <option value="pts_phn">PHN Number</option>
+                      <option value="pts_nnc_no">Clinic Number (NNC)</option>
+                      <option value="pts_name_baby">Baby's Name</option>
+                      <option value="pts_name_mother">Mother's Name</option>
+                    </select>
+                    <small class="form-text text-muted">
+                      Select the patient identifier or name field to search
+                    </small>
+                  </div>
+                </div>
+
+                <!-- User Selection (Hidden by default) -->
+                <div id="user_selection_container" style="display:none;">
+                  <div class="form-group">
+                    <label for="combo_users">
+                      <i class="fas fa-user mr-1"></i>Select User
+                      <span class="text-danger">*</span>
+                    </label>
+                    <select
+                      class="form-control select2"
+                      id="combo_users"
+                      name="combo_users"
+                      data-placeholder="Select user..."
+                      style="width: 100%;">
+                      <option value="">-- Select User --</option>
+                      {% if username_list %}
+                        {% for user in username_list %}
+                        <option value="{{ user.username }}">{{ user.get_full_name|default:user.username }}</option>
+                        {% endfor %}
+                      {% endif %}
+                    </select>
+                    <small class="form-text text-muted">
+                      Select a user account to view details
+                    </small>
+                  </div>
+                </div>
+
+                <!-- Search Text Input (Hidden by default) -->
+                <div id="search_text_container" style="display:none;">
+                  <div class="form-group">
+                    <label for="search_text">
+                      <i class="fas fa-keyboard mr-1"></i>Search Keywords
+                      <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                      <div class="input-group-prepend">
+                        <span class="input-group-text">
+                          <i class="fas fa-search"></i>
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="search_text"
+                        name="search_text"
+                        placeholder="Enter search keywords..."
+                        autocomplete="off">
+                    </div>
+                    <small class="form-text text-muted">
+                      Type the value you want to search for
+                    </small>
+                  </div>
+                </div>
+
+                <!-- Info Alert -->
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                  <i class="icon fas fa-info-circle"></i>
+                  <strong>Search Tips:</strong>
+                  <ul class="mb-0 mt-2">
+                    <li>For patient searches, select a record type and enter the corresponding identifier</li>
+                    <li>Name searches support partial matching</li>
+                    <li>All fields marked with <span class="text-danger">*</span> are required</li>
+                  </ul>
+                  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+
+              </div>
+
+              <div class="card-footer">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-search mr-2"></i>Search
+                </button>
+                <button type="reset" class="btn btn-default float-right" onclick="resetSearch()">
+                  <i class="fas fa-undo mr-2"></i>Reset
+                </button>
+              </div>
+
+            </form>
+          </div>
+          <!-- /.card -->
+
+          <!-- Quick Links Card -->
+          <div class="card card-secondary collapsed-card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-link mr-2"></i>Quick Access</h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <a href="{% url 'manage-patients' %}" class="btn btn-app">
+                    <i class="fas fa-users"></i> All Patients
+                  </a>
+                  <a href="{% url 'manage-patients-new' %}" class="btn btn-app">
+                    <i class="fas fa-user-plus"></i> New Patients
+                  </a>
+                </div>
+                <div class="col-md-6">
+                  <a href="{% url 'assessment-manager' %}" class="btn btn-app">
+                    <i class="fas fa-clipboard-list"></i> Assessments
+                  </a>
+                  <a href="{% url 'add-patient' %}" class="btn btn-app">
+                    <i class="fas fa-plus-circle"></i> Add Patient
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- /.card -->
+
+        </div>
+      </div>
+    </div>
+  </section>
 </div>
+
+<!-- JavaScript for Dynamic Form Behavior -->
+<script>
+// Initialize Select2 on page load
+$(document).ready(function() {
+  $('.select2').select2({
+    theme: 'bootstrap4',
+    width: '100%'
+  });
+});
+
+// Handle record type change
+function handleRecordTypeChange(select) {
+  const value = select.value;
+
+  // Hide all conditional sections
+  hideAllConditionals();
+
+  if (value === 'rtype_pt') {
+    // Show patient parameters
+    $('#patient_params_container').slideDown(300);
+  } else if (value === 'rtype_user') {
+    // Show user selection
+    $('#user_selection_container').slideDown(300);
+  }
+}
+
+// Handle patient parameter change
+function handlePatientParamChange(select) {
+  const value = select.value;
+
+  if (value && value !== '') {
+    // Show search text input for patient searches
+    $('#search_text_container').slideDown(300);
+
+    // Update placeholder based on selected parameter
+    const placeholders = {
+      'pts_bht': 'Enter BHT number (e.g., 123456)',
+      'pts_phn': 'Enter PHN number',
+      'pts_nnc_no': 'Enter clinic number',
+      'pts_name_baby': 'Enter baby\'s name',
+      'pts_name_mother': 'Enter mother\'s name'
+    };
+
+    const searchInput = $('#search_text');
+    searchInput.attr('placeholder', placeholders[value] || 'Enter search keywords...');
+    searchInput.focus();
+  } else {
+    $('#search_text_container').slideUp(300);
+  }
+}
+
+// Hide all conditional sections
+function hideAllConditionals() {
+  $('#patient_params_container').slideUp(300);
+  $('#user_selection_container').slideUp(300);
+  $('#search_text_container').slideUp(300);
+}
+
+// Reset search form
+function resetSearch() {
+  hideAllConditionals();
+  $('.select2').val('').trigger('change');
+  $('#search_text').val('');
+}
+
+// Form validation
+$('form').on('submit', function(e) {
+  const recordType = $('#combo_record_type').val();
+
+  if (!recordType) {
+    e.preventDefault();
+    toastr.error('Please select a record type');
+    return false;
+  }
+
+  if (recordType === 'rtype_pt') {
+    const paramType = $('#combo_pt_param_type').val();
+    const searchText = $('#search_text').val().trim();
+
+    if (!paramType) {
+      e.preventDefault();
+      toastr.error('Please select a search parameter');
+      return false;
+    }
+
+    if (!searchText) {
+      e.preventDefault();
+      toastr.error('Please enter search keywords');
+      return false;
+    }
+  } else if (recordType === 'rtype_user') {
+    const username = $('#combo_users').val();
+
+    if (!username) {
+      e.preventDefault();
+      toastr.error('Please select a user');
+      return false;
+    }
+  }
+
+  return true;
+});
+</script>
+
+{% endblock main_content %}

@@ -121,15 +121,23 @@ class Video(TimeStampedModel, UserTrackingMixin):
     def clean(self):
         """Custom model validation."""
         super().clean()
-        
+
         # Validate recording date is not in future - only if patient is already assigned
-        if self.recorded_on and self.patient and hasattr(self, 'patient'):
+        # Use patient_id instead of patient to avoid RelatedObjectDoesNotExist error
+        if self.recorded_on and self.patient_id:
             try:
-                if hasattr(self.patient, 'dob_tob') and self.patient.dob_tob:
-                    if self.recorded_on.date() < self.patient.dob_tob.date():
+                # Access patient only if we have a patient_id
+                from patients.models import Patient
+                patient = Patient.objects.get(pk=self.patient_id)
+
+                if hasattr(patient, 'dob_tob') and patient.dob_tob:
+                    if self.recorded_on.date() < patient.dob_tob.date():
                         raise ValidationError({
                             'recorded_on': _('Recording date cannot be before patient birth date.')
                         })
+            except Patient.DoesNotExist:
+                # Patient doesn't exist, skip validation
+                pass
             except (AttributeError, ValueError):
                 # Patient not fully loaded yet, skip this validation
                 # It will be validated later when patient is assigned
