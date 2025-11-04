@@ -21,10 +21,9 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
     'django_cleanup.apps.CleanupConfig',
     'csp',  # Content Security Policy
-    'django_permissions_policy',  # Permissions Policy
+    'django_permissions_policy',
     'django_user_agents',
     'users.apps.UsersConfig',
     'patients.apps.PatientsConfig',
@@ -128,7 +127,7 @@ STATIC_ROOT_ENV = config('STATIC_ROOT', default=None)
 if STATIC_ROOT_ENV:
     STATIC_ROOT = STATIC_ROOT_ENV
 else:
-    STATIC_ROOT = BASE_DIR / 'staticfiles'
+    STATIC_ROOT = BASE_DIR / 'static'
 
 MEDIA_ROOT_ENV = config('MEDIA_ROOT', default=None)
 if MEDIA_ROOT_ENV:
@@ -141,7 +140,7 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 # WhiteNoise configuration for serving static files
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+    "static": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
 
 # Default primary key field type
