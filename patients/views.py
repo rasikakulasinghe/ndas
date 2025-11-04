@@ -11,6 +11,7 @@ from patients.models import (
     Attachment,
     HINEAssessment,
     DevelopmentalAssessment,
+    GeneralPaediatricAssessment,
 )
 from video.models import Video
 from users.models import CustomUser
@@ -23,6 +24,7 @@ from patients.forms import (
     CDICRecordForm,
     HINEAssessmentForm,
     DevelopmentalAssessmentForm,
+    GeneralPaediatricAssessmentForm,
 )
 from ndas.custom_codes.choice import BOOKMARK_TYPE
 from django.core.paginator import Paginator
@@ -586,6 +588,12 @@ def patient_view(request, pk):
     cdic_record_count = var_cdic.count()
     cdic_record = var_cdic[:5]
 
+    var_gpa = GeneralPaediatricAssessment.objects.filter(patient=selected_patient).select_related(
+        'discharged_authorized_by', 'added_by'
+    ).order_by("-assessment_date")
+    gpa_assessments_count = var_gpa.count()
+    gpa_assessments = var_gpa[:5]
+
     # check bookmark
     bm = (
         Bookmark.objects.filter(bookmark_type="Patient")
@@ -612,6 +620,8 @@ def patient_view(request, pk):
         "da_assessments": da_assessments,
         "cdic_record_count": cdic_record_count,
         "cdic_record": cdic_record,
+        "gpa_assessments_count": gpa_assessments_count,
+        "gpa_assessments": gpa_assessments,
     }
 
     return render(request, "patients/view.html", context)
@@ -3169,3 +3179,262 @@ def da_assessment_delete(request, da_id):
 @login_required(login_url="user-login")
 def print(request):
     pass
+
+
+# ================================
+# General Paediatric Assessment (GPA) Views
+# ================================
+
+@login_required(login_url="user-login")
+def gpa_add(request, pid):
+    """Create a new General Paediatric Assessment record for a patient"""
+    try:
+        patient = Patient.objects.get(pk=pid)
+    except Patient.DoesNotExist:
+        messages.error(request, "Patient not found")
+        return redirect("patient-manager")
+
+    if request.method == "POST":
+        form = GeneralPaediatricAssessmentForm(request.POST)
+        if form.is_valid():
+            gpa_record = form.save(commit=False)
+            gpa_record.patient = patient
+            gpa_record.save()
+            messages.success(
+                request,
+                f"General Paediatric Assessment for {patient.baby_name} has been successfully created"
+            )
+            return redirect("view-patient", pk=patient.pk)
+        else:
+            messages.error(request, "Please correct the errors below")
+    else:
+        form = GeneralPaediatricAssessmentForm()
+
+    context = {
+        "form": form,
+        "patient": patient,
+    }
+    return render(request, "gpa_record/add.html", context)
+
+
+@login_required(login_url="user-login")
+def gpa_edit(request, gpa_id):
+    """Edit an existing General Paediatric Assessment record"""
+    try:
+        gpa_record = GeneralPaediatricAssessment.objects.select_related(
+            "patient", "discharged_authorized_by"
+        ).get(pk=gpa_id)
+    except GeneralPaediatricAssessment.DoesNotExist:
+        messages.error(request, "GPA record not found")
+        return redirect("gpa-manager")
+
+    if request.method == "POST":
+        form = GeneralPaediatricAssessmentForm(request.POST, instance=gpa_record)
+        if form.is_valid():
+            form.save()
+            messages.success(
+                request,
+                f"GPA record for {gpa_record.patient.baby_name} has been successfully updated"
+            )
+            return redirect("gpa-view", gpa_id=gpa_record.pk)
+        else:
+            messages.error(request, "Please correct the errors below")
+    else:
+        form = GeneralPaediatricAssessmentForm(instance=gpa_record)
+
+    context = {
+        "form": form,
+        "gpa_record": gpa_record,
+        "patient": gpa_record.patient,
+    }
+    return render(request, "gpa_record/edit.html", context)
+
+
+@login_required(login_url="user-login")
+def gpa_view(request, gpa_id):
+    """View detailed information about a specific GPA record"""
+    try:
+        gpa_record = GeneralPaediatricAssessment.objects.select_related(
+            "patient",
+            "discharged_authorized_by",
+            "added_by",
+            "last_edit_by"
+        ).get(pk=gpa_id)
+    except GeneralPaediatricAssessment.DoesNotExist:
+        messages.error(request, "GPA record not found")
+        return redirect("gpa-manager")
+
+    context = {
+        "gpa_record": gpa_record,
+        "patient": gpa_record.patient,
+    }
+    return render(request, "gpa_record/view.html", context)
+
+
+@login_required(login_url="user-login")
+def gpa_manager(request):
+    """List all General Paediatric Assessment records with filtering, search, and pagination"""
+    # Get filter and search parameters
+    filter_type = request.GET.get("filter", "")
+    search_query = request.GET.get("search", "").strip()
+    page_number = request.GET.get("page", 1)
+
+    # Base queryset with optimized query
+    queryset = GeneralPaediatricAssessment.objects.select_related(
+        "patient",
+        "discharged_authorized_by",
+        "added_by"
+    ).order_by("-assessment_date")
+
+    # Apply search filter
+    if search_query:
+        queryset = queryset.filter(
+            Q(patient__baby_name__icontains=search_query)
+            | Q(patient__disk_no__icontains=search_query)
+            | Q(patient__bht__icontains=search_query)
+            | Q(healthcare_provider__icontains=search_query)
+            | Q(current_problems__icontains=search_query)
+        )
+
+    # Apply status filters
+    if filter_type == "recent":
+        # Last 30 days
+        cutoff_date = timezone.now() - timedelta(days=30)
+        queryset = queryset.filter(assessment_date__gte=cutoff_date)
+    elif filter_type == "active":
+        queryset = queryset.filter(is_discharged=False)
+    elif filter_type == "discharged":
+        queryset = queryset.filter(is_discharged=True)
+
+    # Get total count before pagination
+    count = queryset.count()
+
+    # Pagination with proper error handling
+    paginator = Paginator(queryset, 25)  # Show 25 records per page
+    try:
+        page_obj = paginator.get_page(page_number)
+    except Exception as e:
+        logger.error(f"Pagination error in gpa_manager: {str(e)}")
+        page_obj = paginator.get_page(1)
+
+    # Annotate with bookmark information for efficient display
+    for gpa in page_obj:
+        gpa.isBookmarked = gpa.is_bookmarked
+
+    context = {
+        "gpa_page_obj": page_obj,
+        "count": count,
+        "filter_type": filter_type,
+        "search_query": search_query,
+    }
+    return render(request, "gpa_record/manager.html", context)
+
+
+@login_required(login_url="user-login")
+def gpa_manager_by_patient(request, pid):
+    """List all GPA records for a specific patient with search and pagination"""
+    try:
+        patient = Patient.objects.get(pk=pid)
+    except Patient.DoesNotExist:
+        messages.error(request, "Patient not found")
+        return redirect("patient-manager")
+
+    # Get search parameter
+    search_query = request.GET.get("search", "").strip()
+    page_number = request.GET.get("page", 1)
+
+    # Base queryset filtered by patient
+    queryset = GeneralPaediatricAssessment.objects.filter(
+        patient=patient
+    ).select_related(
+        "discharged_authorized_by",
+        "added_by"
+    ).order_by("-assessment_date")
+
+    # Apply search filter if provided
+    if search_query:
+        queryset = queryset.filter(
+            Q(healthcare_provider__icontains=search_query)
+            | Q(current_problems__icontains=search_query)
+        )
+
+    # Get total count before pagination
+    count = queryset.count()
+
+    # Pagination with proper error handling
+    paginator = Paginator(queryset, 25)  # Show 25 records per page
+    try:
+        page_obj = paginator.get_page(page_number)
+    except Exception as e:
+        logger.error(f"Pagination error in gpa_manager_by_patient: {str(e)}")
+        page_obj = paginator.get_page(1)
+
+    # Annotate with bookmark information for efficient display
+    for gpa in page_obj:
+        gpa.isBookmarked = gpa.is_bookmarked
+
+    context = {
+        "gpa_page_obj": page_obj,
+        "count": count,
+        "patient": patient,
+        "search_query": search_query,
+        "filter_type": "patient",
+    }
+    return render(request, "gpa_record/manager.html", context)
+
+
+@login_required(login_url="user-login")
+def gpa_delete_start(request, gpa_id):
+    """Display confirmation page for deleting a GPA record"""
+    try:
+        gpa_record = GeneralPaediatricAssessment.objects.select_related(
+            "patient"
+        ).get(pk=gpa_id)
+    except GeneralPaediatricAssessment.DoesNotExist:
+        messages.error(request, "GPA record not found")
+        return redirect("gpa-manager")
+
+    context = {
+        "gpa_record": gpa_record,
+        "patient": gpa_record.patient,
+    }
+    return render(request, "gpa_record/delete_confirm.html", context)
+
+
+@login_required(login_url="user-login")
+def gpa_delete(request, gpa_id):
+    """Execute deletion of a GPA record after password verification"""
+    if request.method != "POST":
+        messages.error(request, "Invalid request method")
+        return redirect("gpa-manager")
+
+    try:
+        gpa_record = GeneralPaediatricAssessment.objects.select_related(
+            "patient"
+        ).get(pk=gpa_id)
+    except GeneralPaediatricAssessment.DoesNotExist:
+        messages.error(request, "GPA record not found")
+        return redirect("gpa-manager")
+
+    # Verify password
+    from django.contrib.auth import authenticate
+    password = request.POST.get("password")
+    user = authenticate(username=request.user.username, password=password)
+
+    if user is not None:
+        patient_name = gpa_record.patient.baby_name
+        patient_id = gpa_record.patient.pk
+        gpa_record.delete()
+        messages.success(
+            request,
+            f"GPA record for {patient_name} has been successfully deleted"
+        )
+        return redirect("view-patient", pid=patient_id)
+    else:
+        messages.error(
+            request,
+            "Wrong password, please try again with correct password"
+        )
+        return redirect("gpa-delete-start", gpa_id=gpa_id)
+
+

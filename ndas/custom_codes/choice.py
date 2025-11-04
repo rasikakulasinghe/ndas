@@ -42,6 +42,7 @@ BOOKMARK_TYPE = (
     ("Attachment", "Attachment"),
     ("DA", "DA"),
     ("CDICR", "CDICR"),
+    ("GPA", "GPA"),
 )
 
 ATTACHMENT_TYPE = (("Photo", "Photo"), ("PDF", "PDF"), ("Video", "Video"))

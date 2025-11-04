@@ -10,6 +10,7 @@ from patients.models import (
     Attachment,
     CDICRecord,
     HINEAssessment,
+    GeneralPaediatricAssessment,
 )
 
 
@@ -285,6 +286,52 @@ class DevelopmentalAssessmentAdmin(admin.ModelAdmin):
     )
 
 
+class GeneralPaediatricAssessmentAdmin(admin.ModelAdmin):
+    list_display = (
+        "patient",
+        "assessment_date",
+        "healthcare_provider",
+        "is_discharged",
+        "next_assessment_date",
+        "added_by",
+        "created_at",
+        "last_edit_by",
+        "updated_at",
+    )
+    ordering = ("-assessment_date", "-id")
+    list_filter = ("is_discharged", "assessment_date")
+    search_fields = ("patient__baby_name", "healthcare_provider", "current_problems")
+    readonly_fields = ("created_at", "updated_at", "added_by", "last_edit_by")
+
+    fieldsets = (
+        ("Patient Information", {
+            "fields": ("patient",)
+        }),
+        ("Assessment Details", {
+            "fields": (
+                "assessment_date",
+                "healthcare_provider",
+                "current_problems",
+                "physical_examination",
+                "investigation_summary",
+                "prescribed_medications",
+                "next_plan",
+            )
+        }),
+        ("Follow-up Planning", {
+            "fields": ("next_assessment_date",)
+        }),
+        ("Discharge Information", {
+            "fields": ("is_discharged", "discharged_authorized_by", "discharge_plan"),
+            "classes": ("collapse",),
+        }),
+        ("Audit Trail", {
+            "fields": ("added_by", "created_at", "last_edit_by", "updated_at"),
+            "classes": ("collapse",),
+        }),
+    )
+
+
 # Register your models here.
 admin.site.register(Patient, PatientsAdmin)
 admin.site.register(DiagnosisList)
@@ -296,3 +343,4 @@ admin.site.register(Attachment, AttachmentAdmin)
 admin.site.register(CDICRecord, CDICRecordAdmin)
 admin.site.register(HINEAssessment, HINEAssessmentAdmin)
 admin.site.register(DevelopmentalAssessment, DevelopmentalAssessmentAdmin)
+admin.site.register(GeneralPaediatricAssessment, GeneralPaediatricAssessmentAdmin)

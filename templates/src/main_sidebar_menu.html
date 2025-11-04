@@ -127,6 +127,15 @@
                 <p>CDIC Assessment</p>
               </a>
             </li>
+            <li class="nav-item">
+              <a
+                href="{% url 'gpa-manager' %}"
+                class="nav-link {% if 'gpa' in request.resolver_match.url_name %}active{% endif %}"
+              >
+                <i class="far fa-circle nav-icon"></i>
+                <p>GPA Assessment</p>
+              </a>
+            </li>
           </ul>
         </li>
 

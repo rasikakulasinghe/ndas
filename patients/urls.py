@@ -90,4 +90,13 @@ urlpatterns = [
     path("da/delete/confirm/<str:da_id>/", views.da_assessment_delete_start, name='da-assessment-delete_start'),
     path("da/delete/<str:da_id>/", views.da_assessment_delete, name='da-assessment-delete'),
 
+    # URLs for General Paediatric Assessment (GPA) record operations
+    path("gpa/add/<str:pid>/", views.gpa_add, name='gpa-add'),
+    path("gpa/edit/<str:gpa_id>/", views.gpa_edit, name='gpa-edit'),
+    path("gpa/view/<str:gpa_id>/", views.gpa_view, name='gpa-view'),
+    path("gpa/manager/", views.gpa_manager, name='gpa-manager'),
+    path("gpa/manager/patient/<str:pid>/", views.gpa_manager_by_patient, name='gpa-manager-patient'),
+    path("gpa/delete/confirm/<str:gpa_id>/", views.gpa_delete_start, name='gpa-delete-start'),
+    path("gpa/delete/<str:gpa_id>/", views.gpa_delete, name='gpa-delete'),
+
     ]

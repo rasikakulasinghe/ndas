@@ -202,7 +202,7 @@ class Patient(TimeStampedModel, UserTrackingMixin):
         validators=[MinValueValidator(20), MaxValueValidator(50)],
         verbose_name=_("Occipital Frontal Circumference (cm)"),
         help_text=_("Head circumference measurement in centimeters"),
-    ) 
+    )
 
     # Contact and location information
     address = models.TextField(
@@ -360,7 +360,7 @@ class Patient(TimeStampedModel, UserTrackingMixin):
     def isNewPatient(self):
         """Check if patient has any video records"""
         if hasattr(self, "pk") and self.pk:
-            Video = apps.get_model('video', 'Video')
+            Video = apps.get_model("video", "Video")
             return not Video.objects.filter(patient=self.pk).exists()
         return True
 
@@ -1211,6 +1211,237 @@ class CDICRecord(TimeStampedModel, UserTrackingMixin):
         ).select_related("patient")
 
 
+class GeneralPaediatricAssessment(TimeStampedModel, UserTrackingMixin):
+    """
+    General Paediatric Assessment (GPA) model for tracking routine clinical evaluations,
+    physical examinations, investigations, medication management, and discharge planning.
+    """
+
+    # Core fields with proper validation and indexing
+    patient = models.ForeignKey(
+        Patient,
+        on_delete=models.CASCADE,
+        related_name="gpa_assessments",
+        db_index=True,
+        verbose_name=_("Patient"),
+        help_text=_("Patient this GPA record belongs to"),
+    )
+    assessment_date = models.DateTimeField(
+        db_index=True,
+        verbose_name=_("Assessment Date"),
+        help_text=_("Date and time when the assessment was performed"),
+    )
+    healthcare_provider = models.CharField(
+        max_length=200,
+        db_index=True,
+        verbose_name=_("Healthcare Provider"),
+        help_text=_("Name of the healthcare professional who performed the assessment"),
+    )
+
+    # Clinical assessment fields - all required for comprehensive documentation
+    current_problems = models.TextField(
+        verbose_name=_("Current Problems"),
+        help_text=_("Current medical problems and presenting complaints"),
+    )
+    physical_examination = models.TextField(
+        verbose_name=_("Physical Examination"),
+        help_text=_("Detailed physical examination findings"),
+    )
+    investigation_summary = models.TextField(
+        verbose_name=_("Investigation Summary"),
+        help_text=_("Summary of investigations performed and results"),
+    )
+    prescribed_medications = models.TextField(
+        verbose_name=_("Prescribed Medications"),
+        help_text=_("Current medications and treatment prescriptions"),
+    )
+    next_plan = models.TextField(
+        verbose_name=_("Next Plan/Goals"),
+        help_text=_("Planned next steps, goals, and interventions"),
+    )
+
+    # Follow-up planning - optional
+    next_assessment_date = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name=_("Next Assessment Date"),
+        help_text=_("Scheduled date for next assessment (optional)"),
+    )
+
+    # Discharge tracking with proper validation - optional
+    is_discharged = models.BooleanField(
+        default=False,
+        db_index=True,
+        verbose_name=_("Is Discharged"),
+        help_text=_("Whether the patient has been discharged from paediatric care"),
+    )
+    discharged_authorized_by = models.ForeignKey(
+        "users.CustomUser",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="authorized_gpa_discharges",
+        verbose_name=_("Discharged Authorized By"),
+        help_text=_("User who authorized the discharge"),
+    )
+    discharge_plan = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name=_("Discharge Plan"),
+        help_text=_("Discharge planning and follow-up instructions"),
+    )
+
+    class Meta:
+        verbose_name = _("General Paediatric Assessment")
+        verbose_name_plural = _("General Paediatric Assessments")
+        ordering = ["-assessment_date", "-created_at"]
+
+        # Database indexes for performance optimization
+        indexes = [
+            models.Index(
+                fields=["patient", "assessment_date"], name="gpa_patient_date_idx"
+            ),
+            models.Index(
+                fields=["is_discharged", "assessment_date"], name="gpa_discharge_idx"
+            ),
+            models.Index(
+                fields=["next_assessment_date", "is_discharged"],
+                name="gpa_followup_idx",
+            ),
+            models.Index(
+                fields=["healthcare_provider", "assessment_date"],
+                name="gpa_provider_idx",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.assessment_date.strftime('%Y-%m-%d')} | {self.patient.baby_name}"
+
+    def clean(self):
+        """Model-wide validation"""
+        super().clean()
+
+        # Validate assessment date is not in the future
+        if self.assessment_date and self.assessment_date > timezone.now():
+            raise ValidationError(
+                {"assessment_date": _("Assessment date cannot be in the future")}
+            )
+
+        # Validate next assessment date
+        if self.next_assessment_date and self.assessment_date:
+            if self.next_assessment_date <= self.assessment_date:
+                raise ValidationError(
+                    {
+                        "next_assessment_date": _(
+                            "Next assessment date must be after current assessment date"
+                        )
+                    }
+                )
+
+        # Validate discharge information consistency
+        if self.is_discharged:
+            if not self.discharged_authorized_by:
+                raise ValidationError(
+                    {
+                        "discharged_authorized_by": _(
+                            "Discharge authorizer is required when patient is marked as discharged"
+                        )
+                    }
+                )
+
+    def save(self, *args, **kwargs):
+        """Override save to perform validation"""
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    # Optimized properties with efficient database queries
+    @property
+    def assessment_age_in_months(self):
+        """Calculate patient age at time of assessment"""
+        if not self.assessment_date or not self.patient.dob_tob:
+            return "Unknown"
+
+        age_delta = relativedelta(self.assessment_date.date(), self.patient.dob_tob.date())
+        return f"{age_delta.years} Years {age_delta.months} Months {age_delta.days} Days"
+
+    @property
+    def days_since_assessment(self):
+        """Calculate days since assessment was performed"""
+        if not self.assessment_date:
+            return None
+        return (timezone.now() - self.assessment_date).days
+
+    @property
+    def is_follow_up_due(self):
+        """Check if follow-up assessment is due"""
+        if not self.next_assessment_date or self.is_discharged:
+            return False
+        return timezone.now() >= self.next_assessment_date
+
+    @property
+    def days_until_next_assessment(self):
+        """Calculate days until next assessment"""
+        if not self.next_assessment_date or self.is_discharged:
+            return None
+        delta = self.next_assessment_date - timezone.now()
+        return delta.days
+
+    @property
+    def is_bookmarked(self):
+        """Check if GPA record is bookmarked - optimized version"""
+        if not self.pk:
+            return None
+
+        try:
+            return Bookmark.objects.select_related("owner").get(
+                bookmark_type="GPA", object_id=self.pk
+            )
+        except Bookmark.DoesNotExist:
+            return None
+
+    # Class methods for efficient queries
+    @classmethod
+    def get_active_records(cls):
+        """Get all non-discharged GPA records"""
+        return cls.objects.filter(is_discharged=False).select_related("patient", "discharged_authorized_by")
+
+    @classmethod
+    def get_discharged_records(cls):
+        """Get all discharged GPA records"""
+        return cls.objects.filter(is_discharged=True).select_related("patient", "discharged_authorized_by")
+
+    @classmethod
+    def get_due_follow_ups(cls):
+        """Get records with due follow-up assessments"""
+        return cls.objects.filter(
+            next_assessment_date__lte=timezone.now(), is_discharged=False
+        ).select_related("patient")
+
+    @classmethod
+    def get_records_by_date_range(cls, start_date, end_date):
+        """Get GPA records within a date range"""
+        return cls.objects.filter(
+            assessment_date__range=[start_date, end_date]
+        ).select_related("patient", "discharged_authorized_by")
+
+    @classmethod
+    def get_records_by_provider(cls, provider_name):
+        """Get records by specific healthcare provider"""
+        return cls.objects.filter(
+            healthcare_provider__icontains=provider_name
+        ).select_related("patient")
+
+    @classmethod
+    def get_recent_records(cls, days=30):
+        """Get GPA records from the last N days"""
+        from django.utils import timezone as tz
+        cutoff_date = tz.now() - timedelta(days=days)
+        return cls.objects.filter(
+            assessment_date__gte=cutoff_date
+        ).select_related("patient", "discharged_authorized_by")
+
+
 class Attachment(TimeStampedModel, UserTrackingMixin):
 
     # Core fields with proper validation and indexing
@@ -1755,6 +1986,7 @@ class Bookmark(TimeStampedModel, UserTrackingMixin):
                 "Attachment": ("patients", "Attachment"),
                 "DA": ("patients", "DevelopmentalAssessment"),
                 "CDICR": ("patients", "CDICRecord"),
+                "GPA": ("patients", "GeneralPaediatricAssessment"),
             }
 
             if self.bookmark_type in model_mapping:
@@ -1798,6 +2030,7 @@ class Bookmark(TimeStampedModel, UserTrackingMixin):
                 "Attachment": ("patients", "Attachment"),
                 "DA": ("patients", "DevelopmentalAssessment"),
                 "CDICR": ("patients", "CDICRecord"),
+                "GPA": ("patients", "GeneralPaediatricAssessment"),
             }
 
             if self.bookmark_type in model_mapping:
@@ -1886,6 +2119,7 @@ class Bookmark(TimeStampedModel, UserTrackingMixin):
             "Attachment": "attachment-view",
             "DA": "da-assessment-view",
             "CDICR": "cdic-assessment-view",
+            "GPA": "gpa-view",
         }
 
         if self.bookmark_type in url_mapping:

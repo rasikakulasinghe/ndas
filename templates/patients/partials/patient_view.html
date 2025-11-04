@@ -310,6 +310,11 @@
               <i class="fas fa-hands-helping"></i> CDIC <span class="badge badge-light">{{cdic_record_count}}</span>
             </a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link" id="gpa-tab" data-toggle="pill" href="#gpa-section" role="tab">
+              <i class="fas fa-notes-medical"></i> GPA <span class="badge badge-light">{{gpa_assessments_count}}</span>
+            </a>
+          </li>
         </ul>
       </div>
       <div class="card-body">
@@ -531,6 +536,79 @@
             {% endif %}
           </div>
 
+          <!-- General Paediatric Assessments (GPA) -->
+          <div class="tab-pane fade" id="gpa-section" role="tabpanel">
+            {% if gpa_assessments %}
+            <div class="table-responsive">
+              <table class="table table-hover table-sm">
+                <thead class="thead-light">
+                  <tr>
+                    <th>ID</th>
+                    <th>Assessment Date</th>
+                    <th>Healthcare Provider</th>
+                    <th>Next Assessment</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for GPA in gpa_assessments %}
+                  <tr>
+                    <td>{{GPA.id}}</td>
+                    <td>
+                      {{GPA.assessment_date|date:"M d, Y"}}
+                      <br><small class="text-muted">{{GPA.days_since_assessment}} days ago</small>
+                    </td>
+                    <td>{{GPA.healthcare_provider}}</td>
+                    <td>
+                      {% if GPA.next_assessment_date %}
+                        {{GPA.next_assessment_date|date:"M d, Y"}}
+                        {% if GPA.is_follow_up_due %}
+                          <br><span class="badge badge-warning">Due!</span>
+                        {% endif %}
+                      {% else %}
+                        <span class="text-muted">Not scheduled</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if GPA.is_discharged %}
+                        <span class="badge badge-danger">Discharged</span>
+                      {% else %}
+                        <span class="badge badge-success">Active</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <div class="btn-group btn-group-sm">
+                        <a href="{% url 'gpa-view' GPA.id %}" class="btn btn-info btn-sm" title="View">
+                          <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{% url 'gpa-edit' GPA.id %}" class="btn btn-warning btn-sm" title="Edit">
+                          <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'gpa-delete-start' GPA.id %}" class="btn btn-danger btn-sm" title="Delete">
+                          <i class="fas fa-trash"></i>
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% if gpa_assessments_count > 5 %}
+            <div class="text-center mt-2">
+              <a href="{% url 'gpa-manager-patient' patient.id %}" class="btn btn-primary btn-sm">
+                <i class="fas fa-eye"></i> View All ({{gpa_assessments_count}})
+              </a>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="alert alert-light mb-0">
+              <i class="fas fa-info-circle"></i> No General Paediatric Assessments recorded yet.
+            </div>
+            {% endif %}
+          </div>
+
         </div>
       </div>
     </div>
@@ -717,6 +795,11 @@
           <div class="col-md-4 col-sm-6 mb-2">
             <a class="btn btn-dark btn-block" href="{% url 'da-assessment-add' patient.id %}">
               <i class="fas fa-chart-bar"></i> New Developmental Assessment
+            </a>
+          </div>
+          <div class="col-md-4 col-sm-6 mb-2">
+            <a class="btn btn-primary btn-block" href="{% url 'gpa-add' patient.id %}">
+              <i class="fas fa-notes-medical"></i> New GPA Record
             </a>
           </div>
 

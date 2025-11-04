@@ -6,7 +6,13 @@
       "mcp__ide__getDiagnostics",
       "Bash(dir:*)",
       "Bash(curl:*)",
-      "Read(//c/Users/user/OneDrive/Desktop/untitled_screen/**)"
+      "Read(//c/Users/user/OneDrive/Desktop/untitled_screen/**)",
+      "Bash(nul)",
+      "Bash(openspec list:*)",
+      "Bash(test:*)",
+      "Bash(findstr:*)",
+      "Bash(openspec validate:*)",
+      "Bash(openspec show:*)"
     ],
     "deny": [],
     "ask": []

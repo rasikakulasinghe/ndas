@@ -1,3 +1,46 @@
+<!-- OPENSPEC:START -->
+# OpenSpec Instructions
+
+These instructions are for AI assistants working in this project.
+
+Always open `@/openspec/AGENTS.md` when the request:
+- Mentions planning or proposals (words like proposal, spec, change, plan)
+- Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
+- Sounds ambiguous and you need the authoritative spec before coding
+
+Use `@/openspec/AGENTS.md` to learn:
+- How to create and apply change proposals
+- Spec format and conventions
+- Project structure and guidelines
+
+Keep this managed block so 'openspec update' can refresh the instructions.
+
+<!-- OPENSPEC:END -->
+
+## OpenSpec Workflow Integration
+
+This project uses OpenSpec for spec-driven development. Before implementing significant changes:
+
+1. **Check existing specs**: `openspec list --specs` and `openspec list` to see active changes
+2. **Create proposals** for:
+   - New features or capabilities
+   - Breaking changes (API, database schema)
+   - Architecture or security pattern changes
+   - Performance optimizations that change behavior
+3. **Skip proposals** for:
+   - Bug fixes restoring intended behavior
+   - Typos, formatting, comments
+   - Non-breaking dependency updates
+   - Configuration changes
+
+**Key Commands:**
+- `openspec list` - View active changes
+- `openspec show [item]` - Display change or spec details
+- `openspec validate [change] --strict` - Validate before implementation
+- `openspec archive <change-id> --yes` - Archive after deployment
+
+See `openspec/AGENTS.md` for complete workflow documentation.
+
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
@@ -172,6 +215,15 @@ def my_view(request):
 {% endblock %}
 ```
 
+### UI Component Patterns (AdminLTE)
+Follow these established patterns for consistency:
+- **Info Boxes**: Use AdminLTE's `info-box` class with consistent icons
+- **Cards**: Bootstrap `card` class with `card-header`, `card-body`
+- **Tables**: `table table-hover table-striped` wrapped in `.table-responsive`
+- **Buttons**: Bootstrap button classes with Font Awesome icons
+- **Color Scheme**: Primary (blue), success (green), warning (yellow), danger (red)
+- **JavaScript Stack**: jQuery 3.6, Bootstrap 4 JS, HTMX 1.9, Select2, Video.js
+
 ## Critical Development Rules
 
 ### When Adding New Models
@@ -196,6 +248,9 @@ file_field = models.FileField(
 3. **Use consistent form classes** from `patients/forms.py` patterns
 4. **Follow AdminLTE structure**: info-box, card layouts, table patterns
 5. **Maintain responsive design** with mobile-first CSS
+6. **DO NOT change CSS framework**: AdminLTE 3.2 + Bootstrap 4.6 + Font Awesome 6.4
+7. **Initialize components properly**: Bootstrap tooltips, Select2, HTMX in templates
+8. **Use custom utilities**: Reference `static/js/app-utils.js` for common functions
 
 ## Data Flow Patterns
 - **Patient → Video → Assessment**: Core workflow where patients have videos, videos have assessments

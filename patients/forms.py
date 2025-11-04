@@ -11,6 +11,7 @@ from patients.models import (
     CDICRecord,
     HINEAssessment,
     DevelopmentalAssessment,
+    GeneralPaediatricAssessment,
 )
 from ndas.custom_codes.choice import (
     MODE_OF_DELIVERY,
@@ -873,6 +874,148 @@ class DevelopmentalAssessmentForm(forms.ModelForm):
                     "rows": "3",
                     "placeholder": "Any other relevent infomations related to this assessment...",
                     "id": "today_interventions",
+                }
+            ),
+        }
+
+
+class GeneralPaediatricAssessmentForm(forms.ModelForm):
+    """
+    Form for General Paediatric Assessment (GPA) records with comprehensive
+    validation and Bootstrap styling.
+    """
+
+    def clean_next_assessment_date(self):
+        """Validate and make timezone-aware the next assessment date"""
+        next_assessment_date = self.cleaned_data.get("next_assessment_date")
+        if next_assessment_date and timezone.is_naive(next_assessment_date):
+            next_assessment_date = timezone.make_aware(next_assessment_date)
+        return next_assessment_date
+
+    def clean(self):
+        """Form-level validation for discharge fields consistency"""
+        cleaned_data = super().clean()
+        is_discharged = cleaned_data.get("is_discharged")
+        discharged_authorized_by = cleaned_data.get("discharged_authorized_by")
+        discharge_plan = cleaned_data.get("discharge_plan")
+
+        # If patient is marked as discharged, ensure discharge authorizer is provided
+        if is_discharged and not discharged_authorized_by:
+            raise ValidationError(
+                {
+                    "discharged_authorized_by": _(
+                        "Discharge authorizer is required when patient is marked as discharged"
+                    )
+                }
+            )
+
+        return cleaned_data
+
+    class Meta:
+        model = GeneralPaediatricAssessment
+        fields = [
+            "assessment_date",
+            "healthcare_provider",
+            "current_problems",
+            "physical_examination",
+            "investigation_summary",
+            "prescribed_medications",
+            "next_plan",
+            "next_assessment_date",
+            "is_discharged",
+            "discharged_authorized_by",
+            "discharge_plan",
+        ]
+
+        widgets = {
+            "assessment_date": forms.DateTimeInput(
+                attrs={
+                    "type": "datetime-local",
+                    "class": "form-control",
+                    "id": "assessment_date",
+                    "required": True,
+                }
+            ),
+            "healthcare_provider": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Name and designation of healthcare provider",
+                    "id": "healthcare_provider",
+                    "required": True,
+                    "maxlength": "200",
+                }
+            ),
+            "current_problems": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": "4",
+                    "placeholder": "Document current medical problems and presenting complaints...",
+                    "id": "current_problems",
+                    "required": True,
+                }
+            ),
+            "physical_examination": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": "4",
+                    "placeholder": "Detail physical examination findings including vital signs, system examination...",
+                    "id": "physical_examination",
+                    "required": True,
+                }
+            ),
+            "investigation_summary": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": "4",
+                    "placeholder": "Summarize investigations performed (blood tests, imaging, etc.) and results...",
+                    "id": "investigation_summary",
+                    "required": True,
+                }
+            ),
+            "prescribed_medications": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": "4",
+                    "placeholder": "List prescribed medications with dosages, frequency, and duration...",
+                    "id": "prescribed_medications",
+                    "required": True,
+                }
+            ),
+            "next_plan": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": "4",
+                    "placeholder": "Outline next steps, goals, planned interventions, and follow-up care...",
+                    "id": "next_plan",
+                    "required": True,
+                }
+            ),
+            "next_assessment_date": forms.DateTimeInput(
+                attrs={
+                    "type": "datetime-local",
+                    "class": "form-control",
+                    "id": "next_assessment_date",
+                }
+            ),
+            "is_discharged": forms.CheckboxInput(
+                attrs={
+                    "class": "big-checkbox",
+                    "id": "is_discharged",
+                    "onchange": "toggleDischarged()",
+                }
+            ),
+            "discharged_authorized_by": forms.Select(
+                attrs={
+                    "class": "form-control",
+                    "id": "discharged_authorized_by",
+                }
+            ),
+            "discharge_plan": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": "4",
+                    "placeholder": "Discharge planning, follow-up instructions, and referrals...",
+                    "id": "discharge_plan",
                 }
             ),
         }
