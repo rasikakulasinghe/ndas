@@ -1,0 +1,225 @@
+{% extends 'src/base.html' %}
+{% load static %}
+{% block title %}View GPA Record{% endblock %}
+
+{% block content_header %}
+<div class="row mb-2">
+  <div class="col-sm-6">
+    <h1 class="m-0">General Paediatric Assessment Record Details</h1>
+  </div>
+  <div class="col-sm-6">
+    <ol class="breadcrumb float-sm-right">
+      <li class="breadcrumb-item"><a href="{% url 'home' %}">Dashboard</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'view-patient' patient.id %}">Patient</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'gpa-manager-patient' patient.id %}">GPA Records</a></li>
+      <li class="breadcrumb-item active">View</li>
+    </ol>
+  </div>
+</div>
+{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid">
+  {% csrf_token %}
+
+  <div class="row">
+    <!-- Patient Information Sidebar -->
+    <div class="col-md-4">
+      <!-- Patient Information Card -->
+      <div class="card card-info">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-user"></i> Patient Information</h3>
+        </div>
+        <div class="card-body">
+          <dl class="row">
+            <dt class="col-sm-4">Name:</dt>
+            <dd class="col-sm-8">{{ patient.baby_name }}</dd>
+            <dt class="col-sm-4">BHT:</dt>
+            <dd class="col-sm-8">{{ patient.bht|default:"Not assigned" }}</dd>
+            <dt class="col-sm-4">PIN:</dt>
+            <dd class="col-sm-8">{{ patient.pin|default:"Not assigned" }}</dd>
+          </dl>
+          <a href="{% url 'view-patient' patient.id %}" class="btn btn-sm btn-outline-info btn-block">
+            <i class="fas fa-eye"></i> View Full Patient Details
+          </a>
+        </div>
+      </div>
+
+      <!-- Record Information Card -->
+      <div class="card card-secondary">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-info-circle"></i> Record Information</h3>
+        </div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-sm-5">Record ID:</dt>
+            <dd class="col-sm-7"><span class="badge badge-secondary">#{{ gpa_record.id }}</span></dd>
+
+            <dt class="col-sm-5">Status:</dt>
+            <dd class="col-sm-7">
+              {% if gpa_record.is_discharged %}
+                <span class="badge badge-info"><i class="fas fa-user-check"></i> Discharged</span>
+              {% else %}
+                <span class="badge badge-success"><i class="fas fa-check-circle"></i> Active</span>
+              {% endif %}
+            </dd>
+
+            <dt class="col-sm-5">Created:</dt>
+            <dd class="col-sm-7">{{ gpa_record.created_at|date:"M d, Y H:i" }}</dd>
+
+            <dt class="col-sm-5">Created By:</dt>
+            <dd class="col-sm-7">{{ gpa_record.added_by|default:"System" }}</dd>
+
+            {% if gpa_record.updated_at %}
+            <dt class="col-sm-5">Last Updated:</dt>
+            <dd class="col-sm-7">{{ gpa_record.updated_at|date:"M d, Y H:i" }}</dd>
+            {% endif %}
+
+            {% if gpa_record.last_edit_by %}
+            <dt class="col-sm-5">Updated By:</dt>
+            <dd class="col-sm-7">{{ gpa_record.last_edit_by }}</dd>
+            {% endif %}
+          </dl>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="card">
+        <div class="card-body">
+          <a href="{% url 'gpa-edit' gpa_record.id %}" class="btn btn-warning btn-block">
+            <i class="fas fa-edit"></i> Edit Record
+          </a>
+          <a href="{% url 'gpa-delete-start' gpa_record.id %}" class="btn btn-danger btn-block">
+            <i class="fas fa-trash"></i> Delete Record
+          </a>
+          <a href="{% url 'gpa-manager-patient' patient.id %}" class="btn btn-secondary btn-block">
+            <i class="fas fa-arrow-left"></i> Back to List
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- GPA Record Details -->
+    <div class="col-md-8">
+      <!-- Assessment Details Card -->
+      <div class="card card-primary">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-stethoscope"></i> Assessment Details</h3>
+        </div>
+        <div class="card-body">
+          <dl class="row">
+            <dt class="col-sm-4">Assessment Date:</dt>
+            <dd class="col-sm-8">{{ gpa_record.assessment_date|date:"l, F d, Y - H:i" }}</dd>
+
+            <dt class="col-sm-4">Healthcare Provider:</dt>
+            <dd class="col-sm-8">{{ gpa_record.healthcare_provider }}</dd>
+
+            <dt class="col-sm-4">Next Assessment:</dt>
+            <dd class="col-sm-8">
+              {% if gpa_record.next_assessment_date %}
+                {{ gpa_record.next_assessment_date|date:"F d, Y" }}
+              {% else %}
+                <span class="text-muted">Not scheduled</span>
+              {% endif %}
+            </dd>
+          </dl>
+        </div>
+      </div>
+
+      <!-- Clinical Findings Card -->
+      <div class="card card-info">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-notes-medical"></i> Clinical Findings</h3>
+        </div>
+        <div class="card-body">
+          <div class="mb-4">
+            <h5 class="text-primary"><i class="fas fa-exclamation-circle mr-2"></i>Current Problems</h5>
+            <div class="bg-light p-3 rounded">
+              {{ gpa_record.current_problems|linebreaks }}
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <h5 class="text-primary"><i class="fas fa-heartbeat mr-2"></i>Physical Examination</h5>
+            <div class="bg-light p-3 rounded">
+              {{ gpa_record.physical_examination|linebreaks }}
+            </div>
+          </div>
+
+          <div class="mb-0">
+            <h5 class="text-primary"><i class="fas fa-microscope mr-2"></i>Investigation Summary</h5>
+            <div class="bg-light p-3 rounded">
+              {{ gpa_record.investigation_summary|linebreaks }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Treatment & Plan Card -->
+      <div class="card card-success">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-pills"></i> Treatment & Plan</h3>
+        </div>
+        <div class="card-body">
+          <div class="mb-4">
+            <h5 class="text-success"><i class="fas fa-prescription-bottle mr-2"></i>Prescribed Medications</h5>
+            <div class="bg-light p-3 rounded">
+              {{ gpa_record.prescribed_medications|linebreaks }}
+            </div>
+          </div>
+
+          <div class="mb-0">
+            <h5 class="text-success"><i class="fas fa-tasks mr-2"></i>Next Plan/Goals</h5>
+            <div class="bg-light p-3 rounded">
+              {{ gpa_record.next_plan|linebreaks }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Discharge Information Card (if discharged) -->
+      {% if gpa_record.is_discharged %}
+      <div class="card card-warning">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-user-check"></i> Discharge Information</h3>
+        </div>
+        <div class="card-body">
+          <dl class="row mb-3">
+            <dt class="col-sm-4">Discharge Status:</dt>
+            <dd class="col-sm-8">
+              <span class="badge badge-info badge-lg">
+                <i class="fas fa-user-check mr-1"></i>Patient Discharged
+              </span>
+            </dd>
+
+            {% if gpa_record.discharged_authorized_by %}
+            <dt class="col-sm-4">Authorized By:</dt>
+            <dd class="col-sm-8">{{ gpa_record.discharged_authorized_by.get_full_name|default:gpa_record.discharged_authorized_by.username }}</dd>
+            {% endif %}
+          </dl>
+
+          {% if gpa_record.discharge_plan %}
+          <div>
+            <h5 class="text-warning"><i class="fas fa-clipboard-list mr-2"></i>Discharge Plan</h5>
+            <div class="bg-light p-3 rounded">
+              {{ gpa_record.discharge_plan|linebreaks }}
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock main_content %}
+
+{% block extra_js %}
+<script>
+  $(document).ready(function() {
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+  });
+</script>
+{% endblock extra_js %}

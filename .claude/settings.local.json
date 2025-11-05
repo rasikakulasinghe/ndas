@@ -12,7 +12,9 @@
       "Bash(test:*)",
       "Bash(findstr:*)",
       "Bash(openspec validate:*)",
-      "Bash(openspec show:*)"
+      "Bash(openspec show:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []

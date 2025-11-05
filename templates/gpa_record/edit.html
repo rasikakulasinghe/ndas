@@ -1,0 +1,250 @@
+{% extends 'src/base.html' %}
+{% load static %}
+{% block title %}Edit GPA Record{% endblock %}
+
+{% block content_header %}
+<div class="row mb-2">
+  <div class="col-sm-6">
+    <h1 class="m-0">Edit General Paediatric Assessment Record</h1>
+  </div>
+  <div class="col-sm-6">
+    <ol class="breadcrumb float-sm-right">
+      <li class="breadcrumb-item"><a href="{% url 'home' %}">Dashboard</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'view-patient' patient.id %}">Patient</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'gpa-manager-patient' patient.id %}">GPA Records</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'gpa-view' gpa_record.id %}">View</a></li>
+      <li class="breadcrumb-item active">Edit</li>
+    </ol>
+  </div>
+</div>
+{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid">
+  {% csrf_token %}
+
+  <div class="row">
+    <!-- Patient Information Sidebar -->
+    <div class="col-md-4">
+      <!-- Patient Information Card -->
+      <div class="card card-info">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-user"></i> Patient Information</h3>
+        </div>
+        <div class="card-body">
+          <dl class="row">
+            <dt class="col-sm-4">Name:</dt>
+            <dd class="col-sm-8">{{ patient.baby_name }}</dd>
+            <dt class="col-sm-4">BHT:</dt>
+            <dd class="col-sm-8">{{ patient.bht|default:"Not assigned" }}</dd>
+            <dt class="col-sm-4">PIN:</dt>
+            <dd class="col-sm-8">{{ patient.pin|default:"Not assigned" }}</dd>
+          </dl>
+          <a href="{% url 'view-patient' patient.id %}" class="btn btn-sm btn-outline-info">
+            <i class="fas fa-eye"></i> View Patient Details
+          </a>
+        </div>
+      </div>
+
+      <!-- Record Information Card -->
+      <div class="card card-secondary">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-info-circle"></i> Record Information</h3>
+        </div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-sm-5">Record ID:</dt>
+            <dd class="col-sm-7">#{{ gpa_record.id }}</dd>
+
+            <dt class="col-sm-5">Created:</dt>
+            <dd class="col-sm-7">{{ gpa_record.created_at|date:"M d, Y H:i" }}</dd>
+
+            <dt class="col-sm-5">Created By:</dt>
+            <dd class="col-sm-7">{{ gpa_record.added_by|default:"System" }}</dd>
+
+            {% if gpa_record.updated_at %}
+            <dt class="col-sm-5">Last Updated:</dt>
+            <dd class="col-sm-7">{{ gpa_record.updated_at|date:"M d, Y H:i" }}</dd>
+            {% endif %}
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <!-- GPA Form -->
+    <div class="col-md-8">
+      <form method="post">
+        {% csrf_token %}
+
+        <div class="card card-primary">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-stethoscope"></i> Assessment Details</h3>
+          </div>
+          <div class="card-body">
+            <!-- Assessment Date -->
+            <div class="form-group">
+              <label for="{{ form.assessment_date.id_for_label }}">Assessment Date <span class="text-danger">*</span></label>
+              {{ form.assessment_date }}
+              {% if form.assessment_date.errors %}
+                <div class="invalid-feedback d-block">{{ form.assessment_date.errors.0 }}</div>
+              {% endif %}
+              <small class="form-text text-muted">{{ form.assessment_date.help_text }}</small>
+            </div>
+
+            <!-- Healthcare Provider -->
+            <div class="form-group">
+              <label for="{{ form.healthcare_provider.id_for_label }}">Healthcare Provider <span class="text-danger">*</span></label>
+              {{ form.healthcare_provider }}
+              {% if form.healthcare_provider.errors %}
+                <div class="invalid-feedback d-block">{{ form.healthcare_provider.errors.0 }}</div>
+              {% endif %}
+              <small class="form-text text-muted">{{ form.healthcare_provider.help_text }}</small>
+            </div>
+
+            <!-- Current Problems -->
+            <div class="form-group">
+              <label for="{{ form.current_problems.id_for_label }}">Current Problems <span class="text-danger">*</span></label>
+              {{ form.current_problems }}
+              {% if form.current_problems.errors %}
+                <div class="invalid-feedback d-block">{{ form.current_problems.errors.0 }}</div>
+              {% endif %}
+              <small class="form-text text-muted">{{ form.current_problems.help_text }}</small>
+            </div>
+
+            <!-- Physical Examination -->
+            <div class="form-group">
+              <label for="{{ form.physical_examination.id_for_label }}">Physical Examination <span class="text-danger">*</span></label>
+              {{ form.physical_examination }}
+              {% if form.physical_examination.errors %}
+                <div class="invalid-feedback d-block">{{ form.physical_examination.errors.0 }}</div>
+              {% endif %}
+              <small class="form-text text-muted">{{ form.physical_examination.help_text }}</small>
+            </div>
+
+            <!-- Investigation Summary -->
+            <div class="form-group">
+              <label for="{{ form.investigation_summary.id_for_label }}">Investigation Summary <span class="text-danger">*</span></label>
+              {{ form.investigation_summary }}
+              {% if form.investigation_summary.errors %}
+                <div class="invalid-feedback d-block">{{ form.investigation_summary.errors.0 }}</div>
+              {% endif %}
+              <small class="form-text text-muted">{{ form.investigation_summary.help_text }}</small>
+            </div>
+
+            <!-- Prescribed Medications -->
+            <div class="form-group">
+              <label for="{{ form.prescribed_medications.id_for_label }}">Prescribed Medications <span class="text-danger">*</span></label>
+              {{ form.prescribed_medications }}
+              {% if form.prescribed_medications.errors %}
+                <div class="invalid-feedback d-block">{{ form.prescribed_medications.errors.0 }}</div>
+              {% endif %}
+              <small class="form-text text-muted">{{ form.prescribed_medications.help_text }}</small>
+            </div>
+
+            <!-- Next Plan/Goals -->
+            <div class="form-group">
+              <label for="{{ form.next_plan.id_for_label }}">Next Plan/Goals <span class="text-danger">*</span></label>
+              {{ form.next_plan }}
+              {% if form.next_plan.errors %}
+                <div class="invalid-feedback d-block">{{ form.next_plan.errors.0 }}</div>
+              {% endif %}
+              <small class="form-text text-muted">{{ form.next_plan.help_text }}</small>
+            </div>
+
+            <!-- Next Assessment Date -->
+            <div class="form-group">
+              <label for="{{ form.next_assessment_date.id_for_label }}">Next Assessment Date</label>
+              {{ form.next_assessment_date }}
+              {% if form.next_assessment_date.errors %}
+                <div class="invalid-feedback d-block">{{ form.next_assessment_date.errors.0 }}</div>
+              {% endif %}
+              <small class="form-text text-muted">{{ form.next_assessment_date.help_text }}</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Discharge Information Card -->
+        <div class="card card-warning">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-user-check"></i> Discharge Information (Optional)</h3>
+          </div>
+          <div class="card-body">
+            <!-- Is Discharged -->
+            <div class="form-group">
+              <div class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" id="{{ form.is_discharged.id_for_label }}" name="{{ form.is_discharged.name }}" {% if form.is_discharged.value %}checked{% endif %}>
+                <label class="custom-control-label" for="{{ form.is_discharged.id_for_label }}">
+                  Mark patient as discharged from paediatric care
+                </label>
+              </div>
+              {% if form.is_discharged.errors %}
+                <div class="invalid-feedback d-block">{{ form.is_discharged.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Discharge Authorizer -->
+            <div class="form-group" id="discharge_fields" style="display: none;">
+              <label for="{{ form.discharged_authorized_by.id_for_label }}">Discharge Authorized By</label>
+              {{ form.discharged_authorized_by }}
+              {% if form.discharged_authorized_by.errors %}
+                <div class="invalid-feedback d-block">{{ form.discharged_authorized_by.errors.0 }}</div>
+              {% endif %}
+              <small class="form-text text-muted">{{ form.discharged_authorized_by.help_text }}</small>
+            </div>
+
+            <!-- Discharge Plan -->
+            <div class="form-group" id="discharge_plan_field" style="display: none;">
+              <label for="{{ form.discharge_plan.id_for_label }}">Discharge Plan</label>
+              {{ form.discharge_plan }}
+              {% if form.discharge_plan.errors %}
+                <div class="invalid-feedback d-block">{{ form.discharge_plan.errors.0 }}</div>
+              {% endif %}
+              <small class="form-text text-muted">{{ form.discharge_plan.help_text }}</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="card-footer">
+          <div class="row">
+            <div class="col-sm-6">
+              <a href="{% url 'gpa-view' gpa_record.id %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Cancel
+              </a>
+            </div>
+            <div class="col-sm-6 text-right">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Update GPA Record
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock main_content %}
+
+{% block extra_js %}
+<script>
+  $(document).ready(function() {
+    // Show/hide discharge fields based on checkbox
+    $('#{{ form.is_discharged.id_for_label }}').on('change', function() {
+      if ($(this).is(':checked')) {
+        $('#discharge_fields').slideDown();
+        $('#discharge_plan_field').slideDown();
+      } else {
+        $('#discharge_fields').slideUp();
+        $('#discharge_plan_field').slideUp();
+      }
+    });
+
+    // Initialize on page load
+    if ($('#{{ form.is_discharged.id_for_label }}').is(':checked')) {
+      $('#discharge_fields').show();
+      $('#discharge_plan_field').show();
+    }
+  });
+</script>
+{% endblock extra_js %}

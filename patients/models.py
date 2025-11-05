@@ -720,6 +720,7 @@ class GMAssessment(TimeStampedModel, UserTrackingMixin):
     patient = models.ForeignKey(
         Patient,
         on_delete=models.CASCADE,
+        related_name="gm_assessments",
         db_index=True,
         verbose_name=_("Patient"),
         help_text=_("Patient this assessment belongs to"),
@@ -957,6 +958,7 @@ class CDICRecord(TimeStampedModel, UserTrackingMixin):
     patient = models.ForeignKey(
         Patient,
         on_delete=models.CASCADE,
+        related_name="cdic_records",
         db_index=True,
         verbose_name=_("Patient"),
         help_text=_("Patient this CDIC record belongs to"),

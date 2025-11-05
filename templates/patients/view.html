@@ -2,9 +2,17 @@
 {% load static %}
 {% block title %}Patient - View | {{patient.baby_name}}{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/patient-timeline.css' %}">
+{% endblock %}
+
 {% block main_content %}
 <div class="container-fluid">
   {% csrf_token %}
   {% include './partials/patient_view.html' %}
 </div>
 {% endblock main_content %}
+
+{% block extra_js %}
+<script src="{% static 'js/patient-timeline.js' %}" defer></script>
+{% endblock %}

@@ -54,6 +54,8 @@ from ndas.custom_codes.custom_methods import (
     getPatientList,
     getCountZeroIfNone,
 )
+from patients.timeline_utils import get_patient_timeline_events
+from patients.timeline_utils import get_patient_timeline_events
 from datetime import datetime
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -594,6 +596,9 @@ def patient_view(request, pk):
     gpa_assessments_count = var_gpa.count()
     gpa_assessments = var_gpa[:5]
 
+    # Get timeline events
+    timeline_events = get_patient_timeline_events(selected_patient)
+
     # check bookmark
     bm = (
         Bookmark.objects.filter(bookmark_type="Patient")
@@ -622,6 +627,7 @@ def patient_view(request, pk):
         "cdic_record": cdic_record,
         "gpa_assessments_count": gpa_assessments_count,
         "gpa_assessments": gpa_assessments,
+        "timeline_events": timeline_events,
     }
 
     return render(request, "patients/view.html", context)

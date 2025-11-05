@@ -15,3 +15,4 @@ node_modules/
 logs/security.log
 logs/django.log
 logs/django.log
+nul

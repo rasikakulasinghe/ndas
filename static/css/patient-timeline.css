@@ -1,0 +1,438 @@
+/**
+ * Patient Timeline Component Styles
+ *
+ * Description: Professional timeline visualization for patient medical history
+ * Designed for NDAS (Neurodevelopmental Assessment System)
+ * Compatible with: AdminLTE 3.2 + Bootstrap 4.6
+ *
+ * Author: NDAS Development Team
+ * Usage: Include in patient detail view for timeline card styling
+ */
+
+/* ============================================
+   Timeline Container
+   ============================================ */
+
+.timeline {
+    position: relative;
+    padding: 20px 0;
+    margin: 0;
+}
+
+/* Vertical timeline line */
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 30px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom,
+        #28a745 0%,
+        #17a2b8 33%,
+        #ffc107 66%,
+        #dc3545 100%);
+    opacity: 0.3;
+}
+
+/* ============================================
+   Timeline Items
+   ============================================ */
+
+.timeline-item {
+    position: relative;
+    padding-left: 70px;
+    padding-bottom: 30px;
+    min-height: 100px;
+    opacity: 1;
+    transform: translateY(0);
+    transition: all 0.3s ease;
+}
+
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+
+/* Hidden state for filtering */
+.timeline-item.hidden {
+    opacity: 0;
+    transform: translateY(-10px);
+    height: 0;
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+}
+
+/* ============================================
+   Timeline Marker (Icon Circle)
+   ============================================ */
+
+.timeline-marker {
+    position: absolute;
+    left: 0;
+    top: 5px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border: 4px solid #fff;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    z-index: 2;
+}
+
+.timeline-marker:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* Marker color variants (AdminLTE colors) */
+.timeline-marker.bg-primary {
+    background-color: #007bff;
+}
+
+.timeline-marker.bg-success {
+    background-color: #28a745;
+}
+
+.timeline-marker.bg-info {
+    background-color: #17a2b8;
+}
+
+.timeline-marker.bg-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.timeline-marker.bg-danger {
+    background-color: #dc3545;
+}
+
+.timeline-marker.bg-secondary {
+    background-color: #6c757d;
+}
+
+/* ============================================
+   Timeline Content Card
+   ============================================ */
+
+.timeline-content {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.timeline-content:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateX(5px);
+}
+
+/* ============================================
+   Timeline Header
+   ============================================ */
+
+.timeline-header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.timeline-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #343a40;
+    margin: 0;
+}
+
+.timeline-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.timeline-date,
+.timeline-age {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.timeline-date i,
+.timeline-age i {
+    color: #007bff;
+}
+
+.timeline-time {
+    margin-left: 4px;
+    padding-left: 8px;
+    border-left: 1px solid #dee2e6;
+}
+
+/* ============================================
+   Timeline Description
+   ============================================ */
+
+.timeline-description {
+    margin: 0 0 12px 0;
+    line-height: 1.6;
+    color: #495057;
+}
+
+/* ============================================
+   Timeline Actions
+   ============================================ */
+
+.timeline-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.timeline-actions .btn {
+    font-size: 0.875rem;
+    padding: 6px 12px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.timeline-actions .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ============================================
+   Filter Buttons
+   ============================================ */
+
+.card-tools .btn-group button {
+    transition: all 0.2s ease;
+}
+
+.card-tools .btn-group button.active {
+    font-weight: 600;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================
+   Empty State
+   ============================================ */
+
+.text-center.text-muted {
+    padding: 40px 20px;
+}
+
+.text-center.text-muted i {
+    display: block;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+/* ============================================
+   Preview Modal Styling
+   ============================================ */
+
+#timelinePreviewModal .modal-body {
+    padding: 24px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+#timelinePreviewContent {
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* ============================================
+   Accessibility & Focus States
+   ============================================ */
+
+.timeline-content:focus-within {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+.timeline-actions .btn:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+.card-tools .btn-group button:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* Ensure minimum color contrast for WCAG AA */
+.timeline-description {
+    color: #212529;
+}
+
+/* ============================================
+   Responsive Design - Tablet
+   ============================================ */
+
+@media (max-width: 991px) {
+    .timeline-item {
+        padding-left: 60px;
+    }
+
+    .timeline-marker {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+
+    .timeline::before {
+        left: 25px;
+    }
+
+    .timeline-header {
+        flex-direction: column;
+    }
+
+    .timeline-meta {
+        gap: 12px;
+    }
+}
+
+/* ============================================
+   Responsive Design - Mobile
+   ============================================ */
+
+@media (max-width: 767px) {
+    .timeline {
+        padding: 10px 0;
+    }
+
+    .timeline-item {
+        padding-left: 50px;
+        padding-bottom: 20px;
+    }
+
+    .timeline-marker {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+        border-width: 3px;
+    }
+
+    .timeline::before {
+        left: 20px;
+    }
+
+    .timeline-content {
+        padding: 15px;
+    }
+
+    .timeline-header {
+        gap: 6px;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+    }
+
+    .timeline-title {
+        font-size: 1rem;
+    }
+
+    .timeline-meta {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .timeline-time {
+        margin-left: 0;
+        padding-left: 0;
+        border-left: none;
+        display: block;
+    }
+
+    .timeline-actions {
+        flex-direction: column;
+    }
+
+    .timeline-actions .btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    /* Make filter buttons stack on very small screens */
+    .card-tools .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .card-tools .btn-group button {
+        border-radius: 4px !important;
+        margin-bottom: 4px;
+    }
+}
+
+/* ============================================
+   Print Styles
+   ============================================ */
+
+@media print {
+    .timeline::before {
+        background: #000 !important;
+        opacity: 0.2;
+    }
+
+    .timeline-marker {
+        box-shadow: none;
+        border-color: #000;
+    }
+
+    .timeline-content {
+        box-shadow: none;
+        border: 1px solid #000;
+        page-break-inside: avoid;
+    }
+
+    .timeline-actions {
+        display: none;
+    }
+
+    .card-tools {
+        display: none;
+    }
+}
+
+/* ============================================
+   Animation for timeline items appearing
+   ============================================ */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.timeline-item {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* Stagger animation for multiple items */
+.timeline-item:nth-child(1) { animation-delay: 0.05s; }
+.timeline-item:nth-child(2) { animation-delay: 0.1s; }
+.timeline-item:nth-child(3) { animation-delay: 0.15s; }
+.timeline-item:nth-child(4) { animation-delay: 0.2s; }
+.timeline-item:nth-child(5) { animation-delay: 0.25s; }
+/* Items after 5 appear together */
+.timeline-item:nth-child(n+6) { animation-delay: 0.3s; }

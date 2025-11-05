@@ -1,0 +1,109 @@
+{% load static %}
+
+<!-- Patient Timeline Card -->
+<div class="card card-success card-outline">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-history"></i>
+            Patient Timeline
+        </h3>
+
+        <div class="card-tools">
+            <div class="btn-group btn-group-sm" role="group" aria-label="Timeline filters">
+                <button type="button" class="btn btn-outline-primary active" data-filter="all" aria-pressed="true">
+                    <i class="fas fa-th"></i> All
+                </button>
+                <button type="button" class="btn btn-outline-info" data-filter="assessment" aria-pressed="false">
+                    <i class="fas fa-clipboard-check"></i> Assessments
+                </button>
+                <button type="button" class="btn btn-outline-danger" data-filter="media" aria-pressed="false">
+                    <i class="fas fa-photo-video"></i> Media
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body">
+        {% if timeline_events %}
+        <div class="timeline">
+            {% for event in timeline_events %}
+            <div class="timeline-item" data-event-type="{% if event.type == 'gma' or event.type == 'hine' or event.type == 'developmental' or event.type == 'cdic' or event.type == 'gpa' %}assessment{% elif event.type == 'video' or event.type == 'attachment' %}media{% else %}other{% endif %}">
+                <!-- Timeline marker (icon circle) -->
+                <div class="timeline-marker bg-{{ event.color }}">
+                    <i class="fas {{ event.icon }}"></i>
+                </div>
+
+                <!-- Timeline content -->
+                <div class="timeline-content">
+                    <div class="timeline-header">
+                        <h5 class="timeline-title">{{ event.title }}</h5>
+                        <div class="timeline-meta">
+                            <span class="timeline-date">
+                                <i class="far fa-calendar-alt"></i>
+                                {{ event.formatted_datetime.date }}
+                                {% if event.formatted_datetime.time %}
+                                    <span class="timeline-time">{{ event.formatted_datetime.time }}</span>
+                                {% endif %}
+                            </span>
+                            <span class="timeline-age">
+                                <i class="fas fa-baby"></i>
+                                {{ event.age_at_event }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <p class="timeline-description">{{ event.description }}</p>
+
+                    <!-- Action buttons -->
+                    <div class="timeline-actions">
+                        {% if event.detail_url %}
+                        <a href="{{ event.detail_url }}"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-external-link-alt"></i> View Details
+                        </a>
+                        {% endif %}
+
+                        {% if event.can_preview %}
+                        <button type="button"
+                                class="btn btn-sm btn-outline-info timeline-preview-btn"
+                                data-event-type="{{ event.type }}"
+                                data-event-id="{{ event.detail_url|cut:'/'|last }}"
+                                data-preview='{{ event.preview_data|safe }}'>
+                            <i class="fas fa-eye"></i> Quick Preview
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-4">
+            <i class="fas fa-info-circle fa-2x mb-2"></i>
+            <p>No timeline events available for this patient.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Preview Modal (shared for all events) -->
+<div class="modal fade" id="timelinePreviewModal" tabindex="-1" role="dialog" aria-labelledby="timelinePreviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="timelinePreviewModalLabel">Event Preview</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="timelinePreviewContent">
+                <!-- Preview content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

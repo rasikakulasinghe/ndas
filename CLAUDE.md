@@ -123,6 +123,28 @@ This is a Django-based **Neurodevelopmental Assessment System (NDAS)** that mana
 - Uses WhiteNoise for static file serving in production
 - CKEditor integration for rich text editing
 
+### Patient Timeline Feature
+- **Unified Timeline View**: Chronological visualization of all patient events in a single card
+- **Event Sources**: Aggregates birth event, assessments (GMA, HINE, Developmental, CDIC, GPA), videos, and attachments
+- **Implementation Components**:
+  - `patients/timeline_utils.py` - Backend event aggregation and formatting utilities
+    - `get_patient_timeline_events(patient)` - Main function to aggregate all patient events
+    - `format_event_datetime(dt)` - Format datetimes for display
+    - `get_event_age_at_time(birth_date, event_date)` - Calculate patient age at event
+  - `templates/patients/partials/patient_timeline.html` - Timeline card template
+  - `static/css/patient-timeline.css` - Responsive timeline styles
+  - `static/js/patient-timeline.js` - Interactive filtering and preview functionality
+- **Features**:
+  - Event type filtering (All, Assessments, Media)
+  - Inline preview modals for quick event details
+  - Links to detailed views (open in new window)
+  - Responsive design (desktop, tablet, mobile)
+  - Keyboard navigation and accessibility support
+  - Age-at-event calculation for developmental context
+- **Usage**: Automatically displayed on patient detail view after Media Card
+- **Performance**: Uses select_related/prefetch_related for optimized queries
+
+
 ### Security Architecture
 - **Comprehensive security middleware stack**:
   - Content Security Policy (CSP) and Permissions Policy

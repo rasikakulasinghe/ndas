@@ -1,0 +1,348 @@
+{% extends 'src/base.html' %} {% load static %} {% block title %}General Paediatric Assessment Records Manager{% endblock title%}
+{% block main_content %}
+
+<!-- Main content -->
+<div class="content">
+  <div>
+    <!-- Clean Table Card -->
+    <div class="card">
+      <div class="card-header bg-info">
+        <h3 class="card-title text-white">
+          <i class="fas fa-stethoscope mr-2"></i>General Paediatric Assessment Records{% if patient %} :: Patient > {{patient.baby_name}}{% endif %}
+        </h3>
+
+        {% if gpa_page_obj %} <a> &nbsp;:&nbsp;
+           ({{ gpa_page_obj.paginator.count }})
+        </a>
+        {% endif %}
+
+        <div class="card-tools d-flex align-items-center">
+          <!-- Search Bar -->
+          <div class="input-group input-group-sm mr-3" style="width: 200px">
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              placeholder="Search GPA records..."
+              id="cardSearchInput"
+            />
+            <div class="input-group-append">
+              <button class="btn btn-outline-light btn-sm" type="button">
+                <i class="fas fa-search"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Filter Dropdown -->
+          <div class="dropdown mr-2">
+            <button
+              class="btn btn-tool text-white"
+              type="button"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
+              data-toggle="tooltip"
+              title="Filter Records"
+            >
+              <i class="fas fa-filter"></i>
+            </button>
+            <div
+              class="dropdown-menu dropdown-menu-right"
+              style="min-width: 220px"
+            >
+              <h6 class="dropdown-header">Filter Options</h6>
+              <a class="dropdown-item" href="?filter=all">
+                <i class="fas fa-stethoscope mr-2"></i>All GPA Records
+              </a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="?filter=active">
+                <i class="fas fa-check-circle mr-2 text-success"></i>Active Patients
+              </a>
+              <a class="dropdown-item" href="?filter=discharged">
+                <i class="fas fa-user-check mr-2 text-info"></i>Discharged Patients
+              </a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="?filter=recent">
+                <i class="fas fa-clock mr-2"></i>Recent Assessments
+              </a>
+            </div>
+          </div>
+
+          <!-- Export Button -->
+          <button
+            type="button"
+            class="btn btn-tool text-white"
+            data-toggle="tooltip"
+            title="Export Records"
+          >
+            <i class="fas fa-download"></i>
+          </button>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        {% if gpa_page_obj %}
+        <div class="table-responsive">
+          <table class="table table-hover text-nowrap">
+            <thead class="bg-light">
+              <tr>
+                <th
+                  scope="col"
+                  class="border-0 text-uppercase text-secondary font-weight-bold"
+                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
+                >
+                  INDEX
+                </th>
+                <th
+                  scope="col"
+                  class="border-0 text-uppercase text-secondary font-weight-bold"
+                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
+                >
+                  STATUS
+                </th>
+                <th
+                  scope="col"
+                  class="border-0 text-uppercase text-secondary font-weight-bold"
+                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
+                >
+                  PATIENT NAME
+                </th>
+                <th
+                  scope="col"
+                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-md-table-cell"
+                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
+                >
+                  ASSESSMENT DATE
+                </th>
+                <th
+                  scope="col"
+                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-lg-table-cell"
+                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
+                >
+                  PROVIDER
+                </th>
+                <th
+                  scope="col"
+                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-lg-table-cell"
+                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
+                >
+                  NEXT ASSESSMENT
+                </th>
+                <th
+                  scope="col"
+                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-sm-table-cell"
+                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
+                >
+                  INFO
+                </th>
+                <th
+                  scope="col"
+                  class="border-0 text-uppercase text-secondary font-weight-bold"
+                  style="font-size: 0.75rem; padding: 1rem 0.75rem"
+                >
+                  ACTIONS
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for gpa_record in gpa_page_obj %}
+              <tr class="border-bottom">
+                <td
+                  class="align-middle py-3 px-3 text-muted font-weight-medium"
+                >
+                  {{ gpa_record.id }}
+                </td>
+
+                <td class="align-middle py-3 px-3">
+                  {% if gpa_record.is_discharged %}
+                  <span class="badge badge-info px-2 py-1">
+                    <i class="fas fa-user-check mr-1"></i>DISCHARGED
+                  </span>
+                  {% else %}
+                  <span class="badge badge-success px-2 py-1">
+                    <i class="fas fa-check-circle mr-1"></i>ACTIVE
+                  </span>
+                  {% endif %}
+                </td>
+
+                <td class="align-middle py-3 px-3">
+                  <div class="font-weight-medium text-dark">
+                    {{ gpa_record.patient.baby_name|default:"Unnamed" }}
+                  </div>
+                  <small class="d-block d-lg-none text-muted mt-1">
+                    {{ gpa_record.assessment_date|date:"M d, Y"|default:"-" }}
+                  </small>
+                </td>
+
+                <td class="align-middle py-3 px-3 text-muted d-none d-md-table-cell">
+                  {{ gpa_record.assessment_date|date:"M d, Y H:i"|default:"-" }}
+                </td>
+
+                <td class="align-middle py-3 px-3 d-none d-lg-table-cell">
+                  <span class="text-truncate d-inline-block" style="max-width: 150px;" data-toggle="tooltip" title="{{ gpa_record.healthcare_provider }}">
+                    {{ gpa_record.healthcare_provider }}
+                  </span>
+                </td>
+
+                <td class="align-middle py-3 px-3 text-muted d-none d-lg-table-cell">
+                  {% if gpa_record.next_assessment_date %}
+                    {{ gpa_record.next_assessment_date|date:"M d, Y"|default:"-" }}
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+
+                <td class="text-center align-middle py-3 px-3 d-none d-sm-table-cell">
+                  <button
+                    type="button"
+                    class="btn btn-link p-0 text-primary"
+                    data-toggle="tooltip"
+                    title="Added by: {{ gpa_record.added_by|default:'Unknown' }} on {{ gpa_record.created_at|date:'M d, Y'|default:'-' }}"
+                  >
+                    <i class="fas fa-info-circle" style="font-size: 1.1rem"></i>
+                  </button>
+                </td>
+
+                <td class="align-middle py-3 px-3 text-center">
+                  <button
+                    type="button"
+                    class="btn btn-link p-0 text-primary mr-1"
+                    data-toggle="tooltip"
+                    title="View GPA Record"
+                    onclick="window.location.href='{% url 'gpa-view' gpa_record.id %}'"
+                  >
+                    <i class="fas fa-eye" style="font-size: 1.1rem"></i>
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <!-- Integrated Table Footer with Pagination -->
+            <tfoot class="bg-light">
+              <tr>
+                <td colspan="8" class="border-0 py-2">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <!-- Results Info -->
+                    <small class="text-muted">
+                      Showing <strong>{{ gpa_page_obj.start_index }}-{{ gpa_page_obj.end_index }}</strong>
+                      of <strong>{{ gpa_page_obj.paginator.count }}</strong> GPA records
+                    </small>
+
+                    <!-- Compact Pagination -->
+                    <nav aria-label="GPA records pagination">
+                      <ul class="pagination pagination-sm mb-0">
+                        <!-- Previous -->
+                        <li class="page-item {% if not gpa_page_obj.has_previous %}disabled{% endif %}">
+                          {% if gpa_page_obj.has_previous %}
+                            <a class="page-link px-2" href="?page={{ gpa_page_obj.previous_page_number }}{% if filter_type %}&filter={{ filter_type }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" title="Previous">
+                              <i class="fas fa-chevron-left"></i>
+                            </a>
+                          {% else %}
+                            <span class="page-link px-2 text-muted">
+                              <i class="fas fa-chevron-left"></i>
+                            </span>
+                          {% endif %}
+                        </li>
+
+                        <!-- Page Numbers -->
+                        {% for page_num in gpa_page_obj.paginator.page_range %}
+                          {% if page_num == gpa_page_obj.number %}
+                            <li class="page-item active">
+                              <span class="page-link bg-info border-info px-2">{{ page_num }}</span>
+                            </li>
+                          {% elif page_num > gpa_page_obj.number|add:'-3' and page_num < gpa_page_obj.number|add:'3' %}
+                            <li class="page-item">
+                              <a class="page-link px-2" href="?page={{ page_num }}{% if filter_type %}&filter={{ filter_type }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">{{ page_num }}</a>
+                            </li>
+                          {% elif page_num == 1 or page_num == gpa_page_obj.paginator.num_pages %}
+                            <li class="page-item">
+                              <a class="page-link px-2" href="?page={{ page_num }}{% if filter_type %}&filter={{ filter_type }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">{{ page_num }}</a>
+                            </li>
+                          {% elif page_num == gpa_page_obj.number|add:'-4' or page_num == gpa_page_obj.number|add:'3' %}
+                            <li class="page-item disabled">
+                              <span class="page-link px-2">...</span>
+                            </li>
+                          {% endif %}
+                        {% endfor %}
+
+                        <!-- Next -->
+                        <li class="page-item {% if not gpa_page_obj.has_next %}disabled{% endif %}">
+                          {% if gpa_page_obj.has_next %}
+                            <a class="page-link px-2" href="?page={{ gpa_page_obj.next_page_number }}{% if filter_type %}&filter={{ filter_type }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" title="Next">
+                              <i class="fas fa-chevron-right"></i>
+                            </a>
+                          {% else %}
+                            <span class="page-link px-2 text-muted">
+                              <i class="fas fa-chevron-right"></i>
+                            </span>
+                          {% endif %}
+                        </li>
+                      </ul>
+                    </nav>
+
+                    <!-- Quick Page Jump (for large datasets) -->
+                    {% if gpa_page_obj.paginator.num_pages > 10 %}
+                    <div class="d-flex align-items-center">
+                      <small class="text-muted mr-1">Page:</small>
+                      <input type="number" class="form-control form-control-sm" style="width: 50px;"
+                             min="1" max="{{ gpa_page_obj.paginator.num_pages }}"
+                             value="{{ gpa_page_obj.number }}" id="pageJump">
+                      <button class="btn btn-sm btn-outline-info ml-1 px-2" onclick="jumpToPage()" title="Go to page">
+                        <i class="fas fa-arrow-right fa-xs"></i>
+                      </button>
+                    </div>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        {% else %}
+        <div class="text-center py-5">
+          <div class="empty-state">
+            <i class="fas fa-stethoscope fa-3x text-muted mb-4"></i>
+            <h4 class="text-muted mb-3">No GPA Records Found</h4>
+            <p class="text-muted mb-4">
+              {% if patient %}
+                No general paediatric assessment records found for <strong>{{ patient.baby_name }}</strong>.
+              {% else %}
+                No general paediatric assessment records found in the system.
+              {% endif %}
+            </p>
+            {% if patient %}
+              <a href="{% url 'gpa-add' patient.id %}" class="btn btn-primary">
+                <i class="fas fa-plus mr-2"></i>Create First GPA Record
+              </a>
+            {% else %}
+              <a href="{% url 'patient-manager' %}" class="btn btn-primary">
+                <i class="fas fa-users mr-2"></i>View Patients
+              </a>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock main_content %}
+
+{% block extra_js %}
+<script src="{% static 'js/manager.js' %}"></script>
+<script>
+  // Initialize tooltips
+  $(function () {
+    $('[data-toggle="tooltip"]').tooltip();
+  });
+
+  // Page jump functionality
+  function jumpToPage() {
+    const pageNum = document.getElementById('pageJump').value;
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('page', pageNum);
+    window.location.href = currentUrl.toString();
+  }
+</script>
+{% endblock extra_js %}
