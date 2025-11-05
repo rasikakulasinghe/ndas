@@ -340,9 +340,9 @@
                   <tr>
                     <td>{{Assessment.id}}</td>
                     <td>{{Assessment.date_of_assessment|date}}</td>
-                    <td>{{Assessment.getAgeOnAssessment}}</td>
-                    <td><span class="badge badge-info">{{Assessment.getDiagnosis}}</span></td>
-                    <td>{{Assessment.assessment_done_by}}</td>
+                    <td>{{Assessment.assessment_age}}</td>
+                    <td><span class="badge badge-info">{{Assessment.diagnosis_display}}</span></td>
+                    <td>{{Assessment.added_by.get_full_name|default:Assessment.added_by.username}}</td>
                     <td>
                       <div class="btn-group btn-group-sm">
                         <a href="{% url 'assessment-view' Assessment.id %}" class="btn btn-info btn-sm" title="View">
@@ -644,10 +644,10 @@
                 <thead>
                   <tr>
                     <th>#</th>
-                    <th>Caption</th>
+                    <th>Title</th>
                     <th>Age (PNA)</th>
                     <th>Recorded On</th>
-                    <th>Uploaded By</th>
+                    <th>Added By</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -656,14 +656,14 @@
                   <tr>
                     <td>
                       {{video.id}}
-                      {% if video.isNewFile %}
+                      {% if video.is_new_file %}
                       <span class="badge badge-danger">New</span>
                       {% endif %}
                     </td>
-                    <td>{{video.caption}}</td>
-                    <td>{{video.getAgeOnRecord}}</td>
-                    <td>{{video.recorded_on}}</td>
-                    <td>{{video.uploaded_by}}</td>
+                    <td>{{video.title}}</td>
+                    <td>{{video.age_on_recording}}</td>
+                    <td>{{video.recorded_on|date:"M d, Y g:i A"}}</td>
+                    <td>{{video.added_by.get_full_name|default:video.added_by.username}}</td>
                     <td>
                       <div class="btn-group btn-group-sm">
                         <a href="{% url 'video:view' video.id %}" class="btn btn-success btn-sm" title="Play">
@@ -706,7 +706,7 @@
                     <th>Type</th>
                     <th>Title</th>
                     <th>Description</th>
-                    <th>Uploaded On</th>
+                    <th>Added On</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -714,12 +714,16 @@
                   {% for Attachment in file_attachment %}
                   <tr>
                     <td>
-                      {% if Attachment.attachment_type == 'Video' %}
+                      {% if Attachment.attachment_type == 'video' %}
                       <i class="fas fa-play-circle text-danger"></i>
-                      {% elif Attachment.attachment_type == 'Image' %}
+                      {% elif Attachment.attachment_type == 'image' %}
                       <i class="far fa-image text-primary"></i>
-                      {% elif Attachment.attachment_type == 'PDF' %}
+                      {% elif Attachment.attachment_type == 'pdf' %}
                       <i class="far fa-file-pdf text-danger"></i>
+                      {% elif Attachment.attachment_type == 'document' %}
+                      <i class="far fa-file-alt text-info"></i>
+                      {% else %}
+                      <i class="far fa-file text-secondary"></i>
                       {% endif %}
                       {% if Attachment.isBookmarked %}
                       <i class="far fa-bookmark text-warning"></i>
@@ -727,7 +731,7 @@
                     </td>
                     <td>{{Attachment.title}}</td>
                     <td>{{Attachment.description|truncatewords:15}}</td>
-                    <td>{{Attachment.uploaded_on|date}}</td>
+                    <td>{{Attachment.created_at|date:"M d, Y"}}</td>
                     <td>
                       <div class="btn-group btn-group-sm">
                         <a href="{% url 'attachment-view' Attachment.id %}" class="btn btn-info btn-sm" title="View">

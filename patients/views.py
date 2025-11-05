@@ -1242,7 +1242,11 @@ def assessment_view_by_fileid(request, file_id):
 
 @login_required(login_url="user-login")
 def assessment_edit(request, pk):
-    assmnt = GMAssessment.objects.get(id=pk)
+    try:
+        assmnt = GMAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').get(id=pk)
+    except GMAssessment.DoesNotExist:
+        messages.error(request, "Assessment not found.")
+        return redirect("assessment-manager")
     assessment_form = GMAssessmentForm(instance=assmnt)
     if request.method == "POST":
         assessment_form_data = GMAssessmentForm(request.POST, instance=assmnt)
@@ -1298,8 +1302,12 @@ def assessment_delete_start(request, pk):
 @login_required(login_url="user-login")
 def assessment_delete(request, pk):
     if request.method == "POST":
-        assemnt = GMAssessment.objects.get(id=pk)
-        patient = Patient.objects.get(id=assemnt.patient.id)
+        try:
+            assemnt = GMAssessment.objects.select_related('patient').get(id=pk)
+            patient = assemnt.patient
+        except GMAssessment.DoesNotExist:
+            messages.error(request, "Assessment not found.")
+            return redirect("assessment-manager")
         user = request.user
         if user.check_password(request.POST["password"]):
             if assemnt.delete():
@@ -1739,7 +1747,11 @@ def bookmark_view(request, pk):
 
 @login_required(login_url="user-login")
 def bookmark_delete(request, pk):
-    bookmark = Bookmark.objects.get(id=pk)
+    try:
+        bookmark = Bookmark.objects.select_related('owner', 'patient').get(id=pk)
+    except Bookmark.DoesNotExist:
+        messages.error(request, "Bookmark not found.")
+        return redirect("bookmark-manager-user", request.user.username)
     if bookmark.owner == request.user:
         bookmark.delete()
         messages.success(request, "Bookmark deleted succusfully")
@@ -1763,7 +1775,11 @@ def bookmark_manager_user(request, username):
 
 @login_required(login_url="user-login")
 def bookmark_edit(request, pk):
-    selected_bm = Bookmark.objects.get(id=pk)
+    try:
+        selected_bm = Bookmark.objects.select_related('owner', 'patient', 'added_by', 'last_edit_by').get(id=pk)
+    except Bookmark.DoesNotExist:
+        messages.error(request, "Bookmark not found.")
+        return redirect("bookmark-manager-user", request.user.username)
     bm_form = BookmarkForm(instance=selected_bm)
     if request.method == "POST":
         bm_form_data = BookmarkForm(request.POST, instance=selected_bm)
@@ -2094,7 +2110,11 @@ def attachment_add(request, pid):
 
 @login_required(login_url="user-login")
 def attachment_view(request, pk):
-    sa = Attachment.objects.get(pk=pk)
+    try:
+        sa = Attachment.objects.select_related('patient', 'added_by', 'last_edit_by').get(pk=pk)
+    except Attachment.DoesNotExist:
+        messages.error(request, "Attachment not found.")
+        return redirect("manage-patients")
     return render(
         request, "attachment/view.html", {"patient": sa.patient, "attachment": sa}
     )
@@ -2102,7 +2122,11 @@ def attachment_view(request, pk):
 
 @login_required(login_url="user-login")
 def attachment_edit(request, pk):
-    sa = Attachment.objects.get(pk=pk)
+    try:
+        sa = Attachment.objects.select_related('patient', 'added_by', 'last_edit_by').get(pk=pk)
+    except Attachment.DoesNotExist:
+        messages.error(request, "Attachment not found.")
+        return redirect("manage-patients")
 
     a_form = AttachmentkForm(instance=sa)
 
@@ -2278,8 +2302,12 @@ def cdic_assessment_add(request, pid):
 
 @login_required(login_url="user-login")
 def cdic_assessment_edit(request, aid):
-    srecord = CDICRecord.objects.get(id=aid)
-    spt = srecord.patient
+    try:
+        srecord = CDICRecord.objects.select_related('patient', 'added_by', 'last_edit_by').get(id=aid)
+        spt = srecord.patient
+    except CDICRecord.DoesNotExist:
+        messages.error(request, "CDIC record not found.")
+        return redirect("cdic-assessment-manager")
 
     cdicr_form = CDICRecordForm(instance=srecord)
 
@@ -2288,8 +2316,7 @@ def cdic_assessment_edit(request, aid):
         if cdicr_form_data.is_valid():
             cdicr = cdicr_form_data.save(commit=False)
 
-            cdicr.edit_by = request.user
-            cdicr.edit_on = getCurrentDateTime()
+            cdicr.last_edit_by = request.user
             cdicr.save()
 
             messages.success(request, "CDIC record updated succesfully...")
@@ -2310,7 +2337,11 @@ def cdic_assessment_edit(request, aid):
 
 @login_required(login_url="user-login")
 def cdic_assessment_view(request, cdic_id):
-    selected_cdic_record = CDICRecord.objects.get(pk=cdic_id)
+    try:
+        selected_cdic_record = CDICRecord.objects.select_related('patient', 'added_by', 'last_edit_by').get(pk=cdic_id)
+    except CDICRecord.DoesNotExist:
+        messages.error(request, "CDIC record not found.")
+        return redirect("cdic-assessment-manager")
     return render(
         request, "cdic_record/view.html", {"CDICRecord": selected_cdic_record}
     )
@@ -2320,7 +2351,7 @@ def cdic_assessment_view(request, cdic_id):
 def cdic_assessment_manager(request):
     try:
         # Get all CDIC records
-        var_cdic_list = CDICRecord.objects.select_related('patient', 'created_by', 'edit_by').all().order_by("-id")
+        var_cdic_list = CDICRecord.objects.select_related('patient', 'added_by', 'last_edit_by').all().order_by("-id")
         
         # Search and filter functionality
         search_patient = request.GET.get('search_patient', '').strip()
@@ -2336,7 +2367,7 @@ def cdic_assessment_manager(request):
         
         if created_by:
             var_cdic_list = var_cdic_list.filter(
-                created_by__username__icontains=created_by
+                added_by__username__icontains=created_by
             )
         
         # Apply date range filters
@@ -2430,7 +2461,7 @@ def cdic_assessment_manager_by_patients(request, pid):
             return redirect("manage-patients")
         
         # Get CDIC records for this patient
-        var_cdic_list = CDICRecord.objects.select_related('patient', 'created_by', 'edit_by').filter(patient=sp.id).order_by("-id")
+        var_cdic_list = CDICRecord.objects.select_related('patient', 'added_by', 'last_edit_by').filter(patient=sp.id).order_by("-id")
         
         # Search and filter functionality (same as general manager but for specific patient)
         date_range = request.GET.get('date_range', '')
@@ -2440,7 +2471,7 @@ def cdic_assessment_manager_by_patients(request, pid):
         # Apply filters
         if created_by:
             var_cdic_list = var_cdic_list.filter(
-                created_by__username__icontains=created_by
+                added_by__username__icontains=created_by
             )
         
         if date_range:
@@ -2519,7 +2550,11 @@ def cdic_assessment_manager_by_patients(request, pid):
 
 @login_required(login_url="user-login")
 def cdic_assessment_delete_start(request, aid):
-    srecord = CDICRecord.objects.get(id=aid)
+    try:
+        srecord = CDICRecord.objects.select_related('patient').get(id=aid)
+    except CDICRecord.DoesNotExist:
+        messages.error(request, "CDIC record not found.")
+        return redirect("cdic-assessment-manager")
     return render(
         request,
         "cdic_record/delete-confirm.html",
@@ -2530,7 +2565,11 @@ def cdic_assessment_delete_start(request, aid):
 @login_required(login_url="user-login")
 def cdic_assessment_delete(request, aid):
     user = request.user
-    srecord = CDICRecord.objects.get(pk=aid)
+    try:
+        srecord = CDICRecord.objects.select_related('patient').get(pk=aid)
+    except CDICRecord.DoesNotExist:
+        messages.error(request, "CDIC record not found.")
+        return redirect("cdic-assessment-manager")
 
     if user.check_password(request.POST["password"]):
         if srecord.delete():
@@ -2658,7 +2697,11 @@ def hine_assessment_edit(request, hine_id):
 
 @login_required(login_url="user-login")
 def hine_assessment_view(request, hine_id):
-    sh = HINEAssessment.objects.get(pk=hine_id)
+    try:
+        sh = HINEAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').get(pk=hine_id)
+    except HINEAssessment.DoesNotExist:
+        messages.error(request, "HINE assessment record not found.")
+        return redirect("hine-assessment-manager")
     return render(request, "hine/view.html", {"patient": sh.patient, "HINERecord": sh})
 
 
@@ -2831,7 +2874,11 @@ def hine_assessment_delete_start(request, hine_id):
 @login_required(login_url="user-login")
 def hine_assessment_delete(request, hine_id):
     user = request.user
-    shr = HINEAssessment.objects.get(id=hine_id)
+    try:
+        shr = HINEAssessment.objects.select_related('patient').get(id=hine_id)
+    except HINEAssessment.DoesNotExist:
+        messages.error(request, "HINE assessment record not found.")
+        return redirect("hine-assessment-manager")
 
     if user.check_password(request.POST["password"]):
         if shr.delete():
@@ -2859,11 +2906,9 @@ def da_assessment_add(request, pid):
     except Patient.DoesNotExist:
         messages.error(request, "Patient not found.")
         return redirect("manage-patients")
-    
-    da_form = DevelopmentalAssessmentForm()
-    
+
     if request.method == "POST":
-        da_form_data = DevelopmentalAssessmentForm(request.POST)
+        da_form_data = DevelopmentalAssessmentForm(request.POST, patient=sp)
         if da_form_data.is_valid():
             try:
                 da_record = da_form_data.save(commit=False)
@@ -2876,6 +2921,7 @@ def da_assessment_add(request, pid):
                 return redirect("da-assessment-view", da_record.id)
             except Exception as e:
                 messages.error(request, f"Error saving developmental assessment record: {str(e)}")
+                # Pass the form data without the unsaved instance to avoid RelatedObjectDoesNotExist
                 return render(
                     request,
                     "develop_assemnt/add.html",
@@ -2888,16 +2934,18 @@ def da_assessment_add(request, pid):
                 field_name = da_form_data.fields[field].label or field.replace('_', ' ').title()
                 for error in errors:
                     error_messages.append(f"{field_name}: {error}")
-            
+
             if error_messages:
                 messages.error(request, "Please correct the following errors: " + "; ".join(error_messages))
-            
+
+            # Pass form data directly without saving to avoid patient relation issues
             return render(
                 request,
                 "develop_assemnt/add.html",
                 {"patient": sp, "da_form": da_form_data},
             )
     else:
+        da_form = DevelopmentalAssessmentForm(patient=sp)
         return render(
             request, "develop_assemnt/add.html", {"patient": sp, "da_form": da_form}
         )
@@ -2905,10 +2953,14 @@ def da_assessment_add(request, pid):
 
 @login_required(login_url="user-login")
 def da_assessment_edit(request, da_id):
-    dar = DevelopmentalAssessment.objects.get(id=da_id)
-    assessment_form = DevelopmentalAssessmentForm(instance=dar)
+    try:
+        dar = DevelopmentalAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').get(id=da_id)
+    except DevelopmentalAssessment.DoesNotExist:
+        messages.error(request, "Developmental assessment record not found.")
+        return redirect("da-assessment-manager")
+
     if request.method == "POST":
-        assessment_form_data = DevelopmentalAssessmentForm(request.POST, instance=dar)
+        assessment_form_data = DevelopmentalAssessmentForm(request.POST, instance=dar, patient=dar.patient)
         if assessment_form_data.is_valid():
             da_record = assessment_form_data.save(commit=False)
             da_record.last_edit_by = request.user
@@ -2924,14 +2976,20 @@ def da_assessment_edit(request, da_id):
                 "develop_assemnt/edit.html",
                 {"da_form": assessment_form_data, "dar": dar},
             )
-    return render(
-        request, "develop_assemnt/edit.html", {"da_form": assessment_form, "dar": dar}
-    )
+    else:
+        assessment_form = DevelopmentalAssessmentForm(instance=dar, patient=dar.patient)
+        return render(
+            request, "develop_assemnt/edit.html", {"da_form": assessment_form, "dar": dar}
+        )
 
 
 @login_required(login_url="user-login")
 def da_assessment_view(request, da_id):
-    sdar = DevelopmentalAssessment.objects.get(pk=da_id)
+    try:
+        sdar = DevelopmentalAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').get(pk=da_id)
+    except DevelopmentalAssessment.DoesNotExist:
+        messages.error(request, "Developmental assessment record not found.")
+        return redirect("da-assessment-manager")
     return render(request, "develop_assemnt/view.html", {"DARecord": sdar})
 
 
@@ -3147,7 +3205,11 @@ def da_assessment_manager_by_patients(request, pid):
 
 @login_required(login_url="user-login")
 def da_assessment_delete_start(request, da_id):
-    sdr = DevelopmentalAssessment.objects.get(id=da_id)
+    try:
+        sdr = DevelopmentalAssessment.objects.select_related('patient').get(id=da_id)
+    except DevelopmentalAssessment.DoesNotExist:
+        messages.error(request, "Developmental assessment record not found.")
+        return redirect("da-assessment-manager")
     return render(
         request,
         "develop_assemnt/delete-confirm.html",
@@ -3158,7 +3220,11 @@ def da_assessment_delete_start(request, da_id):
 @login_required(login_url="user-login")
 def da_assessment_delete(request, da_id):
     user = request.user
-    sdar = DevelopmentalAssessment.objects.get(id=da_id)
+    try:
+        sdar = DevelopmentalAssessment.objects.select_related('patient').get(id=da_id)
+    except DevelopmentalAssessment.DoesNotExist:
+        messages.error(request, "Developmental assessment record not found.")
+        return redirect("da-assessment-manager")
 
     if user.check_password(request.POST["password"]):
         if sdar.delete():

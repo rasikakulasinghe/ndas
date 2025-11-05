@@ -223,7 +223,7 @@
                     type="button"
                     class="btn btn-link p-0 text-primary"
                     data-toggle="tooltip"
-                    title="Created by: {{ CDICRecord.created_by.username|default:'Unknown' }} on {{ CDICRecord.created_on|date:'M d, Y'|default:'-' }}{% if CDICRecord.edit_by %} | Last edited: {{ CDICRecord.edit_on|date:'M d, Y'|default:'-' }} by {{ CDICRecord.edit_by.username }}{% endif %}"
+                    title="Created by: {{ CDICRecord.added_by.username|default:'Unknown' }} on {{ CDICRecord.created_at|date:'M d, Y'|default:'-' }}{% if CDICRecord.last_edit_by %} | Last edited: {{ CDICRecord.updated_at|date:'M d, Y'|default:'-' }} by {{ CDICRecord.last_edit_by.username }}{% endif %}"
                   >
                     <i class="fas fa-info-circle fa-icon-lg"></i>
                   </button>

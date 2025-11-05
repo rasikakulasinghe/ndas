@@ -481,7 +481,7 @@ def getPatientList(pts_type):
     elif pts_type == PtStatus.NEW:
         return var_ptl.filter(videos__isnull=True).distinct()
     elif pts_type == PtStatus.DISCHARGED:
-        return var_ptl.filter(cdicrecord__is_discharged=True).distinct()
+        return var_ptl.filter(cdic_records__is_discharged=True).distinct()
     elif pts_type == PtStatus.DIAGNOSED:
         return var_ptl.filter(Q(gmassessment__diagnosis_conclusion='ABNORMAL') | Q(hine_assessments__score__lt = 73) | Q(developmental_assessments__is_dx_normal=False)).distinct()
     elif pts_type == PtStatus.DX_NORMAL:

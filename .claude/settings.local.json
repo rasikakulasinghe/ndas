@@ -14,7 +14,8 @@
       "Bash(openspec validate:*)",
       "Bash(openspec show:*)",
       "Bash(git ls-tree:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []

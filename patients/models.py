@@ -1065,7 +1065,11 @@ class CDICRecord(TimeStampedModel, UserTrackingMixin):
         ]
 
     def __str__(self):
-        return f"{self.assessment_date.strftime('%Y-%m-%d')} | {self.patient.baby_name}"
+        try:
+            patient_name = self.patient.baby_name if self.patient_id else "Unsaved"
+            return f"{self.assessment_date.strftime('%Y-%m-%d')} | {patient_name}"
+        except Patient.DoesNotExist:
+            return f"{self.assessment_date.strftime('%Y-%m-%d')} | Unknown Patient"
 
     def clean(self):
         """Model-wide validation"""
@@ -1179,6 +1183,12 @@ class CDICRecord(TimeStampedModel, UserTrackingMixin):
         return (
             f"{age_delta.years} Years {age_delta.months} Months {age_delta.days} Days"
         )
+
+    # Backward compatibility alias for templates using camelCase
+    @property
+    def isBookmarked(self):
+        """Alias for is_bookmarked (backward compatibility)"""
+        return self.is_bookmarked
 
     # Class methods for efficient queries
     @classmethod
@@ -1318,7 +1328,11 @@ class GeneralPaediatricAssessment(TimeStampedModel, UserTrackingMixin):
         ]
 
     def __str__(self):
-        return f"{self.assessment_date.strftime('%Y-%m-%d')} | {self.patient.baby_name}"
+        try:
+            patient_name = self.patient.baby_name if self.patient_id else "Unsaved"
+            return f"{self.assessment_date.strftime('%Y-%m-%d')} | {patient_name}"
+        except Patient.DoesNotExist:
+            return f"{self.assessment_date.strftime('%Y-%m-%d')} | Unknown Patient"
 
     def clean(self):
         """Model-wide validation"""
@@ -2584,9 +2598,11 @@ class DevelopmentalAssessment(TimeStampedModel, UserTrackingMixin):
         ]
 
     def __str__(self):
-        return (
-            f"{self.patient.baby_name} - {self.date_of_assessment.strftime('%Y-%m-%d')}"
-        )
+        try:
+            patient_name = self.patient.baby_name if self.patient_id else "Unsaved"
+            return f"{patient_name} - {self.date_of_assessment.strftime('%Y-%m-%d')}"
+        except Patient.DoesNotExist:
+            return f"Unknown Patient - {self.date_of_assessment.strftime('%Y-%m-%d')}"
 
     def clean(self):
         """Custom validation for Developmental Assessment"""
@@ -2599,19 +2615,25 @@ class DevelopmentalAssessment(TimeStampedModel, UserTrackingMixin):
             )
 
         # Validate assessment date is not before patient's birth
-        if (
-            self.date_of_assessment
-            and self.patient
-            and self.patient.dob_tob
-            and self.date_of_assessment < self.patient.dob_tob
-        ):
-            raise ValidationError(
-                {
-                    "date_of_assessment": _(
-                        "Assessment date cannot be before patient birth date."
+        # Only validate if patient is already set (skip during form validation)
+        if self.patient_id:
+            try:
+                if (
+                    self.date_of_assessment
+                    and self.patient
+                    and self.patient.dob_tob
+                    and self.date_of_assessment < self.patient.dob_tob
+                ):
+                    raise ValidationError(
+                        {
+                            "date_of_assessment": _(
+                                "Assessment date cannot be before patient birth date."
+                            )
+                        }
                     )
-                }
-            )
+            except Patient.DoesNotExist:
+                # Patient relationship not yet established, skip validation
+                pass
 
         # Validate age ranges for each domain
         domains = [
