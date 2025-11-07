@@ -273,6 +273,11 @@ file_field = models.FileField(
 6. **DO NOT change CSS framework**: AdminLTE 3.2 + Bootstrap 4.6 + Font Awesome 6.4
 7. **Initialize components properly**: Bootstrap tooltips, Select2, HTMX in templates
 8. **Use custom utilities**: Reference `static/js/app-utils.js` for common functions
+9. **Bootstrap Modals**: Use standard Bootstrap 4.6 modal structure with proper ARIA attributes
+   - Trigger: `data-toggle="modal"` and `data-target="#modalId"`
+   - Structure: `.modal > .modal-dialog > .modal-content > .modal-header/.modal-body/.modal-footer`
+   - Accessibility: Include `role="dialog"`, `aria-labelledby`, `aria-hidden` attributes
+   - JavaScript: Handle focus management and external link security (see `static/js/login.js` for modal example)
 
 ## Data Flow Patterns
 - **Patient → Video → Assessment**: Core workflow where patients have videos, videos have assessments

@@ -42,19 +42,18 @@ def validate_video_file_upload(var_uploaded_file):
 
 
 def getVideoMaxSizeMB():
-    """Get maximum video file size in MB from settings"""
-    default_size = 2048  # 2GB default
-    max_size_bytes = getattr(
-        settings, "VIDEO_MAX_FILE_SIZE", default_size * 1024 * 1024
-    )
+    """Get maximum video file size in MB from settings - FIX 3.1"""
+    # Use centralized FILE_UPLOAD_LIMITS from settings
+    limits = getattr(settings, 'FILE_UPLOAD_LIMITS', {})
+    max_size_bytes = limits.get('VIDEO_MAX_SIZE', 2 * 1024 * 1024 * 1024)
     return max_size_bytes // (1024 * 1024)
 
 
 def validateVideoSize(var_uploaded_file):
-    """Enhanced video size validation"""
-    max_size_bytes = getattr(
-        settings, "VIDEO_MAX_FILE_SIZE", 2 * 1024 * 1024 * 1024
-    )  # 2GB default
+    """Enhanced video size validation - FIX 3.1"""
+    # Use centralized FILE_UPLOAD_LIMITS from settings
+    limits = getattr(settings, 'FILE_UPLOAD_LIMITS', {})
+    max_size_bytes = limits.get('VIDEO_MAX_SIZE', 2 * 1024 * 1024 * 1024)
     return var_uploaded_file.size <= max_size_bytes
 
 
@@ -231,22 +230,26 @@ def validate_phone_number(value):
 
 def validate_video_file(value):
     """
-    Comprehensive video file validation for Django model fields
+    Comprehensive video file validation for Django model fields - FIX 3.1
     """
     if not value:
         return
-        
+
+    # Get allowed extensions from settings
+    allowed_extensions_dict = getattr(settings, 'ALLOWED_FILE_EXTENSIONS', {})
+    valid_extensions = allowed_extensions_dict.get('VIDEO', [".mp4", ".mov", ".avi", ".mkv", ".webm"])
+
     # Check file extension
     ext = os.path.splitext(value.name)[1].lower()
-    valid_extensions = [".mp4", ".mov", ".avi", ".mkv", ".webm"]
 
     if ext not in valid_extensions:
         raise ValidationError(
             f"Unsupported video format. Allowed formats: {', '.join(valid_extensions)}"
         )
 
-    # Check file size (default max: 2GB, configurable)
-    max_size = getattr(settings, "VIDEO_MAX_FILE_SIZE", 2 * 1024 * 1024 * 1024)  # 2GB
+    # Check file size using centralized limits
+    limits = getattr(settings, 'FILE_UPLOAD_LIMITS', {})
+    max_size = limits.get('VIDEO_MAX_SIZE', 2 * 1024 * 1024 * 1024)
     if value.size > max_size:
         max_size_mb = max_size / (1024 * 1024)
         raise ValidationError(
@@ -290,36 +293,40 @@ def validate_pog_days(value):
 
 def validate_attachment_file(value):
     """
-    Comprehensive file validation for attachments
+    Comprehensive file validation for attachments - FIX 3.1
     """
-    # File size limits (in bytes)
-    MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
-    MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10MB for images
-    MAX_VIDEO_SIZE = 2 * 1024 * 1024 * 1024  # 2GB for videos
+    # Get file size limits from settings
+    limits = getattr(settings, 'FILE_UPLOAD_LIMITS', {})
+    MAX_ATTACHMENT_SIZE = limits.get('ATTACHMENT_MAX_SIZE', 100 * 1024 * 1024)
+    MAX_IMAGE_SIZE = limits.get('IMAGE_MAX_SIZE', 10 * 1024 * 1024)
+    MAX_VIDEO_SIZE = limits.get('VIDEO_MAX_SIZE', 2 * 1024 * 1024 * 1024)
 
-    # Allowed file extensions
-    ALLOWED_EXTENSIONS = {
-        "image": [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"],
-        "pdf": [".pdf"],
-        "video": [".mp4", ".mov", ".avi", ".mkv", ".webm"],
-        "document": [".doc", ".docx", ".txt", ".rtf", ".odt"],
-    }
+    # Get allowed extensions from settings
+    allowed_extensions_dict = getattr(settings, 'ALLOWED_FILE_EXTENSIONS', {})
 
     # Check file extension
     ext = os.path.splitext(value.name)[1].lower()
 
-    # Get all allowed extensions
+    # Get all allowed extensions from settings
     all_allowed_extensions = []
-    for extensions in ALLOWED_EXTENSIONS.values():
+    for extensions in allowed_extensions_dict.values():
         all_allowed_extensions.extend(extensions)
+
+    # Fallback defaults if settings not configured
+    if not all_allowed_extensions:
+        all_allowed_extensions = [
+            ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp",
+            ".pdf", ".mp4", ".mov", ".avi", ".mkv", ".webm",
+            ".doc", ".docx", ".txt", ".rtf", ".odt"
+        ]
 
     if ext not in all_allowed_extensions:
         raise ValidationError(
             f"Unsupported file format. Allowed formats: {', '.join(all_allowed_extensions)}"
         )
 
-    # Check file size (basic check - more specific validation in model)
-    if value.size > MAX_VIDEO_SIZE:  # Use largest allowed size
+    # Check file size (use largest allowed size)
+    if value.size > MAX_VIDEO_SIZE:
         max_size_gb = MAX_VIDEO_SIZE / (1024 * 1024 * 1024)
         raise ValidationError(
             f"File size too large. Maximum allowed size is {max_size_gb:.1f} GB."

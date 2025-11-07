@@ -23,7 +23,69 @@ from ndas.custom_codes.choice import (
 )
 
 
-class PatientForm(forms.ModelForm):
+# FIX 2.1: Reusable validation mixin to eliminate code duplication
+class UniqueFieldValidationMixin:
+    """
+    Mixin for validating unique fields in forms.
+    Eliminates duplicate validation code across multiple forms.
+    """
+
+    def validate_unique_field(self, field_name, value, error_message):
+        """
+        Validate that a field value is unique in the database.
+
+        Args:
+            field_name: Name of the field to check
+            value: Value to validate
+            error_message: Error message to display if not unique
+
+        Returns:
+            The cleaned value
+
+        Raises:
+            ValidationError: If value is not unique
+        """
+        if not value:
+            return value
+
+        queryset = self.Meta.model.objects.filter(**{field_name: value})
+
+        # Exclude current instance when editing
+        if self.instance and self.instance.pk:
+            queryset = queryset.exclude(pk=self.instance.pk)
+
+        if queryset.exists():
+            raise ValidationError(error_message)
+
+        return value
+
+
+# FIX 2.2: Timezone-aware datetime mixin
+class TimezoneDateTimeMixin:
+    """
+    Mixin for handling timezone-aware datetime fields in forms.
+    Automatically converts naive datetimes to timezone-aware.
+    """
+
+    def clean_datetime_field(self, field_name):
+        """
+        Clean and make timezone-aware a datetime field.
+
+        Args:
+            field_name: Name of the datetime field
+
+        Returns:
+            Timezone-aware datetime value
+        """
+        value = self.cleaned_data.get(field_name)
+
+        if value and timezone.is_naive(value):
+            value = timezone.make_aware(value)
+
+        return value
+
+
+class PatientForm(UniqueFieldValidationMixin, forms.ModelForm):
     gender = forms.ChoiceField(
         choices=GENDER, widget=forms.Select(attrs={"class": "form-control"})
     )
@@ -286,18 +348,15 @@ class PatientForm(forms.ModelForm):
         }
 
     def clean_bht(self):
-        """Validate BHT number"""
+        """Validate BHT number - FIX 2.1: Using validation mixin"""
         bht = self.cleaned_data.get("bht")
         if bht:
-            # Check if BHT already exists (excluding current instance during edit)
-            queryset = Patient.objects.filter(bht=bht)
-            if self.instance and self.instance.pk:
-                queryset = queryset.exclude(pk=self.instance.pk)
-
-            if queryset.exists():
-                raise ValidationError(
-                    _("A patient with this BHT number already exists.")
-                )
+            # Validate uniqueness using mixin
+            bht = self.validate_unique_field(
+                'bht',
+                bht,
+                _("A patient with this BHT number already exists.")
+            )
 
             # Additional BHT format validation
             if not re.match(r"^[A-Za-z0-9\-/]+$", bht):
@@ -310,32 +369,28 @@ class PatientForm(forms.ModelForm):
         return bht
 
     def clean_nnc_no(self):
-        """Validate NNC number"""
+        """Validate NNC number - FIX 2.1: Using validation mixin"""
         nnc_no = self.cleaned_data.get("nnc_no")
         if nnc_no:
-            # Check uniqueness
-            queryset = Patient.objects.filter(nnc_no=nnc_no)
-            if self.instance and self.instance.pk:
-                queryset = queryset.exclude(pk=self.instance.pk)
-
-            if queryset.exists():
-                raise ValidationError(
-                    _("A patient with this NNC number already exists.")
-                )
+            # Validate uniqueness using mixin
+            nnc_no = self.validate_unique_field(
+                'nnc_no',
+                nnc_no,
+                _("A patient with this NNC number already exists.")
+            )
 
         return nnc_no
 
     def clean_pin(self):
-        """Validate PIN number"""
+        """Validate PIN number - FIX 2.1: Using validation mixin"""
         pin = self.cleaned_data.get("pin")
         if pin:
-            # Check uniqueness
-            queryset = Patient.objects.filter(pin=pin)
-            if self.instance and self.instance.pk:
-                queryset = queryset.exclude(pk=self.instance.pk)
-
-            if queryset.exists():
-                raise ValidationError(_("A patient with this PIN already exists."))
+            # Validate uniqueness using mixin
+            pin = self.validate_unique_field(
+                'pin',
+                pin,
+                _("A patient with this PIN already exists.")
+            )
 
         return pin
 
@@ -382,13 +437,13 @@ class PatientForm(forms.ModelForm):
         return mother_name
 
     def clean_dob_tob(self):
-        """Validate date and time of birth"""
+        """Validate date and time of birth - FIX 2.2: Simplified timezone handling"""
         dob_tob = self.cleaned_data.get("dob_tob")
         if dob_tob:
-            # Make datetime timezone-aware if it's naive
+            # Make datetime timezone-aware if it's naive (should be handled by Django settings)
             if timezone.is_naive(dob_tob):
                 dob_tob = timezone.make_aware(dob_tob)
-            
+
             # Check if date is not in the future
             if dob_tob > timezone.now():
                 raise ValidationError(_("Date of birth cannot be in the future."))
@@ -553,18 +608,15 @@ class PatientForm(forms.ModelForm):
         return cleaned_data
 
 
-class GMAssessmentForm(forms.ModelForm):
+class GMAssessmentForm(TimezoneDateTimeMixin, forms.ModelForm):
 
     diagnosis_conclusion = forms.ChoiceField(
         choices=DX_CONCLUTION, widget=forms.Select(attrs={"class": "form-control"})
     )
-    
+
     def clean_date_of_assessment(self):
-        """Validate and make timezone-aware the assessment date"""
-        date_of_assessment = self.cleaned_data.get("date_of_assessment")
-        if date_of_assessment and timezone.is_naive(date_of_assessment):
-            date_of_assessment = timezone.make_aware(date_of_assessment)
-        return date_of_assessment
+        """Validate and make timezone-aware the assessment date - FIX 2.2"""
+        return self.clean_datetime_field("date_of_assessment")
 
     class Meta:
         model = GMAssessment
@@ -653,14 +705,11 @@ class AttachmentkForm(forms.ModelForm):
         }
 
 
-class CDICRecordForm(forms.ModelForm):
-    
+class CDICRecordForm(TimezoneDateTimeMixin, forms.ModelForm):
+
     def clean_next_appointment_date(self):
-        """Validate and make timezone-aware the next appointment date"""
-        next_appointment_date = self.cleaned_data.get("next_appointment_date")
-        if next_appointment_date and timezone.is_naive(next_appointment_date):
-            next_appointment_date = timezone.make_aware(next_appointment_date)
-        return next_appointment_date
+        """Validate and make timezone-aware the next appointment date - FIX 2.2"""
+        return self.clean_datetime_field("next_appointment_date")
     
     class Meta:
         model = CDICRecord
@@ -747,26 +796,24 @@ class CDICRecordForm(forms.ModelForm):
         }
 
 
-class HINEAssessmentForm(forms.ModelForm):
-    
+class HINEAssessmentForm(TimezoneDateTimeMixin, forms.ModelForm):
+
     def __init__(self, *args, **kwargs):
         """Initialize form with optional patient instance for validation"""
         self.patient = kwargs.pop('patient', None)
         super().__init__(*args, **kwargs)
-    
+
     def clean_date_of_assessment(self):
-        """Validate and make timezone-aware the assessment date"""
-        date_of_assessment = self.cleaned_data.get("date_of_assessment")
-        if date_of_assessment and timezone.is_naive(date_of_assessment):
-            date_of_assessment = timezone.make_aware(date_of_assessment)
-        
+        """Validate and make timezone-aware the assessment date - FIX 2.2"""
+        date_of_assessment = self.clean_datetime_field("date_of_assessment")
+
         # Validate against patient's birth date if patient is provided
         if date_of_assessment and self.patient and self.patient.dob_tob:
             if date_of_assessment < self.patient.dob_tob:
                 raise forms.ValidationError(
                     _("Assessment date cannot be before patient birth date.")
                 )
-        
+
         return date_of_assessment
     
     class Meta:
@@ -805,7 +852,7 @@ class HINEAssessmentForm(forms.ModelForm):
         }
 
 
-class DevelopmentalAssessmentForm(forms.ModelForm):
+class DevelopmentalAssessmentForm(TimezoneDateTimeMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         """Initialize form with optional patient instance for validation"""
@@ -813,10 +860,8 @@ class DevelopmentalAssessmentForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
     def clean_date_of_assessment(self):
-        """Validate and make timezone-aware the assessment date"""
-        date_of_assessment = self.cleaned_data.get("date_of_assessment")
-        if date_of_assessment and timezone.is_naive(date_of_assessment):
-            date_of_assessment = timezone.make_aware(date_of_assessment)
+        """Validate and make timezone-aware the assessment date - FIX 2.2"""
+        date_of_assessment = self.clean_datetime_field("date_of_assessment")
 
         # Validate against patient's birth date if patient is provided
         if date_of_assessment and self.patient and self.patient.dob_tob:
@@ -892,18 +937,15 @@ class DevelopmentalAssessmentForm(forms.ModelForm):
         }
 
 
-class GeneralPaediatricAssessmentForm(forms.ModelForm):
+class GeneralPaediatricAssessmentForm(TimezoneDateTimeMixin, forms.ModelForm):
     """
     Form for General Paediatric Assessment (GPA) records with comprehensive
     validation and Bootstrap styling.
     """
 
     def clean_next_assessment_date(self):
-        """Validate and make timezone-aware the next assessment date"""
-        next_assessment_date = self.cleaned_data.get("next_assessment_date")
-        if next_assessment_date and timezone.is_naive(next_assessment_date):
-            next_assessment_date = timezone.make_aware(next_assessment_date)
-        return next_assessment_date
+        """Validate and make timezone-aware the next assessment date - FIX 2.2"""
+        return self.clean_datetime_field("next_assessment_date")
 
     def clean(self):
         """Form-level validation for discharge fields consistency"""

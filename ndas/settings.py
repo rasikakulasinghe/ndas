@@ -78,7 +78,10 @@ if DB_ENGINE:
             'PORT': config('DB_PORT', default=5432, cast=int),
             'OPTIONS': {
                 'connect_timeout': 60,
-                'options': '-c default_transaction_isolation=serializable'
+                # FIX 2.3: Changed from 'serializable' to 'read committed' for better performance
+                # 'serializable' can cause deadlocks and is too strict for most web applications
+                # 'read committed' provides sufficient isolation without performance penalty
+                'options': '-c default_transaction_isolation="read committed"'
             },
         }
     }
@@ -127,7 +130,7 @@ STATIC_ROOT_ENV = config('STATIC_ROOT', default=None)
 if STATIC_ROOT_ENV:
     STATIC_ROOT = STATIC_ROOT_ENV
 else:
-    STATIC_ROOT = BASE_DIR / 'static'
+    STATIC_ROOT = BASE_DIR / 'staticfiles'  # Changed from 'static' to 'staticfiles'
 
 MEDIA_ROOT_ENV = config('MEDIA_ROOT', default=None)
 if MEDIA_ROOT_ENV:
@@ -135,6 +138,7 @@ if MEDIA_ROOT_ENV:
 else:
     MEDIA_ROOT = BASE_DIR / 'media'
 
+# Directory where Django looks for static files during development
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # WhiteNoise configuration for serving static files
@@ -297,9 +301,27 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
 SESSION_SAVE_EVERY_REQUEST = True
 
+# FIX 3.1: Comprehensive File Upload Configuration
 # Video Upload and Processing Settings
 VIDEO_MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024  # 2GB
 VIDEO_ALLOWED_FORMATS = ['mp4', 'mov', 'avi', 'mkv', 'webm']
+
+# File Upload Size Limits (centralized for consistency)
+FILE_UPLOAD_LIMITS = {
+    'VIDEO_MAX_SIZE': 2 * 1024 * 1024 * 1024,  # 2GB for videos
+    'IMAGE_MAX_SIZE': 10 * 1024 * 1024,  # 10MB for images
+    'DOCUMENT_MAX_SIZE': 100 * 1024 * 1024,  # 100MB for documents
+    'ATTACHMENT_MAX_SIZE': 100 * 1024 * 1024,  # 100MB for general attachments
+    'PROFILE_PICTURE_MAX_SIZE': 5 * 1024 * 1024,  # 5MB for profile pictures
+}
+
+# Allowed File Extensions by Type
+ALLOWED_FILE_EXTENSIONS = {
+    'IMAGE': ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'],
+    'VIDEO': ['.mp4', '.mov', '.avi', '.mkv', '.webm'],
+    'PDF': ['.pdf'],
+    'DOCUMENT': ['.doc', '.docx', '.txt', '.rtf', '.odt'],
+}
 
 # File Upload Security
 DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100MB

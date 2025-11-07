@@ -1,329 +1,289 @@
 /*
  * NDAS - Login Page Styles
- * Professional healthcare login interface with sophisticated green theme
- * Updated: September 27, 2025 - Enhanced professional medical appearance
- * Color palette: Deep Forest Green (#1e4d3c, #2d5e4f) for trust and stability
+ * Modern healthcare login interface matching screenshot design
+ * Updated: November 6, 2025
+ * Color palette from reference: Muted Blue (#4a6e8a), Accent Blue (#7aa0c4), Deep Blue (#2c5282)
+ * Font: Poppins (Google Fonts)
  */
 
-/* Clean Login Page Layout */
-.login-page {
-    background: linear-gradient(135deg, #f0f4f3 0%, #e8f1ef 50%, #ddeae7 100%);
+/* Global Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body Override for Login Page - Override AdminLTE styles */
+body.ndas-login-body,
+body.ndas-login-body.hold-transition {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    background: #f8f9fa !important;
+    font-family: 'Poppins', sans-serif !important;
+    min-height: 100vh !important;
+}
+
+/* Login Page Container */
+.ndas-login-page {
+    background: #f8f9fa;
     min-height: 100vh;
+    font-family: 'Poppins', sans-serif;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 1rem;
+    width: 100%;
+    position: relative;
 }
 
-.login-box {
-    width: 900px;
-    max-width: 95%;
-    margin: 0 auto;
+.ndas-login-page .container-fluid {
+    padding: 0;
+    max-width: 100%;
 }
 
-/* Simple Login Card */
-.simple-login-card {
-    border-radius: 20px;
+/* Login Card */
+.ndas-login-card {
+    background: #ffffff;
+    border-radius: 1.5rem;
+    box-shadow:
+        0 10px 40px rgba(0, 0, 0, 0.1),
+        0 2px 8px rgba(0, 0, 0, 0.06);
     overflow: hidden;
-    background: white;
-    min-height: 500px;
-    border: none;
-    box-shadow: 
-        0 25px 50px rgba(30, 77, 60, 0.08),
-        0 15px 35px rgba(0, 0, 0, 0.05),
-        0 5px 15px rgba(45, 94, 79, 0.04),
-        0 0 0 1px rgba(213, 232, 226, 0.3);
+    max-width: 900px;
+    width: 100%;
+    margin: 2rem auto;
+}
+
+.ndas-login-card .row {
+    min-height: 550px;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
 }
 
 /* Welcome Panel (Left Side) */
-.welcome-panel {
-    background: linear-gradient(135deg, #1e4d3c 0%, #2d5e4f 50%, #1a4236 100%);
-    color: white;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    position: relative;
+.ndas-welcome-panel {
+    background: linear-gradient(135deg, #4a6e8a 0%, #5b7fa0 100%);
+    color: #ffffff;
+    padding: 3rem 2rem;
+    border-radius: 1.5rem 0 0 1.5rem;
+    padding-left: 15px !important;
+    padding-right: 15px !important;
 }
 
-.welcome-panel::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image: 
-        radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.08) 0%, transparent 30%),
-        radial-gradient(circle at 75% 75%, rgba(144, 238, 144, 0.04) 0%, transparent 25%),
-        linear-gradient(45deg, transparent 40%, rgba(0, 128, 128, 0.03) 60%, transparent 80%);
-    pointer-events: none;
+.ndas-welcome-content {
+    max-width: 350px;
+    margin: 0 auto;
 }
 
-.welcome-content {
-    padding: 3rem 2.5rem;
-    width: 100%;
-    position: relative;
-    z-index: 2;
+/* Brain Icon */
+.ndas-brain-icon svg {
+    color: rgba(255, 255, 255, 0.9);
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.15));
 }
 
-.brand-icon {
-    text-align: center;
-    margin-bottom: 1.5rem;
-}
-
-.brand-icon i {
-    font-size: 3.5rem;
-    color: white;
-    opacity: 0.9;
-}
-
-.welcome-title {
-    font-size: 2.2rem;
+/* Welcome Title */
+.ndas-welcome-title {
+    font-size: 2.5rem;
     font-weight: 700;
     letter-spacing: 2px;
-    margin-bottom: 0.5rem;
-    text-align: center;
+    color: #ffffff;
 }
 
-.welcome-subtitle {
-    font-size: 1.1rem;
+.ndas-welcome-subtitle {
+    font-size: 1.125rem;
     font-weight: 300;
-    text-align: center;
-    margin-bottom: 2rem;
-    opacity: 0.9;
+    color: rgba(255, 255, 255, 0.9);
 }
 
-.welcome-description p {
-    font-size: 0.9rem;
+/* Welcome Description */
+.ndas-welcome-description {
+    font-size: 0.875rem;
     line-height: 1.6;
-    margin-bottom: 1rem;
-    opacity: 0.85;
+    color: rgba(255, 255, 255, 0.85);
 }
 
 /* Form Panel (Right Side) */
-.form-panel {
-    background: linear-gradient(180deg, #ffffff 0%, #f9fdfb 100%);
-    padding: 0;
-    display: flex;
-    align-items: center;
-    border-left: 1px solid #d5e8e2;
-}
-
-.form-content {
+.ndas-form-panel {
+    background: #ffffff;
     padding: 3rem 2.5rem;
-    width: 100%;
+    padding-left: 15px !important;
+    padding-right: 15px !important;
 }
 
-.form-header {
-    text-align: left;
+.ndas-form-content {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* Form Header */
+.ndas-form-header {
     margin-bottom: 2rem;
 }
 
-.form-title {
-    font-size: 1.8rem;
+.ndas-form-title {
+    font-size: 2rem;
     font-weight: 600;
-    color: #1e4d3c;
-    margin-bottom: 0.5rem;
+    color: #1a202c;
 }
 
-.form-subtitle {
-    font-size: 0.9rem;
-    color: #7f8c8d;
-    margin-bottom: 0;
+.ndas-form-subtitle {
+    font-size: 0.9375rem;
+    color: #718096;
 }
 
-/* Simple Form Styling */
-.form-label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #2d5e4f;
+/* Form Labels */
+.ndas-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #2d3748;
     margin-bottom: 0.5rem;
     display: block;
 }
 
-.simple-input {
-    border: 1px solid #d5e8e2;
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
-    font-size: 0.9rem;
-    background: #ffffff;
-    transition: all 0.3s ease;
-    width: 100%;
+/* Form Inputs - Override Bootstrap form-control */
+.ndas-input,
+.ndas-login-page .ndas-input.form-control {
+    background: #f8f9fa !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.625rem !important;
+    padding: 0.875rem 1rem !important;
+    font-size: 0.9375rem !important;
+    color: #2d3748 !important;
+    font-family: 'Poppins', sans-serif !important;
+    transition: all 0.3s ease !important;
+    width: 100% !important;
+    height: auto !important;
 }
 
-.simple-input:focus {
-    border-color: #1e4d3c;
-    box-shadow: 0 0 0 3px rgba(30, 77, 60, 0.1);
-    background: #ffffff;
-    outline: none;
+.ndas-input:focus,
+.ndas-login-page .ndas-input.form-control:focus {
+    background: #ffffff !important;
+    border-color: #7aa0c4 !important;
+    box-shadow: 0 0 0 3px rgba(122, 160, 196, 0.1) !important;
+    outline: none !important;
 }
 
-.simple-input::placeholder {
-    color: #bdc3c7;
-    font-size: 0.85rem;
+.ndas-input::placeholder {
+    color: #a0aec0;
+    font-size: 0.875rem;
 }
 
-/* Password Input with Toggle */
-.password-input-wrapper {
+/* Password Field */
+.ndas-password-wrapper {
     position: relative;
 }
 
-.password-toggle-simple {
+.ndas-password-toggle {
     position: absolute;
-    right: 12px;
+    right: 0.75rem;
     top: 50%;
     transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    padding: 0.5rem;
     cursor: pointer;
-    color: #95a5a6;
+    color: #718096;
     transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
 }
 
-.password-toggle-simple:hover {
-    color: #1e4d3c;
+.ndas-password-toggle:hover {
+    color: #4a6e8a;
+}
+
+.ndas-password-toggle:focus {
+    outline: 2px solid #7aa0c4;
+    outline-offset: 2px;
+    border-radius: 0.25rem;
 }
 
 /* Forgot Link */
-.forgot-link {
-    color: #1e4d3c;
+.ndas-forgot-link {
     font-size: 0.75rem;
     font-weight: 600;
+    color: #2c5282;
     text-decoration: none;
     letter-spacing: 0.5px;
+    transition: color 0.3s ease;
 }
 
-.forgot-link:hover {
-    color: #2d5e4f;
-    text-decoration: none;
+.ndas-forgot-link:hover {
+    color: #4a6e8a;
+    text-decoration: underline;
 }
 
-/* Simple Checkbox */
-.simple-checkbox .custom-control-label {
-    font-size: 0.85rem;
-    color: #7f8c8d;
+/* Checkbox */
+.ndas-checkbox-label {
+    font-size: 0.875rem;
+    color: #4a5568;
     font-weight: 400;
 }
 
-.simple-checkbox .custom-control-input:checked ~ .custom-control-label::before {
-    background-color: #1e4d3c;
-    border-color: #1e4d3c;
+.custom-control-input:checked ~ .custom-control-label::before {
+    background-color: #4a6e8a;
+    border-color: #4a6e8a;
 }
 
-/* Simple Sign In Button */
-.simple-btn {
-    background: linear-gradient(135deg, #1e4d3c 0%, #2d5e4f 100%);
-    border: none;
-    border-radius: 8px;
-    padding: 0.875rem 1.5rem;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: white;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(30, 77, 60, 0.2);
+.custom-control-input:focus ~ .custom-control-label::before {
+    box-shadow: 0 0 0 0.2rem rgba(74, 110, 138, 0.25);
 }
 
-.simple-btn:hover {
-    background: linear-gradient(135deg, #2d5e4f 0%, #1e4d3c 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(30, 77, 60, 0.3);
-    color: white;
+/* Sign In Button - Override Bootstrap btn styles */
+.ndas-signin-btn,
+.ndas-login-page .ndas-signin-btn.btn {
+    background: linear-gradient(135deg, #4a6e8a 0%, #5b7fa0 100%) !important;
+    border: none !important;
+    border-radius: 0.625rem !important;
+    padding: 0.875rem 1.5rem !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+    font-family: 'Poppins', sans-serif !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 14px rgba(74, 110, 138, 0.3) !important;
+    cursor: pointer !important;
+    height: auto !important;
+    line-height: normal !important;
 }
 
-.simple-btn:active {
+.ndas-signin-btn:hover,
+.ndas-login-page .ndas-signin-btn.btn:hover {
+    background: linear-gradient(135deg, #5b7fa0 0%, #6a8fb0 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(74, 110, 138, 0.4) !important;
+    color: #ffffff !important;
+}
+
+.ndas-signin-btn:active {
     transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(74, 110, 138, 0.3);
 }
 
-/* Support Link */
-.support-link {
-    color: #1e4d3c;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.support-link:hover {
-    color: #2d5e4f;
-    text-decoration: none;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .login-box {
-        width: 100%;
-        margin: 0;
-    }
-    
-    .simple-login-card {
-        border-radius: 0;
-        min-height: 100vh;
-    }
-    
-    .simple-login-card .row {
-        flex-direction: column;
-    }
-    
-    .welcome-panel {
-        min-height: 40vh;
-    }
-    
-    .welcome-content {
-        padding: 2rem 1.5rem;
-        text-align: center;
-    }
-    
-    .brand-icon i {
-        font-size: 2.5rem;
-    }
-    
-    .welcome-title {
-        font-size: 1.8rem;
-    }
-    
-    .welcome-description {
-        display: none;
-    }
-    
-    .form-content {
-        padding: 2rem 1.5rem;
-    }
-}
-
-@media (max-width: 576px) {
-    .login-page {
-        padding: 0;
-    }
-    
-    .welcome-content {
-        padding: 1.5rem 1rem;
-    }
-    
-    .form-content {
-        padding: 1.5rem 1rem;
-    }
-    
-    .welcome-title {
-        font-size: 1.5rem;
-    }
-    
-    .form-title {
-        font-size: 1.5rem;
-    }
+.ndas-signin-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(122, 160, 196, 0.3);
 }
 
 /* Loading State */
-.simple-btn.loading {
+.ndas-signin-btn.loading {
     pointer-events: none;
     opacity: 0.7;
+    position: relative;
 }
 
-.simple-btn.loading::after {
+.ndas-signin-btn.loading::after {
     content: '';
+    position: absolute;
     width: 16px;
     height: 16px;
-    margin-left: 8px;
+    margin-left: 10px;
     border: 2px solid transparent;
     border-top-color: #ffffff;
     border-radius: 50%;
-    animation: spin 1s linear infinite;
-    display: inline-block;
+    animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
@@ -331,9 +291,499 @@
     100% { transform: rotate(360deg); }
 }
 
-/* Focus States for Accessibility */
-.simple-input:focus,
-.simple-btn:focus {
-    outline: 2px solid #1e4d3c;
+/* Footer Text */
+.ndas-footer-text {
+    font-size: 0.875rem;
+    color: #718096;
+}
+
+/* Support Link */
+.ndas-support-link {
+    color: #4a6e8a;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.ndas-support-link:hover {
+    color: #2c5282;
+    text-decoration: underline;
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+
+/* Tablet and below */
+@media (max-width: 768px) {
+    .ndas-login-page {
+        padding: 0;
+    }
+
+    .ndas-login-card {
+        border-radius: 0;
+        margin: 0;
+        min-height: 100vh;
+    }
+
+    .ndas-login-card .row {
+        min-height: 100vh;
+    }
+
+    .ndas-welcome-panel {
+        padding: 2rem 1.5rem;
+        border-radius: 0;
+        min-height: auto;
+    }
+
+    .ndas-welcome-title {
+        font-size: 2rem;
+    }
+
+    .ndas-welcome-subtitle {
+        font-size: 1rem;
+    }
+
+    .ndas-welcome-description {
+        font-size: 0.8125rem;
+    }
+
+    .ndas-brain-icon svg {
+        width: 60px;
+        height: 60px;
+    }
+
+    .ndas-form-panel {
+        padding: 2rem 1.5rem;
+    }
+
+    .ndas-form-title {
+        font-size: 1.75rem;
+    }
+
+    .ndas-form-subtitle {
+        font-size: 0.875rem;
+    }
+}
+
+/* Mobile phones */
+@media (max-width: 576px) {
+    .ndas-welcome-panel {
+        padding: 1.5rem 1rem;
+    }
+
+    .ndas-welcome-content {
+        max-width: 100%;
+    }
+
+    .ndas-welcome-title {
+        font-size: 1.75rem;
+        letter-spacing: 1px;
+    }
+
+    .ndas-welcome-subtitle {
+        font-size: 0.9375rem;
+    }
+
+    .ndas-brain-icon svg {
+        width: 50px;
+        height: 50px;
+    }
+
+    .ndas-form-panel {
+        padding: 1.5rem 1rem;
+    }
+
+    .ndas-form-content {
+        max-width: 100%;
+    }
+
+    .ndas-form-title {
+        font-size: 1.5rem;
+    }
+
+    .ndas-form-subtitle {
+        font-size: 0.8125rem;
+    }
+
+    .ndas-input {
+        padding: 0.75rem 0.875rem;
+        font-size: 0.875rem;
+    }
+
+    .ndas-signin-btn {
+        padding: 0.75rem 1.25rem;
+        font-size: 0.9375rem;
+    }
+}
+
+/* Extra small devices */
+@media (max-width: 400px) {
+    .ndas-welcome-description {
+        display: none;
+    }
+
+    .ndas-form-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem !important;
+    }
+}
+
+/* ==================== ACCESSIBILITY ==================== */
+
+/* Focus visible for keyboard navigation */
+.ndas-input:focus-visible,
+.ndas-signin-btn:focus-visible,
+.ndas-password-toggle:focus-visible {
+    outline: 2px solid #7aa0c4;
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .ndas-input {
+        border-width: 2px;
+    }
+
+    .ndas-signin-btn {
+        border: 2px solid #4a6e8a;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ==================== PRINT STYLES ==================== */
+
+@media print {
+    .ndas-login-page {
+        background: #ffffff;
+    }
+
+    .ndas-login-card {
+        box-shadow: none;
+        border: 1px solid #e2e8f0;
+    }
+
+    .ndas-signin-btn,
+    .ndas-forgot-link,
+    .ndas-support-link {
+        display: none;
+    }
+}
+
+/* ==================== CONTACT DEVELOPER MODAL ==================== */
+
+/* Modal Container */
+.ndas-contact-modal {
+    max-width: 600px;
+}
+
+.ndas-contact-modal .modal-content {
+    border-radius: 1.5rem;
+    border: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Modal Header */
+.ndas-contact-modal-header {
+    background: linear-gradient(135deg, #4a6e8a 0%, #5b7fa0 100%);
+    color: #ffffff;
+    border-radius: 1.5rem 1.5rem 0 0;
+    padding: 2rem;
+    border-bottom: none;
+}
+
+.ndas-contact-modal-header .modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 0.25rem;
+}
+
+.ndas-contact-modal-subtitle {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 400;
+}
+
+.ndas-contact-modal-qualifications {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.ndas-contact-modal-header .close {
+    color: #ffffff;
+    opacity: 0.9;
+    text-shadow: none;
+    padding: 0.5rem;
+    margin: -1rem -1rem -1rem auto;
+}
+
+.ndas-contact-modal-header .close:hover {
+    opacity: 1;
+    color: #ffffff;
+}
+
+/* Developer Avatar */
+.ndas-contact-modal-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+.ndas-contact-modal-avatar-placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+.ndas-contact-modal-avatar-placeholder i {
+    font-size: 1.75rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Modal Body */
+.ndas-contact-modal-body {
+    padding: 2rem;
+}
+
+/* Contact Items */
+.ndas-contact-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.ndas-contact-item:last-child {
+    margin-bottom: 0;
+}
+
+.ndas-contact-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 0.5rem;
+    background: linear-gradient(135deg, #4a6e8a 0%, #5b7fa0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.ndas-contact-icon i {
+    color: #ffffff;
+    font-size: 1.125rem;
+}
+
+.ndas-contact-details {
+    flex-grow: 1;
+}
+
+.ndas-contact-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.ndas-contact-value {
+    display: block;
+    font-size: 0.9375rem;
+    color: #1a202c;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.ndas-contact-value:hover {
+    color: #4a6e8a;
+    text-decoration: underline;
+}
+
+/* Social Media Section */
+.ndas-contact-social {
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.ndas-social-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.ndas-social-btn {
+    flex: 1;
+    min-width: 140px;
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ndas-social-facebook {
+    background: #1877f2;
+    color: #ffffff;
+    border: 1px solid #1877f2;
+}
+
+.ndas-social-facebook:hover {
+    background: #1565d8;
+    border-color: #1565d8;
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(24, 119, 242, 0.3);
+}
+
+.ndas-social-linkedin {
+    background: #0a66c2;
+    color: #ffffff;
+    border: 1px solid #0a66c2;
+}
+
+.ndas-social-linkedin:hover {
+    background: #004182;
+    border-color: #004182;
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(10, 102, 194, 0.3);
+}
+
+.ndas-social-twitter {
+    background: #000000;
+    color: #ffffff;
+    border: 1px solid #000000;
+}
+
+.ndas-social-twitter:hover {
+    background: #1a1a1a;
+    border-color: #1a1a1a;
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Modal Footer */
+.ndas-contact-modal-footer {
+    padding: 1rem 2rem 2rem;
+    border-top: none;
+    justify-content: center;
+}
+
+.ndas-btn-secondary {
+    background: #e2e8f0;
+    color: #2d3748;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.625rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.ndas-btn-secondary:hover {
+    background: #cbd5e0;
+    color: #1a202c;
+    transform: translateY(-2px);
+}
+
+/* ==================== RESPONSIVE MODAL ==================== */
+
+@media (max-width: 768px) {
+    .ndas-contact-modal {
+        max-width: 90%;
+        margin: 1rem auto;
+    }
+
+    .ndas-contact-modal-header {
+        padding: 1.5rem;
+    }
+
+    .ndas-contact-modal-body {
+        padding: 1.5rem;
+    }
+
+    .ndas-contact-modal-footer {
+        padding: 1rem 1.5rem 1.5rem;
+    }
+
+    .ndas-contact-modal-avatar,
+    .ndas-contact-modal-avatar-placeholder {
+        width: 50px;
+        height: 50px;
+    }
+}
+
+@media (max-width: 576px) {
+    .ndas-contact-modal {
+        max-width: 100%;
+        margin: 0.5rem;
+    }
+
+    .ndas-contact-modal-header {
+        padding: 1rem;
+    }
+
+    .ndas-contact-modal-body {
+        padding: 1rem;
+    }
+
+    .ndas-contact-modal-footer {
+        padding: 0.75rem 1rem 1rem;
+    }
+
+    .ndas-contact-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .ndas-contact-icon {
+        margin-bottom: 0.5rem;
+    }
+
+    .ndas-social-buttons {
+        flex-direction: column;
+    }
+
+    .ndas-social-btn {
+        width: 100%;
+        min-width: auto;
+    }
+}
+
+/* Modal Animation */
+.modal.fade .modal-dialog {
+    transition: transform 0.3s ease-out;
+}
+
+/* Accessibility */
+.ndas-contact-modal .modal-content:focus-visible {
+    outline: 2px solid #7aa0c4;
     outline-offset: 2px;
 }

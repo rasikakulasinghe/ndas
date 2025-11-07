@@ -528,6 +528,9 @@ class DeveloperContacts(TimeStampedModel, UserTrackingMixin):
     twitter_url = models.URLField(
         blank=True, help_text="Twitter profile URL", verbose_name="Twitter"
     )
+    linkedin_url = models.URLField(
+        blank=True, help_text="LinkedIn profile URL", verbose_name="LinkedIn"
+    )
     whatsapp_number = models.CharField(
         max_length=15,
         validators=[validate_phone_number],

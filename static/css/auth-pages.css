@@ -1,0 +1,674 @@
+/*
+ * NDAS - Authentication Pages Unified Styles
+ * Contact Support, Password Reset, and other auth pages
+ * Updated: November 6, 2025 - Version 2
+ * Color palette: Muted Blue (#4a6e8a), Accent Blue (#7aa0c4), Deep Blue (#2c5282)
+ * Font: Poppins (Google Fonts)
+ */
+
+/* Global Reset for Auth Pages */
+body {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+}
+
+/* ==================== SHARED AUTH PAGE LAYOUT ==================== */
+
+/* Auth Page Container */
+.ndas-auth-page {
+    background: #f8f9fa !important;
+    min-height: 100vh;
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    width: 100%;
+    position: relative;
+}
+
+.ndas-auth-page .container-fluid {
+    padding: 0;
+    max-width: 100%;
+}
+
+/* Auth Card */
+.ndas-auth-card {
+    background: #ffffff;
+    border-radius: 1.5rem;
+    box-shadow:
+        0 10px 40px rgba(0, 0, 0, 0.1),
+        0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    max-width: 900px;
+    width: 100%;
+    margin: 2rem auto;
+}
+
+.ndas-auth-card .row {
+    min-height: 550px;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* ==================== WELCOME PANEL (LEFT SIDE) ==================== */
+
+.ndas-welcome-panel {
+    background: linear-gradient(135deg, #4a6e8a 0%, #5b7fa0 100%) !important;
+    color: #ffffff !important;
+    padding: 3rem 2rem;
+    border-radius: 1.5rem 0 0 1.5rem;
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+}
+
+.ndas-welcome-content {
+    max-width: 350px;
+    margin: 0 auto;
+}
+
+/* Brand Icon */
+.ndas-brand-icon {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.ndas-brand-icon svg,
+.ndas-brand-icon i {
+    font-size: 4rem;
+    color: rgba(255, 255, 255, 0.9);
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.15));
+}
+
+/* Welcome Title */
+.ndas-welcome-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #ffffff !important;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.ndas-welcome-subtitle {
+    font-size: 1.125rem;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.9) !important;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+/* Welcome Description */
+.ndas-welcome-description {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.85) !important;
+    text-align: center;
+}
+
+.ndas-welcome-description p {
+    margin-bottom: 1rem;
+}
+
+.ndas-welcome-description ul {
+    text-align: left;
+    padding-left: 1.5rem;
+    margin-top: 1rem;
+}
+
+.ndas-welcome-description ul li {
+    margin-bottom: 0.5rem;
+}
+
+/* ==================== FORM PANEL (RIGHT SIDE) ==================== */
+
+.ndas-form-panel {
+    background: #ffffff;
+    padding: 3rem 2.5rem;
+    padding-left: 15px !important;
+    padding-right: 15px !important;
+}
+
+.ndas-form-content {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* Form Header */
+.ndas-form-header {
+    margin-bottom: 2rem;
+}
+
+.ndas-form-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #1a202c;
+    margin-bottom: 0.5rem;
+}
+
+.ndas-form-subtitle {
+    font-size: 0.9375rem;
+    color: #718096;
+}
+
+/* ==================== FORM ELEMENTS ==================== */
+
+/* Form Labels */
+.ndas-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+/* Form Inputs */
+.ndas-input {
+    background: #f8f9fa;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.625rem;
+    padding: 0.875rem 1rem;
+    font-size: 0.9375rem;
+    color: #2d3748;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.ndas-input:focus {
+    background: #ffffff;
+    border-color: #7aa0c4;
+    box-shadow: 0 0 0 3px rgba(122, 160, 196, 0.1);
+    outline: none;
+}
+
+.ndas-input::placeholder {
+    color: #a0aec0;
+    font-size: 0.875rem;
+}
+
+/* Password Field Wrapper */
+.ndas-password-wrapper {
+    position: relative;
+}
+
+.ndas-password-toggle {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    color: #718096;
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
+}
+
+.ndas-password-toggle:hover {
+    color: #4a6e8a;
+}
+
+.ndas-password-toggle:focus {
+    outline: 2px solid #7aa0c4;
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+}
+
+/* ==================== BUTTONS ==================== */
+
+/* Primary Button (Submit) */
+.ndas-btn-primary {
+    background: linear-gradient(135deg, #4a6e8a 0%, #5b7fa0 100%);
+    border: none;
+    border-radius: 0.625rem;
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ffffff;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 14px rgba(74, 110, 138, 0.3);
+    cursor: pointer;
+    width: 100%;
+}
+
+.ndas-btn-primary:hover {
+    background: linear-gradient(135deg, #5b7fa0 0%, #6a8fb0 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(74, 110, 138, 0.4);
+    color: #ffffff;
+}
+
+.ndas-btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(74, 110, 138, 0.3);
+}
+
+.ndas-btn-primary:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(122, 160, 196, 0.3);
+}
+
+/* Loading State */
+.ndas-btn-primary.loading {
+    pointer-events: none;
+    opacity: 0.7;
+    position: relative;
+}
+
+.ndas-btn-primary.loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    margin-left: 10px;
+    border: 2px solid transparent;
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Secondary Button */
+.ndas-btn-secondary {
+    border: 1px solid #cbd5e0;
+    color: #4a5568;
+    background: transparent;
+    border-radius: 0.625rem;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.ndas-btn-secondary:hover {
+    background: #f7fafc;
+    border-color: #4a6e8a;
+    color: #4a6e8a;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(74, 110, 138, 0.15);
+}
+
+/* WhatsApp Button */
+.ndas-whatsapp-btn {
+    background: linear-gradient(135deg, #25d366 0%, #128c7e 100%) !important;
+    border: none !important;
+    border-radius: 0.625rem;
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white !important;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 14px rgba(37, 211, 102, 0.3);
+}
+
+.ndas-whatsapp-btn:hover {
+    background: linear-gradient(135deg, #128c7e 0%, #0da066 100%) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+    color: white !important;
+}
+
+.ndas-whatsapp-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3);
+}
+
+.ndas-whatsapp-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.3);
+}
+
+/* ==================== DEVELOPER AVATAR ==================== */
+
+.ndas-developer-avatar {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid #e2e8f0;
+}
+
+.ndas-developer-avatar-placeholder {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto;
+    background: #f8f9fa;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #e2e8f0;
+}
+
+.ndas-developer-avatar-placeholder i {
+    color: #4a6e8a;
+}
+
+/* ==================== UTILITY CLASSES ==================== */
+
+.ndas-text-muted {
+    color: #718096;
+}
+
+.ndas-icon-primary {
+    color: #4a6e8a;
+}
+
+/* ==================== SOCIAL BUTTONS ==================== */
+
+.ndas-social-btn {
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 1px solid;
+}
+
+.ndas-social-facebook {
+    border-color: #4a6e8a;
+    color: #4a6e8a;
+    background: transparent;
+}
+
+.ndas-social-facebook:hover {
+    background: #4a6e8a;
+    color: white !important;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(74, 110, 138, 0.2);
+}
+
+.ndas-social-twitter {
+    border-color: #1da1f2;
+    color: #1da1f2;
+    background: transparent;
+}
+
+.ndas-social-twitter:hover {
+    background: #1da1f2;
+    color: white !important;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(29, 161, 242, 0.2);
+}
+
+.ndas-social-youtube {
+    border-color: #ff0000;
+    color: #ff0000;
+    background: transparent;
+}
+
+.ndas-social-youtube:hover {
+    background: #ff0000;
+    color: white !important;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(255, 0, 0, 0.2);
+}
+
+/* ==================== LINKS ==================== */
+
+.ndas-support-link {
+    color: #4a6e8a;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.ndas-support-link:hover {
+    color: #2c5282;
+    text-decoration: underline;
+}
+
+/* ==================== INFO DISPLAYS ==================== */
+
+.ndas-info-display {
+    background: #f8f9fa;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.625rem;
+    padding: 0.875rem 1rem;
+    font-size: 0.9375rem;
+    color: #2d3748;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ndas-info-display:hover {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+}
+
+.ndas-info-display a {
+    color: #4a6e8a;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.ndas-info-display a:hover {
+    color: #2c5282;
+    text-decoration: underline;
+}
+
+/* ==================== ALERTS & CALLOUTS ==================== */
+
+.ndas-alert {
+    background: #e8f4fd;
+    border-left: 4px solid #4a6e8a;
+    border-radius: 0.625rem;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.ndas-alert h5 {
+    color: #2c5282;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.ndas-alert p {
+    color: #2d3748;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+}
+
+.ndas-alert ul {
+    padding-left: 1.5rem;
+    margin-top: 0.5rem;
+}
+
+.ndas-alert ul li {
+    margin-bottom: 0.25rem;
+    color: #4a5568;
+}
+
+/* ==================== FOOTER ==================== */
+
+.ndas-footer-text {
+    font-size: 0.875rem;
+    color: #718096;
+    text-align: center;
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+
+/* Tablet and below */
+@media (max-width: 768px) {
+    .ndas-auth-page {
+        padding: 0;
+    }
+
+    .ndas-auth-card {
+        border-radius: 0;
+        margin: 0;
+        min-height: 100vh;
+    }
+
+    .ndas-auth-card .row {
+        min-height: 100vh;
+    }
+
+    .ndas-welcome-panel {
+        padding: 2rem 1.5rem;
+        border-radius: 0;
+        min-height: auto;
+    }
+
+    .ndas-welcome-title {
+        font-size: 2rem;
+    }
+
+    .ndas-welcome-subtitle {
+        font-size: 1rem;
+    }
+
+    .ndas-welcome-description {
+        font-size: 0.8125rem;
+    }
+
+    .ndas-brand-icon svg,
+    .ndas-brand-icon i {
+        font-size: 3rem;
+    }
+
+    .ndas-form-panel {
+        padding: 2rem 1.5rem;
+    }
+
+    .ndas-form-title {
+        font-size: 1.75rem;
+    }
+
+    .ndas-form-subtitle {
+        font-size: 0.875rem;
+    }
+}
+
+/* Mobile phones */
+@media (max-width: 576px) {
+    .ndas-welcome-panel {
+        padding: 1.5rem 1rem;
+    }
+
+    .ndas-welcome-content {
+        max-width: 100%;
+    }
+
+    .ndas-welcome-title {
+        font-size: 1.75rem;
+        letter-spacing: 1px;
+    }
+
+    .ndas-welcome-subtitle {
+        font-size: 0.9375rem;
+    }
+
+    .ndas-brand-icon svg,
+    .ndas-brand-icon i {
+        font-size: 2.5rem;
+    }
+
+    .ndas-form-panel {
+        padding: 1.5rem 1rem;
+    }
+
+    .ndas-form-content {
+        max-width: 100%;
+    }
+
+    .ndas-form-title {
+        font-size: 1.5rem;
+    }
+
+    .ndas-form-subtitle {
+        font-size: 0.8125rem;
+    }
+
+    .ndas-input {
+        padding: 0.75rem 0.875rem;
+        font-size: 0.875rem;
+    }
+
+    .ndas-btn-primary {
+        padding: 0.75rem 1.25rem;
+        font-size: 0.9375rem;
+    }
+}
+
+/* Extra small devices */
+@media (max-width: 400px) {
+    .ndas-welcome-description ul {
+        display: none;
+    }
+
+    .ndas-form-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem !important;
+    }
+}
+
+/* ==================== ACCESSIBILITY ==================== */
+
+/* Focus visible for keyboard navigation */
+.ndas-input:focus-visible,
+.ndas-btn-primary:focus-visible,
+.ndas-btn-secondary:focus-visible,
+.ndas-password-toggle:focus-visible {
+    outline: 2px solid #7aa0c4;
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .ndas-input {
+        border-width: 2px;
+    }
+
+    .ndas-btn-primary,
+    .ndas-btn-secondary {
+        border: 2px solid #4a6e8a;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ==================== PRINT STYLES ==================== */
+
+@media print {
+    .ndas-auth-page {
+        background: #ffffff;
+    }
+
+    .ndas-auth-card {
+        box-shadow: none;
+        border: 1px solid #e2e8f0;
+    }
+
+    .ndas-btn-primary,
+    .ndas-btn-secondary,
+    .ndas-support-link {
+        display: none;
+    }
+}

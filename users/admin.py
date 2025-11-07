@@ -74,7 +74,7 @@ class DeveloperContactsAdmin(admin.ModelAdmin):
             'fields': ('mobile_phone', 'landline_phone', 'whatsapp_number')
         }),
         ('Social Media', {
-            'fields': ('facebook_url', 'twitter_url', 'youtube_url', 'website_url'),
+            'fields': ('facebook_url', 'twitter_url', 'linkedin_url', 'youtube_url', 'website_url'),
             'classes': ('collapse',)
         }),
         ('Timestamps', {

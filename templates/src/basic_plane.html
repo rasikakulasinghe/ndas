@@ -38,7 +38,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
   {% endblock extra_css %}
 
 </head>
-<body class="hold-transition sidebar-mini layout-fixed">
+<body class="{% block body_class %}hold-transition{% endblock body_class %}">
 
 {% block mainbody %}
 

@@ -27,6 +27,15 @@ import os
 # Create your views here.
 def loginPage(request):
     logged_user = request.user
+
+    # Fetch developer contact information for modal
+    try:
+        developer = DeveloperContacts.objects.get(id=1)
+    except DeveloperContacts.DoesNotExist:
+        developer = DeveloperContacts.objects.first()
+        if not developer:
+            developer = DeveloperContacts.objects.create()
+
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
         password = request.POST.get('password', '')
@@ -35,11 +44,11 @@ def loginPage(request):
         # Basic validation
         if not username:
             messages.error(request, 'Username is required.')
-            return render(request, 'users/login.html', {'logged_user': logged_user})
+            return render(request, 'users/login.html', {'logged_user': logged_user, 'developer': developer})
         
         if not password:
             messages.error(request, 'Password is required.')
-            return render(request, 'users/login.html', {'logged_user': logged_user})
+            return render(request, 'users/login.html', {'logged_user': logged_user, 'developer': developer})
         
         if CustomUser.objects.filter(username=username).exists():
             user = authenticate(request, username=username, password=password)
@@ -49,6 +58,7 @@ def loginPage(request):
                     messages.warning(request, 'Please verify your email address before logging in.')
                     return render(request, 'users/login.html', {
                         'logged_user': logged_user,
+                        'developer': developer,
                         'show_resend_verification': True,
                         'unverified_user_email': user.email
                     })
@@ -116,7 +126,7 @@ def loginPage(request):
                     logger.error(f"Error logging failed login attempt: {e}")
                 
                 messages.error(request, 'Wrong password. You are not authorized to login.')
-                return render(request, 'users/login.html', {'logged_user': logged_user})
+                return render(request, 'users/login.html', {'logged_user': logged_user, 'developer': developer})
         else:
             # User doesn't exist
             try:
@@ -134,12 +144,12 @@ def loginPage(request):
                 logger.error(f"Error logging failed login attempt: {e}")
             
             messages.error(request, 'Wrong username. You are not authorized to login.')
-            return render(request, 'users/login.html', {'logged_user': logged_user})
+            return render(request, 'users/login.html', {'logged_user': logged_user, 'developer': developer})
     else:
         if request.user.is_authenticated:
             return redirect('home')
         else:
-            return render(request, 'users/login.html', {'logged_user': logged_user})
+            return render(request, 'users/login.html', {'logged_user': logged_user, 'developer': developer})
 
 def logoutPage(request):
     user = request.user

@@ -474,7 +474,7 @@ def video_delete_confirm(request, video_id):
             "can_delete": assessments_count == 0,
         }
 
-        return render(request, "video/delete_confirm.html", context)
+        return render(request, "video/delete-confirm.html", context)
 
     except Video.DoesNotExist:
         messages.error(request, "Video not found.")
@@ -488,7 +488,7 @@ def video_delete_confirm(request, video_id):
 @login_required(login_url="user-login")
 @require_http_methods(["POST"])
 def video_delete(request, video_id):
-    """Delete video after confirmation"""
+    """Delete video after password confirmation"""
     try:
         video = get_object_or_404(Video, id=video_id)
 
@@ -496,6 +496,21 @@ def video_delete(request, video_id):
         if not request.user.is_staff and video.added_by != request.user:
             messages.error(request, "You do not have permission to delete this video.")
             return redirect("video:manager")
+
+        # Verify password
+        password = request.POST.get("password", "")
+        if not password:
+            messages.error(request, "Password is required to delete the video.")
+            return redirect("video:delete-confirm", video_id=video_id)
+
+        if not request.user.check_password(password):
+            logger.warning(
+                f"Invalid password attempt for video deletion by user: {request.user.username} for video ID: {video_id}"
+            )
+            messages.error(
+                request, "Invalid password. Please enter the correct password to confirm deletion."
+            )
+            return redirect("video:delete-confirm", video_id=video_id)
 
         # Check if video is used in assessments
         from patients.models import GMAssessment
@@ -507,6 +522,11 @@ def video_delete(request, video_id):
         # Store patient info for redirect
         patient_id = video.patient.id
         video_title = video.title
+
+        # Log the deletion
+        logger.info(
+            f"Video deletion: Video ID {video_id} ('{video_title}') deleted by user {request.user.username}"
+        )
 
         # Delete the video file from storage
         if video.video_file:

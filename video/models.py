@@ -1,4 +1,5 @@
 import os
+import logging
 from datetime import timedelta
 from django.db import models
 from django.utils import timezone
@@ -10,10 +11,72 @@ from django.utils.html import format_html
 from ndas.custom_codes.Custom_abstract_class import TimeStampedModel, UserTrackingMixin
 from ndas.custom_codes.validators import validate_video_file, validate_recording_date
 from ndas.custom_codes.custom_methods import calculate_age_string, extract_video_metadata, simple_video_duration_estimate
-        
+
 from ndas.custom_codes.choice import PROCESSING_STATUS
 
+logger = logging.getLogger(__name__)
+
+
+class VideoQuerySet(models.QuerySet):
+    """Custom queryset for Video model with performance optimizations"""
+
+    def with_assessment_status(self):
+        """Annotate videos with assessment status to avoid N+1 queries"""
+        from patients.models import GMAssessment
+        return self.annotate(
+            is_assessed=models.Exists(
+                GMAssessment.objects.filter(video_file=models.OuterRef('pk'))
+            )
+        )
+
+    def with_bookmark_status(self, user):
+        """Annotate videos with bookmark status for specific user"""
+        from patients.models import Bookmark
+        return self.annotate(
+            user_bookmarked=models.Exists(
+                Bookmark.objects.filter(
+                    bookmark_type="Video",
+                    object_id=models.OuterRef('pk'),
+                    added_by=user
+                )
+            )
+        )
+
+    def new_videos_only(self):
+        """Return only videos not used in assessments"""
+        from patients.models import GMAssessment
+        assessed_video_ids = GMAssessment.objects.values_list('video_file_id', flat=True)
+        return self.exclude(id__in=assessed_video_ids)
+
+    def assessed_videos_only(self):
+        """Return only videos used in assessments"""
+        from patients.models import GMAssessment
+        assessed_video_ids = GMAssessment.objects.values_list('video_file_id', flat=True)
+        return self.filter(id__in=assessed_video_ids)
+
+
+class VideoManager(models.Manager):
+    """Custom manager for Video model"""
+
+    def get_queryset(self):
+        return VideoQuerySet(self.model, using=self._db)
+
+    def with_assessment_status(self):
+        return self.get_queryset().with_assessment_status()
+
+    def with_bookmark_status(self, user):
+        return self.get_queryset().with_bookmark_status(user)
+
+    def new_videos_only(self):
+        return self.get_queryset().new_videos_only()
+
+    def assessed_videos_only(self):
+        return self.get_queryset().assessed_videos_only()
+
+
 class Video(TimeStampedModel, UserTrackingMixin):
+
+    objects = VideoManager()
 
     video_file = models.FileField(
         upload_to="videos/%Y/%m/",  # Better organization by month
@@ -98,12 +161,14 @@ class Video(TimeStampedModel, UserTrackingMixin):
         verbose_name = _("Video")
         verbose_name_plural = _("Videos")
         ordering = ["-recorded_on", "-created_at"]  # Secondary sort by creation time
-        
-        # Composite indexes for common queries
+
+        # FIX 3.2: Enhanced indexes for common queries
         indexes = [
             models.Index(fields=['patient', '-recorded_on']),
+            models.Index(fields=['processing_status'], name='video_processing_status_idx'),
+            models.Index(fields=['patient', 'processing_status'], name='video_patient_status_idx'),
         ]
-        
+
         # Ensure no duplicate videos for same patient at same time
         constraints = [
             models.UniqueConstraint(
@@ -144,79 +209,138 @@ class Video(TimeStampedModel, UserTrackingMixin):
                 pass
     
     def save(self, *args, **kwargs):
-        # Auto-populate file size if not set
+        # FIX 1.3: Validate patient exists before any processing
+        if self.patient_id and not getattr(self, '_patient_validated', False):
+            try:
+                from patients.models import Patient
+                Patient.objects.get(pk=self.patient_id)
+                self._patient_validated = True
+            except Patient.DoesNotExist:
+                raise ValidationError({'patient': _('Selected patient does not exist.')})
+
+        # FIX 1.4: Auto-populate file size if not set
         if self.video_file and not self.file_size_bytes:
             try:
                 self.file_size_bytes = self.video_file.size
-            except (ValueError, OSError):
-                pass
+            except (ValueError, OSError) as e:
+                logger.warning(
+                    f"Failed to get file size for video {self.title}: {e}",
+                    extra={'video_title': self.title}
+                )
 
-        # Extract video metadata if video file is present and duration not set
+        # FIX 1.2 & 3.4: Extract video metadata with better exception handling and logging
         if self.video_file and not self.duration_seconds:
             try:
-                # Get the file path - handle both uploaded files and existing files
-                if hasattr(self.video_file, 'path'):
-                    file_path = self.video_file.path
-                elif hasattr(self.video_file, 'temporary_file_path'):
-                    file_path = self.video_file.temporary_file_path()
-                else:
-                    # For uploaded files that haven't been saved yet
-                    import tempfile
-                    import os
-
-                    # Create a temporary file to extract metadata
-                    with tempfile.NamedTemporaryFile(delete=False, suffix='.tmp') as temp_file:
-                        for chunk in self.video_file.chunks():
-                            temp_file.write(chunk)
-                        temp_file.flush()
-                        file_path = temp_file.name
-
-                    try:
-                        metadata = extract_video_metadata(file_path)
-                        if metadata:
-                            if metadata.get('duration_seconds'):
-                                self.duration_seconds = metadata['duration_seconds']
-                            if metadata.get('resolution') and not self.resolution:
-                                self.resolution = metadata['resolution']
-                    finally:
-                        # Clean up temporary file
-                        try:
-                            os.unlink(file_path)
-                        except:
-                            pass
-                    file_path = None  # Skip the normal metadata extraction
+                file_path = self._get_video_file_path()
 
                 if file_path:
                     metadata = extract_video_metadata(file_path)
                     if metadata:
-                        if metadata.get('duration_seconds'):
-                            self.duration_seconds = metadata['duration_seconds']
-                        if metadata.get('resolution') and not self.resolution:
-                            self.resolution = metadata['resolution']
+                        self._apply_video_metadata(metadata)
+                        logger.info(
+                            f"Video metadata extracted successfully",
+                            extra={
+                                'video_title': self.title,
+                                'duration': self.duration_seconds,
+                                'resolution': self.resolution,
+                                'file_size': self.file_size_bytes
+                            }
+                        )
                     else:
-                        # Try simple estimation as last resort
-                        estimation = simple_video_duration_estimate(file_path)
-                        if estimation and estimation.get('duration_seconds'):
-                            self.duration_seconds = estimation['duration_seconds']
+                        # Try simple estimation as fallback
+                        self._try_estimate_metadata(file_path)
+
+            except (IOError, OSError) as e:
+                logger.warning(
+                    f"I/O error during video metadata extraction for {self.title}: {e}",
+                    extra={'video_title': self.title, 'error_type': 'IOError'}
+                )
+                self._try_fallback_estimation()
+
+            except (AttributeError, ValueError, TypeError) as e:
+                logger.warning(
+                    f"Data error during video metadata extraction for {self.title}: {e}",
+                    extra={'video_title': self.title, 'error_type': type(e).__name__}
+                )
+                self._try_fallback_estimation()
 
             except Exception as e:
-                # Log the error but don't prevent saving
-                import logging
-                logger = logging.getLogger(__name__)
-                logger.warning(f"Failed to extract video metadata for {self.title}: {str(e)}")
-
-                # Try simple estimation as absolute fallback
-                try:
-                    if hasattr(self.video_file, 'path'):
-                        estimation = simple_video_duration_estimate(self.video_file.path)
-                        if estimation and estimation.get('duration_seconds'):
-                            self.duration_seconds = estimation['duration_seconds']
-                except:
-                    pass  # If estimation also fails, just continue without duration
+                logger.error(
+                    f"Unexpected error during video metadata extraction",
+                    extra={
+                        'video_title': self.title,
+                        'error': str(e),
+                        'error_type': type(e).__name__
+                    },
+                    exc_info=True
+                )
+                self._try_fallback_estimation()
 
         # Validate before saving
         self.clean()
         super().save(*args, **kwargs)
+
+    def _get_video_file_path(self):
+        """Helper method to get video file path for metadata extraction"""
+        if hasattr(self.video_file, 'path'):
+            return self.video_file.path
+        elif hasattr(self.video_file, 'temporary_file_path'):
+            return self.video_file.temporary_file_path()
+        else:
+            # For uploaded files that haven't been saved yet
+            return self._create_temp_file_for_metadata()
+
+    def _create_temp_file_for_metadata(self):
+        """Create temporary file for metadata extraction from uploaded file"""
+        import tempfile
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.tmp') as temp_file:
+            for chunk in self.video_file.chunks():
+                temp_file.write(chunk)
+            temp_file.flush()
+            file_path = temp_file.name
+
+        try:
+            metadata = extract_video_metadata(file_path)
+            if metadata:
+                self._apply_video_metadata(metadata)
+        finally:
+            # Clean up temporary file
+            try:
+                os.unlink(file_path)
+            except (OSError, IOError, PermissionError) as e:
+                logger.warning(f"Failed to delete temporary file {file_path}: {e}")
+
+        return None  # Skip normal metadata extraction
+
+    def _apply_video_metadata(self, metadata):
+        """Apply extracted metadata to video instance"""
+        if metadata.get('duration_seconds'):
+            self.duration_seconds = metadata['duration_seconds']
+        if metadata.get('resolution') and not self.resolution:
+            self.resolution = metadata['resolution']
+
+    def _try_estimate_metadata(self, file_path):
+        """Try simple estimation as fallback"""
+        try:
+            estimation = simple_video_duration_estimate(file_path)
+            if estimation and estimation.get('duration_seconds'):
+                self.duration_seconds = estimation['duration_seconds']
+                logger.info(
+                    f"Video duration estimated for {self.title}",
+                    extra={'video_title': self.title, 'duration': self.duration_seconds}
+                )
+        except (IOError, OSError, ValueError) as e:
+            logger.warning(f"Failed to estimate video duration for {self.title}: {e}")
+
+    def _try_fallback_estimation(self):
+        """Try estimation as absolute fallback"""
+        try:
+            if hasattr(self.video_file, 'path'):
+                self._try_estimate_metadata(self.video_file.path)
+        except Exception as e:
+            logger.debug(f"Fallback estimation also failed for {self.title}: {e}")
+            # Continue without duration - not critical for saving
 
     @property
     def age_on_recording(self):
@@ -229,27 +353,26 @@ class Video(TimeStampedModel, UserTrackingMixin):
             "medical"
         )
     
-    # Cached properties to avoid repeated database hits
-    def is_new_file(self):
-        """Check if this video has been used in any assessments."""
-        from patients.models import GMAssessment
-        return not GMAssessment.objects.filter(video_file=self).exists()
-    
-    def is_bookmarked(self):
-        """Check if this video is bookmarked by any user."""
-        from patients.models import Bookmark
-        return Bookmark.objects.filter(
-            bookmark_type="Video",
-            object_id=self.pk
-        ).exists()
+    # FIX 1.1: Removed N+1 query methods - use annotations from VideoQuerySet instead
+    # Use Video.objects.with_assessment_status() and check 'is_assessed' annotation
+    # Use Video.objects.with_bookmark_status(user) and check 'user_bookmarked' annotation
+    # These methods caused N+1 queries when iterating over video lists
 
-    def get_bookmark(self):
-        """Get the bookmark object if it exists."""
+    def get_bookmark_for_user(self, user):
+        """
+        Get the bookmark object for specific user if it exists.
+        Note: This still performs a query, but it's explicit and only used
+        in detail views, not list views.
+        """
         from patients.models import Bookmark
-        return Bookmark.objects.filter(
-            bookmark_type="Video",
-            object_id=self.pk
-        ).first()
+        try:
+            return Bookmark.objects.select_related("added_by").get(
+                bookmark_type="Video",
+                object_id=self.pk,
+                added_by=user
+            )
+        except Bookmark.DoesNotExist:
+            return None
     
     # Utility methods
     @property
@@ -278,10 +401,11 @@ class Video(TimeStampedModel, UserTrackingMixin):
 
     def get_resolution_display(self):
         return self.resolution or "Unknown"
-    
-    def video_count(self):
-        return Video.objects.filter(patient=self.patient).count() or "Unknown"
-    
+
+    # FIX 1.4: Removed video_count() method - causes N+1 queries
+    # Use patient.videos.count() or annotate Patient queryset with Count('videos')
+    # in Patient model manager for better performance
+
     def age_string_recorded(self):
         """Get formatted age string for how long ago the video was recorded."""
         if not self.recorded_on:

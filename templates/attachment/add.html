@@ -407,34 +407,39 @@ function onFormSubmit(event) {
       if (xhr.status === 200) {
         try {
           const response = JSON.parse(xhr.responseText);
-          
+
           if (response.success) {
             // Success
             progressDiv.style.display = 'none';
             showMessage('success', 'File uploaded successfully! You can now view, edit, or upload another attachment.');
-            
+
             // Show success action buttons
             btn_add.style.display = 'none';
             successActions.style.display = 'block';
-            
+
             // Setup button click handlers
             const viewUrl = `/attachment/view/${response.f_id}`;
             const editUrl = `/attachment/edit/${response.f_id}`;
-            
+
             btn_view.onclick = function() {
               window.location.href = viewUrl;
             };
-            
+
             btn_edit.onclick = function() {
               window.location.href = editUrl;
             };
-            
+
+            // FIX 2.4: Memory cleanup after successful upload
+            cleanupUploadResources();
+
           } else {
             // Server-side validation error
             progressDiv.style.display = 'none';
             showMessage('danger', response.msg || 'Upload failed. Please try again.');
             btn_add.disabled = false;
             btn_add.innerHTML = '<i class="fas fa-upload"></i> Upload Attachment';
+            // FIX 2.4: Memory cleanup after error
+            cleanupUploadResources();
           }
         } catch (e) {
           // JSON parse error
@@ -442,6 +447,8 @@ function onFormSubmit(event) {
           showMessage('danger', 'Unexpected server response. Please try again.');
           btn_add.disabled = false;
           btn_add.innerHTML = '<i class="fas fa-upload"></i> Upload Attachment';
+          // FIX 2.4: Memory cleanup after error
+          cleanupUploadResources();
         }
       } else {
         // HTTP error
@@ -449,6 +456,8 @@ function onFormSubmit(event) {
         showMessage('danger', `Server error (${xhr.status}). Please try again.`);
         btn_add.disabled = false;
         btn_add.innerHTML = '<i class="fas fa-upload"></i> Upload Attachment';
+        // FIX 2.4: Memory cleanup after error
+        cleanupUploadResources();
       }
     }
   };
@@ -459,10 +468,51 @@ function onFormSubmit(event) {
     showMessage('danger', 'Network error. Please check your connection and try again.');
     btn_add.disabled = false;
     btn_add.innerHTML = '<i class="fas fa-upload"></i> Upload Attachment';
+    // FIX 2.4: Memory cleanup after error
+    cleanupUploadResources();
   });
-  
+
   // Send the request
   xhr.send(formData);
+}
+
+// FIX 2.4: Memory cleanup function to prevent memory leaks
+function cleanupUploadResources() {
+  try {
+    // Clear file input to free memory
+    const fileInput = document.getElementById('id_attachment');
+    if (fileInput) {
+      fileInput.value = '';
+      // Reset custom file label
+      const fileLabel = fileInput.nextElementSibling;
+      if (fileLabel && fileLabel.classList.contains('custom-file-label')) {
+        fileLabel.textContent = 'Choose file...';
+      }
+    }
+
+    // Clear validation states
+    document.querySelectorAll('.is-valid, .is-invalid').forEach(function(el) {
+      el.classList.remove('is-valid', 'is-invalid');
+    });
+
+    // Clear error messages
+    document.querySelectorAll('.invalid-feedback').forEach(function(el) {
+      el.textContent = '';
+    });
+
+    // Hint to garbage collector (if available)
+    if (window.gc && typeof window.gc === 'function') {
+      try {
+        window.gc();
+      } catch (e) {
+        // Ignore - gc() may not be available
+      }
+    }
+
+    console.log('Upload resources cleaned up');
+  } catch (e) {
+    console.warn('Error during upload cleanup:', e);
+  }
 }
 </script>
 {% endblock extra_js %}

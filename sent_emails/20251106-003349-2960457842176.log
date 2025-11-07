@@ -1,0 +1,25 @@
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Subject: Password reset on 127.0.0.1:8000
+From: noreply@ndas-system.com
+To: rasikakulasinghe@gmail.com
+Date: Wed, 05 Nov 2025 19:03:49 -0000
+Message-ID: <176236942935.11672.4689889604777308476@rasika-pc>
+
+
+You're receiving this email because you requested a password reset for your user account at 127.0.0.1:8000.
+
+Please go to the following page and choose a new password:
+
+http://127.0.0.1:8000/users/reset/MQ/cytlkd-abc746ce3fb68c209cd2bee361d384bc/
+
+Your username, in case you’ve forgotten: rasikakulasinghe
+
+Thanks for using our site!
+
+The 127.0.0.1:8000 team
+
+
+
+-------------------------------------------------------------------------------

@@ -15,7 +15,13 @@
       "Bash(openspec show:*)",
       "Bash(git ls-tree:*)",
       "Bash(mkdir:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(cat:*)",
+      "Bash(timeout 2 taskkill:*)",
+      "Bash(find:*)",
+      "Bash(timeout /t 3 /nobreak)",
+      "Skill(example-skills:webapp-testing)",
+      "Bash(playwright install:*)"
     ],
     "deny": [],
     "ask": []
