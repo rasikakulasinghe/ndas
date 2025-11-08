@@ -205,31 +205,61 @@ body.ndas-login-body {
                 </div>
                 {% endif %}
 
+                <!-- Landline Phone -->
+                {% if developer.landline_phone %}
+                <div class="ndas-contact-item">
+                    <div class="ndas-contact-icon">
+                        <i class="fas fa-phone"></i>
+                    </div>
+                    <div class="ndas-contact-details">
+                        <label class="ndas-contact-label">Landline</label>
+                        <a href="tel:{{ developer.landline_phone }}" class="ndas-contact-value">{{ developer.landline_phone }}</a>
+                    </div>
+                </div>
+                {% endif %}
+
                 <!-- Social Media Links -->
-                {% if developer.facebook_url or developer.twitter_url or developer.linkedin_url %}
+                {% if developer.facebook_url or developer.twitter_url or developer.linkedin_url or developer.youtube_url or developer.website_url %}
                 <div class="ndas-contact-social mt-4">
-                    <label class="ndas-contact-label mb-2">
-                        <i class="fas fa-share-alt mr-2"></i>Connect with me
-                    </label>
-                    <div class="ndas-social-buttons">
+                  
+                    <div class="ndas-social-icons">
                         {% if developer.facebook_url %}
                         <a href="{{ developer.facebook_url }}" target="_blank" rel="noopener noreferrer"
-                           class="btn ndas-social-btn ndas-social-facebook">
-                            <i class="fab fa-facebook-f mr-2"></i>Facebook
+                           class="ndas-social-icon ndas-social-facebook"
+                           data-toggle="tooltip" data-placement="top" title="Facebook">
+                            <i class="fab fa-facebook-f"></i>
                         </a>
                         {% endif %}
 
                         {% if developer.linkedin_url %}
                         <a href="{{ developer.linkedin_url }}" target="_blank" rel="noopener noreferrer"
-                           class="btn ndas-social-btn ndas-social-linkedin">
-                            <i class="fab fa-linkedin-in mr-2"></i>LinkedIn
+                           class="ndas-social-icon ndas-social-linkedin"
+                           data-toggle="tooltip" data-placement="top" title="LinkedIn">
+                            <i class="fab fa-linkedin-in"></i>
                         </a>
                         {% endif %}
 
                         {% if developer.twitter_url %}
                         <a href="{{ developer.twitter_url }}" target="_blank" rel="noopener noreferrer"
-                           class="btn ndas-social-btn ndas-social-twitter">
-                            <i class="fab fa-x-twitter mr-2"></i>X
+                           class="ndas-social-icon ndas-social-twitter"
+                           data-toggle="tooltip" data-placement="top" title="X (Twitter)">
+                            <i class="fab fa-x-twitter"></i>
+                        </a>
+                        {% endif %}
+
+                        {% if developer.youtube_url %}
+                        <a href="{{ developer.youtube_url }}" target="_blank" rel="noopener noreferrer"
+                           class="ndas-social-icon ndas-social-youtube"
+                           data-toggle="tooltip" data-placement="top" title="YouTube">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                        {% endif %}
+
+                        {% if developer.website_url %}
+                        <a href="{{ developer.website_url }}" target="_blank" rel="noopener noreferrer"
+                           class="ndas-social-icon ndas-social-website"
+                           data-toggle="tooltip" data-placement="top" title="Website">
+                            <i class="fas fa-globe"></i>
                         </a>
                         {% endif %}
                     </div>

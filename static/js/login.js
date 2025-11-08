@@ -109,10 +109,20 @@ document.addEventListener('DOMContentLoaded', function() {
             if (firstFocusable) {
                 firstFocusable.focus();
             }
+
+            // Initialize tooltips for social media icons
+            $('[data-toggle="tooltip"]').tooltip({
+                trigger: 'hover',
+                boundary: 'window',
+                animation: true
+            });
         });
 
         // On modal hidden (after close animation)
         $(contactModal).on('hidden.bs.modal', function() {
+            // Destroy tooltips to prevent memory leaks
+            $('[data-toggle="tooltip"]').tooltip('dispose');
+
             // Return focus to trigger element
             if (modalTrigger && modalTrigger.focus) {
                 modalTrigger.focus();

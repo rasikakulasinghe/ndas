@@ -3,25 +3,9 @@
 {% block title %}Contact Developer{% endblock %}
 
 {% block main_content %}
-    <div class="content-wrapper">
-        <!-- Content Header -->
-        <section class="content-header">
-            <div class="container">
-                <div class="row mb-2">
-                    <div class="col-sm-12">
-                        <h1 class="text-center">Contact Developer</h1>
-                    </div>
-                </div>
-            </div>
-        </section>
+<div class="container">
 
-        <!-- Main content -->
-        <section class="content">
-            <div class="container">
-                {% csrf_token %}
-                {% include 'src/messages.html' %}
-
-                <div class="row">
+    <div class="row">
                     <!-- Developer Profile Card -->
                     <div class="col-md-4">
                         <div class="card card-primary card-outline">
@@ -48,7 +32,7 @@
                         </div>
 
                         <!-- Social Media Card -->
-                        <div class="card card-primary">
+                        <div class="card">
                             <div class="card-header">
                                 <h3 class="card-title">Social Media</h3>
                             </div>
@@ -130,33 +114,8 @@
                             </div>
                         </div>
 
-                        <!-- Quick Contact Actions Card -->
-                        <div class="card card-success">
-                            <div class="card-header">
-                                <h3 class="card-title">
-                                    <i class="fas fa-paper-plane mr-2"></i> Quick Contact
-                                </h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6 mb-2">
-                                        <a href="mailto:{{ developer.email }}?subject=NDAS System Inquiry" class="btn btn-primary btn-block">
-                                            <i class="fas fa-envelope mr-2"></i> Send Email
-                                        </a>
-                                    </div>
-                                    {% if developer.whatsapp_number %}
-                                    <div class="col-md-6 mb-2">
-                                        <a href="https://wa.me/{{ developer.whatsapp_number }}?text=Hello, I need help with the NDAS system." target="_blank" class="btn btn-success btn-block">
-                                            <i class="fab fa-whatsapp mr-2"></i> WhatsApp Chat
-                                        </a>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- Help Information Card -->
-                        <div class="card card-info">
+                        <div class="card">
                             <div class="card-header">
                                 <h3 class="card-title">
                                     <i class="fas fa-question-circle mr-2"></i> Need Help?
@@ -180,7 +139,6 @@
                     </div>
                 </div>
             </div>
-        </section>
-    </div>
+            </div>
 
 {% endblock main_content %}
