@@ -1,7 +1,8 @@
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from datetime import timedelta
 from django.utils import timezone
 from django.urls import reverse
+import json
 from patients.models import (
     Patient,
     GMAssessment,
@@ -634,159 +635,114 @@ def patient_view(request, pk):
 
 
 @login_required(login_url="user-login")
-@require_http_methods(["DELETE", "POST"])
+@require_http_methods(["DELETE"])
 def patient_delete(request, pk):
     """
-    Enhanced patient deletion endpoint with proper error handling and audit logging
+    Unified patient deletion endpoint with password verification and audit logging
+    Part of refactor-delete-confirmation change
+
+    Accepts: DELETE method with JSON payload {password: str}
+    Returns: JSON {success: bool, message: str, redirect_url: str}
     """
+    from ndas.custom_codes.delete_helpers import (
+        has_delete_permission,
+        validate_can_delete,
+        get_entity_display_name,
+        get_redirect_url
+    )
+
     try:
-        patient = Patient.objects.get(id=pk)
-    except Patient.DoesNotExist:
-        logger.warning(
-            f"Attempted to delete non-existent patient with ID: {pk} by user: {request.user.username}"
-        )
-        if request.method == "DELETE":
-            return JsonResponse(
-                {
-                    "success": False,
-                    "error": "Patient not found",
-                    "message": "The patient you are trying to delete does not exist.",
-                },
-                status=404,
-            )
-        else:
-            messages.error(request, "Patient not found.")
-            return redirect("manage-patients")
+        # 1. Retrieve patient
+        patient = get_object_or_404(Patient, id=pk)
 
-    # Check user permissions
-    if not request.user.is_superuser:
-        logger.warning(
-            f"Unauthorized patient deletion attempt by user: {request.user.username} for patient ID: {pk}"
-        )
-        if request.method == "DELETE":
-            return JsonResponse(
-                {
-                    "success": False,
-                    "error": "Permission denied",
-                    "message": "You do not have permission to delete patients.",
-                },
-                status=403,
-            )
-        else:
-            messages.error(
-                request, "You do not have permission to delete this patient."
-            )
-            return redirect("view-patient", pk=pk)
-
-    if request.method == "DELETE":
-        # Handle AJAX DELETE request
-        try:
-            import json
-
-            request_data = json.loads(request.body) if request.body else {}
-            password = request_data.get("password", "")
-
-            # Verify password
-            if not request.user.check_password(password):
-                logger.warning(
-                    f"Invalid password attempt for patient deletion by user: {request.user.username} for patient ID: {pk}"
-                )
-                return JsonResponse(
-                    {
-                        "success": False,
-                        "error": "Invalid password",
-                        "message": "Wrong password, please try again with correct password",
-                    },
-                    status=403,
-                )
-
-            # Log the deletion attempt
-            logger.info(
-                f"Patient deletion initiated by user: {request.user.username} for patient: {patient.baby_name} (ID: {pk}, BHT: {patient.bht})"
-            )
-
-            # Store patient info for logging before deletion
-            patient_info = {
-                "id": patient.id,
-                "baby_name": patient.baby_name,
-                "mother_name": patient.mother_name,
-                "bht": patient.bht,
-                "deleted_by": request.user.username,
-                "deleted_at": timezone.now().isoformat(),
-            }
-
-            patient.delete()
-
-            # Log successful deletion
-            logger.info(f"Patient successfully deleted: {patient_info}")
-
-            return JsonResponse(
-                {
-                    "success": True,
-                    "message": "Patient has been deleted successfully.",
-                    "redirect_url": reverse("manage-patients"),
-                }
-            )
-
-        except Exception as e:
-            logger.error(
-                f"Error deleting patient ID {pk}: {str(e)} by user: {request.user.username}"
-            )
-            return JsonResponse(
-                {
-                    "success": False,
-                    "error": "Deletion failed",
-                    "message": "An error occurred while deleting the patient. Please try again.",
-                },
-                status=500,
-            )
-
-    elif request.method == "POST":
-        # Handle form-based POST request (legacy support)
-        user = request.user
-        if user.check_password(request.POST.get("password", "")):
-            try:
-                # Log the deletion attempt
-                logger.info(
-                    f"Patient deletion initiated by user: {request.user.username} for patient: {patient.baby_name} (ID: {pk}, BHT: {patient.bht})"
-                )
-
-                # Store patient info for logging before deletion
-                patient_info = {
-                    "id": patient.id,
-                    "baby_name": patient.baby_name,
-                    "mother_name": patient.mother_name,
-                    "bht": patient.bht,
-                    "deleted_by": request.user.username,
-                    "deleted_at": timezone.now().isoformat(),
-                }
-
-                patient.delete()
-
-                # Log successful deletion
-                logger.info(f"Patient successfully deleted: {patient_info}")
-
-                messages.success(request, "Patient has been deleted successfully.")
-                return redirect("manage-patients")
-
-            except Exception as e:
-                logger.error(
-                    f"Error deleting patient ID {pk}: {str(e)} by user: {request.user.username}"
-                )
-                messages.error(
-                    request, "Something went wrong while deleting the patient."
-                )
-                return render(
-                    request, "patients/delete-confirm.html", {"patient": patient}
-                )
-        else:
+        # 2. Check permissions
+        if not has_delete_permission(request.user, patient):
             logger.warning(
-                f"Invalid password attempt for patient deletion by user: {request.user.username} for patient ID: {pk}"
+                f"Unauthorized deletion attempt: user={request.user.username}, "
+                f"entity=Patient, id={pk}"
             )
-            messages.error(
-                request, "Wrong password, please try again with correct password"
+            return JsonResponse({
+                "success": False,
+                "error": "Permission denied",
+                "message": "You do not have permission to delete this patient."
+            }, status=403)
+
+        # 3. Verify password
+        try:
+            data = json.loads(request.body)
+            password = data.get('password', '')
+        except json.JSONDecodeError:
+            return JsonResponse({
+                "success": False,
+                "error": "Invalid request",
+                "message": "Invalid request format."
+            }, status=400)
+
+        if not password:
+            return JsonResponse({
+                "success": False,
+                "error": "Password required",
+                "message": "Password is required to confirm deletion."
+            }, status=400)
+
+        if not request.user.check_password(password):
+            logger.warning(
+                f"Invalid password for deletion: user={request.user.username}, "
+                f"entity=Patient, id={pk}"
             )
-            return render(request, "patients/delete-confirm.html", {"patient": patient})
+            return JsonResponse({
+                "success": False,
+                "error": "Invalid password",
+                "message": "Incorrect password. Please try again."
+            }, status=401)
+
+        # 4. Check business rules
+        validation_result = validate_can_delete(patient)
+        if not validation_result['can_delete']:
+            return JsonResponse({
+                "success": False,
+                "error": "Cannot delete",
+                "message": validation_result['reason']
+            }, status=400)
+
+        # 5. Store info for logging and response
+        patient_name = get_entity_display_name(patient)
+        patient_info = {
+            "id": patient.id,
+            "baby_name": patient.baby_name,
+            "mother_name": patient.mother_name,
+            "bht": patient.bht,
+            "deleted_by": request.user.username,
+            "deleted_at": timezone.now().isoformat(),
+        }
+
+        # 6. Perform deletion
+        patient.delete()
+
+        # 7. Audit log
+        logger.info(
+            f"Deletion successful: user={request.user.username}, "
+            f"entity=Patient, name={patient_name}, id={pk}, "
+            f"details={patient_info}"
+        )
+
+        # 8. Return success
+        return JsonResponse({
+            "success": True,
+            "message": f"Patient '{patient_name}' has been deleted successfully.",
+            "redirect_url": get_redirect_url('Patient')
+        })
+
+    except Exception as e:
+        logger.error(
+            f"Deletion error: user={request.user.username}, "
+            f"entity=Patient, id={pk}, error={str(e)}"
+        )
+        return JsonResponse({
+            "success": False,
+            "error": "Server error",
+            "message": f"An error occurred during deletion: {str(e)}"
+        }, status=500)
 
 
 @login_required(login_url="user-login")
@@ -1290,6 +1246,7 @@ def assessment_edit_by_fileid(request, pk):
 
 @login_required(login_url="user-login")
 def assessment_delete_start(request, pk):
+    """DEPRECATED: Use unified delete modal instead"""
     assemnt = GMAssessment.objects.get(id=pk)
     patient = Patient.objects.get(id=assemnt.patient.id)
     return render(
@@ -1300,37 +1257,107 @@ def assessment_delete_start(request, pk):
 
 
 @login_required(login_url="user-login")
+@require_http_methods(["DELETE"])
 def assessment_delete(request, pk):
-    if request.method == "POST":
+    """
+    Unified GMA assessment deletion endpoint with password verification
+    Part of refactor-delete-confirmation change
+
+    Accepts: DELETE method with JSON payload {password: str}
+    Returns: JSON {success: bool, message: str, redirect_url: str}
+    """
+    from ndas.custom_codes.delete_helpers import (
+        has_delete_permission,
+        validate_can_delete,
+        get_entity_display_name,
+        get_redirect_url
+    )
+
+    try:
+        # 1. Retrieve assessment
+        assessment = get_object_or_404(GMAssessment, id=pk)
+        patient = assessment.patient
+
+        # 2. Check permissions
+        if not has_delete_permission(request.user, assessment):
+            logger.warning(
+                f"Unauthorized deletion attempt: user={request.user.username}, "
+                f"entity=GMAssessment, id={pk}"
+            )
+            return JsonResponse({
+                "success": False,
+                "error": "Permission denied",
+                "message": "You do not have permission to delete this assessment."
+            }, status=403)
+
+        # 3. Verify password
         try:
-            assemnt = GMAssessment.objects.select_related('patient').get(id=pk)
-            patient = assemnt.patient
-        except GMAssessment.DoesNotExist:
-            messages.error(request, "Assessment not found.")
-            return redirect("assessment-manager")
-        user = request.user
-        if user.check_password(request.POST["password"]):
-            if assemnt.delete():
-                messages.success(request, "Assessment deleted succusfully...")
-                return redirect("assessment-manager-patient", pk=patient.id)
-            else:
-                messages.error(
-                    request, "Something went wrong while deleting the assessment..."
-                )
-                return render(
-                    request,
-                    "assessment/delete-confirm.html",
-                    {"assemnt": assemnt, "patient": patient},
-                )
-        else:
-            messages.error(
-                request, "Wrong password, please try again with correct password"
+            data = json.loads(request.body)
+            password = data.get('password', '')
+        except json.JSONDecodeError:
+            return JsonResponse({
+                "success": False,
+                "error": "Invalid request",
+                "message": "Invalid request format."
+            }, status=400)
+
+        if not password:
+            return JsonResponse({
+                "success": False,
+                "error": "Password required",
+                "message": "Password is required to confirm deletion."
+            }, status=400)
+
+        if not request.user.check_password(password):
+            logger.warning(
+                f"Invalid password for deletion: user={request.user.username}, "
+                f"entity=GMAssessment, id={pk}"
             )
-            return render(
-                request,
-                "assessment/delete-confirm.html",
-                {"assemnt": assemnt, "patient": patient},
-            )
+            return JsonResponse({
+                "success": False,
+                "error": "Invalid password",
+                "message": "Incorrect password. Please try again."
+            }, status=401)
+
+        # 4. Check business rules
+        validation_result = validate_can_delete(assessment)
+        if not validation_result['can_delete']:
+            return JsonResponse({
+                "success": False,
+                "error": "Cannot delete",
+                "message": validation_result['reason']
+            }, status=400)
+
+        # 5. Store info for logging and response
+        assessment_name = get_entity_display_name(assessment)
+
+        # 6. Perform deletion
+        assessment.delete()
+
+        # 7. Audit log
+        logger.info(
+            f"Deletion successful: user={request.user.username}, "
+            f"entity=GMAssessment, name={assessment_name}, id={pk}, "
+            f"patient={patient.baby_name}"
+        )
+
+        # 8. Return success
+        return JsonResponse({
+            "success": True,
+            "message": f"GMA Assessment has been deleted successfully.",
+            "redirect_url": reverse("view-patient", kwargs={'pk': patient.id})
+        })
+
+    except Exception as e:
+        logger.error(
+            f"Deletion error: user={request.user.username}, "
+            f"entity=GMAssessment, id={pk}, error={str(e)}"
+        )
+        return JsonResponse({
+            "success": False,
+            "error": "Server error",
+            "message": f"An error occurred during deletion: {str(e)}"
+        }, status=500)
 
 
 @login_required(login_url="user-login")
@@ -1746,19 +1773,105 @@ def bookmark_view(request, pk):
 
 
 @login_required(login_url="user-login")
+@require_http_methods(["DELETE"])
 def bookmark_delete(request, pk):
+    """
+    Unified bookmark deletion endpoint with password verification
+    Part of refactor-delete-confirmation change
+
+    Accepts: DELETE method with JSON payload {password: str}
+    Returns: JSON {success: bool, message: str, redirect_url: str}
+    """
+    from ndas.custom_codes.delete_helpers import (
+        has_delete_permission,
+        validate_can_delete,
+        get_entity_display_name,
+        get_redirect_url
+    )
+
     try:
-        bookmark = Bookmark.objects.select_related('owner', 'patient').get(id=pk)
-    except Bookmark.DoesNotExist:
-        messages.error(request, "Bookmark not found.")
-        return redirect("bookmark-manager-user", request.user.username)
-    if bookmark.owner == request.user:
+        # 1. Retrieve bookmark
+        bookmark = get_object_or_404(Bookmark, id=pk)
+
+        # 2. Check permissions
+        if not has_delete_permission(request.user, bookmark):
+            logger.warning(
+                f"Unauthorized deletion attempt: user={request.user.username}, "
+                f"entity=Bookmark, id={pk}"
+            )
+            return JsonResponse({
+                "success": False,
+                "error": "Permission denied",
+                "message": "You do not have permission to delete this bookmark."
+            }, status=403)
+
+        # 3. Verify password
+        try:
+            data = json.loads(request.body)
+            password = data.get('password', '')
+        except json.JSONDecodeError:
+            return JsonResponse({
+                "success": False,
+                "error": "Invalid request",
+                "message": "Invalid request format."
+            }, status=400)
+
+        if not password:
+            return JsonResponse({
+                "success": False,
+                "error": "Password required",
+                "message": "Password is required to confirm deletion."
+            }, status=400)
+
+        if not request.user.check_password(password):
+            logger.warning(
+                f"Invalid password for deletion: user={request.user.username}, "
+                f"entity=Bookmark, id={pk}"
+            )
+            return JsonResponse({
+                "success": False,
+                "error": "Invalid password",
+                "message": "Incorrect password. Please try again."
+            }, status=401)
+
+        # 4. Check business rules
+        validation_result = validate_can_delete(bookmark)
+        if not validation_result['can_delete']:
+            return JsonResponse({
+                "success": False,
+                "error": "Cannot delete",
+                "message": validation_result['reason']
+            }, status=400)
+
+        # 5. Store info for logging and response
+        bookmark_name = get_entity_display_name(bookmark)
+
+        # 6. Perform deletion
         bookmark.delete()
-        messages.success(request, "Bookmark deleted succusfully")
-        return redirect("bookmark-manager-user", request.user.username)
-    else:
-        messages.error(request, "You have no permission to remove this book mark...")
-        return render(request, "bookmark/view.html", {"bookmark": bookmark})
+
+        # 7. Audit log
+        logger.info(
+            f"Deletion successful: user={request.user.username}, "
+            f"entity=Bookmark, name={bookmark_name}, id={pk}"
+        )
+
+        # 8. Return success
+        return JsonResponse({
+            "success": True,
+            "message": f"Bookmark has been deleted successfully.",
+            "redirect_url": reverse("bookmark-manager-user", kwargs={'username': request.user.username})
+        })
+
+    except Exception as e:
+        logger.error(
+            f"Deletion error: user={request.user.username}, "
+            f"entity=Bookmark, id={pk}, error={str(e)}"
+        )
+        return JsonResponse({
+            "success": False,
+            "error": "Server error",
+            "message": f"An error occurred during deletion: {str(e)}"
+        }, status=500)
 
 
 @login_required(login_url="user-login")
@@ -2180,6 +2293,7 @@ def attachment_edit(request, pk):
 
 @login_required(login_url="user-login")
 def attachment_delete_confirm(request, pk):
+    """DEPRECATED: Use unified delete modal instead"""
     attachment = Attachment.objects.get(id=pk)
     patient = attachment.patient
     return render(
@@ -2190,63 +2304,116 @@ def attachment_delete_confirm(request, pk):
 
 
 @login_required(login_url="user-login")
+@require_http_methods(["DELETE"])
 def attachment_delete(request, pk):
-    from django.http import JsonResponse
-    
-    user = request.user
-    try:
-        attachment = Attachment.objects.get(pk=pk)
-    except Attachment.DoesNotExist:
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'error': 'Attachment not found.'}, status=404)
-        messages.error(request, "Attachment not found.")
-        return redirect("attachment-manager")
+    """
+    Unified attachment deletion endpoint with password verification
+    Part of refactor-delete-confirmation change
 
-    if request.method == 'POST':
-        password = request.POST.get("password", "")
-        
-        if user.check_password(password):
+    Accepts: DELETE method with JSON payload {password: str}
+    Returns: JSON {success: bool, message: str, redirect_url: str}
+    """
+    from ndas.custom_codes.delete_helpers import (
+        has_delete_permission,
+        validate_can_delete,
+        get_entity_display_name,
+        get_redirect_url
+    )
+
+    try:
+        # 1. Retrieve attachment
+        attachment = get_object_or_404(Attachment, id=pk)
+        patient = attachment.patient
+
+        # 2. Check permissions
+        if not has_delete_permission(request.user, attachment):
+            logger.warning(
+                f"Unauthorized deletion attempt: user={request.user.username}, "
+                f"entity=Attachment, id={pk}"
+            )
+            return JsonResponse({
+                "success": False,
+                "error": "Permission denied",
+                "message": "You do not have permission to delete this attachment."
+            }, status=403)
+
+        # 3. Verify password
+        try:
+            data = json.loads(request.body)
+            password = data.get('password', '')
+        except json.JSONDecodeError:
+            return JsonResponse({
+                "success": False,
+                "error": "Invalid request",
+                "message": "Invalid request format."
+            }, status=400)
+
+        if not password:
+            return JsonResponse({
+                "success": False,
+                "error": "Password required",
+                "message": "Password is required to confirm deletion."
+            }, status=400)
+
+        if not request.user.check_password(password):
+            logger.warning(
+                f"Invalid password for deletion: user={request.user.username}, "
+                f"entity=Attachment, id={pk}"
+            )
+            return JsonResponse({
+                "success": False,
+                "error": "Invalid password",
+                "message": "Incorrect password. Please try again."
+            }, status=401)
+
+        # 4. Check business rules
+        validation_result = validate_can_delete(attachment)
+        if not validation_result['can_delete']:
+            return JsonResponse({
+                "success": False,
+                "error": "Cannot delete",
+                "message": validation_result['reason']
+            }, status=400)
+
+        # 5. Store info for logging and response
+        attachment_name = get_entity_display_name(attachment)
+
+        # 6. Delete file from storage
+        if attachment.attachment:
             try:
-                attachment_patient_id = attachment.patient.id
-                attachment.delete()
-                
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    return JsonResponse({
-                        'success': True,
-                        'message': 'Attachment deleted successfully!',
-                        'redirect_url': f'/patient/view/{attachment_patient_id}/'
-                    })
-                else:
-                    messages.success(request, "Attachment deleted successfully...")
-                    return redirect("view-patient", pk=attachment_patient_id)
-                    
+                attachment.attachment.delete(save=False)
             except Exception as e:
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    return JsonResponse({'error': 'Something went wrong during deletion.'}, status=500)
-                else:
-                    messages.error(request, "Something went wrong during delete the attachment...")
-                    return render(
-                        request,
-                        "attachment/view.html",
-                        {"patient": attachment.patient, "attachment": attachment},
-                    )
-        else:
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'error': 'Invalid password. Please try again.'}, status=403)
-            else:
-                messages.error(
-                    request, "Wrong password, please try again with correct password"
-                )
-                return render(
-                    request,
-                    "attachment/view.html",
-                    {"patient": attachment.patient, "attachment": attachment},
-                )
-    
-    # Handle GET requests (shouldn't happen with modal, but good to have)
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-    return redirect("attachment-manager")
+                logger.warning(f"Failed to delete attachment file: {e}")
+
+        # 7. Perform deletion
+        attachment.delete()
+
+        # 8. Audit log
+        logger.info(
+            f"Deletion successful: user={request.user.username}, "
+            f"entity=Attachment, name={attachment_name}, id={pk}, "
+            f"patient={patient.baby_name}"
+        )
+
+        # 9. Return success
+        return JsonResponse({
+            "success": True,
+            "message": f"Attachment has been deleted successfully.",
+            "redirect_url": reverse("view-patient", kwargs={'pk': patient.id})
+        })
+
+    except Exception as e:
+        logger.error(
+            f"Deletion error: user={request.user.username}, "
+            f"entity=Attachment, id={pk}, error={str(e)}"
+        )
+        return JsonResponse({
+            "success": False,
+            "error": "Server error",
+            "message": f"An error occurred during deletion: {str(e)}"
+        }, status=500)
+
+
 
 
 @login_required(login_url="user-login")
@@ -2550,6 +2717,7 @@ def cdic_assessment_manager_by_patients(request, pid):
 
 @login_required(login_url="user-login")
 def cdic_assessment_delete_start(request, aid):
+    """DEPRECATED: Use unified delete modal instead"""
     try:
         srecord = CDICRecord.objects.select_related('patient').get(id=aid)
     except CDICRecord.DoesNotExist:
@@ -2563,34 +2731,107 @@ def cdic_assessment_delete_start(request, aid):
 
 
 @login_required(login_url="user-login")
+@require_http_methods(["DELETE"])
 def cdic_assessment_delete(request, aid):
-    user = request.user
-    try:
-        srecord = CDICRecord.objects.select_related('patient').get(pk=aid)
-    except CDICRecord.DoesNotExist:
-        messages.error(request, "CDIC record not found.")
-        return redirect("cdic-assessment-manager")
+    """
+    Unified CDIC Record deletion endpoint with password verification
+    Part of refactor-delete-confirmation change
 
-    if user.check_password(request.POST["password"]):
-        if srecord.delete():
-            messages.success(request, "Record deleted succussfully...")
-            return redirect("cdic-assessment-manager")
-        else:
-            messages.error(request, "Something went wrong during delete the record...")
-            return render(
-                request,
-                "cdic_record/view.html",
-                {"patient": srecord.patient, "CDICRecord": srecord},
+    Accepts: DELETE method with JSON payload {password: str}
+    Returns: JSON {success: bool, message: str, redirect_url: str}
+    """
+    from ndas.custom_codes.delete_helpers import (
+        has_delete_permission,
+        validate_can_delete,
+        get_entity_display_name,
+        get_redirect_url
+    )
+
+    try:
+        # 1. Retrieve CDIC record
+        cdic_record = get_object_or_404(CDICRecord, id=aid)
+        patient = cdic_record.patient
+
+        # 2. Check permissions
+        if not has_delete_permission(request.user, cdic_record):
+            logger.warning(
+                f"Unauthorized deletion attempt: user={request.user.username}, "
+                f"entity=CDICRecord, id={aid}"
             )
-    else:
-        messages.error(
-            request, "Wrong password, please try again with correct password"
+            return JsonResponse({
+                "success": False,
+                "error": "Permission denied",
+                "message": "You do not have permission to delete this CDIC record."
+            }, status=403)
+
+        # 3. Verify password
+        try:
+            data = json.loads(request.body)
+            password = data.get('password', '')
+        except json.JSONDecodeError:
+            return JsonResponse({
+                "success": False,
+                "error": "Invalid request",
+                "message": "Invalid request format."
+            }, status=400)
+
+        if not password:
+            return JsonResponse({
+                "success": False,
+                "error": "Password required",
+                "message": "Password is required to confirm deletion."
+            }, status=400)
+
+        if not request.user.check_password(password):
+            logger.warning(
+                f"Invalid password for deletion: user={request.user.username}, "
+                f"entity=CDICRecord, id={aid}"
+            )
+            return JsonResponse({
+                "success": False,
+                "error": "Invalid password",
+                "message": "Incorrect password. Please try again."
+            }, status=401)
+
+        # 4. Check business rules
+        validation_result = validate_can_delete(cdic_record)
+        if not validation_result['can_delete']:
+            return JsonResponse({
+                "success": False,
+                "error": "Cannot delete",
+                "message": validation_result['reason']
+            }, status=400)
+
+        # 5. Store info for logging and response
+        cdic_name = get_entity_display_name(cdic_record)
+
+        # 6. Perform deletion
+        cdic_record.delete()
+
+        # 7. Audit log
+        logger.info(
+            f"Deletion successful: user={request.user.username}, "
+            f"entity=CDICRecord, name={cdic_name}, id={aid}, "
+            f"patient={patient.baby_name}"
         )
-        return render(
-            request,
-            "cdic_record/view.html",
-            {"patient": srecord.patient, "CDICRecord": srecord},
+
+        # 8. Return success
+        return JsonResponse({
+            "success": True,
+            "message": f"CDIC Record has been deleted successfully.",
+            "redirect_url": reverse("view-patient", kwargs={'pk': patient.id})
+        })
+
+    except Exception as e:
+        logger.error(
+            f"Deletion error: user={request.user.username}, "
+            f"entity=CDICRecord, id={aid}, error={str(e)}"
         )
+        return JsonResponse({
+            "success": False,
+            "error": "Server error",
+            "message": f"An error occurred during deletion: {str(e)}"
+        }, status=500)
 
 
 # Functions for HINE assessments
@@ -2863,6 +3104,7 @@ def hine_assessment_manager_by_patients(request, pid):
 
 @login_required(login_url="user-login")
 def hine_assessment_delete_start(request, hine_id):
+    """DEPRECATED: Use unified delete modal instead"""
     shr = HINEAssessment.objects.get(id=hine_id)
     return render(
         request,
@@ -2872,30 +3114,107 @@ def hine_assessment_delete_start(request, hine_id):
 
 
 @login_required(login_url="user-login")
+@require_http_methods(["DELETE"])
 def hine_assessment_delete(request, hine_id):
-    user = request.user
-    try:
-        shr = HINEAssessment.objects.select_related('patient').get(id=hine_id)
-    except HINEAssessment.DoesNotExist:
-        messages.error(request, "HINE assessment record not found.")
-        return redirect("hine-assessment-manager")
+    """
+    Unified HINE Assessment deletion endpoint with password verification
+    Part of refactor-delete-confirmation change
 
-    if user.check_password(request.POST["password"]):
-        if shr.delete():
-            messages.success(request, "Record deleted succussfully...")
-            return redirect("hine-assessment-manager")
-        else:
-            messages.error(request, "Something went wrong during delete the record...")
-            return render(
-                request, "hine/view.html", {"patient": shr.patient, "HINERecord": shr}
+    Accepts: DELETE method with JSON payload {password: str}
+    Returns: JSON {success: bool, message: str, redirect_url: str}
+    """
+    from ndas.custom_codes.delete_helpers import (
+        has_delete_permission,
+        validate_can_delete,
+        get_entity_display_name,
+        get_redirect_url
+    )
+
+    try:
+        # 1. Retrieve HINE assessment
+        hine_assessment = get_object_or_404(HINEAssessment, id=hine_id)
+        patient = hine_assessment.patient
+
+        # 2. Check permissions
+        if not has_delete_permission(request.user, hine_assessment):
+            logger.warning(
+                f"Unauthorized deletion attempt: user={request.user.username}, "
+                f"entity=HINEAssessment, id={hine_id}"
             )
-    else:
-        messages.error(
-            request, "Wrong password, please try again with correct password"
+            return JsonResponse({
+                "success": False,
+                "error": "Permission denied",
+                "message": "You do not have permission to delete this HINE assessment."
+            }, status=403)
+
+        # 3. Verify password
+        try:
+            data = json.loads(request.body)
+            password = data.get('password', '')
+        except json.JSONDecodeError:
+            return JsonResponse({
+                "success": False,
+                "error": "Invalid request",
+                "message": "Invalid request format."
+            }, status=400)
+
+        if not password:
+            return JsonResponse({
+                "success": False,
+                "error": "Password required",
+                "message": "Password is required to confirm deletion."
+            }, status=400)
+
+        if not request.user.check_password(password):
+            logger.warning(
+                f"Invalid password for deletion: user={request.user.username}, "
+                f"entity=HINEAssessment, id={hine_id}"
+            )
+            return JsonResponse({
+                "success": False,
+                "error": "Invalid password",
+                "message": "Incorrect password. Please try again."
+            }, status=401)
+
+        # 4. Check business rules
+        validation_result = validate_can_delete(hine_assessment)
+        if not validation_result['can_delete']:
+            return JsonResponse({
+                "success": False,
+                "error": "Cannot delete",
+                "message": validation_result['reason']
+            }, status=400)
+
+        # 5. Store info for logging and response
+        hine_name = get_entity_display_name(hine_assessment)
+
+        # 6. Perform deletion
+        hine_assessment.delete()
+
+        # 7. Audit log
+        logger.info(
+            f"Deletion successful: user={request.user.username}, "
+            f"entity=HINEAssessment, name={hine_name}, id={hine_id}, "
+            f"patient={patient.baby_name}"
         )
-        return render(
-            request, "hine/view.html", {"patient": shr.patient, "HINERecord": shr}
+
+        # 8. Return success
+        return JsonResponse({
+            "success": True,
+            "message": f"HINE Assessment has been deleted successfully.",
+            "redirect_url": reverse("view-patient", kwargs={'pk': patient.id})
+        })
+
+    except Exception as e:
+        logger.error(
+            f"Deletion error: user={request.user.username}, "
+            f"entity=HINEAssessment, id={hine_id}, error={str(e)}"
         )
+        return JsonResponse({
+            "success": False,
+            "error": "Server error",
+            "message": f"An error occurred during deletion: {str(e)}"
+        }, status=500)
 
 
 # Functions for Developmental assessments
@@ -3205,6 +3524,7 @@ def da_assessment_manager_by_patients(request, pid):
 
 @login_required(login_url="user-login")
 def da_assessment_delete_start(request, da_id):
+    """DEPRECATED: Use unified delete modal instead"""
     try:
         sdr = DevelopmentalAssessment.objects.select_related('patient').get(id=da_id)
     except DevelopmentalAssessment.DoesNotExist:
@@ -3218,34 +3538,107 @@ def da_assessment_delete_start(request, da_id):
 
 
 @login_required(login_url="user-login")
+@require_http_methods(["DELETE"])
 def da_assessment_delete(request, da_id):
-    user = request.user
-    try:
-        sdar = DevelopmentalAssessment.objects.select_related('patient').get(id=da_id)
-    except DevelopmentalAssessment.DoesNotExist:
-        messages.error(request, "Developmental assessment record not found.")
-        return redirect("da-assessment-manager")
+    """
+    Unified Developmental Assessment deletion endpoint with password verification
+    Part of refactor-delete-confirmation change
 
-    if user.check_password(request.POST["password"]):
-        if sdar.delete():
-            messages.success(request, "Record deleted succussfully...")
-            return redirect("da-assessment-manager")
-        else:
-            messages.error(request, "Something went wrong during delete the record...")
-            return render(
-                request,
-                "develop_assemnt/view.html",
-                {"patient": sdar.patient, "DARecord": sdar},
+    Accepts: DELETE method with JSON payload {password: str}
+    Returns: JSON {success: bool, message: str, redirect_url: str}
+    """
+    from ndas.custom_codes.delete_helpers import (
+        has_delete_permission,
+        validate_can_delete,
+        get_entity_display_name,
+        get_redirect_url
+    )
+
+    try:
+        # 1. Retrieve Developmental assessment
+        da_assessment = get_object_or_404(DevelopmentalAssessment, id=da_id)
+        patient = da_assessment.patient
+
+        # 2. Check permissions
+        if not has_delete_permission(request.user, da_assessment):
+            logger.warning(
+                f"Unauthorized deletion attempt: user={request.user.username}, "
+                f"entity=DevelopmentalAssessment, id={da_id}"
             )
-    else:
-        messages.error(
-            request, "Wrong password, please try again with correct password"
+            return JsonResponse({
+                "success": False,
+                "error": "Permission denied",
+                "message": "You do not have permission to delete this developmental assessment."
+            }, status=403)
+
+        # 3. Verify password
+        try:
+            data = json.loads(request.body)
+            password = data.get('password', '')
+        except json.JSONDecodeError:
+            return JsonResponse({
+                "success": False,
+                "error": "Invalid request",
+                "message": "Invalid request format."
+            }, status=400)
+
+        if not password:
+            return JsonResponse({
+                "success": False,
+                "error": "Password required",
+                "message": "Password is required to confirm deletion."
+            }, status=400)
+
+        if not request.user.check_password(password):
+            logger.warning(
+                f"Invalid password for deletion: user={request.user.username}, "
+                f"entity=DevelopmentalAssessment, id={da_id}"
+            )
+            return JsonResponse({
+                "success": False,
+                "error": "Invalid password",
+                "message": "Incorrect password. Please try again."
+            }, status=401)
+
+        # 4. Check business rules
+        validation_result = validate_can_delete(da_assessment)
+        if not validation_result['can_delete']:
+            return JsonResponse({
+                "success": False,
+                "error": "Cannot delete",
+                "message": validation_result['reason']
+            }, status=400)
+
+        # 5. Store info for logging and response
+        da_name = get_entity_display_name(da_assessment)
+
+        # 6. Perform deletion
+        da_assessment.delete()
+
+        # 7. Audit log
+        logger.info(
+            f"Deletion successful: user={request.user.username}, "
+            f"entity=DevelopmentalAssessment, name={da_name}, id={da_id}, "
+            f"patient={patient.baby_name}"
         )
-        return render(
-            request,
-            "develop_assemnt/view.html",
-            {"patient": sdar.patient, "DARecord": sdar},
+
+        # 8. Return success
+        return JsonResponse({
+            "success": True,
+            "message": f"Developmental Assessment has been deleted successfully.",
+            "redirect_url": reverse("view-patient", kwargs={'pk': patient.id})
+        })
+
+    except Exception as e:
+        logger.error(
+            f"Deletion error: user={request.user.username}, "
+            f"entity=DevelopmentalAssessment, id={da_id}, error={str(e)}"
         )
+        return JsonResponse({
+            "success": False,
+            "error": "Server error",
+            "message": f"An error occurred during deletion: {str(e)}"
+        }, status=500)
 
 
 @login_required(login_url="user-login")
@@ -3457,7 +3850,7 @@ def gpa_manager_by_patient(request, pid):
 
 @login_required(login_url="user-login")
 def gpa_delete_start(request, gpa_id):
-    """Display confirmation page for deleting a GPA record"""
+    """DEPRECATED: Use unified delete modal instead"""
     try:
         gpa_record = GeneralPaediatricAssessment.objects.select_related(
             "patient"
@@ -3474,39 +3867,106 @@ def gpa_delete_start(request, gpa_id):
 
 
 @login_required(login_url="user-login")
+@require_http_methods(["DELETE"])
 def gpa_delete(request, gpa_id):
-    """Execute deletion of a GPA record after password verification"""
-    if request.method != "POST":
-        messages.error(request, "Invalid request method")
-        return redirect("gpa-manager")
+    """
+    Unified General Paediatric Assessment deletion endpoint with password verification
+    Part of refactor-delete-confirmation change
+
+    Accepts: DELETE method with JSON payload {password: str}
+    Returns: JSON {success: bool, message: str, redirect_url: str}
+    """
+    from ndas.custom_codes.delete_helpers import (
+        has_delete_permission,
+        validate_can_delete,
+        get_entity_display_name,
+        get_redirect_url
+    )
 
     try:
-        gpa_record = GeneralPaediatricAssessment.objects.select_related(
-            "patient"
-        ).get(pk=gpa_id)
-    except GeneralPaediatricAssessment.DoesNotExist:
-        messages.error(request, "GPA record not found")
-        return redirect("gpa-manager")
+        # 1. Retrieve GPA record
+        gpa_record = get_object_or_404(GeneralPaediatricAssessment, id=gpa_id)
+        patient = gpa_record.patient
 
-    # Verify password
-    from django.contrib.auth import authenticate
-    password = request.POST.get("password")
-    user = authenticate(username=request.user.username, password=password)
+        # 2. Check permissions
+        if not has_delete_permission(request.user, gpa_record):
+            logger.warning(
+                f"Unauthorized deletion attempt: user={request.user.username}, "
+                f"entity=GeneralPaediatricAssessment, id={gpa_id}"
+            )
+            return JsonResponse({
+                "success": False,
+                "error": "Permission denied",
+                "message": "You do not have permission to delete this GPA record."
+            }, status=403)
 
-    if user is not None:
-        patient_name = gpa_record.patient.baby_name
-        patient_id = gpa_record.patient.pk
+        # 3. Verify password
+        try:
+            data = json.loads(request.body)
+            password = data.get('password', '')
+        except json.JSONDecodeError:
+            return JsonResponse({
+                "success": False,
+                "error": "Invalid request",
+                "message": "Invalid request format."
+            }, status=400)
+
+        if not password:
+            return JsonResponse({
+                "success": False,
+                "error": "Password required",
+                "message": "Password is required to confirm deletion."
+            }, status=400)
+
+        if not request.user.check_password(password):
+            logger.warning(
+                f"Invalid password for deletion: user={request.user.username}, "
+                f"entity=GeneralPaediatricAssessment, id={gpa_id}"
+            )
+            return JsonResponse({
+                "success": False,
+                "error": "Invalid password",
+                "message": "Incorrect password. Please try again."
+            }, status=401)
+
+        # 4. Check business rules
+        validation_result = validate_can_delete(gpa_record)
+        if not validation_result['can_delete']:
+            return JsonResponse({
+                "success": False,
+                "error": "Cannot delete",
+                "message": validation_result['reason']
+            }, status=400)
+
+        # 5. Store info for logging and response
+        gpa_name = get_entity_display_name(gpa_record)
+
+        # 6. Perform deletion
         gpa_record.delete()
-        messages.success(
-            request,
-            f"GPA record for {patient_name} has been successfully deleted"
+
+        # 7. Audit log
+        logger.info(
+            f"Deletion successful: user={request.user.username}, "
+            f"entity=GeneralPaediatricAssessment, name={gpa_name}, id={gpa_id}, "
+            f"patient={patient.baby_name}"
         )
-        return redirect("view-patient", pid=patient_id)
-    else:
-        messages.error(
-            request,
-            "Wrong password, please try again with correct password"
+
+        # 8. Return success
+        return JsonResponse({
+            "success": True,
+            "message": f"General Paediatric Assessment has been deleted successfully.",
+            "redirect_url": reverse("view-patient", kwargs={'pk': patient.id})
+        })
+
+    except Exception as e:
+        logger.error(
+            f"Deletion error: user={request.user.username}, "
+            f"entity=GeneralPaediatricAssessment, id={gpa_id}, error={str(e)}"
         )
-        return redirect("gpa-delete-start", gpa_id=gpa_id)
+        return JsonResponse({
+            "success": False,
+            "error": "Server error",
+            "message": f"An error occurred during deletion: {str(e)}"
+        }, status=500)
 
 

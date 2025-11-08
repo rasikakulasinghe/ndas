@@ -1,0 +1,70 @@
+<!-- Unified Delete Confirmation Modal -->
+<!-- File: templates/src/partials/delete_confirmation_modal.html -->
+<!-- Part of refactor-delete-confirmation change -->
+
+<div class="modal fade" id="{{ modal_id }}" tabindex="-1" role="dialog" aria-labelledby="{{ modal_id }}Label" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <!-- Header with entity type -->
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="{{ modal_id }}Label">
+          <i class="fas fa-exclamation-triangle"></i> Confirm {{ entity_type }} Deletion
+        </h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <!-- Body with warnings, details, password -->
+      <div class="modal-body">
+        <!-- Dynamic warning section -->
+        <div class="alert alert-danger mb-3" role="alert">
+          <h6 class="alert-heading"><strong>Warning: This action cannot be undone!</strong></h6>
+          {% if warning_items %}
+          <ul class="mb-0 pl-3">
+            {% for item in warning_items %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="mb-0">This {{ entity_type|lower }} will be permanently deleted from the system.</p>
+          {% endif %}
+        </div>
+
+        <!-- Entity details display -->
+        {% if detail_items %}
+        <div class="entity-info bg-light p-3 rounded mb-3">
+          <h6><strong>{{ entity_type }} Details:</strong></h6>
+          {% for key, value in detail_items.items %}
+          <p class="mb-1"><strong>{{ key }}:</strong> {{ value }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Password verification -->
+        <div class="form-group mt-3">
+          <label for="deletePassword{{ modal_id }}"><strong>Enter your password to confirm:</strong></label>
+          <input type="password" class="form-control" id="deletePassword{{ modal_id }}"
+                 placeholder="Enter your password" required autocomplete="current-password"
+                 aria-required="true" aria-describedby="deleteError{{ modal_id }}">
+          <div id="deleteError{{ modal_id }}" class="text-danger mt-2" style="display: none;" role="alert"></div>
+        </div>
+      </div>
+
+      <!-- Footer with actions -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn{{ modal_id }}"
+                data-delete-url="{{ delete_url }}"
+                data-redirect-url="{{ redirect_url }}"
+                data-modal-id="{{ modal_id }}"
+                onclick="DeleteConfirmation.execute(this)">
+          <span class="spinner-border spinner-border-sm" style="display: none;"></span>
+          <i class="fas fa-trash-alt"></i> Delete {{ entity_type }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

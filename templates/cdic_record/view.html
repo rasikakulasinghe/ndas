@@ -92,7 +92,7 @@
         </div>
 
         <div class="col-auto m-2">
-          <a class="btn btn-primary" href="{% url 'cdic-assessment-delete_start' CDICRecord.id %}" type="button"><i class="right far fa-trash-alt"></i>  Delete</a>
+          <button type="button" class="btn btn-primary" onclick="DeleteConfirmation.show('deleteCDICModal')"><i class="right far fa-trash-alt"></i>  Delete</button>
         </div>
         
         <div class="col-auto m-2">
@@ -113,4 +113,12 @@
 <!-- /.card-body -->
 
 </div> <!-- /.main container -->
+
+{% include 'src/partials/delete_confirmation_modal.html' with
+   modal_id='deleteCDICModal'
+   entity_type='CDIC Record'
+   delete_url=CDICRecord.get_delete_url
+   redirect_url=CDICRecord.patient.get_absolute_url
+%}
+
 {% endblock main_content %}

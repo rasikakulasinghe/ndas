@@ -89,9 +89,9 @@
           <a href="{% url 'gpa-edit' gpa_record.id %}" class="btn btn-warning btn-block">
             <i class="fas fa-edit"></i> Edit Record
           </a>
-          <a href="{% url 'gpa-delete-start' gpa_record.id %}" class="btn btn-danger btn-block">
+          <button type="button" class="btn btn-danger btn-block" onclick="DeleteConfirmation.show('deleteGPAModal')">
             <i class="fas fa-trash"></i> Delete Record
-          </a>
+          </button>
           <a href="{% url 'gpa-manager-patient' patient.id %}" class="btn btn-secondary btn-block">
             <i class="fas fa-arrow-left"></i> Back to List
           </a>
@@ -222,4 +222,12 @@
     $('[data-toggle="tooltip"]').tooltip();
   });
 </script>
+
+{% include 'src/partials/delete_confirmation_modal.html' with
+   modal_id='deleteGPAModal'
+   entity_type='GPA Record'
+   delete_url=gpa_record.get_delete_url
+   redirect_url=gpa_record.patient.get_absolute_url
+%}
+
 {% endblock extra_js %}

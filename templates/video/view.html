@@ -161,9 +161,9 @@
               <i class="fas fa-edit"></i>Edit Video Details
               </a>
 
-              <a href="{% url 'video:delete-confirm' video.id %}" class="btn btn-outline-danger btn-block">
+              <button type="button" class="btn btn-outline-danger btn-block" onclick="DeleteConfirmation.show('deleteVideoModal')">
               <i class="fas fa-trash"></i>Delete Video
-              </a>
+              </button>
 
               <a href="{% url 'video:manager-by-patient' patient.id %}" class="btn btn-outline-info btn-block">
               <i class="fas fa-video mr-2"></i>All Patient Videos
@@ -394,5 +394,12 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 }
 </style>
+
+{% include 'src/partials/delete_confirmation_modal.html' with
+   modal_id='deleteVideoModal'
+   entity_type='Video'
+   delete_url=video.get_delete_url
+   redirect_url=patient.get_absolute_url
+%}
 
 {% endblock main_content %}

@@ -264,9 +264,10 @@
                       </a>
                       {% endif %}
                       <div class="dropdown-divider"></div>
-                      <a class="dropdown-item text-danger" href="{% url 'da-assessment-delete_start' DARecord.id %}" onclick="return confirm('Are you sure you want to delete this developmental assessment?')">
+                      <button class="dropdown-item text-danger" type="button"
+                              onclick="DeleteConfirmation.show('deleteDAModal{{ DARecord.id }}')">
                         <i class="fas fa-trash-alt mr-2"></i>Delete Assessment
-                      </a>
+                      </button>
                     </div>
                   </div>
                 </td>
@@ -339,5 +340,15 @@
 <script src="{% static 'js/manager.js' %}"></script>
 {% endblock extra_js %}
 
+<!-- Delete Modals for Each DA Record -->
+{% for DARecord in da_records %}
+{% url 'da-assessment-delete' DARecord.id as da_delete_url %}
+{% include 'src/partials/delete_confirmation_modal.html' with
+   modal_id='deleteDAModal'|add:DARecord.id|stringformat:"s"
+   entity_type='Developmental Assessment'
+   delete_url=da_delete_url
+   redirect_url='/da/manager/'
+only %}
+{% endfor %}
 
 {% endblock main_content %}

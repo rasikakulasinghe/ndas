@@ -11,5 +11,6 @@ urlpatterns = [
     path("view/<int:video_id>/", views.video_view, name="view"),
     path("edit/<int:video_id>/", views.video_edit, name="edit"),
     path("delete/<int:video_id>/", views.video_delete, name="delete"),
-    path("delete-confirm/<int:video_id>/", views.video_delete_confirm, name="delete-confirm"),
+    # DEPRECATED: Use unified delete modal instead (refactor-delete-confirmation)
+    # path("delete-confirm/<int:video_id>/", views.video_delete_confirm, name="delete-confirm"),
 ]

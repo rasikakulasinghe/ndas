@@ -180,8 +180,8 @@
                     <button type="button" class="btn btn-secondary mr-2" onclick="window.location.href='{% url 'video:view' video.id %}'">
                       <i class="fas fa-arrow-left mr-2"></i>Back to Video
                     </button>
-                    <button type="button" class="btn btn-outline-danger" onclick="window.location.href='{% url 'video:delete-confirm' video.id %}'">
-                      <i class="fas fa-trash mr-2"></i>Delete
+                    <button type="button" class="btn btn-outline-danger" onclick="DeleteConfirmation.show('deleteVideoModal')">
+                      <i class="fas fa-trash mr-2"></i>Delete Video
                     </button>
                   </div>
                   <div class="col-sm-6 text-right">
@@ -432,5 +432,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+{% include 'src/partials/delete_confirmation_modal.html' with
+   modal_id='deleteVideoModal'
+   entity_type='Video'
+   delete_url=video.get_delete_url
+   redirect_url=patient.get_absolute_url
+%}
 
 {% endblock main_content %}

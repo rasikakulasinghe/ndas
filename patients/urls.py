@@ -23,7 +23,8 @@ urlpatterns = [
     path("patient/add/", views.patient_add, name='add-patient'),
     path("patient/view/<str:pk>/", views.patient_view, name='view-patient'),
     path("patient/edit/<str:pk>/", views.patient_edit, name='edit-patient'),
-    path("patient/delete/confirm/<str:pk>/", views.patient_delete_confirm, name='delete-confirm-patient'),
+    # DEPRECATED: Use unified delete modal instead (refactor-delete-confirmation)
+    # path("patient/delete/confirm/<str:pk>/", views.patient_delete_confirm, name='delete-confirm-patient'),
     path("patient/delete/<str:pk>/", views.patient_delete, name='delete-patient'),
     path("search/", views.search_start, name='search-start'),
     path("search/results/", views.search_results, name='search-results'),
@@ -44,7 +45,8 @@ urlpatterns = [
     path("attachment/add/<str:pid>/", views.attachment_add, name='attachment-add'),
     path("attachment/view/<str:pk>/", views.attachment_view, name='attachment-view'),
     path("attachment/edit/<str:pk>/", views.attachment_edit, name='attachment-edit'),
-    path("attachment/delete/confirm/<str:pk>/", views.attachment_delete_confirm, name='attachment-delete-confirm'),
+    # DEPRECATED: Use unified delete modal instead (refactor-delete-confirmation)
+    # path("attachment/delete/confirm/<str:pk>/", views.attachment_delete_confirm, name='attachment-delete-confirm'),
     path("attachment/delete/<str:pk>/", views.attachment_delete, name='attachment-delete'),
 
     # URLs for GMA assessment record operations
@@ -60,34 +62,38 @@ urlpatterns = [
     path("manager/assessment/informed", views.assessment_manager_informed, name='assessment-manager-informed'),
     path("manager/assessment/not-informed", views.assessment_manager_not_informed, name='assessment-manager-not-informed'),
     path("manager/assessment/patient/<str:pk>/", views.assessment_manager_by_patients, name='assessment-manager-patient'),
-    path("assessment/delete/confirm/<str:pk>/", views.assessment_delete_start, name='assessment-delete_start'),
+    # DEPRECATED: Use unified delete modal instead (refactor-delete-confirmation)
+    # path("assessment/delete/confirm/<str:pk>/", views.assessment_delete_start, name='assessment-delete_start'),
     path("assessment/delete/<str:pk>/", views.assessment_delete, name='assessment-delete'),
-    
+
     # URLs for CDIC assessment record operations
     path("cdic/add/<str:pid>/", views.cdic_assessment_add, name='cdic-assessment-add'),
     path("cdic/edit/<str:aid>/", views.cdic_assessment_edit, name='cdic-assessment-edit'),
     path("cdic/view/<str:cdic_id>/", views.cdic_assessment_view, name='cdic-assessment-view'),
     path("cdic/manager/", views.cdic_assessment_manager, name='cdic-assessment-manager'),
     path("cdic/manager/patient/<str:pid>/", views.cdic_assessment_manager_by_patients, name='cdic-assessment-manager-patient'),
-    path("cdic/delete/confirm/<str:aid>/", views.cdic_assessment_delete_start, name='cdic-assessment-delete_start'),
+    # DEPRECATED: Use unified delete modal instead (refactor-delete-confirmation)
+    # path("cdic/delete/confirm/<str:aid>/", views.cdic_assessment_delete_start, name='cdic-assessment-delete_start'),
     path("cdic/delete/<str:aid>/", views.cdic_assessment_delete, name='cdic-assessment-delete'),
-    
+
     # URLs for HINE assessment record operations
     path("hine/add/<str:pid>/", views.hine_assessment_add, name='hine-assessment-add'),
     path("hine/edit/<str:hine_id>/", views.hine_assessment_edit, name='hine-assessment-edit'),
     path("hine/view/<str:hine_id>/", views.hine_assessment_view, name='hine-assessment-view'),
     path("hine/manager/", views.hine_assessment_manager, name='hine-assessment-manager'),
     path("hine/manager/patient/<str:pid>/", views.hine_assessment_manager_by_patients, name='hine-assessment-manager-patient'),
-    path("hine/delete/confirm/<str:hine_id>/", views.hine_assessment_delete_start, name='hine-assessment-delete_start'),
+    # DEPRECATED: Use unified delete modal instead (refactor-delete-confirmation)
+    # path("hine/delete/confirm/<str:hine_id>/", views.hine_assessment_delete_start, name='hine-assessment-delete_start'),
     path("hine/delete/<str:hine_id>/", views.hine_assessment_delete, name='hine-assessment-delete'),
-    
+
     # URLs for Develompental assessment record operations
     path("da/add/<str:pid>/", views.da_assessment_add, name='da-assessment-add'),
     path("da/edit/<str:da_id>/", views.da_assessment_edit, name='da-assessment-edit'),
     path("da/view/<str:da_id>/", views.da_assessment_view, name='da-assessment-view'),
     path("da/manager/", views.da_assessment_manager, name='da-assessment-manager'),
     path("da/manager/patient/<str:pid>/", views.da_assessment_manager_by_patients, name='da-assessment-manager-patient'),
-    path("da/delete/confirm/<str:da_id>/", views.da_assessment_delete_start, name='da-assessment-delete_start'),
+    # DEPRECATED: Use unified delete modal instead (refactor-delete-confirmation)
+    # path("da/delete/confirm/<str:da_id>/", views.da_assessment_delete_start, name='da-assessment-delete_start'),
     path("da/delete/<str:da_id>/", views.da_assessment_delete, name='da-assessment-delete'),
 
     # URLs for General Paediatric Assessment (GPA) record operations
@@ -96,7 +102,8 @@ urlpatterns = [
     path("gpa/view/<str:gpa_id>/", views.gpa_view, name='gpa-view'),
     path("gpa/manager/", views.gpa_manager, name='gpa-manager'),
     path("gpa/manager/patient/<str:pid>/", views.gpa_manager_by_patient, name='gpa-manager-patient'),
-    path("gpa/delete/confirm/<str:gpa_id>/", views.gpa_delete_start, name='gpa-delete-start'),
+    # DEPRECATED: Use unified delete modal instead (refactor-delete-confirmation)
+    # path("gpa/delete/confirm/<str:gpa_id>/", views.gpa_delete_start, name='gpa-delete-start'),
     path("gpa/delete/<str:gpa_id>/", views.gpa_delete, name='gpa-delete'),
 
     ]

@@ -265,9 +265,10 @@
                       </a>
                       {% endif %}
                       <div class="dropdown-divider"></div>
-                      <a class="dropdown-item text-danger" href="{% url 'cdic-assessment-delete_start' CDICRecord.id %}" onclick="return confirm('Are you sure you want to delete this CDIC record?')">
+                      <button class="dropdown-item text-danger" type="button"
+                              onclick="DeleteConfirmation.show('deleteCDICModal{{ CDICRecord.id }}')">
                         <i class="fas fa-trash-alt mr-2"></i>Delete Record
-                      </a>
+                      </button>
                     </div>
                   </div>
                 </td>
@@ -340,5 +341,15 @@
 <script src="{% static 'js/manager.js' %}"></script>
 {% endblock extra_js %}
 
+<!-- Delete Modals for Each CDIC Record -->
+{% for CDICRecord in cdic_records %}
+{% url 'cdic-assessment-delete' CDICRecord.id as cdic_delete_url %}
+{% include 'src/partials/delete_confirmation_modal.html' with
+   modal_id='deleteCDICModal'|add:CDICRecord.id|stringformat:"s"
+   entity_type='CDIC Record'
+   delete_url=cdic_delete_url
+   redirect_url='/cdic/manager/'
+only %}
+{% endfor %}
 
 {% endblock main_content %}

@@ -250,9 +250,10 @@ Manager{% endblock title%}
                       <a class="dropdown-item" href="{% url 'assessment-edit' Assessment.id %}">
                         <i class="fas fa-pencil-alt mr-2"></i>Edit Assessment
                       </a>
-                      <a class="dropdown-item" href="{% url 'assessment-delete_start' Assessment.id %}">
+                      <button class="dropdown-item text-danger" type="button"
+                              onclick="DeleteConfirmation.show('deleteGMAModal{{ Assessment.id }}')">
                         <i class="far fa-trash-alt mr-2"></i>Delete Assessment
-                      </a>
+                      </button>
                       <div class="dropdown-divider"></div>
                       <a class="dropdown-item" href="{% url 'assessment-manager-patient' Assessment.patient.id %}">
                         <i class="fas fa-clipboard-list mr-2"></i>All Patient Assessments
@@ -417,5 +418,16 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock extra_js %}
+
+<!-- Delete Modals for Each Assessment -->
+{% for Assessment in assessments %}
+{% url 'assessment-delete' Assessment.id as gma_delete_url %}
+{% include 'src/partials/delete_confirmation_modal.html' with
+   modal_id='deleteGMAModal'|add:Assessment.id|stringformat:"s"
+   entity_type='GMA Assessment'
+   delete_url=gma_delete_url
+   redirect_url='/manager/assessment/'
+only %}
+{% endfor %}
 
 {% endblock main_content %}

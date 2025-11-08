@@ -486,68 +486,113 @@ def video_delete_confirm(request, video_id):
 
 
 @login_required(login_url="user-login")
-@require_http_methods(["POST"])
+@require_http_methods(["DELETE"])
 def video_delete(request, video_id):
-    """Delete video after password confirmation"""
+    """
+    Unified video deletion endpoint with password verification
+    Part of refactor-delete-confirmation change
+
+    Accepts: DELETE method with JSON payload {password: str}
+    Returns: JSON {success: bool, message: str, redirect_url: str}
+    """
+    from ndas.custom_codes.delete_helpers import (
+        has_delete_permission,
+        validate_can_delete,
+        get_entity_display_name,
+        get_redirect_url
+    )
+
     try:
+        # 1. Retrieve video
         video = get_object_or_404(Video, id=video_id)
 
-        # Check permissions
-        if not request.user.is_staff and video.added_by != request.user:
-            messages.error(request, "You do not have permission to delete this video.")
-            return redirect("video:manager")
+        # 2. Check permissions
+        if not has_delete_permission(request.user, video):
+            logger.warning(
+                f"Unauthorized deletion attempt: user={request.user.username}, "
+                f"entity=Video, id={video_id}"
+            )
+            return JsonResponse({
+                "success": False,
+                "error": "Permission denied",
+                "message": "You do not have permission to delete this video."
+            }, status=403)
 
-        # Verify password
-        password = request.POST.get("password", "")
+        # 3. Verify password
+        try:
+            data = json.loads(request.body)
+            password = data.get('password', '')
+        except json.JSONDecodeError:
+            return JsonResponse({
+                "success": False,
+                "error": "Invalid request",
+                "message": "Invalid request format."
+            }, status=400)
+
         if not password:
-            messages.error(request, "Password is required to delete the video.")
-            return redirect("video:delete-confirm", video_id=video_id)
+            return JsonResponse({
+                "success": False,
+                "error": "Password required",
+                "message": "Password is required to confirm deletion."
+            }, status=400)
 
         if not request.user.check_password(password):
             logger.warning(
-                f"Invalid password attempt for video deletion by user: {request.user.username} for video ID: {video_id}"
+                f"Invalid password for deletion: user={request.user.username}, "
+                f"entity=Video, id={video_id}"
             )
-            messages.error(
-                request, "Invalid password. Please enter the correct password to confirm deletion."
-            )
-            return redirect("video:delete-confirm", video_id=video_id)
+            return JsonResponse({
+                "success": False,
+                "error": "Invalid password",
+                "message": "Incorrect password. Please try again."
+            }, status=401)
 
-        # Check if video is used in assessments
-        from patients.models import GMAssessment
+        # 4. Check business rules (video used in assessments)
+        validation_result = validate_can_delete(video)
+        if not validation_result['can_delete']:
+            return JsonResponse({
+                "success": False,
+                "error": "Cannot delete",
+                "message": validation_result['reason']
+            }, status=400)
 
-        if GMAssessment.objects.filter(video_file=video).exists():
-            messages.error(request, "Cannot delete video that is used in assessments.")
-            return redirect("video:delete-confirm", video_id=video_id)
+        # 5. Store info for logging and response
+        video_name = get_entity_display_name(video)
+        video_title = video.title or 'Unknown'
 
-        # Store patient info for redirect
-        patient_id = video.patient.id
-        video_title = video.title
-
-        # Log the deletion
-        logger.info(
-            f"Video deletion: Video ID {video_id} ('{video_title}') deleted by user {request.user.username}"
-        )
-
-        # Delete the video file from storage
+        # 6. Delete the video file from storage
         if video.video_file:
             try:
                 video.video_file.delete(save=False)
             except Exception as e:
                 logger.warning(f"Failed to delete video file: {e}")
 
-        # Delete the database record
+        # 7. Perform deletion
         video.delete()
 
-        messages.success(
-            request, f'Video "{video_title}" has been deleted successfully.'
+        # 8. Audit log
+        logger.info(
+            f"Deletion successful: user={request.user.username}, "
+            f"entity=Video, name={video_name}, id={video_id}"
         )
 
-        # Redirect based on referer or default to manager
-        referer = request.META.get("HTTP_REFERER", "")
-        if "patient" in referer:
-            return redirect("view-patient", pk=patient_id)
-        else:
-            return redirect("video:manager")
+        # 9. Return success
+        return JsonResponse({
+            "success": True,
+            "message": f"Video '{video_title}' has been deleted successfully.",
+            "redirect_url": get_redirect_url('Video')
+        })
+
+    except Exception as e:
+        logger.error(
+            f"Deletion error: user={request.user.username}, "
+            f"entity=Video, id={video_id}, error={str(e)}"
+        )
+        return JsonResponse({
+            "success": False,
+            "error": "Server error",
+            "message": f"An error occurred during deletion: {str(e)}"
+        }, status=500)
 
     except Video.DoesNotExist:
         messages.error(request, "Video not found.")

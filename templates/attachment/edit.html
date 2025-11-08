@@ -215,17 +215,7 @@
                     <button type="submit" class="btn btn-warning">
                       <i class="fas fa-save"></i> Update Attachment
                     </button>
-                    <button type="button" class="btn btn-danger ml-2" onclick="openDeleteAttachmentModal({
-                      id: '{{ attachment.id }}',
-                      title: '{{ attachment.title|escapejs }}',
-                      patient_name: '{{ attachment.patient.baby_name|escapejs }}',
-                      patient_bht: '{{ attachment.patient.bht|escapejs }}',
-                      patient_gender: '{{ attachment.patient.get_gender_display|escapejs }}',
-                      attachment_type: '{{ attachment.attachment_type }}',
-                      created_at: '{{ attachment.created_at|date:"M d, Y H:i" }}',
-                      added_by: '{{ attachment.added_by.get_full_name|default:attachment.added_by.username|escapejs }}',
-                      description: '{{ attachment.description|escapejs }}'
-                    })">
+                    <button type="button" class="btn btn-danger ml-2" onclick="DeleteConfirmation.show('deleteAttachmentModal')">
                       <i class="fas fa-trash"></i> Delete
                     </button>
                   </div>
@@ -314,6 +304,12 @@ $(document).ready(function() {
 });
 </script>
 
-<!-- Include Delete Modal -->
-{% include 'attachment/delete-confirm.html' %}
+<!-- Include Unified Delete Modal -->
+{% include 'src/partials/delete_confirmation_modal.html' with
+   modal_id='deleteAttachmentModal'
+   entity_type='Attachment'
+   delete_url=attachment.get_delete_url
+   redirect_url=attachment.patient.get_absolute_url
+%}
+
 {% endblock main_content %}

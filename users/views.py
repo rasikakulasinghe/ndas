@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from django.core.paginator import Paginator
@@ -622,39 +622,112 @@ def admin_user_edit(request, pk):
 
 
 @admin_required
-@require_POST
+@require_http_methods(["DELETE"])
 def admin_user_delete(request, pk):
-    """Admin view to delete users (soft delete by deactivating)."""
-    user = get_object_or_404(CustomUser, pk=pk)
-    
-    # Prevent self-deletion
-    if user == request.user:
-        messages.error(request, 'You cannot delete your own account.')
-        return redirect('admin-user-list')
-    
-    # Prevent deletion of superusers by non-superusers
-    if user.is_superuser and not request.user.is_superuser:
-        messages.error(request, 'You cannot delete superuser accounts.')
-        return redirect('admin-user-list')
-    
+    """
+    Unified user deletion endpoint with password verification (soft delete)
+    Part of refactor-delete-confirmation change
+
+    Accepts: DELETE method with JSON payload {password: str}
+    Returns: JSON {success: bool, message: str, redirect_url: str}
+    """
+    import json
+    from django.http import JsonResponse
+    from django.urls import reverse
+    import logging
+
+    logger = logging.getLogger(__name__)
+
     try:
-        # Soft delete by deactivating
+        # 1. Retrieve user
+        user = get_object_or_404(CustomUser, pk=pk)
+
+        # 2. Check self-deletion
+        if user == request.user:
+            logger.warning(
+                f"Self-deletion attempt blocked: user={request.user.username}"
+            )
+            return JsonResponse({
+                "success": False,
+                "error": "Self-deletion not allowed",
+                "message": "You cannot delete your own account."
+            }, status=403)
+
+        # 3. Check superuser permissions
+        if user.is_superuser and not request.user.is_superuser:
+            logger.warning(
+                f"Non-superuser attempted to delete superuser: admin={request.user.username}, "
+                f"target_user={user.username}"
+            )
+            return JsonResponse({
+                "success": False,
+                "error": "Permission denied",
+                "message": "You cannot delete superuser accounts."
+            }, status=403)
+
+        # 4. Verify password
+        try:
+            data = json.loads(request.body)
+            password = data.get('password', '')
+        except json.JSONDecodeError:
+            return JsonResponse({
+                "success": False,
+                "error": "Invalid request",
+                "message": "Invalid request format."
+            }, status=400)
+
+        if not password:
+            return JsonResponse({
+                "success": False,
+                "error": "Password required",
+                "message": "Password is required to confirm deletion."
+            }, status=400)
+
+        if not request.user.check_password(password):
+            logger.warning(
+                f"Invalid password for user deletion: admin={request.user.username}, "
+                f"target_user={user.username}"
+            )
+            return JsonResponse({
+                "success": False,
+                "error": "Invalid password",
+                "message": "Incorrect password. Please try again."
+            }, status=401)
+
+        # 5. Perform soft delete (deactivation)
         user.is_active = False
         user.save()
-        
-        # Log admin action
+
+        # 6. Audit log
         log_user_activity(
             request,
             request.user,
             UserActivityLog.LOGIN_SUCCESS,
-            failed_reason=f"Admin action: Deleted user: {user.username}"
+            failed_reason=f"Admin action: Deleted (deactivated) user: {user.username}"
         )
-        
-        messages.success(request, f'User "{user.username}" has been deactivated.')
+
+        logger.info(
+            f"User deletion successful: admin={request.user.username}, "
+            f"deactivated_user={user.username}, id={pk}"
+        )
+
+        # 7. Return success
+        return JsonResponse({
+            "success": True,
+            "message": f"User '{user.username}' has been deactivated successfully.",
+            "redirect_url": reverse('admin-user-list')
+        })
+
     except Exception as e:
-        messages.error(request, f'Error deleting user: {str(e)}')
-    
-    return redirect('admin-user-list')
+        logger.error(
+            f"User deletion error: admin={request.user.username}, "
+            f"target_user_id={pk}, error={str(e)}"
+        )
+        return JsonResponse({
+            "success": False,
+            "error": "Server error",
+            "message": f"An error occurred during deletion: {str(e)}"
+        }, status=500)
 
 
 @admin_required

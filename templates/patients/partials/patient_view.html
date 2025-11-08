@@ -351,9 +351,10 @@
                         <a href="{% url 'assessment-edit' Assessment.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
                         </a>
-                        <a href="{% url 'assessment-delete_start' Assessment.id %}" class="btn btn-danger btn-sm" title="Delete">
+                        <button type="button" class="btn btn-danger btn-sm" title="Delete"
+                                onclick="DeleteConfirmation.show('deleteGMAModal{{ Assessment.id }}')">
                           <i class="fas fa-trash"></i>
-                        </a>
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -404,9 +405,10 @@
                         <a href="{% url 'hine-assessment-edit' HINE.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
                         </a>
-                        <a href="{% url 'hine-assessment-delete_start' HINE.id %}" class="btn btn-danger btn-sm" title="Delete">
+                        <button type="button" class="btn btn-danger btn-sm" title="Delete"
+                                onclick="DeleteConfirmation.show('deleteHINEModal{{ HINE.id }}')">
                           <i class="fas fa-trash"></i>
-                        </a>
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -459,9 +461,10 @@
                         <a href="{% url 'da-assessment-edit' DA.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
                         </a>
-                        <a href="{% url 'da-assessment-delete_start' DA.id %}" class="btn btn-danger btn-sm" title="Delete">
+                        <button type="button" class="btn btn-danger btn-sm" title="Delete"
+                                onclick="DeleteConfirmation.show('deleteDAModal{{ DA.id }}')">
                           <i class="fas fa-trash"></i>
-                        </a>
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -512,9 +515,10 @@
                         <a href="{% url 'cdic-assessment-edit' CDIC.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
                         </a>
-                        <a href="{% url 'cdic-assessment-delete_start' CDIC.id %}" class="btn btn-danger btn-sm" title="Delete">
+                        <button type="button" class="btn btn-danger btn-sm" title="Delete"
+                                onclick="DeleteConfirmation.show('deleteCDICModal{{ CDIC.id }}')">
                           <i class="fas fa-trash"></i>
-                        </a>
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -912,3 +916,46 @@
 
 {% load static %}
 <script src="{% static 'js/patient-deletion.js' %}" defer></script>
+
+<!-- Delete Modals for Assessments -->
+{% for Assessment in gm_assessments %}
+{% url 'assessment-delete' Assessment.id as gma_delete_url %}
+{% include 'src/partials/delete_confirmation_modal.html' with
+   modal_id='deleteGMAModal'|add:Assessment.id|stringformat:"s"
+   entity_type='GMA Assessment'
+   delete_url=gma_delete_url
+   redirect_url=patient.get_absolute_url
+only %}
+{% endfor %}
+
+{% for HINE in hine_assessments %}
+{% url 'hine-assessment-delete' HINE.id as hine_delete_url %}
+{% include 'src/partials/delete_confirmation_modal.html' with
+   modal_id='deleteHINEModal'|add:HINE.id|stringformat:"s"
+   entity_type='HINE Assessment'
+   delete_url=hine_delete_url
+   redirect_url=patient.get_absolute_url
+only %}
+{% endfor %}
+
+{% for DA in da_assessments %}
+{% url 'da-assessment-delete' DA.id as da_delete_url %}
+{% include 'src/partials/delete_confirmation_modal.html' with
+   modal_id='deleteDAModal'|add:DA.id|stringformat:"s"
+   entity_type='Developmental Assessment'
+   delete_url=da_delete_url
+   redirect_url=patient.get_absolute_url
+only %}
+{% endfor %}
+
+{% for CDIC in cdic_record %}
+{% url 'cdic-assessment-delete' CDIC.id as cdic_delete_url %}
+{% include 'src/partials/delete_confirmation_modal.html' with
+   modal_id='deleteCDICModal'|add:CDIC.id|stringformat:"s"
+   entity_type='CDIC Record'
+   delete_url=cdic_delete_url
+   redirect_url=patient.get_absolute_url
+only %}
+{% endfor %}
+
+

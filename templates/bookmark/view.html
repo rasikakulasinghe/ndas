@@ -121,10 +121,9 @@
               <a class="btn btn-outline-success mb-1" href="{% url 'bookmark-edit' bookmark.id %}">
                 <i class="fas fa-edit mr-2"></i>Edit Bookmark
               </a>
-              <a class="btn btn-outline-danger mb-1" href="{% url 'bookmark-delete' bookmark.id %}" 
-                 onclick="return confirm('Are you sure you want to delete this bookmark?')">
+              <button type="button" class="btn btn-outline-danger mb-1" onclick="DeleteConfirmation.show('deleteBookmarkModal')">
                 <i class="fas fa-trash mr-2"></i>Delete Bookmark
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -191,5 +190,12 @@ $(document).ready(function(){
     $('[data-toggle="tooltip"]').tooltip();
 });
 </script>
+
+{% include 'src/partials/delete_confirmation_modal.html' with
+   modal_id='deleteBookmarkModal'
+   entity_type='Bookmark'
+   delete_url=bookmark.get_delete_url
+   redirect_url=bookmark.get_list_url
+%}
 
 {% endblock main_content %}

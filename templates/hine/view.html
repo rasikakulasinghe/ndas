@@ -162,10 +162,10 @@
                   <i class="fas fa-bookmark-o mr-2"></i>Add Bookmark
                 </a>
               {% endif %}
-              <a class="btn btn-outline-danger mb-1" href="{% url 'hine-assessment-delete_start' HINERecord.id %}" 
-                 onclick="return confirm('Are you sure you want to delete this HINE record?')">
+              <button type="button" class="btn btn-outline-danger mb-1"
+                 onclick="DeleteConfirmation.show('deleteHINEModal')">
                 <i class="fas fa-trash mr-2"></i>Delete Record
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -227,5 +227,12 @@
   }
 }
 </style>
+
+{% include 'src/partials/delete_confirmation_modal.html' with
+   modal_id='deleteHINEModal'
+   entity_type='HINE Assessment'
+   delete_url=HINERecord.get_delete_url
+   redirect_url=HINERecord.patient.get_absolute_url
+%}
 
 {% endblock main_content %}
