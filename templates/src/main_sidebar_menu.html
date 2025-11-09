@@ -272,16 +272,18 @@
               </a>
             </li>
 
-            <!-- Subscription -->
+            {% if user.is_superuser %}
+            <!-- Subscription Management (Superuser Only) -->
             <li class="nav-item">
               <a
-                href="{% url 'subscription-detail' %}"
-                class="nav-link {% if request.resolver_match.url_name == 'subscription-detail' %}active{% endif %}"
+                href="{% url 'subscription-update' %}"
+                class="nav-link {% if request.resolver_match.url_name == 'subscription-update' %}active{% endif %}"
               >
-                <i class="nav-icon fas fa-credit-card"></i>
-                <p>Subscription</p>
+                <i class="far fa-circle nav-icon"></i>
+                <p>Update Subscription</p>
               </a>
             </li>
+            {% endif %}
           </ul>
         </li>
         {% endif %}

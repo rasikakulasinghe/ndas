@@ -287,7 +287,6 @@ class UserSessionAdmin(admin.ModelAdmin):
 class SubscriptionAdmin(admin.ModelAdmin):
     form = SubscriptionForm
     list_display = (
-        'user',
         'subscription_type',
         'status_display',
         'start_date',
@@ -303,10 +302,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
         'created_at',
     )
     search_fields = (
-        'user__username',
-        'user__first_name',
-        'user__last_name',
-        'user__email',
+        'notes',
     )
     readonly_fields = (
         'created_at',
@@ -318,11 +314,8 @@ class SubscriptionAdmin(admin.ModelAdmin):
         'is_active_display',
     )
     ordering = ('-start_date',)
-    
+
     fieldsets = (
-        ('User Information', {
-            'fields': ('user',)
-        }),
         ('Subscription Details', {
             'fields': (
                 'subscription_type',
@@ -355,6 +348,14 @@ class SubscriptionAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+    def has_add_permission(self, request):
+        """Only allow one subscription (singleton pattern)."""
+        return not Subscription.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        """Prevent deletion of the global subscription."""
+        return False
     
     def status_display(self, obj):
         """Display status with color coding."""

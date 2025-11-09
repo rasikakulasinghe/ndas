@@ -337,14 +337,14 @@ class UserSearchForm(forms.Form):
 
 class SubscriptionForm(forms.ModelForm):
     """
-    Form for creating and updating subscriptions in the admin interface.
+    Form for updating the global subscription.
+    This form is used to modify the single subscription that applies to all non-superuser users.
     Includes validation for reasonable date ranges and positive numeric values.
     """
-    
+
     class Meta:
         model = Subscription
         fields = [
-            'user',
             'subscription_type',
             'start_date',
             'duration_days',
@@ -353,9 +353,8 @@ class SubscriptionForm(forms.ModelForm):
             'status',
             'notes',
         ]
-        
+
         widgets = {
-            'user': forms.Select(attrs={'class': 'form-control'}),
             'subscription_type': forms.Select(attrs={'class': 'form-control'}),
             'start_date': forms.DateInput(attrs={
                 'class': 'form-control',

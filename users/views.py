@@ -12,8 +12,8 @@ from django.utils import timezone
 from django.core.paginator import Paginator
 from django.db.models import Q
 from datetime import date
-from .forms import CustomUserRegistrationForm, UserPasswordChange, CustomUserEditForm
-from .models import DeveloperContacts
+from .forms import CustomUserRegistrationForm, UserPasswordChange, CustomUserEditForm, SubscriptionForm
+from .models import DeveloperContacts, Subscription
 from .utils import (
     log_user_activity, 
     create_or_update_user_session, 
@@ -65,10 +65,11 @@ def loginPage(request):
                     })
                 
                 # CRITICAL: Check subscription status BEFORE allowing login
-                # Skip for superusers and staff
-                if not (user.is_superuser or user.is_staff):
+                # Skip for superusers only (staff are subject to subscription)
+                if not user.is_superuser:
                     try:
-                        subscription = user.subscription
+                        # Get the global subscription
+                        subscription = Subscription.get_global_subscription()
                         # Update status to ensure it's current
                         subscription.update_status()
 
@@ -77,8 +78,8 @@ def loginPage(request):
                         if subscription.is_expired:
                             messages.error(
                                 request,
-                                f'Your subscription expired on {subscription.expiration_date} and grace period ended on {subscription.grace_period_end_date}. '
-                                'Please contact support to renew your subscription before logging in.'
+                                f'The system subscription expired on {subscription.expiration_date} and grace period ended on {subscription.grace_period_end_date}. '
+                                'Please contact support to renew the subscription before logging in.'
                             )
                             # Log the failed login attempt due to expired subscription
                             try:
@@ -87,7 +88,7 @@ def loginPage(request):
                                     None,
                                     UserActivityLog.LOGIN_FAILED,
                                     attempted_username=username,
-                                    failed_reason="Subscription fully expired (past grace period)"
+                                    failed_reason="Global subscription fully expired (past grace period)"
                                 )
                             except Exception:
                                 pass
@@ -98,16 +99,16 @@ def loginPage(request):
                             days_until_lockout = (subscription.grace_period_end_date - date.today()).days
                             messages.warning(
                                 request,
-                                f'⚠️ Your subscription expired on {subscription.expiration_date}. '
-                                f'You have {days_until_lockout} days remaining in your grace period. '
-                                'Please contact support to renew your subscription.'
+                                f'⚠️ The system subscription expired on {subscription.expiration_date}. '
+                                f'You have {days_until_lockout} days remaining in the grace period. '
+                                'Please contact support to renew the subscription.'
                             )
-                    
+
                     except Exception as e:
-                        # If no subscription exists, deny login (fail closed for security)
+                        # If subscription check fails, deny login (fail closed for security)
                         import logging
                         logger = logging.getLogger(__name__)
-                        logger.error(f"Subscription check failed for user {username}: {e}")
+                        logger.error(f"Global subscription check failed for user {username}: {e}")
                         messages.error(
                             request,
                             'Unable to verify subscription status. Please contact support.'
@@ -837,13 +838,14 @@ def admin_activity_logs(request):
 @login_required(login_url="user-login")
 def subscription_detail(request):
     """
-    Display subscription details for the authenticated user.
+    Display global subscription details.
     Shows subscription information including remaining days, status, and expiration date.
 
     SECURITY: Requires login - for active/grace period users only.
     """
     try:
-        subscription = request.user.subscription
+        # Get the global subscription
+        subscription = Subscription.get_global_subscription()
         subscription.update_status()
 
         context = {
@@ -870,19 +872,13 @@ def subscription_info(request):
     This page is accessible to show expired subscription details.
     """
     try:
-        # SECURITY: Check if user was recently logged out with session data
-        # Get username from session or query param if available
-        username = request.session.get('expired_username', None)
-
+        # Get the global subscription
         subscription = None
-        if username:
-            try:
-                from users.models import CustomUser
-                user = CustomUser.objects.get(username=username)
-                subscription = user.subscription
-                subscription.update_status()
-            except (CustomUser.DoesNotExist, Exception):
-                pass
+        try:
+            subscription = Subscription.get_global_subscription()
+            subscription.update_status()
+        except Exception:
+            pass
 
         # Fetch developer contact information
         try:
@@ -921,3 +917,45 @@ def subscription_info(request):
         }
 
         return render(request, 'users/subscription_expired.html', context)
+
+
+@login_required(login_url="user-login")
+def subscription_update(request):
+    """
+    Update the global subscription that applies to all non-superuser users.
+
+    SECURITY: Restricted to superusers only.
+    PURPOSE: Allows superusers to modify the single global subscription.
+    """
+    # Check if user is superuser
+    if not request.user.is_superuser:
+        messages.error(request, 'Access denied. Only superusers can update subscriptions.')
+        return redirect('home')
+
+    # Get or create the global subscription
+    subscription = Subscription.get_global_subscription()
+
+    if request.method == 'POST':
+        form = SubscriptionForm(request.POST, instance=subscription)
+        if form.is_valid():
+            try:
+                # Update the global subscription
+                subscription = form.save()
+                subscription.update_status()
+
+                messages.success(request, 'Global subscription updated successfully. Changes apply to all non-superuser users.')
+                return redirect('admin-user-list')
+
+            except Exception as e:
+                messages.error(request, f'Error updating subscription: {str(e)}')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = SubscriptionForm(instance=subscription)
+
+    context = {
+        'form': form,
+        'subscription': subscription,
+    }
+
+    return render(request, 'users/subscription_update.html', context)

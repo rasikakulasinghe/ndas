@@ -50,5 +50,6 @@ urlpatterns = [
     # Subscription URLs
     path('subscription/', views.subscription_detail, name='subscription-detail'),
     path('subscription/info/', views.subscription_info, name='subscription-info'),
+    path('subscription/update/', views.subscription_update, name='subscription-update'),
 
 ]

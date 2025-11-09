@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 import uuid
-from datetime import timedelta
+from datetime import timedelta, date
 from decimal import Decimal
 from ndas.custom_codes.choice import POSSITION, LOGIN_STATUS_CHOICES, SUBSCRIPTION_TYPE_CHOICES, SUBSCRIPTION_STATUS_CHOICES
 from ndas.custom_codes.validators import image_extension_validation, validate_phone_number
@@ -559,19 +559,11 @@ class DeveloperContacts(TimeStampedModel, UserTrackingMixin):
 
 class Subscription(TimeStampedModel, UserTrackingMixin):
     """
-    Model to track user subscription details and status.
-    Each user has exactly one active subscription at any time.
+    Global subscription model that applies to all non-superuser users.
+    Only one subscription record should exist in the system.
+    Superusers are exempt from subscription requirements.
     """
-    
-    user = models.OneToOneField(
-        CustomUser,
-        on_delete=models.CASCADE,
-        related_name='subscription',
-        help_text="User associated with this subscription",
-        verbose_name="User",
-        db_index=True,
-    )
-    
+
     subscription_type = models.CharField(
         max_length=10,
         choices=SUBSCRIPTION_TYPE_CHOICES,
@@ -818,15 +810,44 @@ class Subscription(TimeStampedModel, UserTrackingMixin):
             self._clear_cache()
             self.update_status()
     
+    @classmethod
+    def get_global_subscription(cls):
+        """
+        Get or create the single global subscription instance.
+
+        Returns:
+            Subscription: The global subscription object.
+        """
+        subscription, created = cls.objects.get_or_create(
+            pk=1,
+            defaults={
+                'subscription_type': 'free',
+                'start_date': date.today(),
+                'duration_days': 30,
+                'billing_amount': Decimal('0.00'),
+                'status': 'active',
+                'grace_period_days': 7,
+            }
+        )
+        return subscription
+
+    def save(self, *args, **kwargs):
+        """
+        Override save to enforce singleton pattern.
+        Always save with pk=1 to ensure only one record exists.
+        """
+        self.pk = 1
+        super().save(*args, **kwargs)
+        self._clear_cache()
+
     def __str__(self):
-        return f"{self.user.username} - {self.subscription_type} ({self.status})"
-    
+        return f"Global Subscription - {self.subscription_type} ({self.status})"
+
     class Meta:
-        verbose_name = "Subscription"
-        verbose_name_plural = "Subscriptions"
+        verbose_name = "Global Subscription"
+        verbose_name_plural = "Global Subscription"
         ordering = ["-start_date"]
         indexes = [
-            models.Index(fields=["user", "status"]),
             models.Index(fields=["start_date"]),
             models.Index(fields=["status"]),
         ]
