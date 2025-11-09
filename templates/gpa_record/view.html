@@ -89,6 +89,9 @@
         <div class="card-body">
           <a href="{% url 'gpa-edit' gpa_record.id %}" class="btn btn-warning btn-block">
             <i class="fas fa-edit"></i> Edit Record
+          </a>
+          <a href="{% url 'reports:pdf-gpa' gpa_record.id %}" class="btn btn-outline-primary btn-block">
+            <i class="fas fa-file-pdf"></i> Download PDF
           </a>{% delete_modal_id 'GeneralPaediatricAssessment' gpa_record.id as modal_id %}
           <button type="button" class="btn btn-danger btn-block" onclick="DeleteConfirmation.show('{{ modal_id }}')">
             <i class="fas fa-trash"></i> Delete Record

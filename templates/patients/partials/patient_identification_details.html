@@ -7,9 +7,9 @@
         <i class="fas fa-user-injured mr-2" style="font-size: 1.25rem;"></i>
         <h5 class="mb-0 font-weight-semibold" style="font-size: 1.125rem;">Patient Identification</h5>
       </div>
-      <button class="btn btn-sm" style="background-color: white; color: #009688; border-radius: 1rem; padding: 0.2rem 0.6rem; font-weight: 500; font-size: 0.875rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        <i class="fas fa-plus mr-1"></i> New
-      </button>
+      <a href="{% url 'reports:builder' %}?patient={{ patient.id }}" class="btn btn-sm" style="background-color: white; color: #009688; border-radius: 1rem; padding: 0.2rem 0.6rem; font-weight: 500; font-size: 0.875rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <i class="fas fa-file-pdf mr-1"></i> Generate Report
+      </a>
     </div>
   </div>
 

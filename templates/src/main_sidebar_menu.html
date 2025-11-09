@@ -183,6 +183,42 @@
           </ul>
         </li>
 
+        <!-- Reports -->
+        <li
+          class="nav-item {% if 'reports' in request.resolver_match.namespace %}menu-open{% endif %}"
+        >
+          <a
+            href="#"
+            class="nav-link {% if 'reports' in request.resolver_match.namespace %}active{% endif %}"
+          >
+            <i class="nav-icon fas fa-chart-bar"></i>
+            <p>
+              Reports
+              <i class="fas fa-angle-left right"></i>
+            </p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item">
+              <a
+                href="{% url 'reports:builder' %}"
+                class="nav-link {% if request.resolver_match.url_name == 'builder' or request.resolver_match.url_name == 'generate' %}active{% endif %}"
+              >
+                <i class="far fa-circle nav-icon"></i>
+                <p>Generate Report</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                href="{% url 'reports:history' %}"
+                class="nav-link {% if request.resolver_match.url_name == 'history' %}active{% endif %}"
+              >
+                <i class="far fa-circle nav-icon"></i>
+                <p>Report History</p>
+              </a>
+            </li>
+          </ul>
+        </li>
+
         {% if user.is_staff or user.is_superuser %}
 
         <li

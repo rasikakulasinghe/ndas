@@ -1,0 +1,102 @@
+{% extends 'src/base.html' %}
+{% load static %}
+
+{% block title %}Reports - Generate | NDAS{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid">
+    {% csrf_token %}
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-chart-bar"></i> Generate Report</h3>
+        </div>
+
+        <div class="card-body">
+            {% if error %}
+            <div class="alert alert-danger alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <strong>Error!</strong> {{ error }}
+            </div>
+            {% endif %}
+
+            {% if message %}
+            <div class="alert alert-info alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                {{ message }}
+            </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'reports:generate' %}">
+                {% csrf_token %}
+
+                <!-- Format Selection -->
+                <div class="form-group">
+                    <label>Report Format</label>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="format" id="formatPDF" value="pdf" checked>
+                        <label class="form-check-label" for="formatPDF">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="format" id="formatExcel" value="excel">
+                        <label class="form-check-label" for="formatExcel">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Date Range -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="start_date">Start Date</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="end_date">End Date</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Selection -->
+                <div class="form-group">
+                    <label>Data to Include</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="patients" id="patients" checked>
+                        <label class="form-check-label" for="patients">
+                            Patient Demographics
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="gm_assessments" id="gm_assessments" checked>
+                        <label class="form-check-label" for="gm_assessments">
+                            GM Assessments
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="hine_assessments" id="hine_assessments" checked>
+                        <label class="form-check-label" for="hine_assessments">
+                            HINE Assessments
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-file-download"></i> Generate Report
+                    </button>
+                    <a href="{% url 'reports:history' %}" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-history"></i> View History
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

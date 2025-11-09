@@ -30,6 +30,7 @@ gunicorn==23.0.0  # Updated from 20.1.0
 # PDF and document handling
 pypdf==5.0.1  # Updated from 3.8.1
 reportlab==4.2.2  # New addition for better PDF handling
+openpyxl==3.1.5  # Excel generation for reports
 
 # New security additions
 django-csp==3.8  # Content Security Policy

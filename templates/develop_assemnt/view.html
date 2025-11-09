@@ -166,6 +166,10 @@
           <a class="btn btn-primary" href="{% url 'da-assessment-edit' DARecord.id %}" type="button"><i class="fas fa-pencil-alt"></i>  Update Record</a>
         </div>
 
+        <div class="col-auto m-2">
+          <a class="btn btn-outline-primary" href="{% url 'reports:pdf-da' DARecord.id %}" type="button"><i class="fas fa-file-pdf"></i>  Download PDF</a>
+        </div>
+
         {% if bookmark %}
         <a class="btn btn-primary" href="{% url 'bookmark-view' bookmark.id %}" type="button"><i class="fas fa-eye"></i> View Bookmark</a>
         {% else %}

@@ -154,6 +154,9 @@
               <a class="btn btn-outline-success mb-1" href="{% url 'hine-assessment-edit' HINERecord.id %}">
                 <i class="fas fa-edit mr-2"></i>Edit Record
               </a>
+              <a class="btn btn-outline-primary mb-1" href="{% url 'reports:pdf-hine' HINERecord.id %}">
+                <i class="fas fa-file-pdf mr-2"></i>Download PDF
+              </a>
               {% if bookmark %}
                 <a class="btn btn-outline-warning mb-1" href="{% url 'bookmark-view' bookmark.id %}">
                   <i class="fas fa-bookmark mr-2"></i>View Bookmark

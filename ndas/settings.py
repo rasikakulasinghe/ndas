@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'patients.apps.PatientsConfig',
     'video.apps.VideoConfig',
+    'reports.apps.ReportsConfig',
     'ckeditor',
 ]
 

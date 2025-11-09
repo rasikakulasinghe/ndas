@@ -1,0 +1,31 @@
+{% extends 'src/base.html' %}
+{% load static %}
+
+{% block title %}Report History | NDAS{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid">
+    {% csrf_token %}
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-history"></i> Report History</h3>
+        </div>
+
+        <div class="card-body">
+            <p class="text-muted">
+                Reports are generated on-demand and retained for 24 hours. After expiration, please regenerate the report.
+            </p>
+
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                For MVP release, report history is not persisted. Generated reports are available for download immediately after generation.
+            </div>
+
+            <a href="{% url 'reports:builder' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Generate New Report
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -48,6 +48,13 @@ BOOKMARK_TYPE = (
 ATTACHMENT_TYPE = (("Photo", "Photo"), ("PDF", "PDF"), ("Video", "Video"))
 DX_CONCLUTION = (("NORMAL", "NORMAL"), ("ABNORMAL", "ABNORMAL"))
 
+# Report Configuration Value Types
+class ConfigValueTypes(models.TextChoices):
+    STRING = "STRING", "String"
+    INTEGER = "INTEGER", "Integer"
+    BOOLEAN = "BOOLEAN", "Boolean"
+    JSON = "JSON", "JSON"
+
 LEVEL_OF_INDICATION = (("High", "High"), ("Medium", "Medium"), ("Low", "Low"))
 
 POG_WKS = (

@@ -11,6 +11,7 @@ admin.site.index_title = settings.ADMIN_INDEX_TITLE
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("users/", include("users.urls")),
+    path("reports/", include("reports.urls")),
     path("", include("patients.urls")),
     path("djrichtextfield/", include("djrichtextfield.urls")),
     path("video/", include("video.urls")),
