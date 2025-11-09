@@ -95,7 +95,7 @@ def delete_modal(entity, modal_id=None):
         'HINEAssessment': f'/hine/delete/{entity_id}/',
         'CDICRecord': f'/cdic/delete/{entity_id}/',
         'DevelopmentalAssessment': f'/da/delete/{entity_id}/',
-        'GPARecord': f'/gpa/delete/{entity_id}/',
+        'GeneralPaediatricAssessment': f'/gpa/delete/{entity_id}/',
         'Attachment': f'/attachment/delete/{entity_id}/',
         'Bookmark': f'/bookmarks/delete/{entity_id}/',
         'CustomUser': f'/users/admin/user/delete/{entity_id}/',
