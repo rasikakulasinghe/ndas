@@ -4,7 +4,8 @@ from django.utils import timezone
 from django.utils.crypto import get_random_string
 import uuid
 from datetime import timedelta
-from ndas.custom_codes.choice import POSSITION, LOGIN_STATUS_CHOICES
+from decimal import Decimal
+from ndas.custom_codes.choice import POSSITION, LOGIN_STATUS_CHOICES, SUBSCRIPTION_TYPE_CHOICES, SUBSCRIPTION_STATUS_CHOICES
 from ndas.custom_codes.validators import image_extension_validation, validate_phone_number
 from ndas.custom_codes.Custom_abstract_class import (
     TimeStampedModel,
@@ -554,3 +555,148 @@ class DeveloperContacts(TimeStampedModel, UserTrackingMixin):
         verbose_name = "Developer Contact"
         verbose_name_plural = "Developer Contacts"
         ordering = ["name"]
+
+
+class Subscription(TimeStampedModel, UserTrackingMixin):
+    """
+    Model to track user subscription details and status.
+    Each user has exactly one active subscription at any time.
+    """
+    
+    user = models.OneToOneField(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='subscription',
+        help_text="User associated with this subscription",
+        verbose_name="User",
+        db_index=True,
+    )
+    
+    subscription_type = models.CharField(
+        max_length=10,
+        choices=SUBSCRIPTION_TYPE_CHOICES,
+        default='free',
+        help_text="Type of subscription (Free or Paid)",
+        verbose_name="Subscription Type",
+    )
+    
+    start_date = models.DateField(
+        help_text="Subscription start date",
+        verbose_name="Start Date",
+        db_index=True,
+    )
+    
+    duration_days = models.PositiveIntegerField(
+        default=30,
+        help_text="Subscription duration in days",
+        verbose_name="Duration (Days)",
+    )
+    
+    billing_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        help_text="Billing amount for this subscription period",
+        verbose_name="Billing Amount",
+    )
+    
+    status = models.CharField(
+        max_length=15,
+        choices=SUBSCRIPTION_STATUS_CHOICES,
+        default='active',
+        help_text="Current subscription status",
+        verbose_name="Status",
+        db_index=True,
+    )
+    
+    grace_period_days = models.PositiveIntegerField(
+        default=7,
+        help_text="Number of days for grace period after expiration",
+        verbose_name="Grace Period (Days)",
+    )
+    
+    notes = models.TextField(
+        blank=True,
+        help_text="Additional notes or remarks about this subscription",
+        verbose_name="Notes",
+    )
+    
+    @property
+    def expiration_date(self):
+        """Calculate and return the subscription expiration date."""
+        from datetime import timedelta
+        return self.start_date + timedelta(days=self.duration_days)
+    
+    @property
+    def grace_period_end_date(self):
+        """Calculate and return the end date of the grace period."""
+        from datetime import timedelta
+        return self.expiration_date + timedelta(days=self.grace_period_days)
+    
+    @property
+    def remaining_days(self):
+        """Calculate remaining days until expiration."""
+        from datetime import date
+        today = date.today()
+        if today > self.expiration_date:
+            return 0
+        return (self.expiration_date - today).days
+    
+    @property
+    def is_active(self):
+        """Check if subscription is currently active."""
+        from datetime import date
+        today = date.today()
+        return today <= self.expiration_date
+    
+    @property
+    def is_expired(self):
+        """Check if subscription has expired (beyond grace period)."""
+        from datetime import date
+        today = date.today()
+        return today > self.grace_period_end_date
+    
+    @property
+    def is_grace_period(self):
+        """Check if subscription is in grace period."""
+        from datetime import date
+        today = date.today()
+        return self.expiration_date < today <= self.grace_period_end_date
+    
+    def update_status(self):
+        """
+        Update subscription status based on current date.
+        This method should be called periodically or on-demand.
+        """
+        if self.is_expired:
+            self.status = 'expired'
+        elif self.is_grace_period:
+            self.status = 'grace_period'
+        elif self.is_active:
+            self.status = 'active'
+        self.save(update_fields=['status'])
+    
+    def extend_subscription(self, days):
+        """
+        Extend the subscription by adding days to duration.
+        
+        Args:
+            days (int): Number of days to add to the subscription
+        """
+        self.duration_days += days
+        self.update_status()
+        self.save(update_fields=['duration_days'])
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.subscription_type} ({self.status})"
+    
+    class Meta:
+        verbose_name = "Subscription"
+        verbose_name_plural = "Subscriptions"
+        ordering = ["-start_date"]
+        indexes = [
+            models.Index(fields=["user", "status"]),
+            models.Index(fields=["start_date"]),
+            models.Index(fields=["status"]),
+        ]
+

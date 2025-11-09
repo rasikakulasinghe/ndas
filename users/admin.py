@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import CustomUser, DeveloperContacts, UserActivityLog, UserSession
+from .models import CustomUser, DeveloperContacts, UserActivityLog, UserSession, Subscription
+from .forms import SubscriptionForm
 from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
 from django.urls import reverse
@@ -280,6 +281,124 @@ class UserSessionAdmin(admin.ModelAdmin):
         queryset.filter(last_activity__lt=cutoff_date).delete()
         self.message_user(request, f"Cleaned up {count} expired sessions.")
     cleanup_expired_sessions.short_description = "Cleanup expired sessions (30+ days)"
+
+
+@admin.register(Subscription)
+class SubscriptionAdmin(admin.ModelAdmin):
+    form = SubscriptionForm
+    list_display = (
+        'user',
+        'subscription_type',
+        'status_display',
+        'start_date',
+        'expiration_date_display',
+        'remaining_days_display',
+        'billing_amount',
+        'created_at',
+    )
+    list_filter = (
+        'subscription_type',
+        'status',
+        'start_date',
+        'created_at',
+    )
+    search_fields = (
+        'user__username',
+        'user__first_name',
+        'user__last_name',
+        'user__email',
+    )
+    readonly_fields = (
+        'created_at',
+        'updated_at',
+        'added_by',
+        'last_edit_by',
+        'expiration_date_display',
+        'remaining_days_display',
+        'is_active_display',
+    )
+    ordering = ('-start_date',)
+    
+    fieldsets = (
+        ('User Information', {
+            'fields': ('user',)
+        }),
+        ('Subscription Details', {
+            'fields': (
+                'subscription_type',
+                'start_date',
+                'duration_days',
+                'billing_amount',
+                'status',
+                'grace_period_days',
+            )
+        }),
+        ('Computed Information', {
+            'fields': (
+                'expiration_date_display',
+                'remaining_days_display',
+                'is_active_display',
+            ),
+            'classes': ('collapse',)
+        }),
+        ('Additional Information', {
+            'fields': ('notes',),
+            'classes': ('collapse',)
+        }),
+        ('Tracking Information', {
+            'fields': (
+                'created_at',
+                'updated_at',
+                'added_by',
+                'last_edit_by',
+            ),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def status_display(self, obj):
+        """Display status with color coding."""
+        colors = {
+            'active': 'green',
+            'grace_period': 'orange',
+            'expired': 'red',
+        }
+        color = colors.get(obj.status, 'gray')
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{}</span>',
+            color,
+            obj.get_status_display()
+        )
+    status_display.short_description = 'Status'
+    
+    def expiration_date_display(self, obj):
+        """Display computed expiration date."""
+        return obj.expiration_date
+    expiration_date_display.short_description = 'Expiration Date'
+    
+    def remaining_days_display(self, obj):
+        """Display remaining days with color coding."""
+        remaining = obj.remaining_days
+        if remaining > 7:
+            color = 'green'
+        elif remaining > 0:
+            color = 'orange'
+        else:
+            color = 'red'
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{} days</span>',
+            color,
+            remaining
+        )
+    remaining_days_display.short_description = 'Remaining Days'
+    
+    def is_active_display(self, obj):
+        """Display active status with icon."""
+        if obj.is_active:
+            return format_html('<span style="color: green;">✓ Active</span>')
+        else:
+            return format_html('<span style="color: red;">✗ Inactive</span>')
+    is_active_display.short_description = 'Active Status'
 
 
 # Register your models here.

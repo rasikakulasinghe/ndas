@@ -1,0 +1,175 @@
+{% extends 'src/base.html' %}
+{% load static %}
+
+{% block title %}Subscription Details | NDAS{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid">
+    {% csrf_token %}
+    
+    <!-- Page Header -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Subscription Details</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                        <li class="breadcrumb-item active">Subscription Details</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <section class="content">
+        <div class="container-fluid">
+            
+            <!-- Grace Period Warning -->
+            {% if is_grace_period %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <h5><i class="icon fas fa-exclamation-triangle"></i> Grace Period Active</h5>
+                        Your subscription has expired but you are in the grace period. 
+                        Please contact the administrator to renew your subscription before 
+                        <strong>{{ grace_period_end_date|date:"F d, Y" }}</strong>.
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Subscription Information Boxes -->
+            <div class="row">
+                <!-- Subscription Type -->
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="info-box">
+                        <span class="info-box-icon bg-info elevation-1">
+                            <i class="fas fa-tag"></i>
+                        </span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Subscription Type</span>
+                            <span class="info-box-number">{{ subscription.get_subscription_type_display }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="info-box">
+                        <span class="info-box-icon {% if subscription.status == 'active' %}bg-success{% elif subscription.status == 'grace_period' %}bg-warning{% else %}bg-danger{% endif %} elevation-1">
+                            <i class="fas fa-check-circle"></i>
+                        </span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Status</span>
+                            <span class="info-box-number">{{ subscription.get_status_display }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Remaining Days -->
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="info-box">
+                        <span class="info-box-icon {% if remaining_days > 7 %}bg-success{% elif remaining_days > 0 %}bg-warning{% else %}bg-danger{% endif %} elevation-1">
+                            <i class="fas fa-calendar-day"></i>
+                        </span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Remaining Days</span>
+                            <span class="info-box-number">{{ remaining_days }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Billing Amount -->
+                <div class="col-12 col-sm-6 col-md-3">
+                    <div class="info-box">
+                        <span class="info-box-icon bg-primary elevation-1">
+                            <i class="fas fa-dollar-sign"></i>
+                        </span>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Billing Amount</span>
+                            <span class="info-box-number">${{ subscription.billing_amount }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subscription Details Card -->
+            <div class="row">
+                <div class="col-12 col-md-6">
+                    <div class="card card-primary card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-info-circle"></i>
+                                Subscription Information
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row">
+                                <dt class="col-sm-5">Start Date:</dt>
+                                <dd class="col-sm-7">{{ subscription.start_date|date:"F d, Y" }}</dd>
+
+                                <dt class="col-sm-5">Duration:</dt>
+                                <dd class="col-sm-7">{{ subscription.duration_days }} days</dd>
+
+                                <dt class="col-sm-5">Expiration Date:</dt>
+                                <dd class="col-sm-7">{{ expiration_date|date:"F d, Y" }}</dd>
+
+                                <dt class="col-sm-5">Grace Period:</dt>
+                                <dd class="col-sm-7">{{ subscription.grace_period_days }} days</dd>
+
+                                <dt class="col-sm-5">Grace Period Ends:</dt>
+                                <dd class="col-sm-7">{{ grace_period_end_date|date:"F d, Y" }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <div class="card card-info card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-question-circle"></i>
+                                Need Help?
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <p>If you need to extend or modify your subscription, please contact the system administrator.</p>
+                            <p>For any questions or concerns regarding your subscription, you can reach out through the support section.</p>
+                            <a href="{% url 'developer-contact' %}" class="btn btn-info">
+                                <i class="fas fa-envelope"></i> Contact Support
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Notes (if any) -->
+            {% if subscription.notes %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-secondary card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-sticky-note"></i>
+                                Notes
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            {{ subscription.notes|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </section>
+</div>
+{% endblock %}

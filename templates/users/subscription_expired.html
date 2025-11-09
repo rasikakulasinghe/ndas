@@ -1,0 +1,148 @@
+{% extends 'src/base.html' %}
+{% load static %}
+
+{% block title %}Subscription Expired | NDAS{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid">
+    {% csrf_token %}
+    
+    <!-- Page Header -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Subscription Information</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                        <li class="breadcrumb-item active">Subscription Information</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <section class="content">
+        <div class="container-fluid">
+            
+            <!-- Expired Message -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="callout callout-danger">
+                        <h5><i class="icon fas fa-ban"></i> Subscription Expired</h5>
+                        <p>Your subscription has expired and the grace period has ended. You no longer have access to the system.</p>
+                        <p>Your subscription expired on <strong>{{ expiration_date|date:"F d, Y" }}</strong> and the grace period ended on <strong>{{ grace_period_end_date|date:"F d, Y" }}</strong>.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Information Card -->
+            <div class="row">
+                <div class="col-12 col-md-8 offset-md-2">
+                    <div class="card card-warning card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-info-circle"></i>
+                                What to Do Next
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>To regain access to the NDAS system, please contact the system administrator to renew your subscription.</strong></p>
+                            
+                            <hr>
+                            
+                            <h5><i class="fas fa-envelope"></i> Contact Information</h5>
+                            
+                            {% if developer %}
+                            <dl class="row">
+                                <dt class="col-sm-4">Name:</dt>
+                                <dd class="col-sm-8">{{ developer.name }}</dd>
+
+                                {% if developer.email %}
+                                <dt class="col-sm-4">Email:</dt>
+                                <dd class="col-sm-8">
+                                    <a href="mailto:{{ developer.email }}">{{ developer.email }}</a>
+                                </dd>
+                                {% endif %}
+
+                                {% if developer.mobile_phone %}
+                                <dt class="col-sm-4">Mobile Phone:</dt>
+                                <dd class="col-sm-8">
+                                    <a href="tel:{{ developer.mobile_phone }}">{{ developer.mobile_phone }}</a>
+                                </dd>
+                                {% endif %}
+
+                                {% if developer.landline_phone %}
+                                <dt class="col-sm-4">Landline:</dt>
+                                <dd class="col-sm-8">
+                                    <a href="tel:{{ developer.landline_phone }}">{{ developer.landline_phone }}</a>
+                                </dd>
+                                {% endif %}
+
+                                {% if developer.whatsapp_number %}
+                                <dt class="col-sm-4">WhatsApp:</dt>
+                                <dd class="col-sm-8">
+                                    <a href="https://wa.me/{{ developer.whatsapp_number }}" target="_blank">
+                                        {{ developer.whatsapp_number }}
+                                    </a>
+                                </dd>
+                                {% endif %}
+                            </dl>
+                            {% else %}
+                            <p>Please contact your system administrator for assistance.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subscription Details -->
+            <div class="row">
+                <div class="col-12 col-md-8 offset-md-2">
+                    <div class="card card-secondary card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-file-invoice"></i>
+                                Your Subscription Details
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row">
+                                <dt class="col-sm-4">Subscription Type:</dt>
+                                <dd class="col-sm-8">{{ subscription.get_subscription_type_display }}</dd>
+
+                                <dt class="col-sm-4">Status:</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge badge-danger">{{ subscription.get_status_display }}</span>
+                                </dd>
+
+                                <dt class="col-sm-4">Start Date:</dt>
+                                <dd class="col-sm-8">{{ subscription.start_date|date:"F d, Y" }}</dd>
+
+                                <dt class="col-sm-4">Expiration Date:</dt>
+                                <dd class="col-sm-8">{{ expiration_date|date:"F d, Y" }}</dd>
+
+                                <dt class="col-sm-4">Grace Period Ended:</dt>
+                                <dd class="col-sm-8">{{ grace_period_end_date|date:"F d, Y" }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="row">
+                <div class="col-12 text-center">
+                    <a href="{% url 'user-logout' %}" class="btn btn-lg btn-danger">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </section>
+</div>
+{% endblock %}

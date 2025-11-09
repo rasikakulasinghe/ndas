@@ -798,3 +798,58 @@ def admin_activity_logs(request):
     }
     
     return render(request, 'users/admin/activity_logs.html', context)
+
+
+@login_required(login_url="user-login")
+def subscription_detail(request):
+    """
+    Display subscription details for the authenticated user.
+    Shows subscription information including remaining days, status, and expiration date.
+    """
+    try:
+        subscription = request.user.subscription
+        subscription.update_status()
+        
+        context = {
+            'subscription': subscription,
+            'remaining_days': subscription.remaining_days,
+            'is_grace_period': subscription.is_grace_period,
+            'expiration_date': subscription.expiration_date,
+            'grace_period_end_date': subscription.grace_period_end_date,
+        }
+        
+        return render(request, 'users/subscription_detail.html', context)
+        
+    except Exception as e:
+        messages.error(request, 'Unable to retrieve subscription information.')
+        return redirect('home')
+
+
+@login_required(login_url="user-login")
+def subscription_info(request):
+    """
+    Display subscription expired/information page.
+    Shows clear messaging about expired subscription and contact information.
+    """
+    try:
+        subscription = request.user.subscription
+        subscription.update_status()
+        
+        # Fetch developer contact information
+        try:
+            developer = DeveloperContacts.objects.get(id=1)
+        except DeveloperContacts.DoesNotExist:
+            developer = DeveloperContacts.objects.first()
+        
+        context = {
+            'subscription': subscription,
+            'expiration_date': subscription.expiration_date,
+            'grace_period_end_date': subscription.grace_period_end_date,
+            'developer': developer,
+        }
+        
+        return render(request, 'users/subscription_expired.html', context)
+        
+    except Exception as e:
+        messages.error(request, 'Unable to retrieve subscription information.')
+        return redirect('home')

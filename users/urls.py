@@ -46,5 +46,9 @@ urlpatterns = [
     
     # other urls
     path("contact-developer/", views.developerContacts, name="developer-contact"),
+    
+    # Subscription URLs
+    path('subscription/', views.subscription_detail, name='subscription-detail'),
+    path('subscription/info/', views.subscription_info, name='subscription-info'),
 
 ]

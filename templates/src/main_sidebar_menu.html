@@ -271,6 +271,17 @@
                 <p>Activity Logs</p>
               </a>
             </li>
+
+            <!-- Subscription -->
+            <li class="nav-item">
+              <a
+                href="{% url 'subscription-detail' %}"
+                class="nav-link {% if request.resolver_match.url_name == 'subscription-detail' %}active{% endif %}"
+              >
+                <i class="nav-icon fas fa-credit-card"></i>
+                <p>Subscription</p>
+              </a>
+            </li>
           </ul>
         </li>
         {% endif %}

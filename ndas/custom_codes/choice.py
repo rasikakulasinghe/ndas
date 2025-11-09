@@ -175,3 +175,16 @@ ALLOWED_EXTENSIONS = {
     "video": [".mp4", ".mov", ".avi", ".mkv", ".webm"],
     "document": [".doc", ".docx", ".txt", ".rtf", ".odt"],
 }
+
+# Subscription Type Choices
+SUBSCRIPTION_TYPE_CHOICES = [
+    ('free', 'Free'),
+    ('paid', 'Paid'),
+]
+
+# Subscription Status Choices
+SUBSCRIPTION_STATUS_CHOICES = [
+    ('active', 'Active'),
+    ('expired', 'Expired'),
+    ('grace_period', 'Grace Period'),
+]

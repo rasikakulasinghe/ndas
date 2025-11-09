@@ -45,6 +45,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_user_agents.middleware.UserAgentMiddleware',
+    'users.middleware.SubscriptionCheckMiddleware',
 ]
 
 ROOT_URLCONF = 'ndas.urls'

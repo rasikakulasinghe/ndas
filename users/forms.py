@@ -1,7 +1,8 @@
 from django import forms
-from ndas.custom_codes.choice import POSSITION
-from users.models import CustomUser
+from ndas.custom_codes.choice import POSSITION, SUBSCRIPTION_TYPE_CHOICES, SUBSCRIPTION_STATUS_CHOICES
+from users.models import CustomUser, Subscription
 from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm, PasswordChangeForm
+from datetime import date, timedelta
 
 class CustomUserRegistrationForm(forms.ModelForm):
     profile_picture = forms.ImageField(required=False, label='Your Profile Picture: ')
@@ -334,3 +335,87 @@ class UserSearchForm(forms.Form):
         choices=[('', 'All Types'), ('true', 'Staff'), ('false', 'Regular Users')],
         widget=forms.Select(attrs={'class': 'form-control'})
     )
+
+
+class SubscriptionForm(forms.ModelForm):
+    """
+    Form for creating and updating subscriptions in the admin interface.
+    Includes validation for reasonable date ranges and positive numeric values.
+    """
+    
+    class Meta:
+        model = Subscription
+        fields = [
+            'user',
+            'subscription_type',
+            'start_date',
+            'duration_days',
+            'billing_amount',
+            'grace_period_days',
+            'status',
+            'notes',
+        ]
+        
+        widgets = {
+            'user': forms.Select(attrs={'class': 'form-control'}),
+            'subscription_type': forms.Select(attrs={'class': 'form-control'}),
+            'start_date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date',
+            }),
+            'duration_days': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '1',
+            }),
+            'billing_amount': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0',
+                'step': '0.01',
+            }),
+            'grace_period_days': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0',
+            }),
+            'status': forms.Select(attrs={'class': 'form-control'}),
+            'notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+            }),
+        }
+    
+    def clean_duration_days(self):
+        """Validate that duration_days is positive."""
+        duration_days = self.cleaned_data.get('duration_days')
+        if duration_days is not None and duration_days <= 0:
+            raise forms.ValidationError('Duration must be greater than 0 days.')
+        return duration_days
+    
+    def clean_billing_amount(self):
+        """Validate that billing_amount is non-negative."""
+        billing_amount = self.cleaned_data.get('billing_amount')
+        if billing_amount is not None and billing_amount < 0:
+            raise forms.ValidationError('Billing amount cannot be negative.')
+        return billing_amount
+    
+    def clean_grace_period_days(self):
+        """Validate that grace_period_days is non-negative."""
+        grace_period_days = self.cleaned_data.get('grace_period_days')
+        if grace_period_days is not None and grace_period_days < 0:
+            raise forms.ValidationError('Grace period cannot be negative.')
+        return grace_period_days
+    
+    def clean_start_date(self):
+        """Validate that start_date is within a reasonable range."""
+        start_date = self.cleaned_data.get('start_date')
+        if start_date:
+            # Check if start_date is not too far in the past (more than 10 years)
+            ten_years_ago = date.today() - timedelta(days=365 * 10)
+            if start_date < ten_years_ago:
+                raise forms.ValidationError('Start date cannot be more than 10 years in the past.')
+            
+            # Check if start_date is not too far in the future (more than 1 year)
+            one_year_from_now = date.today() + timedelta(days=365)
+            if start_date > one_year_from_now:
+                raise forms.ValidationError('Start date cannot be more than 1 year in the future.')
+        
+        return start_date
