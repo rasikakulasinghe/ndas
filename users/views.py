@@ -63,6 +63,53 @@ def loginPage(request):
                         'unverified_user_email': user.email
                     })
                 
+                # CRITICAL: Check subscription status BEFORE allowing login
+                # Skip for superusers and staff
+                if not (user.is_superuser or user.is_staff):
+                    try:
+                        subscription = user.subscription
+                        # Update status to ensure it's current
+                        subscription.update_status()
+                        
+                        # Block login if subscription is expired (beyond grace period)
+                        if subscription.is_expired:
+                            messages.error(
+                                request,
+                                f'Your subscription has expired on {subscription.grace_period_end_date}. '
+                                'Please contact support to renew your subscription before logging in.'
+                            )
+                            # Log the failed login attempt due to expired subscription
+                            try:
+                                log_user_activity(
+                                    request,
+                                    None,
+                                    UserActivityLog.LOGIN_FAILED,
+                                    attempted_username=username,
+                                    failed_reason="Subscription expired"
+                                )
+                            except Exception:
+                                pass
+                            return render(request, 'users/login.html', {'logged_user': logged_user, 'developer': developer})
+                        
+                        # Warn if in grace period
+                        if subscription.is_grace_period:
+                            messages.warning(
+                                request,
+                                f'Your subscription is in grace period and will expire on {subscription.grace_period_end_date}. '
+                                'Please renew soon.'
+                            )
+                    
+                    except Exception as e:
+                        # If no subscription exists, deny login (fail closed for security)
+                        import logging
+                        logger = logging.getLogger(__name__)
+                        logger.error(f"Subscription check failed for user {username}: {e}")
+                        messages.error(
+                            request,
+                            'Unable to verify subscription status. Please contact support.'
+                        )
+                        return render(request, 'users/login.html', {'logged_user': logged_user, 'developer': developer})
+                
                 # Successful login
                 login(request, user)
                 

@@ -644,37 +644,117 @@ class Subscription(TimeStampedModel, UserTrackingMixin):
     
     @property
     def is_active(self):
-        """Check if subscription is currently active."""
+        """
+        Check if subscription is currently active.
+        
+        PERFORMANCE: Cached for 60 seconds to reduce database load.
+        """
         from datetime import date
+        from django.core.cache import cache
+        
+        cache_key = f'subscription_active_{self.pk}'
+        cached_result = cache.get(cache_key)
+        
+        if cached_result is not None:
+            return cached_result
+        
         today = date.today()
-        return today <= self.expiration_date
+        result = today <= self.expiration_date
+        
+        # Cache for 60 seconds
+        cache.set(cache_key, result, 60)
+        return result
     
     @property
     def is_expired(self):
-        """Check if subscription has expired (beyond grace period)."""
+        """
+        Check if subscription has expired (beyond grace period).
+        
+        PERFORMANCE: Cached for 60 seconds to reduce database load.
+        """
         from datetime import date
+        from django.core.cache import cache
+        
+        cache_key = f'subscription_expired_{self.pk}'
+        cached_result = cache.get(cache_key)
+        
+        if cached_result is not None:
+            return cached_result
+        
         today = date.today()
-        return today > self.grace_period_end_date
+        result = today > self.grace_period_end_date
+        
+        # Cache for 60 seconds
+        cache.set(cache_key, result, 60)
+        return result
     
     @property
     def is_grace_period(self):
-        """Check if subscription is in grace period."""
+        """
+        Check if subscription is in grace period.
+        
+        PERFORMANCE: Cached for 60 seconds to reduce database load.
+        """
         from datetime import date
+        from django.core.cache import cache
+        
+        cache_key = f'subscription_grace_{self.pk}'
+        cached_result = cache.get(cache_key)
+        
+        if cached_result is not None:
+            return cached_result
+        
         today = date.today()
-        return self.expiration_date < today <= self.grace_period_end_date
+        result = self.expiration_date < today <= self.grace_period_end_date
+        
+        # Cache for 60 seconds
+        cache.set(cache_key, result, 60)
+        return result
     
     def update_status(self):
         """
         Update subscription status based on current date.
         This method should be called periodically or on-demand.
+        
+        SECURITY: Uses database transaction to prevent race conditions.
+        PERFORMANCE: Only updates if status actually changed.
         """
+        from django.db import transaction
+        
+        # Calculate what the status should be
+        new_status = None
         if self.is_expired:
-            self.status = 'expired'
+            new_status = 'expired'
         elif self.is_grace_period:
-            self.status = 'grace_period'
+            new_status = 'grace_period'
         elif self.is_active:
-            self.status = 'active'
-        self.save(update_fields=['status'])
+            new_status = 'active'
+        
+        # Only update if status changed (performance optimization)
+        if new_status and self.status != new_status:
+            with transaction.atomic():
+                # Use select_for_update to prevent race conditions
+                subscription = Subscription.objects.select_for_update().get(pk=self.pk)
+                subscription.status = new_status
+                subscription.save(update_fields=['status', 'updated_at'])
+                # Update the current instance
+                self.status = new_status
+                # Clear cache when status changes
+                self._clear_cache()
+    
+    def _clear_cache(self):
+        """
+        Clear all cached subscription properties.
+        Called when subscription data changes.
+        """
+        from django.core.cache import cache
+        cache_keys = [
+            f'subscription_active_{self.pk}',
+            f'subscription_expired_{self.pk}',
+            f'subscription_grace_{self.pk}',
+        ]
+        for key in cache_keys:
+            cache.delete(key)
     
     def extend_subscription(self, days):
         """
@@ -682,10 +762,19 @@ class Subscription(TimeStampedModel, UserTrackingMixin):
         
         Args:
             days (int): Number of days to add to the subscription
+            
+        SECURITY: Uses transaction to ensure atomic update.
         """
-        self.duration_days += days
-        self.update_status()
-        self.save(update_fields=['duration_days'])
+        from django.db import transaction
+        
+        with transaction.atomic():
+            subscription = Subscription.objects.select_for_update().get(pk=self.pk)
+            subscription.duration_days += days
+            subscription.save(update_fields=['duration_days', 'updated_at'])
+            self.duration_days = subscription.duration_days
+            # Clear cache and update status
+            self._clear_cache()
+            self.update_status()
     
     def __str__(self):
         return f"{self.user.username} - {self.subscription_type} ({self.status})"

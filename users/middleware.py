@@ -7,6 +7,8 @@ from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.dispatch import receiver
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.contrib import messages
+from django.core.exceptions import ObjectDoesNotExist
 from users.utils import (
     log_user_activity, 
     create_or_update_user_session,
@@ -46,6 +48,8 @@ class SubscriptionCheckMiddleware(MiddlewareMixin):
     """
     Middleware to check user subscription status and enforce access control.
     Redirects expired users to subscription information page.
+    
+    SECURITY: This middleware enforces subscription restrictions STRICTLY.
     """
     
     # URLs exempt from subscription check
@@ -53,6 +57,10 @@ class SubscriptionCheckMiddleware(MiddlewareMixin):
         '/users/login/',
         '/users/logout/',
         '/users/subscription/info/',
+        '/users/reset_password/',
+        '/users/reset_password_sent/',
+        '/users/reset/',
+        '/users/reset_password_complete/',
         '/static/',
         '/media/',
         '/admin/',  # Admin users should be able to access admin panel
@@ -61,6 +69,8 @@ class SubscriptionCheckMiddleware(MiddlewareMixin):
     def process_request(self, request):
         """
         Check subscription status for authenticated users.
+        
+        CRITICAL: This enforces subscription expiration strictly.
         """
         # Skip check for unauthenticated users
         if not hasattr(request, 'user') or not request.user.is_authenticated:
@@ -70,26 +80,86 @@ class SubscriptionCheckMiddleware(MiddlewareMixin):
         if any(request.path.startswith(url) for url in self.EXEMPT_URLS):
             return None
         
-        # Skip check for superusers and staff
+        # Skip check for superusers and staff (administrative access)
         if request.user.is_superuser or request.user.is_staff:
             return None
         
         try:
-            # Get user's subscription
-            subscription = request.user.subscription
+            # Get user's subscription - will raise DoesNotExist if missing
+            # PERFORMANCE: Use select_related to avoid additional query
+            from users.models import Subscription
+            try:
+                subscription = Subscription.objects.select_related('user').get(user=request.user)
+            except Subscription.DoesNotExist:
+                raise ObjectDoesNotExist(f"No subscription found for user {request.user.username}")
             
-            # Update subscription status
+            # Update subscription status (uses date calculations)
             subscription.update_status()
             
-            # Check if subscription is expired (beyond grace period)
+            # CRITICAL CHECK: Block access if subscription is expired (beyond grace period)
             if subscription.is_expired:
-                # Redirect to subscription info page
+                # Log the blocked access attempt
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(
+                    f"Blocked access for user {request.user.username} with expired subscription. "
+                    f"Expiration: {subscription.expiration_date}, Grace period end: {subscription.grace_period_end_date}"
+                )
+                
+                # Force logout for expired subscriptions
+                from django.contrib.auth import logout
+                logout(request)
+                
+                # Redirect to subscription info page with message
+                messages.warning(
+                    request,
+                    'Your subscription has expired. Please contact support to renew your subscription.'
+                )
                 return redirect(reverse('subscription-info'))
             
-        except Exception:
-            # Fail silently to avoid breaking the application
-            # If no subscription exists or any error occurs, allow access
-            pass
+            # WARNING CHECK: Notify users in grace period
+            if subscription.is_grace_period:
+                messages.warning(
+                    request,
+                    f'Your subscription is in grace period. It will expire on {subscription.grace_period_end_date}. '
+                    'Please renew soon to avoid service interruption.'
+                )
+            
+        except ObjectDoesNotExist:
+            # SECURITY: If user has no subscription, deny access (fail closed)
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(
+                f"User {request.user.username} (ID: {request.user.id}) has no subscription record. Denying access."
+            )
+            
+            from django.contrib.auth import logout
+            logout(request)
+            
+            messages.error(
+                request,
+                'No subscription found for your account. Please contact support.'
+            )
+            return redirect(reverse('subscription-info'))
+        
+        except Exception as e:
+            # SECURITY: Log unexpected errors and deny access (fail closed)
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(
+                f"Subscription check error for user {request.user.username}: {type(e).__name__}: {str(e)}",
+                exc_info=True
+            )
+            
+            # In production, fail closed (deny access on errors)
+            from django.contrib.auth import logout
+            logout(request)
+            
+            messages.error(
+                request,
+                'Unable to verify subscription status. Please contact support.'
+            )
+            return redirect(reverse('subscription-info'))
         
         return None
 
