@@ -1,5 +1,6 @@
 {% extends 'src/base.html' %}
 {% load static %}
+{% load delete_modal_tags %}
 {% block title %}Edit Video - {{ video.title }}{% endblock %}
 
 {% block main_content %}
@@ -179,9 +180,7 @@
                   <div class="col-sm-6">
                     <button type="button" class="btn btn-secondary mr-2" onclick="window.location.href='{% url 'video:view' video.id %}'">
                       <i class="fas fa-arrow-left mr-2"></i>Back to Video
-                    </button>
-                    {% load delete_modal_tags %}
-                    {% delete_modal_id 'Video' video.id as modal_id %}
+                    </button>{% delete_modal_id 'Video' video.id as modal_id %}
                     <button type="button" class="btn btn-outline-danger" onclick="DeleteConfirmation.show('{{ modal_id }}')">
                       <i class="fas fa-trash mr-2"></i>Delete Video
                     </button>
@@ -433,9 +432,6 @@ document.addEventListener('DOMContentLoaded', function() {
         $('[data-toggle="tooltip"]').tooltip();
     }
 });
-</script>
-
-{% load delete_modal_tags %}
-{% delete_modal video %}
+</script>{% delete_modal video %}
 
 {% endblock main_content %}

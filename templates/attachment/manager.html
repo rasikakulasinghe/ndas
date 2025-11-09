@@ -1,5 +1,6 @@
 {% extends 'src/base.html' %}
 {% load static %}
+{% load delete_modal_tags %}
 {% block title %}{{ page_title|default:"Attachment Manager" }}{% endblock %}
 
 {% block main_content %}
@@ -301,9 +302,7 @@
                   </a>
                   <a class="dropdown-item" href="{% url 'attachment-edit' attachment.id %}">
                     <i class="fas fa-edit text-warning"></i> Edit Details
-                  </a>
-                  {% load delete_modal_tags %}
-                  {% delete_modal_id 'Attachment' attachment.id as attachment_modal_id %}
+                  </a>{% delete_modal_id 'Attachment' attachment.id as attachment_modal_id %}
                   <a class="dropdown-item" href="#" onclick="DeleteConfirmation.show('{{ attachment_modal_id }}'); return false;">
                     <i class="fas fa-trash-alt text-danger"></i> Delete
                   </a>
@@ -332,9 +331,7 @@
     </div>
   </div>
 
-  <!-- Delete Modals for Each Attachment -->
-  {% load delete_modal_tags %}
-  {% for attachment in attachment_page_obj %}
+  <!-- Delete Modals for Each Attachment -->{% for attachment in attachment_page_obj %}
     {% delete_modal attachment %}
   {% endfor %}
 

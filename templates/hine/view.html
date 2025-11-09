@@ -1,5 +1,6 @@
 {% extends 'src/base.html' %}
 {% load static %}
+{% load delete_modal_tags %}
 {% block title %}HINE Record - View{% endblock %}
 {% block main_content %}
 
@@ -161,9 +162,7 @@
                 <a class="btn btn-outline-secondary mb-1" href="{% url 'bookmark-add' HINERecord.id 'HINE' %}">
                   <i class="fas fa-bookmark-o mr-2"></i>Add Bookmark
                 </a>
-              {% endif %}
-              {% load delete_modal_tags %}
-              {% delete_modal_id 'HINEAssessment' HINERecord.id as modal_id %}
+              {% endif %}{% delete_modal_id 'HINEAssessment' HINERecord.id as modal_id %}
               <button type="button" class="btn btn-outline-danger mb-1"
                  onclick="DeleteConfirmation.show('{{ modal_id }}')">
                 <i class="fas fa-trash mr-2"></i>Delete Record
@@ -228,9 +227,6 @@
     margin-bottom: 1rem;
   }
 }
-</style>
-
-{% load delete_modal_tags %}
-{% delete_modal HINERecord %}
+</style>{% delete_modal HINERecord %}
 
 {% endblock main_content %}

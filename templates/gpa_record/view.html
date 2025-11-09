@@ -1,5 +1,6 @@
 {% extends 'src/base.html' %}
 {% load static %}
+{% load delete_modal_tags %}
 {% block title %}View GPA Record{% endblock %}
 
 {% block content_header %}
@@ -88,9 +89,7 @@
         <div class="card-body">
           <a href="{% url 'gpa-edit' gpa_record.id %}" class="btn btn-warning btn-block">
             <i class="fas fa-edit"></i> Edit Record
-          </a>
-          {% load delete_modal_tags %}
-          {% delete_modal_id 'GeneralPaediatricAssessment' gpa_record.id as modal_id %}
+          </a>{% delete_modal_id 'GeneralPaediatricAssessment' gpa_record.id as modal_id %}
           <button type="button" class="btn btn-danger btn-block" onclick="DeleteConfirmation.show('{{ modal_id }}')">
             <i class="fas fa-trash"></i> Delete Record
           </button>
@@ -223,9 +222,6 @@
     // Initialize tooltips
     $('[data-toggle="tooltip"]').tooltip();
   });
-</script>
-
-{% load delete_modal_tags %}
-{% delete_modal gpa_record %}
+</script>{% delete_modal gpa_record %}
 
 {% endblock extra_js %}

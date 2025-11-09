@@ -1,4 +1,5 @@
 {% extends 'src/base.html' %} {% load static %} {% block title %}Developmental Assessment Manager{% endblock title %}
+{% load delete_modal_tags %}
 {% block main_content %}
 
 <!-- Main content -->
@@ -264,7 +265,6 @@
                       </a>
                       {% endif %}
                       <div class="dropdown-divider"></div>
-                      {% load delete_modal_tags %}
                       {% delete_modal_id 'DevelopmentalAssessment' DARecord.id as da_modal_id %}
                       <button class="dropdown-item text-danger" type="button"
                               onclick="DeleteConfirmation.show('{{ da_modal_id }}')">
@@ -337,9 +337,7 @@
       {% endif %}
     </div>
 
-  <!-- Delete Modals for Each DA Record -->
-  {% load delete_modal_tags %}
-  {% for DARecord in da_records %}
+  <!-- Delete Modals for Each DA Record -->{% for DARecord in da_records %}
   {% delete_modal DARecord %}
   {% endfor %}
 

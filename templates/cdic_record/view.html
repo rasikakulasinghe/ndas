@@ -1,5 +1,6 @@
 {% extends 'src/base.html' %}
 {% load static %}
+{% load delete_modal_tags %}
 {% block title %}CDIC Record - View{% endblock %}
 {% block main_content %}
 
@@ -91,9 +92,7 @@
           <a class="btn btn-primary" href="{% url 'cdic-assessment-manager-patient' CDICRecord.patient.id %}" type="button"><i class="right fas fa-eye"></i>  View All CDIC Record</a>
         </div>
 
-        <div class="col-auto m-2">
-          {% load delete_modal_tags %}
-          {% delete_modal_id 'CDICRecord' CDICRecord.id as modal_id %}
+        <div class="col-auto m-2">{% delete_modal_id 'CDICRecord' CDICRecord.id as modal_id %}
           <button type="button" class="btn btn-primary" onclick="DeleteConfirmation.show('{{ modal_id }}')"><i class="right far fa-trash-alt"></i>  Delete</button>
         </div>
         
@@ -114,9 +113,6 @@
 </div>
 <!-- /.card-body -->
 
-</div> <!-- /.main container -->
-
-{% load delete_modal_tags %}
-{% delete_modal CDICRecord %}
+</div> <!-- /.main container -->{% delete_modal CDICRecord %}
 
 {% endblock main_content %}

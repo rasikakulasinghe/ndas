@@ -1,5 +1,6 @@
 {% extends 'src/base.html' %}
 {% load static %}
+{% load delete_modal_tags %}
 {% block title %}{{ page_title|default:"Video Manager" }}{% endblock %}
 
 {% block main_content %}
@@ -281,9 +282,7 @@
             </a>
             <a class="dropdown-item" href="{% url 'video:edit' video.id %}">
               <i class="fas fa-edit text-warning"></i> Edit Details
-            </a>
-            {% load delete_modal_tags %}
-            {% delete_modal_id 'Video' video.id as video_modal_id %}
+            </a>{% delete_modal_id 'Video' video.id as video_modal_id %}
             <a class="dropdown-item" href="#" onclick="DeleteConfirmation.show('{{ video_modal_id }}'); return false;">
               <i class="fas fa-trash-alt text-danger"></i> Delete
             </a>
@@ -310,9 +309,7 @@
     </div>
   </div>
 
-  <!-- Delete Modals for Each Video -->
-  {% load delete_modal_tags %}
-  {% for video in file_list %}
+  <!-- Delete Modals for Each Video -->{% for video in file_list %}
     {% delete_modal video %}
   {% endfor %}
 

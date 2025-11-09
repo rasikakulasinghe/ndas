@@ -1,5 +1,6 @@
 {% extends 'src/base.html' %}
 {% load static %}
+{% load delete_modal_tags %}
 {% block title %}{{ assessment.patient.baby_name }} - Assessment View{% endblock %}
 
 {% block main_content %}
@@ -226,9 +227,7 @@
                     <div class="d-flex">
                       <a href="{% url 'assessment-edit' assessment.id %}" class="btn btn-primary mr-2 px-3">
                         <i class="fas fa-edit mr-1"></i>Edit
-                      </a>
-                      {% load delete_modal_tags %}
-                      {% delete_modal_id 'GMAssessment' assessment.id as modal_id %}
+                      </a>{% delete_modal_id 'GMAssessment' assessment.id as modal_id %}
                       <button type="button" class="btn btn-outline-danger px-3"
                          onclick="DeleteConfirmation.show('{{ modal_id }}')"
                          data-toggle="tooltip" title="Delete this assessment">
@@ -263,9 +262,6 @@ document.addEventListener('DOMContentLoaded', function() {
         $('[data-card-widget="collapse"]').CardWidget('collapse');
     }
 });
-</script>
-
-{% load delete_modal_tags %}
-{% delete_modal assessment %}
+</script>{% delete_modal assessment %}
 
 {% endblock main_content %}

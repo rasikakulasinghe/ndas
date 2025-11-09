@@ -1,4 +1,7 @@
-{% extends 'src/base.html' %} {% load static %} {% block title %}Bookmark Manager{% endblock title %}
+{% extends 'src/base.html' %}
+{% load static %}
+{% load delete_modal_tags %}
+{% block title %}Bookmark Manager{% endblock title %}
 {% block main_content %}
 
 <!-- Main content -->
@@ -403,7 +406,6 @@
                         <i class="fas fa-edit mr-2"></i>Edit Bookmark
                       </a>
                       <div class="dropdown-divider"></div>
-                      {% load delete_modal_tags %}
                       {% delete_modal_id 'Bookmark' Bookmark.id as bookmark_modal_id %}
                       <a class="dropdown-item text-danger" href="#" onclick="DeleteConfirmation.show('{{ bookmark_modal_id }}'); return false;">
                         <i class="fas fa-trash-alt mr-2"></i>Delete Bookmark
@@ -528,9 +530,8 @@
 </div>
 
 <!-- Delete Modals for Bookmarks -->
-{% load delete_modal_tags %}
-{% for Bookmark in bookmarks %}
-{% delete_modal Bookmark %}
+{% for Bookmark in bookmark_page_obj %}
+  {% delete_modal Bookmark %}
 {% endfor %}
 
 {% block extra_js %}

@@ -1,5 +1,6 @@
 {% extends 'src/base.html' %}
 {% load static %}
+{% load delete_modal_tags %}
 {% block title %}{{ video.title }} - {{ patient.baby_name }}{% endblock %}
 
 {% block main_content %}
@@ -159,10 +160,7 @@
 
               <a href="{% url 'video:edit' video.id %}" class="btn btn-outline-info btn-block">
               <i class="fas fa-edit"></i>Edit Video Details
-              </a>
-
-              {% load delete_modal_tags %}
-              {% delete_modal_id 'Video' video.id as modal_id %}
+              </a>{% delete_modal_id 'Video' video.id as modal_id %}
               <button type="button" class="btn btn-outline-danger btn-block" onclick="DeleteConfirmation.show('{{ modal_id }}')">
               <i class="fas fa-trash"></i>Delete Video
               </button>
@@ -395,9 +393,6 @@ document.addEventListener('DOMContentLoaded', function() {
     font-size: 0.75rem;
   }
 }
-</style>
-
-{% load delete_modal_tags %}
-{% delete_modal video %}
+</style>{% delete_modal video %}
 
 {% endblock main_content %}

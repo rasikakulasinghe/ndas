@@ -24,7 +24,9 @@
       "Bash(playwright install:*)",
       "Bash(done)",
       "Bash(\"$TEMP\\delete_modal_id_usage.txt\")",
-      "Bash(type \"$TEMP\\delete_modal_id_usage.txt\")"
+      "Bash(type \"$TEMP\\delete_modal_id_usage.txt\")",
+      "Bash(\"$TEMP\\delete_modal_id_usage.txt\" 2)",
+      "Bash(del fix_delete_modal_tags.py)"
     ],
     "deny": [],
     "ask": []

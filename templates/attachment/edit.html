@@ -1,5 +1,6 @@
 {% extends 'src/base.html' %}
 {% load static %}
+{% load delete_modal_tags %}
 {% block title %}Edit Attachment{% endblock %}
 
 {% block main_content %}
@@ -204,9 +205,7 @@
                 {% endif %}
               </div>
               
-              <div class="card-footer">
-                {% load delete_modal_tags %}
-                {% delete_modal_id 'Attachment' attachment.id as modal_id %}
+              <div class="card-footer">{% delete_modal_id 'Attachment' attachment.id as modal_id %}
                 <div class="row">
                   <div class="col-sm-6">
                     <a href="{% url 'attachment-view' attachment.id %}" class="btn btn-secondary">
@@ -306,8 +305,6 @@ $(document).ready(function() {
 });
 </script>
 
-<!-- Include Unified Delete Modal -->
-{% load delete_modal_tags %}
-{% delete_modal attachment %}
+<!-- Include Unified Delete Modal -->{% delete_modal attachment %}
 
 {% endblock main_content %}

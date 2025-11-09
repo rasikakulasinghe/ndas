@@ -1,5 +1,6 @@
 {% extends 'src/base.html' %}
 {% load static %}
+{% load delete_modal_tags %}
 {% block title %}Bookmark - View{% endblock %}
 {% block main_content %}
 
@@ -116,9 +117,7 @@
               </a>
             </div>
           </div>
-          <div class="col-md-6">
-            {% load delete_modal_tags %}
-            {% delete_modal_id 'Bookmark' bookmark.id as modal_id %}
+          <div class="col-md-6">{% delete_modal_id 'Bookmark' bookmark.id as modal_id %}
             <div class="btn-group-vertical btn-group-sm w-100" role="group">
               <a class="btn btn-outline-success mb-1" href="{% url 'bookmark-edit' bookmark.id %}">
                 <i class="fas fa-edit mr-2"></i>Edit Bookmark
@@ -191,9 +190,6 @@
 $(document).ready(function(){
     $('[data-toggle="tooltip"]').tooltip();
 });
-</script>
-
-{% load delete_modal_tags %}
-{% delete_modal bookmark %}
+</script>{% delete_modal bookmark %}
 
 {% endblock main_content %}

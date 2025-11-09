@@ -1,3 +1,4 @@
+{% load delete_modal_tags %}
 <!-- Compact Patient Header -->
 <div class="row">
   <div class="col-12">
@@ -350,9 +351,7 @@
                         </a>
                         <a href="{% url 'assessment-edit' Assessment.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
-                        </a>
-                        {% load delete_modal_tags %}
-                        {% delete_modal_id 'GMAssessment' Assessment.id as gma_modal_id %}
+                        </a>{% delete_modal_id 'GMAssessment' Assessment.id as gma_modal_id %}
                         <button type="button" class="btn btn-danger btn-sm" title="Delete"
                                 onclick="DeleteConfirmation.show('{{ gma_modal_id }}')">
                           <i class="fas fa-trash"></i>
@@ -406,9 +405,7 @@
                         </a>
                         <a href="{% url 'hine-assessment-edit' HINE.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
-                        </a>
-                        {% load delete_modal_tags %}
-                        {% delete_modal_id 'HINEAssessment' HINE.id as hine_modal_id %}
+                        </a>{% delete_modal_id 'HINEAssessment' HINE.id as hine_modal_id %}
                         <button type="button" class="btn btn-danger btn-sm" title="Delete"
                                 onclick="DeleteConfirmation.show('{{ hine_modal_id }}')">
                           <i class="fas fa-trash"></i>
@@ -464,9 +461,7 @@
                         </a>
                         <a href="{% url 'da-assessment-edit' DA.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
-                        </a>
-                        {% load delete_modal_tags %}
-                        {% delete_modal_id 'DevelopmentalAssessment' DA.id as da_modal_id %}
+                        </a>{% delete_modal_id 'DevelopmentalAssessment' DA.id as da_modal_id %}
                         <button type="button" class="btn btn-danger btn-sm" title="Delete"
                                 onclick="DeleteConfirmation.show('{{ da_modal_id }}')">
                           <i class="fas fa-trash"></i>
@@ -520,9 +515,7 @@
                         </a>
                         <a href="{% url 'cdic-assessment-edit' CDIC.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
-                        </a>
-                        {% load delete_modal_tags %}
-                        {% delete_modal_id 'CDICRecord' CDIC.id as cdic_modal_id %}
+                        </a>{% delete_modal_id 'CDICRecord' CDIC.id as cdic_modal_id %}
                         <button type="button" class="btn btn-danger btn-sm" title="Delete"
                                 onclick="DeleteConfirmation.show('{{ cdic_modal_id }}')">
                           <i class="fas fa-trash"></i>
@@ -596,9 +589,7 @@
                         </a>
                         <a href="{% url 'gpa-edit' GPA.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
-                        </a>
-                        {% load delete_modal_tags %}
-                        {% delete_modal_id 'GeneralPaediatricAssessment' GPA.id as gpa_modal_id %}
+                        </a>{% delete_modal_id 'GeneralPaediatricAssessment' GPA.id as gpa_modal_id %}
                         <button type="button" class="btn btn-danger btn-sm" title="Delete"
                                 onclick="DeleteConfirmation.show('{{ gpa_modal_id }}')">
                           <i class="fas fa-trash"></i>
@@ -686,9 +677,7 @@
                         </a>
                         <a href="{% url 'video:edit' video.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
-                        </a>
-                        {% load delete_modal_tags %}
-                        {% delete_modal_id 'Video' video.id as video_modal_id %}
+                        </a>{% delete_modal_id 'Video' video.id as video_modal_id %}
                         <button type="button" class="btn btn-danger btn-sm" title="Delete" onclick="DeleteConfirmation.show('{{ video_modal_id }}')">
                           <i class="fas fa-trash"></i>
                         </button>
@@ -756,9 +745,7 @@
                         </a>
                         <a href="{% url 'attachment-edit' Attachment.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
-                        </a>
-                        {% load delete_modal_tags %}
-                        {% delete_modal_id 'Attachment' Attachment.id as attachment_modal_id %}
+                        </a>{% delete_modal_id 'Attachment' Attachment.id as attachment_modal_id %}
                         <button type="button" class="btn btn-danger btn-sm" title="Delete" onclick="DeleteConfirmation.show('{{ attachment_modal_id }}')">
                           <i class="fas fa-trash"></i>
                         </button>
@@ -886,15 +873,14 @@
 </div>
 
 {% load static %}
+{% load delete_modal_tags %}
 
 <!-- Patient Delete Modal using unified template -->
 {% url 'delete-patient' patient.id as patient_delete_url %}
 {% include 'src/partials/delete_confirmation_modal.html' with modal_id='deletePatientModal' entity_type='Patient' entity_name=patient.baby_name delete_url=patient_delete_url redirect_url='/manager/patient/' warning_items=warning_list detail_items=patient_details %}
 
 <!-- Delete Modals for Assessments -->
-<!-- Using full querysets (var_*) instead of limited ones to ensure all delete modals exist -->
-{% load delete_modal_tags %}
-{% for Assessment in var_gma %}
+<!-- Using full querysets (var_*) instead of limited ones to ensure all delete modals exist -->{% for Assessment in var_gma %}
 {% delete_modal Assessment %}
 {% endfor %}
 
