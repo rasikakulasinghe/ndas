@@ -1,4 +1,4 @@
-{% extends 'src/base.html' %}
+{% extends 'src/basic_plane.html' %}
 {% load static %}
 
 {% block title %}Subscription Expired | NDAS{% endblock %}
@@ -34,7 +34,11 @@
                     <div class="callout callout-danger">
                         <h5><i class="icon fas fa-ban"></i> Subscription Expired</h5>
                         <p>Your subscription has expired and the grace period has ended. You no longer have access to the system.</p>
+                        {% if expiration_date and grace_period_end_date %}
                         <p>Your subscription expired on <strong>{{ expiration_date|date:"F d, Y" }}</strong> and the grace period ended on <strong>{{ grace_period_end_date|date:"F d, Y" }}</strong>.</p>
+                        {% else %}
+                        <p>Please contact support for subscription details.</p>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -100,6 +104,7 @@
             </div>
 
             <!-- Subscription Details -->
+            {% if subscription %}
             <div class="row">
                 <div class="col-12 col-md-8 offset-md-2">
                     <div class="card card-secondary card-outline">
@@ -132,6 +137,7 @@
                     </div>
                 </div>
             </div>
+            {% endif %}
 
             <!-- Action Buttons -->
             <div class="row">

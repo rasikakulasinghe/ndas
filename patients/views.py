@@ -2182,61 +2182,97 @@ def attachment_manager_patient(request, pid):
     return render(request, "attachment/manager.html", context)
 
 
-@csrf_exempt
 @login_required(login_url="user-login")
 def attachment_add(request, pid):
+    """
+    Handle attachment upload for a patient.
+    Updated to support new Attachment model fields and proper error handling.
+    """
+    try:
+        selected_patient = Patient.objects.get(pk=pid)
+    except Patient.DoesNotExist:
+        if request.method == "POST":
+            return JsonResponse(
+                {"success": False, "msg": "Patient not found."},
+                status=404
+            )
+        messages.error(request, "Patient not found.")
+        return redirect("manage-patients")
 
-    selected_patient = Patient.objects.get(pk=pid)
     attachment_form = AttachmentkForm()
 
-    temp_file = None
-
     if request.method == "POST":
-        title = request.POST["title"]
-        attachment = request.FILES["attachment"]
-        description = request.POST["description"]
+        # Use .get() to safely access POST/FILES data
+        title = request.POST.get("title", "").strip()
+        description = request.POST.get("description", "").strip()
 
-        if validateAttachmentSize(attachment):
-            if validateAttachmentType(attachment):
-                # save file object
-                temp_file = Attachment(
-                    patient=selected_patient,
-                    title=title,
-                    attachment=attachment,
-                    attachment_type=getAttachmentType(attachment),
-                    description=description,
-                    added_by=request.user,
-                    last_edit_by=None,
-                )
-
-                temp_file.save()
-
-                if temp_file != None:
-                    return JsonResponse(
-                        {
-                            "success": True,
-                            "msg": "OK",
-                            "p_id": selected_patient.id,
-                            "f_id": temp_file.id,
-                        }
-                    )
-                else:
-                    return JsonResponse(
-                        {
-                            "success": False,
-                            "msg": "Something went wrong during file uploading, Please try again...",
-                        }
-                    )
-            else:
-                return JsonResponse(
-                    {
-                        "success": False,
-                        "msg": "Only allowed file types are PDF, Videos (.mp4, .mov), Images (.jpg, .jpeg)...",
-                    }
-                )
-        else:
+        # Validate required fields
+        if not title:
             return JsonResponse(
-                {"success": False, "msg": "You cant upload >100mb files..."}
+                {"success": False, "msg": "Title is required."},
+                status=400
+            )
+
+        if "attachment" not in request.FILES:
+            return JsonResponse(
+                {"success": False, "msg": "No file was uploaded."},
+                status=400
+            )
+
+        attachment = request.FILES["attachment"]
+
+        # Validate file size
+        if not validateAttachmentSize(attachment):
+            return JsonResponse(
+                {"success": False, "msg": "File size exceeds the maximum allowed limit. Images: 10MB, Videos: 2GB, Documents: 100MB."},
+                status=400
+            )
+
+        # Validate file type
+        if not validateAttachmentType(attachment):
+            return JsonResponse(
+                {
+                    "success": False,
+                    "msg": "Invalid file type. Allowed types: Images (jpg, jpeg, png, gif, bmp, webp), Videos (mp4, mov, avi, mkv, webm), Documents (pdf, doc, docx, txt).",
+                },
+                status=400
+            )
+
+        try:
+            # Create attachment with new model fields
+            temp_file = Attachment(
+                patient=selected_patient,
+                title=title,
+                attachment=attachment,
+                attachment_type=getAttachmentType(attachment),
+                description=description,
+                original_filename=attachment.name,
+                file_size=attachment.size,
+                # User tracking handled by middleware
+            )
+
+            temp_file.save()
+
+            return JsonResponse(
+                {
+                    "success": True,
+                    "msg": "File uploaded successfully!",
+                    "p_id": selected_patient.id,
+                    "f_id": temp_file.id,
+                }
+            )
+
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error saving attachment: {str(e)}", exc_info=True)
+
+            return JsonResponse(
+                {
+                    "success": False,
+                    "msg": f"Error saving file: {str(e)}",
+                },
+                status=500
             )
     else:
         return render(

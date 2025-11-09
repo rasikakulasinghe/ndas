@@ -69,9 +69,7 @@
                                 <tr>
                                     <td>
                                         <strong>{{ user.username }}</strong>
-                                        {% if user.is_superuser %}
-                                            <span class="badge badge-danger">Superuser</span>
-                                        {% elif user.is_staff %}
+                                        {% if user.is_staff %}
                                             <span class="badge badge-warning">Staff</span>
                                         {% endif %}
                                     </td>
@@ -93,9 +91,7 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if user.is_superuser %}
-                                            <span class="badge badge-danger">Superuser</span>
-                                        {% elif user.is_staff %}
+                                        {% if user.is_staff %}
                                             <span class="badge badge-warning">Staff</span>
                                         {% else %}
                                             <span class="badge badge-info">User</span>
@@ -133,14 +129,13 @@
                                                         <i class="fas fa-{% if user.is_active %}ban{% else %}check{% endif %}"></i>
                                                     </button>
                                                 </form>
-                                                {% if not user.is_superuser or request.user.is_superuser %}{% delete_modal_id 'CustomUser' user.pk as user_modal_id %}
+                                                {% delete_modal_id 'CustomUser' user.pk as user_modal_id %}
                                                 <button type="button"
                                                         class="btn btn-danger btn-sm"
                                                         onclick="DeleteConfirmation.show('{{ user_modal_id }}')"
                                                         title="Delete">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
-                                                {% endif %}
                                             {% endif %}
                                         </div>
                                     </td>
@@ -155,7 +150,7 @@
                     </div>
 
                     <!-- Delete Modals for each user -->{% for user in page_obj %}
-                        {% if user != request.user and (not user.is_superuser or request.user.is_superuser) %}
+                        {% if user != request.user %}
                             {% delete_modal user %}
                         {% endif %}
                     {% endfor %}

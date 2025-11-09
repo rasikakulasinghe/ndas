@@ -179,7 +179,7 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-check">
                                     {{ form.is_active }}
                                     <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
@@ -188,7 +188,7 @@
                                     <small class="form-text text-muted">User can login to the system</small>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-check">
                                     {{ form.is_staff }}
                                     <label class="form-check-label" for="{{ form.is_staff.id_for_label }}">
@@ -197,16 +197,7 @@
                                     <small class="form-text text-muted">User can access admin features</small>
                                 </div>
                             </div>
-                            <div class="col-md-3">
-                                <div class="form-check">
-                                    {{ form.is_superuser }}
-                                    <label class="form-check-label" for="{{ form.is_superuser.id_for_label }}">
-                                        Superuser Status
-                                    </label>
-                                    <small class="form-text text-muted">User has all permissions</small>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="form-check">
                                     {{ form.is_email_verified }}
                                     <label class="form-check-label" for="{{ form.is_email_verified.id_for_label }}">
@@ -216,7 +207,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         {% if user_obj == request.user %}
                         <div class="alert alert-warning mt-3">
                             <i class="fas fa-exclamation-triangle"></i>

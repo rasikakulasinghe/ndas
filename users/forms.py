@@ -235,7 +235,7 @@ class AdminUserCreationForm(forms.ModelForm):
             'username', 'first_name', 'last_name', 'email', 'position',
             'mobile_primary', 'mobile_secondary', 'landline_primary', 'landline_secondary',
             'home_address', 'station_address', 'profile_picture',
-            'is_active', 'is_staff', 'is_superuser', 'additional_notes'
+            'is_active', 'is_staff', 'additional_notes'
         ]
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
@@ -252,7 +252,6 @@ class AdminUserCreationForm(forms.ModelForm):
             'additional_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_staff': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'is_superuser': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
     
     def clean_password2(self):
@@ -278,19 +277,19 @@ class AdminUserCreationForm(forms.ModelForm):
 
 class AdminUserEditForm(forms.ModelForm):
     """Admin form for editing existing users."""
-    
+
     class Meta:
         model = CustomUser
         fields = [
             'username', 'first_name', 'last_name', 'email', 'position',
             'mobile_primary', 'mobile_secondary', 'landline_primary', 'landline_secondary',
             'home_address', 'station_address', 'profile_picture',
-            'is_active', 'is_staff', 'is_superuser', 'is_email_verified',
+            'is_active', 'is_staff', 'is_email_verified',
             'additional_notes'
         ]
         widgets = {
             'username': forms.TextInput(attrs={
-                'class': 'form-control', 
+                'class': 'form-control',
                 'readonly': 'readonly'
             }),
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -306,7 +305,6 @@ class AdminUserEditForm(forms.ModelForm):
             'additional_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_staff': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'is_superuser': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_email_verified': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 

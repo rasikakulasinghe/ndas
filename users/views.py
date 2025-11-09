@@ -11,6 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from django.core.paginator import Paginator
 from django.db.models import Q
+from datetime import date
 from .forms import CustomUserRegistrationForm, UserPasswordChange, CustomUserEditForm
 from .models import DeveloperContacts
 from .utils import (
@@ -70,12 +71,13 @@ def loginPage(request):
                         subscription = user.subscription
                         # Update status to ensure it's current
                         subscription.update_status()
-                        
-                        # Block login if subscription is expired (beyond grace period)
+
+                        # SECURITY FIX: Block login ONLY if fully expired (past grace period)
+                        # Allow login during grace period with warnings
                         if subscription.is_expired:
                             messages.error(
                                 request,
-                                f'Your subscription has expired on {subscription.grace_period_end_date}. '
+                                f'Your subscription expired on {subscription.expiration_date} and grace period ended on {subscription.grace_period_end_date}. '
                                 'Please contact support to renew your subscription before logging in.'
                             )
                             # Log the failed login attempt due to expired subscription
@@ -85,18 +87,20 @@ def loginPage(request):
                                     None,
                                     UserActivityLog.LOGIN_FAILED,
                                     attempted_username=username,
-                                    failed_reason="Subscription expired"
+                                    failed_reason="Subscription fully expired (past grace period)"
                                 )
                             except Exception:
                                 pass
                             return render(request, 'users/login.html', {'logged_user': logged_user, 'developer': developer})
-                        
-                        # Warn if in grace period
+
+                        # SECURITY: Show warning during grace period (after expiration but before full expiry)
                         if subscription.is_grace_period:
+                            days_until_lockout = (subscription.grace_period_end_date - date.today()).days
                             messages.warning(
                                 request,
-                                f'Your subscription is in grace period and will expire on {subscription.grace_period_end_date}. '
-                                'Please renew soon.'
+                                f'⚠️ Your subscription expired on {subscription.expiration_date}. '
+                                f'You have {days_until_lockout} days remaining in your grace period. '
+                                'Please contact support to renew your subscription.'
                             )
                     
                     except Exception as e:
@@ -622,24 +626,19 @@ def admin_user_edit(request, pk):
                 original_data = {
                     'is_active': user.is_active,
                     'is_staff': user.is_staff,
-                    'is_superuser': user.is_superuser,
                 }
-                
+
                 updated_user = form.save()
-                
+
                 # Check for important changes and log them
                 changes = []
                 if original_data['is_active'] != updated_user.is_active:
                     status = "activated" if updated_user.is_active else "deactivated"
                     changes.append(f"User {status}")
-                
+
                 if original_data['is_staff'] != updated_user.is_staff:
                     status = "granted" if updated_user.is_staff else "removed"
                     changes.append(f"Staff access {status}")
-                
-                if original_data['is_superuser'] != updated_user.is_superuser:
-                    status = "granted" if updated_user.is_superuser else "removed"
-                    changes.append(f"Superuser access {status}")
                 
                 # Log admin action
                 change_description = f"Updated user: {user.username}"
@@ -700,19 +699,7 @@ def admin_user_delete(request, pk):
                 "message": "You cannot delete your own account."
             }, status=403)
 
-        # 3. Check superuser permissions
-        if user.is_superuser and not request.user.is_superuser:
-            logger.warning(
-                f"Non-superuser attempted to delete superuser: admin={request.user.username}, "
-                f"target_user={user.username}"
-            )
-            return JsonResponse({
-                "success": False,
-                "error": "Permission denied",
-                "message": "You cannot delete superuser accounts."
-            }, status=403)
-
-        # 4. Verify password
+        # 3. Verify password
         try:
             data = json.loads(request.body)
             password = data.get('password', '')
@@ -852,11 +839,13 @@ def subscription_detail(request):
     """
     Display subscription details for the authenticated user.
     Shows subscription information including remaining days, status, and expiration date.
+
+    SECURITY: Requires login - for active/grace period users only.
     """
     try:
         subscription = request.user.subscription
         subscription.update_status()
-        
+
         context = {
             'subscription': subscription,
             'remaining_days': subscription.remaining_days,
@@ -864,39 +853,71 @@ def subscription_detail(request):
             'expiration_date': subscription.expiration_date,
             'grace_period_end_date': subscription.grace_period_end_date,
         }
-        
+
         return render(request, 'users/subscription_detail.html', context)
-        
+
     except Exception as e:
         messages.error(request, 'Unable to retrieve subscription information.')
         return redirect('home')
 
 
-@login_required(login_url="user-login")
 def subscription_info(request):
     """
     Display subscription expired/information page.
     Shows clear messaging about expired subscription and contact information.
+
+    SECURITY: No @login_required - users are logged out before reaching here.
+    This page is accessible to show expired subscription details.
     """
     try:
-        subscription = request.user.subscription
-        subscription.update_status()
-        
+        # SECURITY: Check if user was recently logged out with session data
+        # Get username from session or query param if available
+        username = request.session.get('expired_username', None)
+
+        subscription = None
+        if username:
+            try:
+                from users.models import CustomUser
+                user = CustomUser.objects.get(username=username)
+                subscription = user.subscription
+                subscription.update_status()
+            except (CustomUser.DoesNotExist, Exception):
+                pass
+
         # Fetch developer contact information
         try:
             developer = DeveloperContacts.objects.get(id=1)
         except DeveloperContacts.DoesNotExist:
             developer = DeveloperContacts.objects.first()
-        
+
         context = {
             'subscription': subscription,
-            'expiration_date': subscription.expiration_date,
-            'grace_period_end_date': subscription.grace_period_end_date,
+            'expiration_date': subscription.expiration_date if subscription else None,
+            'grace_period_end_date': subscription.grace_period_end_date if subscription else None,
             'developer': developer,
         }
-        
+
         return render(request, 'users/subscription_expired.html', context)
-        
+
     except Exception as e:
-        messages.error(request, 'Unable to retrieve subscription information.')
-        return redirect('home')
+        # Log error but still show page with minimal info
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error in subscription_info view: {e}", exc_info=True)
+
+        # Fetch developer contact information
+        try:
+            developer = DeveloperContacts.objects.get(id=1)
+        except DeveloperContacts.DoesNotExist:
+            developer = DeveloperContacts.objects.first()
+
+        messages.error(request, 'Unable to retrieve complete subscription information.')
+
+        context = {
+            'subscription': None,
+            'expiration_date': None,
+            'grace_period_end_date': None,
+            'developer': developer,
+        }
+
+        return render(request, 'users/subscription_expired.html', context)
