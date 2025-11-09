@@ -17,6 +17,9 @@
 
       <!-- Body with warnings, details, password -->
       <div class="modal-body">
+        <!-- CSRF Token for AJAX request -->
+        {% csrf_token %}
+
         <!-- Dynamic warning section -->
         <div class="alert alert-danger mb-3" role="alert">
           <h6 class="alert-heading"><strong>Warning: This action cannot be undone!</strong></h6>

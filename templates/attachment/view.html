@@ -191,6 +191,8 @@
             </div>
             <div class="card-footer">
               <!-- Horizontal Action Buttons (Single Row) -->
+              {% load delete_modal_tags %}
+              {% delete_modal_id 'Attachment' attachment.id as modal_id %}
               <div class="attachment-actions d-flex flex-wrap justify-content-center">
                 <a href="{% url 'attachment-view' attachment.id %}" class="btn btn-success btn-sm mx-1 mb-1">
                   <i class="fas fa-eye"></i> <span class="btn-text">View</span>
@@ -210,7 +212,7 @@
                     <i class="far fa-bookmark"></i> <span class="btn-text">Save</span>
                   </a>
                 {% endif %}
-                <button type="button" class="btn btn-danger btn-sm mx-1 mb-1" onclick="DeleteConfirmation.show('deleteAttachmentModal')">
+                <button type="button" class="btn btn-danger btn-sm mx-1 mb-1" onclick="DeleteConfirmation.show('{{ modal_id }}')">
                   <i class="fas fa-trash"></i> <span class="btn-text">Delete</span>
                 </button>
               </div>
@@ -442,11 +444,7 @@ $(document).ready(function() {
 </script>
 
 <!-- Include Unified Delete Modal -->
-{% include 'src/partials/delete_confirmation_modal.html' with
-   modal_id='deleteAttachmentModal'
-   entity_type='Attachment'
-   delete_url=attachment.get_delete_url
-   redirect_url=attachment.patient.get_absolute_url
-%}
+{% load delete_modal_tags %}
+{% delete_modal attachment %}
 
 {% endblock main_content %}

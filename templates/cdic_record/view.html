@@ -92,7 +92,9 @@
         </div>
 
         <div class="col-auto m-2">
-          <button type="button" class="btn btn-primary" onclick="DeleteConfirmation.show('deleteCDICModal')"><i class="right far fa-trash-alt"></i>  Delete</button>
+          {% load delete_modal_tags %}
+          {% delete_modal_id 'CDICRecord' CDICRecord.id as modal_id %}
+          <button type="button" class="btn btn-primary" onclick="DeleteConfirmation.show('{{ modal_id }}')"><i class="right far fa-trash-alt"></i>  Delete</button>
         </div>
         
         <div class="col-auto m-2">
@@ -114,11 +116,7 @@
 
 </div> <!-- /.main container -->
 
-{% include 'src/partials/delete_confirmation_modal.html' with
-   modal_id='deleteCDICModal'
-   entity_type='CDIC Record'
-   delete_url=CDICRecord.get_delete_url
-   redirect_url=CDICRecord.patient.get_absolute_url
-%}
+{% load delete_modal_tags %}
+{% delete_modal CDICRecord %}
 
 {% endblock main_content %}

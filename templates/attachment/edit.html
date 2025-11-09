@@ -205,6 +205,8 @@
               </div>
               
               <div class="card-footer">
+                {% load delete_modal_tags %}
+                {% delete_modal_id 'Attachment' attachment.id as modal_id %}
                 <div class="row">
                   <div class="col-sm-6">
                     <a href="{% url 'attachment-view' attachment.id %}" class="btn btn-secondary">
@@ -215,7 +217,7 @@
                     <button type="submit" class="btn btn-warning">
                       <i class="fas fa-save"></i> Update Attachment
                     </button>
-                    <button type="button" class="btn btn-danger ml-2" onclick="DeleteConfirmation.show('deleteAttachmentModal')">
+                    <button type="button" class="btn btn-danger ml-2" onclick="DeleteConfirmation.show('{{ modal_id }}')">
                       <i class="fas fa-trash"></i> Delete
                     </button>
                   </div>
@@ -305,11 +307,7 @@ $(document).ready(function() {
 </script>
 
 <!-- Include Unified Delete Modal -->
-{% include 'src/partials/delete_confirmation_modal.html' with
-   modal_id='deleteAttachmentModal'
-   entity_type='Attachment'
-   delete_url=attachment.get_delete_url
-   redirect_url=attachment.patient.get_absolute_url
-%}
+{% load delete_modal_tags %}
+{% delete_modal attachment %}
 
 {% endblock main_content %}

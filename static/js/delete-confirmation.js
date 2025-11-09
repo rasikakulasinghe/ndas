@@ -26,6 +26,14 @@
 
             if (modal.length === 0) {
                 console.error('DeleteConfirmation: Modal not found with ID:', modalId);
+                console.error('DeleteConfirmation: Available modals:', $('[id*="Modal"]').map(function() { return this.id; }).get());
+                
+                // Show user-friendly error
+                if (typeof window.showAlert === 'function') {
+                    window.showAlert('Error: Delete modal not found. Please refresh the page and try again.', 'danger');
+                } else {
+                    alert('Error: Delete confirmation modal not found. Please refresh the page and try again.');
+                }
                 return;
             }
 
@@ -38,13 +46,22 @@
             const passwordField = $('#deletePassword' + modalId);
             const errorDiv = $('#deleteError' + modalId);
 
+            if (passwordField.length === 0) {
+                console.error('DeleteConfirmation: Password field not found for modal:', modalId);
+                return;
+            }
+
             passwordField.val('');
             errorDiv.hide().text('');
 
             // Enable delete button
             const deleteBtn = $('#confirmDeleteBtn' + modalId);
-            deleteBtn.prop('disabled', false);
-            deleteBtn.find('.spinner-border').hide();
+            if (deleteBtn.length > 0) {
+                deleteBtn.prop('disabled', false);
+                deleteBtn.find('.spinner-border').hide();
+            } else {
+                console.warn('DeleteConfirmation: Delete button not found for modal:', modalId);
+            }
 
             // Show modal
             modal.modal('show');
@@ -281,13 +298,18 @@
             });
 
             // Clear password field when modal is hidden
-            $(document).on('hidden.bs.modal', '[id*="delete" i][id*="modal" i]', function() {
+            // Use class-based selector or simpler ID pattern without case-insensitive flag
+            $(document).on('hidden.bs.modal', '.modal[id^="delete"]', function() {
                 const modalId = this.id;
                 const passwordField = $('#deletePassword' + modalId);
                 const errorDiv = $('#deleteError' + modalId);
 
-                passwordField.val('');
-                errorDiv.hide().text('');
+                if (passwordField.length > 0) {
+                    passwordField.val('');
+                }
+                if (errorDiv.length > 0) {
+                    errorDiv.hide().text('');
+                }
             });
 
             console.log('DeleteConfirmation system initialized');

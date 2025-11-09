@@ -158,7 +158,9 @@
         </div>
 
         <div class="col-auto m-2">
-          <button type="button" class="btn btn-primary" onclick="DeleteConfirmation.show('deleteDAModal')"><i class="right far fa-trash-alt"></i>  Delete</button>
+          {% load delete_modal_tags %}
+          {% delete_modal_id 'DevelopmentalAssessment' DARecord.id as modal_id %}
+          <button type="button" class="btn btn-primary" onclick="DeleteConfirmation.show('{{ modal_id }}')"><i class="right far fa-trash-alt"></i>  Delete</button>
         </div>
         
         <div class="col-auto m-2">
@@ -180,11 +182,7 @@
 
 </div> <!-- /.main container -->
 
-{% include 'src/partials/delete_confirmation_modal.html' with
-   modal_id='deleteDAModal'
-   entity_type='Developmental Assessment'
-   delete_url=DARecord.get_delete_url
-   redirect_url=DARecord.patient.get_absolute_url
-%}
+{% load delete_modal_tags %}
+{% delete_modal DARecord %}
 
 {% endblock main_content %}

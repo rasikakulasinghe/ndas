@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'csp',  # Content Security Policy
     'django_permissions_policy',
     'django_user_agents',
+    'ndas',  # Core NDAS app (for template tags)
     'users.apps.UsersConfig',
     'patients.apps.PatientsConfig',
     'video.apps.VideoConfig',

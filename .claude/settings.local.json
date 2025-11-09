@@ -21,7 +21,10 @@
       "Bash(find:*)",
       "Bash(timeout /t 3 /nobreak)",
       "Skill(example-skills:webapp-testing)",
-      "Bash(playwright install:*)"
+      "Bash(playwright install:*)",
+      "Bash(done)",
+      "Bash(\"$TEMP\\delete_modal_id_usage.txt\")",
+      "Bash(type \"$TEMP\\delete_modal_id_usage.txt\")"
     ],
     "deny": [],
     "ask": []

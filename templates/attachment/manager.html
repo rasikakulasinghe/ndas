@@ -302,7 +302,9 @@
                   <a class="dropdown-item" href="{% url 'attachment-edit' attachment.id %}">
                     <i class="fas fa-edit text-warning"></i> Edit Details
                   </a>
-                  <a class="dropdown-item" href="{% url 'attachment-delete-confirm' attachment.id %}">
+                  {% load delete_modal_tags %}
+                  {% delete_modal_id 'Attachment' attachment.id as attachment_modal_id %}
+                  <a class="dropdown-item" href="#" onclick="DeleteConfirmation.show('{{ attachment_modal_id }}'); return false;">
                     <i class="fas fa-trash-alt text-danger"></i> Delete
                   </a>
                   <div class="dropdown-divider"></div>
@@ -329,6 +331,12 @@
       </table>
     </div>
   </div>
+
+  <!-- Delete Modals for Each Attachment -->
+  {% load delete_modal_tags %}
+  {% for attachment in attachment_page_obj %}
+    {% delete_modal attachment %}
+  {% endfor %}
 
   <!-- Pagination Section -->
   {% if attachment_page_obj.paginator.num_pages > 1 %}
@@ -411,6 +419,7 @@
   {% endif %}
 
 </div>
+{% endblock main_content %}
 
 {% block extra_js %}
 <script src="{% static 'js/manager.js' %}"></script>
@@ -440,5 +449,3 @@ $(document).ready(function() {
 });
 </script>
 {% endblock extra_js %}
-
-{% endblock main_content %}

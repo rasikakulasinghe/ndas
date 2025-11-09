@@ -117,11 +117,13 @@
             </div>
           </div>
           <div class="col-md-6">
+            {% load delete_modal_tags %}
+            {% delete_modal_id 'Bookmark' bookmark.id as modal_id %}
             <div class="btn-group-vertical btn-group-sm w-100" role="group">
               <a class="btn btn-outline-success mb-1" href="{% url 'bookmark-edit' bookmark.id %}">
                 <i class="fas fa-edit mr-2"></i>Edit Bookmark
               </a>
-              <button type="button" class="btn btn-outline-danger mb-1" onclick="DeleteConfirmation.show('deleteBookmarkModal')">
+              <button type="button" class="btn btn-outline-danger mb-1" onclick="DeleteConfirmation.show('{{ modal_id }}')">
                 <i class="fas fa-trash mr-2"></i>Delete Bookmark
               </button>
             </div>
@@ -191,11 +193,7 @@ $(document).ready(function(){
 });
 </script>
 
-{% include 'src/partials/delete_confirmation_modal.html' with
-   modal_id='deleteBookmarkModal'
-   entity_type='Bookmark'
-   delete_url=bookmark.get_delete_url
-   redirect_url=bookmark.get_list_url
-%}
+{% load delete_modal_tags %}
+{% delete_modal bookmark %}
 
 {% endblock main_content %}

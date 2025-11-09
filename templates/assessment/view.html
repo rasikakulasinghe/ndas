@@ -227,8 +227,10 @@
                       <a href="{% url 'assessment-edit' assessment.id %}" class="btn btn-primary mr-2 px-3">
                         <i class="fas fa-edit mr-1"></i>Edit
                       </a>
+                      {% load delete_modal_tags %}
+                      {% delete_modal_id 'GMAssessment' assessment.id as modal_id %}
                       <button type="button" class="btn btn-outline-danger px-3"
-                         onclick="DeleteConfirmation.show('deleteGMAModal')"
+                         onclick="DeleteConfirmation.show('{{ modal_id }}')"
                          data-toggle="tooltip" title="Delete this assessment">
                         <i class="fas fa-trash mr-1"></i>Delete
                       </button>
@@ -263,11 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-{% include 'src/partials/delete_confirmation_modal.html' with
-   modal_id='deleteGMAModal'
-   entity_type='GMA Assessment'
-   delete_url=assessment.get_delete_url
-   redirect_url=assessment.patient.get_absolute_url
-%}
+{% load delete_modal_tags %}
+{% delete_modal assessment %}
 
 {% endblock main_content %}

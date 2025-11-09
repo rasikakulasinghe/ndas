@@ -1,4 +1,4 @@
-﻿<!-- Compact Patient Header -->
+<!-- Compact Patient Header -->
 <div class="row">
   <div class="col-12">
     {% include 'patients/partials/patient_identification_details.html' %}
@@ -351,8 +351,10 @@
                         <a href="{% url 'assessment-edit' Assessment.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
                         </a>
+                        {% load delete_modal_tags %}
+                        {% delete_modal_id 'GMAssessment' Assessment.id as gma_modal_id %}
                         <button type="button" class="btn btn-danger btn-sm" title="Delete"
-                                onclick="DeleteConfirmation.show('deleteGMAModal{{ Assessment.id }}')">
+                                onclick="DeleteConfirmation.show('{{ gma_modal_id }}')">
                           <i class="fas fa-trash"></i>
                         </button>
                       </div>
@@ -405,8 +407,10 @@
                         <a href="{% url 'hine-assessment-edit' HINE.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
                         </a>
+                        {% load delete_modal_tags %}
+                        {% delete_modal_id 'HINEAssessment' HINE.id as hine_modal_id %}
                         <button type="button" class="btn btn-danger btn-sm" title="Delete"
-                                onclick="DeleteConfirmation.show('deleteHINEModal{{ HINE.id }}')">
+                                onclick="DeleteConfirmation.show('{{ hine_modal_id }}')">
                           <i class="fas fa-trash"></i>
                         </button>
                       </div>
@@ -461,8 +465,10 @@
                         <a href="{% url 'da-assessment-edit' DA.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
                         </a>
+                        {% load delete_modal_tags %}
+                        {% delete_modal_id 'DevelopmentalAssessment' DA.id as da_modal_id %}
                         <button type="button" class="btn btn-danger btn-sm" title="Delete"
-                                onclick="DeleteConfirmation.show('deleteDAModal{{ DA.id }}')">
+                                onclick="DeleteConfirmation.show('{{ da_modal_id }}')">
                           <i class="fas fa-trash"></i>
                         </button>
                       </div>
@@ -515,8 +521,10 @@
                         <a href="{% url 'cdic-assessment-edit' CDIC.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
                         </a>
+                        {% load delete_modal_tags %}
+                        {% delete_modal_id 'CDICRecord' CDIC.id as cdic_modal_id %}
                         <button type="button" class="btn btn-danger btn-sm" title="Delete"
-                                onclick="DeleteConfirmation.show('deleteCDICModal{{ CDIC.id }}')">
+                                onclick="DeleteConfirmation.show('{{ cdic_modal_id }}')">
                           <i class="fas fa-trash"></i>
                         </button>
                       </div>
@@ -589,9 +597,12 @@
                         <a href="{% url 'gpa-edit' GPA.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
                         </a>
-                        <a href="{% url 'gpa-delete-start' GPA.id %}" class="btn btn-danger btn-sm" title="Delete">
+                        {% load delete_modal_tags %}
+                        {% delete_modal_id 'GeneralPaediatricAssessment' GPA.id as gpa_modal_id %}
+                        <button type="button" class="btn btn-danger btn-sm" title="Delete"
+                                onclick="DeleteConfirmation.show('{{ gpa_modal_id }}')">
                           <i class="fas fa-trash"></i>
-                        </a>
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -676,9 +687,11 @@
                         <a href="{% url 'video:edit' video.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
                         </a>
-                        <a href="{% url 'video:delete-confirm' video.id %}" class="btn btn-danger btn-sm" title="Delete">
+                        {% load delete_modal_tags %}
+                        {% delete_modal_id 'Video' video.id as video_modal_id %}
+                        <button type="button" class="btn btn-danger btn-sm" title="Delete" onclick="DeleteConfirmation.show('{{ video_modal_id }}')">
                           <i class="fas fa-trash"></i>
-                        </a>
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -744,9 +757,11 @@
                         <a href="{% url 'attachment-edit' Attachment.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
                         </a>
-                        <a href="{% url 'attachment-delete-confirm' Attachment.id %}" class="btn btn-danger btn-sm" title="Delete">
+                        {% load delete_modal_tags %}
+                        {% delete_modal_id 'Attachment' Attachment.id as attachment_modal_id %}
+                        <button type="button" class="btn btn-danger btn-sm" title="Delete" onclick="DeleteConfirmation.show('{{ attachment_modal_id }}')">
                           <i class="fas fa-trash"></i>
-                        </a>
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -839,7 +854,7 @@
           {% endif %}
           {% if user.is_superuser %}
           <div class="col-md-4 col-sm-6 mb-2">
-            <button class="btn btn-danger btn-block" onclick="PatientDeletion.confirm()" type="button">
+            <button class="btn btn-danger btn-block" onclick="DeleteConfirmation.show('deletePatientModal')" type="button">
               <i class="fas fa-trash-alt"></i> Delete Patient
             </button>
           </div>
@@ -870,92 +885,39 @@
   </div>
 </div>
 
-<!-- Patient Deletion Modal -->
-<div class="modal fade" id="deletePatientModal" tabindex="-1" role="dialog"
-     data-patient-id="{{patient.id}}" data-delete-url="{% url 'delete-patient' patient.id %}">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header bg-danger">
-        <h5 class="modal-title">
-          <i class="fas fa-exclamation-triangle"></i> Confirm Patient Deletion
-        </h5>
-        <button type="button" class="close" data-dismiss="modal">
-          <span>&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="alert alert-danger">
-          <h6><strong>Warning: This action cannot be undone!</strong></h6>
-          <p>You are about to permanently delete this patient and ALL associated records.</p>
-        </div>
-
-        <div class="callout callout-info">
-          <h6><strong>Patient Details:</strong></h6>
-          <p class="mb-1"><strong>Name:</strong> {{patient.baby_name}}</p>
-          <p class="mb-1"><strong>Mother:</strong> {{patient.mother_name}}</p>
-          <p class="mb-0"><strong>BHT:</strong> {{patient.bht}}</p>
-        </div>
-
-        <div class="form-group">
-          <label>Enter your password to confirm:</label>
-          <input type="password" class="form-control" id="deletePassword" placeholder="Password">
-          <div id="deleteError" class="text-danger mt-2" style="display: none;"></div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-danger" id="confirmDeleteBtn"
-                onclick="PatientDeletion.execute('{{patient.id}}', '{% url 'delete-patient' patient.id %}')">
-          <span id="deleteSpinner" class="spinner-border spinner-border-sm" style="display: none;"></span>
-          <i class="fas fa-trash-alt"></i> Delete Patient
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
 {% load static %}
-<script src="{% static 'js/patient-deletion.js' %}" defer></script>
+
+<!-- Patient Delete Modal using unified template -->
+{% url 'delete-patient' patient.id as patient_delete_url %}
+{% include 'src/partials/delete_confirmation_modal.html' with modal_id='deletePatientModal' entity_type='Patient' entity_name=patient.baby_name delete_url=patient_delete_url redirect_url='/manager/patient/' warning_items=warning_list detail_items=patient_details %}
 
 <!-- Delete Modals for Assessments -->
-{% for Assessment in gm_assessments %}
-{% url 'assessment-delete' Assessment.id as gma_delete_url %}
-{% include 'src/partials/delete_confirmation_modal.html' with
-   modal_id='deleteGMAModal'|add:Assessment.id|stringformat:"s"
-   entity_type='GMA Assessment'
-   delete_url=gma_delete_url
-   redirect_url=patient.get_absolute_url
-only %}
+<!-- Using full querysets (var_*) instead of limited ones to ensure all delete modals exist -->
+{% load delete_modal_tags %}
+{% for Assessment in var_gma %}
+{% delete_modal Assessment %}
 {% endfor %}
 
-{% for HINE in hine_assessments %}
-{% url 'hine-assessment-delete' HINE.id as hine_delete_url %}
-{% include 'src/partials/delete_confirmation_modal.html' with
-   modal_id='deleteHINEModal'|add:HINE.id|stringformat:"s"
-   entity_type='HINE Assessment'
-   delete_url=hine_delete_url
-   redirect_url=patient.get_absolute_url
-only %}
+{% for HINE in var_hine %}
+{% delete_modal HINE %}
 {% endfor %}
 
-{% for DA in da_assessments %}
-{% url 'da-assessment-delete' DA.id as da_delete_url %}
-{% include 'src/partials/delete_confirmation_modal.html' with
-   modal_id='deleteDAModal'|add:DA.id|stringformat:"s"
-   entity_type='Developmental Assessment'
-   delete_url=da_delete_url
-   redirect_url=patient.get_absolute_url
-only %}
+{% for DA in var_da %}
+{% delete_modal DA %}
 {% endfor %}
 
-{% for CDIC in cdic_record %}
-{% url 'cdic-assessment-delete' CDIC.id as cdic_delete_url %}
-{% include 'src/partials/delete_confirmation_modal.html' with
-   modal_id='deleteCDICModal'|add:CDIC.id|stringformat:"s"
-   entity_type='CDIC Record'
-   delete_url=cdic_delete_url
-   redirect_url=patient.get_absolute_url
-only %}
+{% for GPA in var_gpa %}
+{% delete_modal GPA %}
 {% endfor %}
 
+{% for CDIC in var_cdic %}
+{% delete_modal CDIC %}
+{% endfor %}
 
+{% for Attachment in var_file_attachments %}
+{% delete_modal Attachment %}
+{% endfor %}
+
+{% for video in var_file_video %}
+{% delete_modal video %}
+{% endfor %}

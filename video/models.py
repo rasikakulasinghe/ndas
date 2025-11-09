@@ -181,7 +181,11 @@ class Video(TimeStampedModel, UserTrackingMixin):
         return f"{self.title} - {self.patient} ({self.recorded_on:%Y-%m-%d})"
     
     def get_absolute_url(self):
-        return reverse('video:detail', kwargs={'pk': self.pk})
+        return reverse('video:view', kwargs={'video_id': self.pk})
+    
+    def get_delete_url(self):
+        """Get delete URL for this video"""
+        return reverse('video:delete', kwargs={'video_id': self.pk})
     
     def clean(self):
         """Custom model validation."""

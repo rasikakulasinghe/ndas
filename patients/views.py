@@ -607,12 +607,30 @@ def patient_view(request, pk):
         .first()
     )
 
+    # Prepare delete modal context
+    warning_list = [
+        f"All associated assessments ({gm_assessments_count} GMA, {hine_assessments_count} HINE, {da_assessments_count} Developmental, {cdic_record_count} CDIC, {gpa_assessments_count} GPA) will be deleted",
+        f"All video files ({file_video_count}) and attachments ({file_attachment_count}) will be permanently removed",
+        "All bookmarks related to this patient will be deleted",
+        "This patient record will be permanently deleted from the system"
+    ]
+
+    patient_details = {
+        "Baby Name": selected_patient.baby_name,
+        "Mother Name": selected_patient.mother_name,
+        "BHT": selected_patient.bht or "Not specified",
+        "Gender": selected_patient.gender,
+        "Date of Birth": selected_patient.dob_tob.strftime("%b %d, %Y") if selected_patient.dob_tob else "Not specified"
+    }
+
     context = {
         "patient": selected_patient,
         "file_videos": file_videos,
         "file_video_count": file_video_count,
+        "var_file_video": var_file_video,  # Full queryset for delete modals
         "file_attachment": file_attachment,
         "file_attachment_count": file_attachment_count,
+        "var_file_attachments": var_file_attachments,  # Full queryset for delete modals
         "indications": indications,
         "bookmark": bm,
         "gm_assessments_new": "",
@@ -620,15 +638,22 @@ def patient_view(request, pk):
         "gm_assessments": gm_assessments,
         "gm_assessments_count": gm_assessments_count,
         "gm_last_assessment": gm_last_assessment,
+        "var_gma": var_gma,  # Full queryset for delete modals
         "hine_assessments_count": hine_assessments_count,
         "hine_assessments": hine_assessments,
+        "var_hine": var_hine,  # Full queryset for delete modals
         "da_assessments_count": da_assessments_count,
         "da_assessments": da_assessments,
+        "var_da": var_da,  # Full queryset for delete modals
         "cdic_record_count": cdic_record_count,
         "cdic_record": cdic_record,
+        "var_cdic": var_cdic,  # Full queryset for delete modals
         "gpa_assessments_count": gpa_assessments_count,
         "gpa_assessments": gpa_assessments,
+        "var_gpa": var_gpa,  # Full queryset for delete modals
         "timeline_events": timeline_events,
+        "warning_list": warning_list,  # For patient delete modal
+        "patient_details": patient_details,  # For patient delete modal
     }
 
     return render(request, "patients/view.html", context)

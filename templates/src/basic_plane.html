@@ -80,12 +80,14 @@ scratch. This page gets rid of all links and provides the needed markup only.
 <script src="{% static 'js/zoomrotate.js' %}" defer></script>
 <script src="{% static 'js/rotate.js' %}" defer></script>
 
-<!-- NDAS Application Scripts (with defer for optimal loading) -->
+<!-- NDAS Application Scripts -->
+<!-- Critical scripts without defer to ensure they're available for inline handlers -->
+<script src="{% static 'js/delete-confirmation.js' %}"></script>
+<script src="{% static 'js/logout-modal.js' %}"></script>
+<!-- Non-critical scripts with defer for optimal loading -->
 <script src="{% static 'js/app-utils.js' %}" defer></script>
-<script src="{% static 'js/delete-confirmation.js' %}" defer></script>
 <script src="{% static 'js/video-manager.js' %}" defer></script>
 <script src="{% static 'js/main.js' %}" defer></script>
-<script src="{% static 'js/logout-modal.js' %}" defer></script>
 
 <!-- CDN Health Check (runs after all scripts load) -->
 <script>

@@ -1820,6 +1820,16 @@ class Attachment(TimeStampedModel, UserTrackingMixin):
             return self.attachment.url
         return None
 
+    def get_absolute_url(self):
+        """Get detail view URL for this attachment"""
+        from django.urls import reverse
+        return reverse('attachment-view', args=[str(self.id)])
+
+    def get_delete_url(self):
+        """Get delete URL for this attachment"""
+        from django.urls import reverse
+        return reverse('attachment-delete', args=[str(self.id)])
+
     # Class methods for efficient queries
     @classmethod
     def get_by_patient(cls, patient, attachment_type=None):

@@ -504,7 +504,9 @@
                       <i class="fas fa-save"></i> Update Patient
                     </button>
                     {% if user.is_superuser %}
-                    <button type="button" class="btn btn-danger ml-2" onclick="DeleteConfirmation.show('deletePatientModal')">
+                    {% load delete_modal_tags %}
+                    {% delete_modal_id 'Patient' patient.id as modal_id %}
+                    <button type="button" class="btn btn-danger ml-2" onclick="DeleteConfirmation.show('{{ modal_id }}')">
                       <i class="fas fa-trash-alt"></i> Delete Patient
                     </button>
                     {% endif %}
@@ -637,6 +639,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- Unified Delete Confirmation Modal -->
-{% include 'src/partials/delete_confirmation_modal.html' with modal_id='deletePatientModal' entity_type='Patient' delete_url='/patient/delete/'|add:patient.id|add:'/' redirect_url='/manager/patient/' warning_items=patient_warnings detail_items=patient_details %}
+{% load delete_modal_tags %}
+{% delete_modal patient %}
 
 {% endblock main_content %}

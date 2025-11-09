@@ -250,8 +250,10 @@ Manager{% endblock title%}
                       <a class="dropdown-item" href="{% url 'assessment-edit' Assessment.id %}">
                         <i class="fas fa-pencil-alt mr-2"></i>Edit Assessment
                       </a>
+                      {% load delete_modal_tags %}
+                      {% delete_modal_id 'GMAssessment' Assessment.id as gma_modal_id %}
                       <button class="dropdown-item text-danger" type="button"
-                              onclick="DeleteConfirmation.show('deleteGMAModal{{ Assessment.id }}')">
+                              onclick="DeleteConfirmation.show('{{ gma_modal_id }}')">
                         <i class="far fa-trash-alt mr-2"></i>Delete Assessment
                       </button>
                       <div class="dropdown-divider"></div>
@@ -390,7 +392,15 @@ Manager{% endblock title%}
       </div>
       {% endif %}
     </div>
+
+  <!-- Delete Modals for Each Assessment -->
+  {% load delete_modal_tags %}
+  {% for Assessment in assessment_page_obj %}
+    {% delete_modal Assessment %}
+  {% endfor %}
+
 </div>
+{% endblock main_content %}
 
 {% block extra_js %}
 <script src="{% static 'js/manager.js' %}"></script>
@@ -418,16 +428,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock extra_js %}
-
-<!-- Delete Modals for Each Assessment -->
-{% for Assessment in assessments %}
-{% url 'assessment-delete' Assessment.id as gma_delete_url %}
-{% include 'src/partials/delete_confirmation_modal.html' with
-   modal_id='deleteGMAModal'|add:Assessment.id|stringformat:"s"
-   entity_type='GMA Assessment'
-   delete_url=gma_delete_url
-   redirect_url='/manager/assessment/'
-only %}
-{% endfor %}
-
-{% endblock main_content %}

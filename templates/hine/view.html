@@ -162,8 +162,10 @@
                   <i class="fas fa-bookmark-o mr-2"></i>Add Bookmark
                 </a>
               {% endif %}
+              {% load delete_modal_tags %}
+              {% delete_modal_id 'HINEAssessment' HINERecord.id as modal_id %}
               <button type="button" class="btn btn-outline-danger mb-1"
-                 onclick="DeleteConfirmation.show('deleteHINEModal')">
+                 onclick="DeleteConfirmation.show('{{ modal_id }}')">
                 <i class="fas fa-trash mr-2"></i>Delete Record
               </button>
             </div>
@@ -228,11 +230,7 @@
 }
 </style>
 
-{% include 'src/partials/delete_confirmation_modal.html' with
-   modal_id='deleteHINEModal'
-   entity_type='HINE Assessment'
-   delete_url=HINERecord.get_delete_url
-   redirect_url=HINERecord.patient.get_absolute_url
-%}
+{% load delete_modal_tags %}
+{% delete_modal HINERecord %}
 
 {% endblock main_content %}

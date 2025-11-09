@@ -133,9 +133,11 @@
                                                     </button>
                                                 </form>
                                                 {% if not user.is_superuser or request.user.is_superuser %}
+                                                {% load delete_modal_tags %}
+                                                {% delete_modal_id 'CustomUser' user.pk as user_modal_id %}
                                                 <button type="button"
                                                         class="btn btn-danger btn-sm"
-                                                        onclick="DeleteConfirmation.show('deleteUserModal{{ user.pk }}')"
+                                                        onclick="DeleteConfirmation.show('{{ user_modal_id }}')"
                                                         title="Delete">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
@@ -154,14 +156,10 @@
                     </div>
 
                     <!-- Delete Modals for each user -->
+                    {% load delete_modal_tags %}
                     {% for user in page_obj %}
                         {% if user != request.user and (not user.is_superuser or request.user.is_superuser) %}
-                            {% include 'src/partials/delete_confirmation_modal.html' with
-                               modal_id='deleteUserModal'|add:user.pk|stringformat:"s"
-                               entity_type='User'
-                               delete_url=user.get_delete_url
-                               redirect_url='/users/admin/users/'
-                            %}
+                            {% delete_modal user %}
                         {% endif %}
                     {% endfor %}
                     

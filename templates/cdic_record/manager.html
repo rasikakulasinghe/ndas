@@ -265,8 +265,10 @@
                       </a>
                       {% endif %}
                       <div class="dropdown-divider"></div>
+                      {% load delete_modal_tags %}
+                      {% delete_modal_id 'CDICRecord' CDICRecord.id as cdic_modal_id %}
                       <button class="dropdown-item text-danger" type="button"
-                              onclick="DeleteConfirmation.show('deleteCDICModal{{ CDICRecord.id }}')">
+                              onclick="DeleteConfirmation.show('{{ cdic_modal_id }}')">
                         <i class="fas fa-trash-alt mr-2"></i>Delete Record
                       </button>
                     </div>
@@ -337,19 +339,15 @@
     </div>
 </div>
 
+  <!-- Delete Modals for Each CDIC Record -->
+  {% load delete_modal_tags %}
+  {% for CDICRecord in cdic_record_list %}
+    {% delete_modal CDICRecord %}
+  {% endfor %}
+
+</div>
+{% endblock main_content %}
+
 {% block extra_js %}
 <script src="{% static 'js/manager.js' %}"></script>
 {% endblock extra_js %}
-
-<!-- Delete Modals for Each CDIC Record -->
-{% for CDICRecord in cdic_records %}
-{% url 'cdic-assessment-delete' CDICRecord.id as cdic_delete_url %}
-{% include 'src/partials/delete_confirmation_modal.html' with
-   modal_id='deleteCDICModal'|add:CDICRecord.id|stringformat:"s"
-   entity_type='CDIC Record'
-   delete_url=cdic_delete_url
-   redirect_url='/cdic/manager/'
-only %}
-{% endfor %}
-
-{% endblock main_content %}
