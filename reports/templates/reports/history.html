@@ -10,22 +10,149 @@
     <div class="card">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-history"></i> Report History</h3>
+            <div class="card-tools">
+                <span class="badge badge-primary">{{ total_reports }} Report{{ total_reports|pluralize }}</span>
+            </div>
         </div>
 
         <div class="card-body">
-            <p class="text-muted">
-                Reports are generated on-demand and retained for 24 hours. After expiration, please regenerate the report.
-            </p>
-
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i>
-                For MVP release, report history is not persisted. Generated reports are available for download immediately after generation.
+            <div class="row mb-3">
+                <div class="col-md-8">
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle"></i> <strong>Retention Policy:</strong> Reports are retained for 24 hours after generation, then automatically deleted.
+                    </div>
+                </div>
+                <div class="col-md-4 text-right">
+                    <a href="{% url 'reports:builder' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Generate New Report
+                    </a>
+                </div>
             </div>
 
-            <a href="{% url 'reports:builder' %}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Generate New Report
-            </a>
+            {% if reports %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-file"></i> Type</th>
+                            <th><i class="fas fa-signature"></i> Filename</th>
+                            <th><i class="fas fa-hdd"></i> Size</th>
+                            <th><i class="fas fa-clock"></i> Created</th>
+                            <th><i class="fas fa-hourglass-half"></i> Age</th>
+                            <th><i class="fas fa-stopwatch"></i> Expires In</th>
+                            <th class="text-center"><i class="fas fa-cog"></i> Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in reports %}
+                        <tr>
+                            <td>
+                                {% if report.type == 'Excel' %}
+                                <span class="badge badge-success">
+                                    <i class="fas fa-file-excel"></i> Excel
+                                </span>
+                                {% else %}
+                                <span class="badge badge-danger">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <code>{{ report.filename }}</code>
+                            </td>
+                            <td>
+                                {% if report.size_mb < 0.01 %}
+                                {{ report.size|filesizeformat }}
+                                {% else %}
+                                {{ report.size_mb }} MB
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ report.created|date:"Y-m-d H:i" }}
+                            </td>
+                            <td>
+                                {% if report.hours_old < 1 %}
+                                <span class="badge badge-success">{{ report.hours_old|floatformat:1 }}h ago</span>
+                                {% elif report.hours_old < 12 %}
+                                <span class="badge badge-info">{{ report.hours_old|floatformat:1 }}h ago</span>
+                                {% else %}
+                                <span class="badge badge-warning">{{ report.hours_old|floatformat:1 }}h ago</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if report.expires_in < 1 %}
+                                <span class="badge badge-danger">
+                                    <i class="fas fa-exclamation-triangle"></i> Expiring soon
+                                </span>
+                                {% elif report.expires_in < 6 %}
+                                <span class="badge badge-warning">{{ report.expires_in|floatformat:1 }}h</span>
+                                {% else %}
+                                <span class="badge badge-success">{{ report.expires_in|floatformat:1 }}h</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'reports:download' file_id=report.file_id %}"
+                                       class="btn btn-primary"
+                                       title="Download Report">
+                                        <i class="fas fa-download"></i> Download
+                                    </a>
+                                    <button type="button"
+                                            class="btn btn-danger"
+                                            onclick="deleteReport('{{ report.file_id }}')"
+                                            title="Delete Report">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert alert-warning mt-3">
+                <i class="fas fa-exclamation-triangle"></i> <strong>Note:</strong>
+                Deleting a report is permanent and cannot be undone. You will need to regenerate the report if needed.
+            </div>
+
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-folder-open fa-5x text-muted mb-3"></i>
+                <h4 class="text-muted">No Reports Found</h4>
+                <p class="text-muted">
+                    You haven't generated any reports yet, or all previous reports have expired.
+                </p>
+                <a href="{% url 'reports:builder' %}" class="btn btn-primary btn-lg mt-3">
+                    <i class="fas fa-chart-bar"></i> Generate Your First Report
+                </a>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
+
+<script>
+function deleteReport(fileId) {
+    if (confirm('Are you sure you want to delete this report? This action cannot be undone.')) {
+        fetch(`/reports/delete/${fileId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error deleting report: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Error deleting report: ' + error);
+        });
+    }
+}
+</script>
 {% endblock %}

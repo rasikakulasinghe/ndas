@@ -52,11 +52,19 @@ class ReportTemplate(TimeStampedModel, UserTrackingMixin):
         return f"{self.name}{default_tag}{active_tag}"
 
     def save(self, *args, **kwargs):
-        """Ensure only one default template exists"""
+        """Ensure only one default template exists (atomic operation)"""
+        from django.db import transaction
+
         if self.is_default:
-            # Unset any other default templates
-            ReportTemplate.objects.filter(is_default=True).exclude(pk=self.pk).update(is_default=False)
-        super().save(*args, **kwargs)
+            # Use atomic transaction to prevent race conditions
+            with transaction.atomic():
+                # Lock the table and unset any other default templates
+                ReportTemplate.objects.select_for_update().filter(
+                    is_default=True
+                ).exclude(pk=self.pk).update(is_default=False)
+                super().save(*args, **kwargs)
+        else:
+            super().save(*args, **kwargs)
 
 
 class ReportConfig(TimeStampedModel, UserTrackingMixin):

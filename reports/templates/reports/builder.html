@@ -9,7 +9,10 @@
 
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-chart-bar"></i> Generate Report</h3>
+            <h3 class="card-title"><i class="fas fa-chart-bar"></i> Generate Research Export</h3>
+            <div class="card-tools">
+                <span class="badge badge-success">Excel Format</span>
+            </div>
         </div>
 
         <div class="card-body">
@@ -33,16 +36,14 @@
                 <!-- Format Selection -->
                 <div class="form-group">
                     <label>Report Format</label>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="format" id="formatPDF" value="pdf" checked>
-                        <label class="form-check-label" for="formatPDF">
-                            <i class="fas fa-file-pdf"></i> PDF
-                        </label>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> <strong>Research Export:</strong> Excel format provides comprehensive data export with all assessment types, quality metrics, and statistical summaries. For individual patient PDFs, use the patient view page.
                     </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="format" id="formatExcel" value="excel">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="format" id="formatExcel" value="excel" checked>
                         <label class="form-check-label" for="formatExcel">
-                            <i class="fas fa-file-excel"></i> Excel
+                            <i class="fas fa-file-excel text-success"></i> <strong>Excel Research Export</strong>
+                            <small class="text-muted d-block">Comprehensive multi-patient data export with statistical summaries</small>
                         </label>
                     </div>
                 </div>
@@ -63,26 +64,415 @@
                     </div>
                 </div>
 
+                <!-- Advanced Filters -->
+                <div class="form-group">
+                    <label><i class="fas fa-filter"></i> Advanced Filters</label>
+                    <div class="card card-outline card-info collapsed-card">
+                        <div class="card-header">
+                            <h5 class="card-title">Filter Data by Clinical Criteria</h5>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body" style="display: none;">
+                            <div class="row">
+                                <!-- Gestational Age Filter -->
+                                <div class="col-md-6">
+                                    <div class="card card-outline card-primary">
+                                        <div class="card-header">
+                                            <h6 class="card-title"><i class="fas fa-baby"></i> Gestational Age (POG)</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="pog_min">Minimum (weeks)</label>
+                                                        <input type="number" class="form-control form-control-sm" id="pog_min" name="pog_min" min="20" max="44" placeholder="e.g., 28">
+                                                        <small class="text-muted">Leave blank for no minimum</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="pog_max">Maximum (weeks)</label>
+                                                        <input type="number" class="form-control form-control-sm" id="pog_max" name="pog_max" min="20" max="44" placeholder="e.g., 37">
+                                                        <small class="text-muted">Leave blank for no maximum</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="alert alert-info alert-sm mb-0">
+                                                <small><strong>Common ranges:</strong> Preterm: &lt;37 weeks, Term: 37-42 weeks</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- APGAR Score Filter -->
+                                <div class="col-md-6">
+                                    <div class="card card-outline card-success">
+                                        <div class="card-header">
+                                            <h6 class="card-title"><i class="fas fa-heartbeat"></i> APGAR Scores</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="form-group">
+                                                <label for="apgar_timepoint">Timepoint</label>
+                                                <select class="form-control form-control-sm" id="apgar_timepoint" name="apgar_timepoint">
+                                                    <option value="">No APGAR filter</option>
+                                                    <option value="1">1 minute</option>
+                                                    <option value="5">5 minutes</option>
+                                                    <option value="10">10 minutes</option>
+                                                </select>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="apgar_min">Minimum Score</label>
+                                                        <input type="number" class="form-control form-control-sm" id="apgar_min" name="apgar_min" min="0" max="10" placeholder="e.g., 0">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="apgar_max">Maximum Score</label>
+                                                        <input type="number" class="form-control form-control-sm" id="apgar_max" name="apgar_max" min="0" max="10" placeholder="e.g., 3">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="alert alert-info alert-sm mb-0">
+                                                <small><strong>Ranges:</strong> Low: 0-3, Moderate: 4-6, Normal: 7-10</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-2">
+                                <!-- GM Assessment Filter -->
+                                <div class="col-md-6">
+                                    <div class="card card-outline card-warning">
+                                        <div class="card-header">
+                                            <h6 class="card-title"><i class="fas fa-stethoscope"></i> GM Assessment Classification</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="form-group mb-0">
+                                                <label>Diagnosis Conclusion</label>
+                                                <div class="form-check">
+                                                    <input class="form-check-input gm-filter" type="checkbox" name="gm_diagnosis" value="NORMAL" id="gm_normal">
+                                                    <label class="form-check-label" for="gm_normal">
+                                                        <span class="badge badge-success">NORMAL</span>
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input gm-filter" type="checkbox" name="gm_diagnosis" value="ABNORMAL" id="gm_abnormal">
+                                                    <label class="form-check-label" for="gm_abnormal">
+                                                        <span class="badge badge-danger">ABNORMAL</span>
+                                                    </label>
+                                                </div>
+                                                <small class="text-muted d-block mt-2">Leave unchecked to include all GM assessments</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- HINE Assessment Filter -->
+                                <div class="col-md-6">
+                                    <div class="card card-outline card-info">
+                                        <div class="card-header">
+                                            <h6 class="card-title"><i class="fas fa-brain"></i> HINE Assessment Score</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="hine_score_min">Minimum Score</label>
+                                                        <input type="number" class="form-control form-control-sm" id="hine_score_min" name="hine_score_min" min="0" max="78" placeholder="e.g., 0">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="hine_score_max">Maximum Score</label>
+                                                        <input type="number" class="form-control form-control-sm" id="hine_score_max" name="hine_score_max" min="0" max="78" placeholder="e.g., 40">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="alert alert-info alert-sm mb-0">
+                                                <small><strong>Range:</strong> HINE score typically 0-78 points</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-2">
+                                <!-- Gender Filter -->
+                                <div class="col-md-6">
+                                    <div class="card card-outline card-secondary">
+                                        <div class="card-header">
+                                            <h6 class="card-title"><i class="fas fa-venus-mars"></i> Gender</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="form-group mb-0">
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="checkbox" name="gender" value="Male" id="gender_male">
+                                                    <label class="form-check-label" for="gender_male">Male</label>
+                                                </div>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="checkbox" name="gender" value="Female" id="gender_female">
+                                                    <label class="form-check-label" for="gender_female">Female</label>
+                                                </div>
+                                                <small class="text-muted d-block mt-2">Leave unchecked to include all genders</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Resuscitation Filter -->
+                                <div class="col-md-6">
+                                    <div class="card card-outline card-danger">
+                                        <div class="card-header">
+                                            <h6 class="card-title"><i class="fas fa-ambulance"></i> Resuscitation Status</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="form-group mb-0">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="resuscitation_status" value="yes" id="resus_yes">
+                                                    <label class="form-check-label" for="resus_yes">
+                                                        Resuscitated
+                                                    </label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="resuscitation_status" value="no" id="resus_no">
+                                                    <label class="form-check-label" for="resus_no">
+                                                        Not Resuscitated
+                                                    </label>
+                                                </div>
+                                                <small class="text-muted d-block mt-2">Leave unchecked to include all patients</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-success mt-3">
+                                <i class="fas fa-info-circle"></i> <strong>How filters work:</strong>
+                                <ul class="mb-0">
+                                    <li>All filters are applied together (AND logic)</li>
+                                    <li>Empty/unchecked filters are ignored</li>
+                                    <li>Filters apply to patient records and their assessments</li>
+                                    <li>Date range filters are always applied to record creation dates</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Anonymization -->
+                <div class="form-group">
+                    <label><i class="fas fa-user-secret"></i> Data Anonymization (Research Compliance)</label>
+                    <div class="card card-outline card-warning">
+                        <div class="card-body">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="anonymize_data" id="anonymize_data">
+                                <label class="form-check-label" for="anonymize_data">
+                                    <strong>Enable Data Anonymization</strong>
+                                    <small class="text-muted d-block">Remove/mask patient identifiers (names, BHT, NNC, etc.) for research ethics compliance</small>
+                                </label>
+                            </div>
+                            <div class="alert alert-warning mt-2 mb-0">
+                                <i class="fas fa-exclamation-triangle"></i> <strong>When enabled:</strong> Patient names, BHT numbers, NNC numbers, and other identifiers will be replaced with anonymous IDs (e.g., PATIENT_001, PATIENT_002)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Data Selection -->
                 <div class="form-group">
-                    <label>Data to Include</label>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="patients" id="patients" checked>
-                        <label class="form-check-label" for="patients">
-                            Patient Demographics
-                        </label>
+                    <label>Data to Include (Excel Research Export)</label>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card card-outline card-primary">
+                                <div class="card-header">
+                                    <h5 class="card-title">Demographics & Clinical</h5>
+                                    <div class="card-tools">
+                                        <button type="button" class="btn btn-tool btn-sm" onclick="togglePatientFields(true)">
+                                            <i class="fas fa-check-square"></i> All
+                                        </button>
+                                        <button type="button" class="btn btn-tool btn-sm" onclick="togglePatientFields(false)">
+                                            <i class="fas fa-square"></i> None
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="patients" id="patients" checked>
+                                        <label class="form-check-label" for="patients">
+                                            <strong>Patient Demographics</strong>
+                                            <small class="text-muted d-block">Complete patient records with birth data, maternal info, discharge details</small>
+                                        </label>
+                                    </div>
+                                    <div class="ml-4 mt-2" id="patient_field_selection" style="display: none;">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <small class="text-muted"><strong>Identifiers</strong></small>
+                                                <div class="form-check form-check-sm">
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="id" checked>
+                                                    <label class="form-check-label"><small>Patient ID</small></label>
+                                                </div>
+                                                <div class="form-check form-check-sm">
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="baby_name" checked>
+                                                    <label class="form-check-label"><small>Baby Name</small></label>
+                                                </div>
+                                                <div class="form-check form-check-sm">
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="mother_name" checked>
+                                                    <label class="form-check-label"><small>Mother Name</small></label>
+                                                </div>
+                                                <div class="form-check form-check-sm">
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="bht" checked>
+                                                    <label class="form-check-label"><small>BHT Number</small></label>
+                                                </div>
+                                                <div class="form-check form-check-sm">
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="nnc_no" checked>
+                                                    <label class="form-check-label"><small>NNC Number</small></label>
+                                                </div>
+                                                <div class="form-check form-check-sm">
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="ptc_no" checked>
+                                                    <label class="form-check-label"><small>PTC Number</small></label>
+                                                </div>
+                                                <div class="form-check form-check-sm">
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="pc_no" checked>
+                                                    <label class="form-check-label"><small>PC Number</small></label>
+                                                </div>
+                                                <div class="form-check form-check-sm">
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="pin" checked>
+                                                    <label class="form-check-label"><small>PIN</small></label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <small class="text-muted"><strong>Birth Data</strong></small>
+                                                <div class="form-check form-check-sm">
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="sex" checked>
+                                                    <label class="form-check-label"><small>Sex</small></label>
+                                                </div>
+                                                <div class="form-check form-check-sm">
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="dob_tob" checked>
+                                                    <label class="form-check-label"><small>Date/Time of Birth</small></label>
+                                                </div>
+                                                <div class="form-check form-check-sm">
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="pog_wks" checked>
+                                                    <label class="form-check-label"><small>POG (Weeks)</small></label>
+                                                </div>
+                                                <div class="form-check form-check-sm">
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="pog_days" checked>
+                                                    <label class="form-check-label"><small>POG (Days)</small></label>
+                                                </div>
+                                                <div class="form-check form-check-sm">
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="mode_of_delivery" checked>
+                                                    <label class="form-check-label"><small>Mode of Delivery</small></label>
+                                                </div>
+                                                <small class="text-muted mt-2"><strong>APGAR Scores</strong></small>
+                                                <div class="form-check form-check-sm">
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="apgar_1" checked>
+                                                    <label class="form-check-label"><small>APGAR 1 min</small></label>
+                                                </div>
+                                                <div class="form-check form-check-sm">
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="apgar_5" checked>
+                                                    <label class="form-check-label"><small>APGAR 5 min</small></label>
+                                                </div>
+                                                <div class="form-check form-check-sm">
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="apgar_10" checked>
+                                                    <label class="form-check-label"><small>APGAR 10 min</small></label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col-md-6">
+                                                <small class="text-muted"><strong>Clinical Data</strong></small>
+                                                <div class="form-check form-check-sm">
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="resuscitated" checked>
+                                                    <label class="form-check-label"><small>Resuscitated</small></label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <small class="text-muted"><strong>Metadata</strong></small>
+                                                <div class="form-check form-check-sm">
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="created_at" checked>
+                                                    <label class="form-check-label"><small>Created At</small></label>
+                                                </div>
+                                                <div class="form-check form-check-sm">
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="updated_at" checked>
+                                                    <label class="form-check-label"><small>Updated At</small></label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="toggleFieldSelection()">
+                                        <i class="fas fa-cog"></i> <span id="toggle_text">Show Field Selection</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card card-outline card-success">
+                                <div class="card-header">
+                                    <h5 class="card-title">Assessment Records</h5>
+                                    <div class="card-tools">
+                                        <button type="button" class="btn btn-tool btn-sm" onclick="toggleAssessmentFields(true)">
+                                            <i class="fas fa-check-square"></i> All
+                                        </button>
+                                        <button type="button" class="btn btn-tool btn-sm" onclick="toggleAssessmentFields(false)">
+                                            <i class="fas fa-square"></i> None
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-check">
+                                        <input class="form-check-input assessment-type" type="checkbox" name="gm_assessments" id="gm_assessments" checked>
+                                        <label class="form-check-label" for="gm_assessments">
+                                            <strong>GM Assessments</strong>
+                                            <small class="text-muted d-block">General Movement assessments and classifications</small>
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input assessment-type" type="checkbox" name="hine_assessments" id="hine_assessments" checked>
+                                        <label class="form-check-label" for="hine_assessments">
+                                            <strong>HINE Assessments</strong>
+                                            <small class="text-muted d-block">Hammersmith Infant Neurological Exam scores</small>
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input assessment-type" type="checkbox" name="developmental_assessments" id="developmental_assessments" checked>
+                                        <label class="form-check-label" for="developmental_assessments">
+                                            <strong>Developmental Assessments</strong>
+                                            <small class="text-muted d-block">Multi-domain developmental evaluation</small>
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input assessment-type" type="checkbox" name="cdic_records" id="cdic_records" checked>
+                                        <label class="form-check-label" for="cdic_records">
+                                            <strong>CDIC Records</strong>
+                                            <small class="text-muted d-block">Child Development Intervention Centre records</small>
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input assessment-type" type="checkbox" name="gpa_assessments" id="gpa_assessments" checked>
+                                        <label class="form-check-label" for="gpa_assessments">
+                                            <strong>GPA Assessments</strong>
+                                            <small class="text-muted d-block">General Paediatric assessments and treatment plans</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="gm_assessments" id="gm_assessments" checked>
-                        <label class="form-check-label" for="gm_assessments">
-                            GM Assessments
-                        </label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="hine_assessments" id="hine_assessments" checked>
-                        <label class="form-check-label" for="hine_assessments">
-                            HINE Assessments
-                        </label>
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i> <strong>Excel reports include:</strong>
+                        <ul class="mb-0">
+                            <li>Summary statistics with data quality metrics</li>
+                            <li>Customizable field selection for patient data</li>
+                            <li>All assessment types with complete field sets</li>
+                            <li>Optional data anonymization for research ethics compliance</li>
+                            <li>Optimized for research analysis and statistical software</li>
+                        </ul>
                     </div>
                 </div>
 
@@ -99,4 +489,109 @@
         </div>
     </div>
 </div>
+
+<script>
+// Toggle field selection visibility
+function toggleFieldSelection() {
+    const fieldSelection = document.getElementById('patient_field_selection');
+    const toggleText = document.getElementById('toggle_text');
+
+    if (fieldSelection.style.display === 'none') {
+        fieldSelection.style.display = 'block';
+        toggleText.textContent = 'Hide Field Selection';
+    } else {
+        fieldSelection.style.display = 'none';
+        toggleText.textContent = 'Show Field Selection';
+    }
+}
+
+// Toggle all patient fields
+function togglePatientFields(checked) {
+    const checkboxes = document.querySelectorAll('.patient-field');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = checked;
+    });
+}
+
+// Toggle all assessment type checkboxes
+function toggleAssessmentFields(checked) {
+    const checkboxes = document.querySelectorAll('.assessment-type');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = checked;
+    });
+}
+
+// Auto-expand field selection if "patients" checkbox is checked
+document.addEventListener('DOMContentLoaded', function() {
+    const patientsCheckbox = document.getElementById('patients');
+    const fieldSelection = document.getElementById('patient_field_selection');
+
+    patientsCheckbox.addEventListener('change', function() {
+        if (!this.checked && fieldSelection.style.display === 'block') {
+            toggleFieldSelection();
+        }
+    });
+
+    // APGAR filter validation
+    const apgarTimepoint = document.getElementById('apgar_timepoint');
+    const apgarMin = document.getElementById('apgar_min');
+    const apgarMax = document.getElementById('apgar_max');
+
+    [apgarMin, apgarMax].forEach(field => {
+        field.addEventListener('input', function() {
+            if (this.value && !apgarTimepoint.value) {
+                apgarTimepoint.style.borderColor = '#ffc107';
+                apgarTimepoint.title = 'Please select a timepoint when using APGAR score filters';
+            } else {
+                apgarTimepoint.style.borderColor = '';
+                apgarTimepoint.title = '';
+            }
+        });
+    });
+
+    // POG range validation
+    const pogMin = document.getElementById('pog_min');
+    const pogMax = document.getElementById('pog_max');
+
+    pogMin.addEventListener('change', function() {
+        if (pogMax.value && parseInt(this.value) > parseInt(pogMax.value)) {
+            this.setCustomValidity('Minimum cannot be greater than maximum');
+            this.reportValidity();
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+
+    pogMax.addEventListener('change', function() {
+        if (pogMin.value && parseInt(this.value) < parseInt(pogMin.value)) {
+            this.setCustomValidity('Maximum cannot be less than minimum');
+            this.reportValidity();
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+
+    // HINE score range validation
+    const hineMin = document.getElementById('hine_score_min');
+    const hineMax = document.getElementById('hine_score_max');
+
+    hineMin.addEventListener('change', function() {
+        if (hineMax.value && parseInt(this.value) > parseInt(hineMax.value)) {
+            this.setCustomValidity('Minimum cannot be greater than maximum');
+            this.reportValidity();
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+
+    hineMax.addEventListener('change', function() {
+        if (hineMin.value && parseInt(this.value) < parseInt(hineMin.value)) {
+            this.setCustomValidity('Maximum cannot be less than minimum');
+            this.reportValidity();
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+});
+</script>
 {% endblock %}

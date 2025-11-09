@@ -10,8 +10,9 @@ urlpatterns = [
     path('generate/', views.report_builder, name='generate'),
     path('history/', views.report_history, name='history'),
 
-    # Report download
+    # Report download and delete
     path('download/<str:file_id>/', views.download_report, name='download'),
+    path('delete/<str:file_id>/', views.delete_report, name='delete'),
 
     # Assessment PDF downloads
     path('pdf/gm/<int:assessment_id>/', views.download_gm_assessment_pdf, name='pdf-gm'),

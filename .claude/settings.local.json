@@ -27,7 +27,8 @@
       "Bash(type \"$TEMP\\delete_modal_id_usage.txt\")",
       "Bash(\"$TEMP\\delete_modal_id_usage.txt\" 2)",
       "Bash(del fix_delete_modal_tags.py)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(del:*)"
     ],
     "deny": [],
     "ask": []
