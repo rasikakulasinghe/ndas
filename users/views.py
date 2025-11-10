@@ -99,7 +99,7 @@ def loginPage(request):
                             days_until_lockout = (subscription.grace_period_end_date - date.today()).days
                             messages.warning(
                                 request,
-                                f'⚠️ The system subscription expired on {subscription.expiration_date}. '
+                                f'URGENT: The system subscription expired on {subscription.expiration_date}. '
                                 f'You have {days_until_lockout} days remaining in the grace period. '
                                 'Please contact support to renew the subscription.'
                             )

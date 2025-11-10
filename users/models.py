@@ -568,7 +568,7 @@ class Subscription(TimeStampedModel, UserTrackingMixin):
         max_length=10,
         choices=SUBSCRIPTION_TYPE_CHOICES,
         default='free',
-        help_text="Type of subscription (Free or Paid)",
+        help_text="Type of subscription (Free or Commercial)",
         verbose_name="Subscription Type",
     )
     

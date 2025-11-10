@@ -80,18 +80,16 @@ class SubscriptionCheckMiddleware(MiddlewareMixin):
         if any(request.path.startswith(url) for url in self.EXEMPT_URLS):
             return None
         
-        # Skip check for superusers and staff (administrative access)
-        if request.user.is_superuser or request.user.is_staff:
+        # Skip check ONLY for superusers (as per requirements)
+        # Staff users are subject to subscription like regular users
+        if request.user.is_superuser:
             return None
         
         try:
-            # Get user's subscription - will raise DoesNotExist if missing
-            # PERFORMANCE: No select_related needed, we already have request.user
+            # Get the global subscription that applies to all non-superuser users
+            # SECURITY: Use global subscription, not per-user subscriptions
             from users.models import Subscription
-            try:
-                subscription = Subscription.objects.get(user=request.user)
-            except Subscription.DoesNotExist:
-                raise ObjectDoesNotExist(f"No subscription found for user {request.user.username}")
+            subscription = Subscription.get_global_subscription()
 
             # PERFORMANCE: Only update status once per minute (avoid updating on every request)
             from django.core.cache import cache
@@ -144,40 +142,20 @@ class SubscriptionCheckMiddleware(MiddlewareMixin):
                 if not request.session.get(session_key, False):
                     messages.warning(
                         request,
-                        f'⚠️ URGENT: Your subscription expired on {subscription.expiration_date}. '
+                        f'URGENT: Your subscription expired on {subscription.expiration_date}. '
                         f'You have {days_until_lockout} days remaining before account lockout. '
                         'Please contact support immediately to renew your subscription.'
                     )
                     # Mark that we've shown the warning in this session
                     request.session[session_key] = True
-            
-        except ObjectDoesNotExist:
-            # SECURITY: If user has no subscription, deny access (fail closed)
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(
-                f"User {request.user.username} (ID: {request.user.id}) has no subscription record. Denying access."
-            )
-
-            # Store username before logout
-            username = request.user.username
-            request.session['expired_username'] = username
-
-            from django.contrib.auth import logout
-            logout(request)
-
-            messages.error(
-                request,
-                'No subscription found for your account. Please contact support.'
-            )
-            return redirect(reverse('subscription-info'))
         
         except Exception as e:
             # SECURITY: Log unexpected errors and deny access (fail closed)
+            # This should rarely happen since get_global_subscription() always creates if missing
             import logging
             logger = logging.getLogger(__name__)
             logger.error(
-                f"Subscription check error for user {request.user.username}: {type(e).__name__}: {str(e)}",
+                f"Unexpected subscription check error for user {request.user.username}: {type(e).__name__}: {str(e)}",
                 exc_info=True
             )
 

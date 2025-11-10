@@ -290,11 +290,11 @@
 
         <!-- Support -->
         <li
-          class="nav-item {% if 'help' in request.resolver_match.url_name or 'developer-contact' in request.resolver_match.url_name %}menu-open{% endif %}"
+          class="nav-item {% if 'help' in request.resolver_match.url_name or 'developer-contact' in request.resolver_match.url_name or 'subscription-info' in request.resolver_match.url_name or 'subscription-detail' in request.resolver_match.url_name %}menu-open{% endif %}"
         >
           <a
             href="#"
-            class="nav-link {% if 'help' in request.resolver_match.url_name or 'developer-contact' in request.resolver_match.url_name %}active{% endif %}"
+            class="nav-link {% if 'help' in request.resolver_match.url_name or 'developer-contact' in request.resolver_match.url_name or 'subscription-info' in request.resolver_match.url_name or 'subscription-detail' in request.resolver_match.url_name %}active{% endif %}"
           >
             <i class="nav-icon fas fa-life-ring"></i>
             <p>
@@ -310,6 +310,15 @@
               >
                 <i class="far fa-circle nav-icon"></i>
                 <p>Help Center</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                href="{% url 'subscription-detail' %}"
+                class="nav-link {% if request.resolver_match.url_name == 'subscription-detail' %}active{% endif %}"
+              >
+                <i class="far fa-circle nav-icon"></i>
+                <p>My Subscription</p>
               </a>
             </li>
             <li class="nav-item">

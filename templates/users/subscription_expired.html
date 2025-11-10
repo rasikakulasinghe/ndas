@@ -3,152 +3,156 @@
 
 {% block title %}Subscription Expired | NDAS{% endblock %}
 
-{% block main_content %}
-<div class="container-fluid">
+{% block extra_css %}
+<style>
+    body {
+        background-color: #f8f9fa;
+        min-height: 100vh;
+    }
+</style>
+{% endblock extra_css %}
+
+{% block mainbody %}
+<div class="container py-4">
     {% csrf_token %}
     
-    <!-- Page Header -->
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0">Subscription Information</h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
-                        <li class="breadcrumb-item active">Subscription Information</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Content -->
-    <section class="content">
-        <div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-7">
             
-            <!-- Expired Message -->
-            <div class="row">
-                <div class="col-12">
-                    <div class="callout callout-danger">
-                        <h5><i class="icon fas fa-ban"></i> Subscription Expired</h5>
-                        <p>Your subscription has expired and the grace period has ended. You no longer have access to the system.</p>
+            <!-- Warning Alert -->
+            <div class="alert alert-danger text-center mb-3" role="alert">
+                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                <h4 class="alert-heading mb-1">Subscription Expired</h4>
+                <p class="mb-0 small">Access to NDAS has been suspended</p>
+            </div>
+            
+            <!-- Main Card -->
+            <div class="card shadow-sm">
+                <div class="card-body p-3">
+                    
+                    <!-- Important Notice -->
+                    <div class="alert alert-warning mb-3">
+                        <h6 class="alert-heading mb-1">
+                            <i class="fas fa-info-circle mr-1"></i>Important Notice
+                        </h6>
+                        <hr class="my-2">
+                        <p class="mb-1 small"><strong>Your subscription has expired and the grace period has ended.</strong></p>
                         {% if expiration_date and grace_period_end_date %}
-                        <p>Your subscription expired on <strong>{{ expiration_date|date:"F d, Y" }}</strong> and the grace period ended on <strong>{{ grace_period_end_date|date:"F d, Y" }}</strong>.</p>
+                        <p class="mb-0 small">Subscription expired: <strong class="text-danger">{{ expiration_date|date:"F d, Y" }}</strong> | Grace period ended: <strong class="text-danger">{{ grace_period_end_date|date:"F d, Y" }}</strong></p>
                         {% else %}
-                        <p>Please contact support for subscription details.</p>
+                        <p class="mb-0 small">Please contact support for subscription details.</p>
                         {% endif %}
                     </div>
-                </div>
-            </div>
-
-            <!-- Information Card -->
-            <div class="row">
-                <div class="col-12 col-md-8 offset-md-2">
-                    <div class="card card-warning card-outline">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-info-circle"></i>
-                                What to Do Next
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <p><strong>To regain access to the NDAS system, please contact the system administrator to renew your subscription.</strong></p>
-                            
-                            <hr>
-                            
-                            <h5><i class="fas fa-envelope"></i> Contact Information</h5>
-                            
-                            {% if developer %}
-                            <dl class="row">
-                                <dt class="col-sm-4">Name:</dt>
+                    
+                    <!-- What to Do Section -->
+                    <div class="mb-3">
+                        <h6 class="border-bottom pb-2 mb-2">
+                            <i class="fas fa-question-circle text-primary mr-1"></i>What to Do Next
+                        </h6>
+                        <p class="text-muted small mb-0">To regain access to the NDAS system, please contact the system administrator to renew your subscription. Our support team is ready to assist you with the renewal process.</p>
+                    </div>
+                    
+                    <!-- Contact Information -->
+                    {% if developer %}
+                    <div class="mb-3">
+                        <h6 class="border-bottom pb-2 mb-2">
+                            <i class="fas fa-headset text-primary mr-1"></i>Contact Support
+                        </h6>
+                        <div class="bg-light p-3 rounded">
+                            <dl class="row mb-0 small">
+                                <dt class="col-sm-4 text-muted">Administrator:</dt>
                                 <dd class="col-sm-8">{{ developer.name }}</dd>
 
                                 {% if developer.email %}
-                                <dt class="col-sm-4">Email:</dt>
+                                <dt class="col-sm-4 text-muted">Email:</dt>
                                 <dd class="col-sm-8">
-                                    <a href="mailto:{{ developer.email }}">{{ developer.email }}</a>
+                                    <a href="mailto:{{ developer.email }}" class="text-decoration-none">
+                                        <i class="fas fa-envelope mr-1"></i>{{ developer.email }}
+                                    </a>
                                 </dd>
                                 {% endif %}
 
                                 {% if developer.mobile_phone %}
-                                <dt class="col-sm-4">Mobile Phone:</dt>
+                                <dt class="col-sm-4 text-muted">Mobile Phone:</dt>
                                 <dd class="col-sm-8">
-                                    <a href="tel:{{ developer.mobile_phone }}">{{ developer.mobile_phone }}</a>
+                                    <a href="tel:{{ developer.mobile_phone }}" class="text-decoration-none">
+                                        <i class="fas fa-phone mr-1"></i>{{ developer.mobile_phone }}
+                                    </a>
                                 </dd>
                                 {% endif %}
 
                                 {% if developer.landline_phone %}
-                                <dt class="col-sm-4">Landline:</dt>
+                                <dt class="col-sm-4 text-muted">Landline:</dt>
                                 <dd class="col-sm-8">
-                                    <a href="tel:{{ developer.landline_phone }}">{{ developer.landline_phone }}</a>
+                                    <a href="tel:{{ developer.landline_phone }}" class="text-decoration-none">
+                                        <i class="fas fa-phone-square mr-1"></i>{{ developer.landline_phone }}
+                                    </a>
                                 </dd>
                                 {% endif %}
 
                                 {% if developer.whatsapp_number %}
-                                <dt class="col-sm-4">WhatsApp:</dt>
+                                <dt class="col-sm-4 text-muted">WhatsApp:</dt>
                                 <dd class="col-sm-8">
-                                    <a href="https://wa.me/{{ developer.whatsapp_number }}" target="_blank">
-                                        {{ developer.whatsapp_number }}
+                                    <a href="https://wa.me/{{ developer.whatsapp_number }}" target="_blank" class="text-decoration-none">
+                                        <i class="fab fa-whatsapp mr-1"></i>{{ developer.whatsapp_number }}
                                     </a>
                                 </dd>
                                 {% endif %}
                             </dl>
-                            {% else %}
-                            <p>Please contact your system administrator for assistance.</p>
-                            {% endif %}
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Subscription Details -->
-            {% if subscription %}
-            <div class="row">
-                <div class="col-12 col-md-8 offset-md-2">
-                    <div class="card card-secondary card-outline">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-file-invoice"></i>
-                                Your Subscription Details
-                            </h3>
+                    {% else %}
+                    <div class="mb-3">
+                        <h6 class="border-bottom pb-2 mb-2">
+                            <i class="fas fa-headset text-primary mr-1"></i>Contact Support
+                        </h6>
+                        <div class="bg-light p-3 rounded">
+                            <p class="mb-0 small text-muted">Please contact your system administrator for assistance with subscription renewal.</p>
                         </div>
-                        <div class="card-body">
-                            <dl class="row">
-                                <dt class="col-sm-4">Subscription Type:</dt>
-                                <dd class="col-sm-8">{{ subscription.get_subscription_type_display }}</dd>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Subscription Details -->
+                    {% if subscription %}
+                    <div class="mb-3">
+                        <h6 class="border-bottom pb-2 mb-2">
+                            <i class="fas fa-file-contract text-primary mr-1"></i>Subscription Details
+                        </h6>
+                        <div class="border rounded p-3">
+                            <dl class="row mb-0 small">
+                                <dt class="col-sm-5 text-muted">Subscription Type:</dt>
+                                <dd class="col-sm-7">{{ subscription.get_subscription_type_display }}</dd>
 
-                                <dt class="col-sm-4">Status:</dt>
-                                <dd class="col-sm-8">
-                                    <span class="badge badge-danger">{{ subscription.get_status_display }}</span>
+                                <dt class="col-sm-5 text-muted">Status:</dt>
+                                <dd class="col-sm-7">
+                                    <span class="badge badge-danger badge-sm">
+                                        <i class="fas fa-times-circle mr-1"></i>{{ subscription.get_status_display }}
+                                    </span>
                                 </dd>
 
-                                <dt class="col-sm-4">Start Date:</dt>
-                                <dd class="col-sm-8">{{ subscription.start_date|date:"F d, Y" }}</dd>
+                                <dt class="col-sm-5 text-muted">Start Date:</dt>
+                                <dd class="col-sm-7">{{ subscription.start_date|date:"F d, Y" }}</dd>
 
-                                <dt class="col-sm-4">Expiration Date:</dt>
-                                <dd class="col-sm-8">{{ expiration_date|date:"F d, Y" }}</dd>
+                                <dt class="col-sm-5 text-muted">Expiration Date:</dt>
+                                <dd class="col-sm-7 text-danger font-weight-bold">{{ expiration_date|date:"F d, Y" }}</dd>
 
-                                <dt class="col-sm-4">Grace Period Ended:</dt>
-                                <dd class="col-sm-8">{{ grace_period_end_date|date:"F d, Y" }}</dd>
+                                <dt class="col-sm-5 text-muted">Grace Period Ended:</dt>
+                                <dd class="col-sm-7 text-danger font-weight-bold">{{ grace_period_end_date|date:"F d, Y" }}</dd>
                             </dl>
                         </div>
                     </div>
+                    {% endif %}
+                    
+                    <!-- Action Button -->
+                    <div class="text-center pt-2 border-top mt-3">
+                        <a href="{% url 'user-logout' %}" class="btn btn-danger btn-sm px-4">
+                            <i class="fas fa-sign-out-alt mr-1"></i>Logout
+                        </a>
+                    </div>
+                    
                 </div>
             </div>
-            {% endif %}
-
-            <!-- Action Buttons -->
-            <div class="row">
-                <div class="col-12 text-center">
-                    <a href="{% url 'user-logout' %}" class="btn btn-lg btn-danger">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </a>
-                </div>
-            </div>
-
         </div>
-    </section>
+    </div>
 </div>
-{% endblock %}
+{% endblock mainbody %}

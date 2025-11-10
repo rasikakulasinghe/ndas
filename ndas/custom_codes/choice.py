@@ -179,7 +179,7 @@ ALLOWED_EXTENSIONS = {
 # Subscription Type Choices
 SUBSCRIPTION_TYPE_CHOICES = [
     ('free', 'Free'),
-    ('paid', 'Paid'),
+    ('commercial', 'Commercial'),
 ]
 
 # Subscription Status Choices

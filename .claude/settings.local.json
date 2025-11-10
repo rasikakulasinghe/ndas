@@ -29,7 +29,8 @@
       "Bash(del fix_delete_modal_tags.py)",
       "Bash(pip install:*)",
       "Bash(del:*)",
-      "Bash(move \"templates\\users\\subscription_add.html\" \"templates\\users\\subscription_update.html\")"
+      "Bash(move \"templates\\users\\subscription_add.html\" \"templates\\users\\subscription_update.html\")",
+      "Bash(timeout 5 curl:*)"
     ],
     "deny": [],
     "ask": []
