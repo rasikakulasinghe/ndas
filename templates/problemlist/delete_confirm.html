@@ -1,0 +1,193 @@
+{% extends 'src/base.html' %}
+{% load static %}
+{% block title %}Delete Problem - {{ problem.name }} | NDAS{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid">
+  {% csrf_token %}
+
+  <!-- Breadcrumb -->
+  <div class="row">
+    <div class="col-12">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'view-patient' problem.patient.pk %}">{{ problem.patient.baby_name }}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'problem-manager' problem.patient.pk %}">Problem List</a></li>
+        <li class="breadcrumb-item active">Delete Confirmation</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Card -->
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card card-danger card-outline">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-exclamation-triangle"></i> Confirm Deletion
+          </h3>
+        </div>
+        <form method="POST" action="{% url 'problem-delete' problem.pk %}" id="deleteForm">
+          {% csrf_token %}
+          <div class="card-body">
+
+            <!-- Warning Alert -->
+            <div class="alert alert-danger">
+              <h5><i class="icon fas fa-ban"></i> Warning!</h5>
+              You are about to permanently delete this problem record. This action cannot be undone.
+            </div>
+
+            <!-- Entity Details -->
+            <div class="card mb-3">
+              <div class="card-header bg-light">
+                <h5 class="card-title mb-0">Problem Details</h5>
+              </div>
+              <div class="card-body">
+                {% for key, value in details.items %}
+                <div class="row mb-2">
+                  <div class="col-md-4">
+                    <strong>{{ key }}:</strong>
+                  </div>
+                  <div class="col-md-8">
+                    {{ value }}
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Warnings List -->
+            {% if warnings %}
+            <div class="card mb-3">
+              <div class="card-header bg-warning">
+                <h5 class="card-title mb-0">
+                  <i class="fas fa-exclamation-circle"></i> What will be deleted:
+                </h5>
+              </div>
+              <div class="card-body">
+                <ul class="mb-0">
+                  {% for warning in warnings %}
+                  <li>{{ warning }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Password Verification -->
+            <div class="card card-primary">
+              <div class="card-header">
+                <h5 class="card-title mb-0">
+                  <i class="fas fa-lock"></i> Password Verification Required
+                </h5>
+              </div>
+              <div class="card-body">
+                <p class="text-muted mb-3">
+                  To confirm this deletion, please enter your account password below:
+                </p>
+                <div class="form-group">
+                  <label for="password">Your Password <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text">
+                        <i class="fas fa-key"></i>
+                      </span>
+                    </div>
+                    <input
+                      type="password"
+                      class="form-control"
+                      id="password"
+                      name="password"
+                      placeholder="Enter your password"
+                      required
+                      autofocus>
+                  </div>
+                  <small class="form-text text-muted">
+                    This is the password you use to log into your NDAS account.
+                  </small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Confirmation Checkbox -->
+            <div class="form-group mt-3">
+              <div class="custom-control custom-checkbox">
+                <input
+                  type="checkbox"
+                  class="custom-control-input"
+                  id="confirmDelete"
+                  required>
+                <label class="custom-control-label" for="confirmDelete">
+                  I understand that this action is permanent and cannot be undone
+                </label>
+              </div>
+            </div>
+
+          </div>
+          <div class="card-footer">
+            <div class="row">
+              <div class="col-md-6">
+                <a href="{% url 'problem-manager' problem.patient.pk %}" class="btn btn-default btn-block">
+                  <i class="fas fa-times"></i> Cancel
+                </a>
+              </div>
+              <div class="col-md-6">
+                <button type="submit" class="btn btn-danger btn-block" id="deleteButton">
+                  <i class="fas fa-trash"></i> Delete Problem
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Additional JavaScript for form validation -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const deleteForm = document.getElementById('deleteForm');
+  const passwordInput = document.getElementById('password');
+  const confirmCheckbox = document.getElementById('confirmDelete');
+  const deleteButton = document.getElementById('deleteButton');
+
+  // Enable/disable delete button based on checkbox
+  confirmCheckbox.addEventListener('change', function() {
+    deleteButton.disabled = !this.checked;
+  });
+
+  // Initial state
+  deleteButton.disabled = !confirmCheckbox.checked;
+
+  // Form submission confirmation
+  deleteForm.addEventListener('submit', function(e) {
+    if (!passwordInput.value) {
+      e.preventDefault();
+      alert('Please enter your password to confirm deletion.');
+      passwordInput.focus();
+      return false;
+    }
+
+    if (!confirmCheckbox.checked) {
+      e.preventDefault();
+      alert('Please confirm that you understand this action is permanent.');
+      return false;
+    }
+
+    // Final confirmation
+    const confirmed = confirm(
+      'Are you absolutely sure you want to delete this problem?\n\n' +
+      'This will permanently delete:\n' +
+      '{% for warning in warnings %}- {{ warning }}\n{% endfor %}\n' +
+      'This action CANNOT be undone!'
+    );
+
+    if (!confirmed) {
+      e.preventDefault();
+      return false;
+    }
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,265 @@
+{% extends 'src/base.html' %}
+{% load static %}
+{% block title %}Problem Analysis | NDAS{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap4-theme@1.0.0/dist/select2-bootstrap4.min.css" rel="stylesheet" />
+{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid">
+  {% csrf_token %}
+
+  <!-- Breadcrumb -->
+  <div class="row">
+    <div class="col-12">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+        <li class="breadcrumb-item active">Problem Analysis</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-12">
+      <!-- Filter Card -->
+      <div class="card card-primary card-outline">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-filter"></i> Problem Analysis Filters</h3>
+          <div class="card-tools">
+            <span class="badge badge-info">Filter problems across all patients</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <form method="GET" action="{% url 'problem-analysis' %}" id="filter-form">
+            <div class="row">
+              <!-- Patient Selection with Select2 -->
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="patient-select">Patient</label>
+                  <select id="patient-select" name="patient" class="form-control select2">
+                    <option value="">-- All Patients --</option>
+                    {% for p in patients %}
+                    <option value="{{p.pk}}" {% if filters.patient_id == p.pk|stringformat:"s" %}selected{% endif %}>
+                      {{p.bht|default:"No BHT"}} - {{p.baby_name}} ({{p.mother_name}})
+                    </option>
+                    {% endfor %}
+                  </select>
+                  <small class="form-text text-muted">Search by BHT, baby name, or mother's name</small>
+                </div>
+              </div>
+
+              <!-- Status Filter (Multiple) -->
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label>Status</label>
+                  <select name="status" multiple class="form-control select2" data-placeholder="All Statuses">
+                    <option value="active" {% if 'active' in filters.status_filter %}selected{% endif %}>Active</option>
+                    <option value="chronic" {% if 'chronic' in filters.status_filter %}selected{% endif %}>Chronic</option>
+                    <option value="resolved" {% if 'resolved' in filters.status_filter %}selected{% endif %}>Resolved</option>
+                    <option value="inactive" {% if 'inactive' in filters.status_filter %}selected{% endif %}>Inactive</option>
+                  </select>
+                  <small class="form-text text-muted">Multiple selection allowed</small>
+                </div>
+              </div>
+
+              <!-- Severity Filter (Multiple) -->
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label>Severity</label>
+                  <select name="severity" multiple class="form-control select2" data-placeholder="All Severities">
+                    <option value="mild" {% if 'mild' in filters.severity_filter %}selected{% endif %}>Mild</option>
+                    <option value="moderate" {% if 'moderate' in filters.severity_filter %}selected{% endif %}>Moderate</option>
+                    <option value="severe" {% if 'severe' in filters.severity_filter %}selected{% endif %}>Severe</option>
+                    <option value="life_threatening" {% if 'life_threatening' in filters.severity_filter %}selected{% endif %}>Life Threatening</option>
+                  </select>
+                  <small class="form-text text-muted">Multiple selection allowed</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Date Range -->
+            <div class="row">
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label for="date_from">Date Identified From</label>
+                  <input type="date" name="date_from" id="date_from" class="form-control" value="{{filters.date_from}}">
+                  <small class="form-text text-muted">Start of date range</small>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label for="date_to">Date Identified To</label>
+                  <input type="date" name="date_to" id="date_to" class="form-control" value="{{filters.date_to}}">
+                  <small class="form-text text-muted">End of date range</small>
+                </div>
+              </div>
+              <div class="col-md-6 align-self-end">
+                <div class="form-group">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Apply Filters
+                  </button>
+                  <a href="{% url 'problem-analysis' %}" class="btn btn-default">
+                    <i class="fas fa-redo"></i> Clear
+                  </a>
+                  {% if count > 0 %}
+                  <a href="{% url 'problem-analysis-export' %}?{{request.GET.urlencode}}" class="btn btn-success">
+                    <i class="fas fa-file-excel"></i> Export to Excel
+                  </a>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Results Card -->
+      <div class="card card-info card-outline">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-list"></i> Analysis Results ({{count}} problems)</h3>
+        </div>
+        <div class="card-body">
+          {% if count > 0 %}
+          <div class="table-responsive">
+            <table class="table table-hover table-striped">
+              <thead>
+                <tr>
+                  <th>Patient</th>
+                  <th>Problem</th>
+                  <th>Status</th>
+                  <th>Severity</th>
+                  <th>Date Identified</th>
+                  <th>Date Resolved</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for problem in problems %}
+                <tr class="{% if problem.status in 'resolved,inactive' %}text-muted{% endif %}">
+                  <td>
+                    <strong>{{problem.patient.bht|default:"No BHT"}}</strong><br>
+                    <small>{{problem.patient.baby_name}}</small>
+                  </td>
+                  <td>
+                    <strong>{{problem.name}}</strong>
+                    {% if problem.description %}
+                    <br><small class="text-muted">{{problem.description|truncatewords:10}}</small>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="badge badge-{{problem.get_status_badge_class}}">
+                      {{problem.get_status_display}}
+                    </span>
+                  </td>
+                  <td>
+                    {% if problem.severity %}
+                    <span class="badge badge-{{problem.get_severity_badge_class}}">
+                      {{problem.get_severity_display}}
+                    </span>
+                    {% else %}
+                    <span class="text-muted">N/A</span>
+                    {% endif %}
+                  </td>
+                  <td>{{problem.date_identified|date:"Y-m-d"}}</td>
+                  <td>{{problem.date_resolved|date:"Y-m-d"|default:"--"}}</td>
+                  <td>
+                    <a href="{% url 'problem-view' problem.pk %}" class="btn btn-sm btn-info" title="View">
+                      <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="{% url 'view-patient' problem.patient.pk %}" class="btn btn-sm btn-secondary" title="View Patient">
+                      <i class="fas fa-user"></i>
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Summary Statistics -->
+          <div class="row mt-4">
+            <div class="col-md-12">
+              <div class="card bg-light">
+                <div class="card-header">
+                  <h3 class="card-title"><i class="fas fa-chart-pie"></i> Summary Statistics</h3>
+                </div>
+                <div class="card-body">
+                  <div class="row text-center">
+                    <div class="col-md-3">
+                      <div class="info-box bg-success">
+                        <span class="info-box-icon"><i class="fas fa-check-circle"></i></span>
+                        <div class="info-box-content">
+                          <span class="info-box-text">Active Problems</span>
+                          <span class="info-box-number">{{ stats.active|default:0 }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-3">
+                      <div class="info-box bg-info">
+                        <span class="info-box-icon"><i class="fas fa-stream"></i></span>
+                        <div class="info-box-content">
+                          <span class="info-box-text">Chronic Problems</span>
+                          <span class="info-box-number">{{ stats.chronic|default:0 }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-3">
+                      <div class="info-box bg-warning">
+                        <span class="info-box-icon"><i class="fas fa-times-circle"></i></span>
+                        <div class="info-box-content">
+                          <span class="info-box-text">Resolved Problems</span>
+                          <span class="info-box-number">{{ stats.resolved|default:0 }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-3">
+                      <div class="info-box bg-secondary">
+                        <span class="info-box-icon"><i class="fas fa-pause-circle"></i></span>
+                        <div class="info-box-content">
+                          <span class="info-box-text">Inactive Problems</span>
+                          <span class="info-box-number">{{ stats.inactive|default:0 }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% else %}
+          <div class="text-center text-muted py-5">
+            <i class="fas fa-inbox fa-4x mb-3"></i>
+            <h5>No Problems Found</h5>
+            <p>No problems found matching the selected filters.</p>
+            <p>Try adjusting your filter criteria or <a href="{% url 'problem-analysis' %}">clear all filters</a>.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Initialize Select2 for all select elements
+    $('.select2').select2({
+        theme: 'bootstrap4',
+        width: '100%'
+    });
+
+    // Patient select with search
+    $('#patient-select').select2({
+        theme: 'bootstrap4',
+        width: '100%',
+        placeholder: '-- All Patients --',
+        allowClear: true
+    });
+});
+</script>
+{% endblock %}

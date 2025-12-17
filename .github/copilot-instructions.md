@@ -19,12 +19,15 @@ class MyModel(TimeStampedModel, UserTrackingMixin):
 ### Centralized Configuration
 - **Choices**: All dropdown options in `ndas/custom_codes/choice.py` using Django TextChoices
 - **Validators**: Medical data validation in `ndas/custom_codes/validators.py`
-- **Utilities**: Shared functions in `ndas/custom_codes/custom_methods.py`
+- **Utilities**: Shared functions in `ndas/custom_codes/custom_methods.py` (includes `getCountZeroIfNone()`, `calculate_age_string()`, `extract_video_metadata()`)
+- **Enumerations**: Status and enums in `ndas/custom_codes/ndas_enums.py`
+- **Delete Helpers**: Entity deletion utilities in `ndas/custom_codes/delete_helpers.py` (permission checks, business rules, redirects)
 
 ### URL Structure
 - `""` (root) → `patients/` app (primary interface)
-- `users/` → Authentication, profiles, activity tracking
+- `users/` → Authentication, profiles, subscriptions, activity tracking
 - `video/` → Video file management and processing
+- `reports/` → Report generation (PDF and Excel exports with data anonymization)
 - `admin/` → Django admin with custom branding
 
 ## Key Models
@@ -150,6 +153,7 @@ def my_view(request):
 9. MessageMiddleware
 10. XFrameOptionsMiddleware
 11. UserAgentMiddleware
+12. SubscriptionCheckMiddleware (custom)
 
 ### Security Features
 - CSRF protection on all forms
@@ -213,12 +217,84 @@ file_field = models.FileField(
 - PTC (Perinatal Transport Card)
 - PC (Patient Card)
 - PIN (Patient Identification Number)
+- Disk No. (Disk Number)
 
 ### Medical Data Validation
 - Birth weights: 300g - 8000g
 - APGAR scores: 0-10 scale
-- Gestational age (POG): 20-44 weeks
+- Gestational age (POG): 20-44 weeks + 0-6 days
 - Date validations for medical timelines
+
+### Patient Model Field Reference (CRITICAL)
+
+**Common Field Errors - Always verify field names:**
+
+```python
+# Identifiers
+patient.bht              # NOT bht_number
+patient.nnc_no           # NOT nnc_number
+patient.ptc_no           # NOT ptc_number
+patient.pc_no            # NOT pc_number
+patient.pin              # NOT pin_number
+patient.disk_no          # NOT disk_number
+
+# Demographics
+patient.baby_name        # NOT patient_name or name
+patient.mother_name      # NOT mother
+patient.gender           # ✓ correct
+patient.dob_tob          # NOT date_of_birth or dob
+
+# Birth Data
+patient.pog_wks          # NOT gestational_age_weeks or pog_weeks
+patient.pog_days         # NOT gestational_age_days
+patient.mo_delivery      # NOT mode_of_delivery
+patient.birth_weight     # NOT birth_weight_g or weight
+patient.length           # ✓ correct
+patient.hc               # NOT head_circumference
+
+# APGAR Scores
+patient.apgar_1          # NOT apgar_1_min or apgar1
+patient.apgar_5          # NOT apgar_5_min or apgar5
+patient.apgar_10         # NOT apgar_10_min or apgar10
+```
+
+## Reports Module
+
+### PDF Generation (`reports/utils/pdf_generator.py`)
+- `BasePDFGenerator` - Base class with common styling, headers/footers
+- `PatientPDFGenerator` - Comprehensive patient reports
+- `GMAssessmentPDFGenerator`, `HINEAssessmentPDFGenerator`, `DAAssessmentPDFGenerator`, `CDICAssessmentPDFGenerator`, `GPAAssessmentPDFGenerator` - Assessment-specific reports
+
+### Excel Generation (`reports/utils/excel_generator.py`)
+- `ExcelReportGenerator` - Research data exports with:
+  - Customizable field selection
+  - Data anonymization (replaces patient identifiers with anonymous IDs)
+  - Advanced filtering (POG, APGAR, GM diagnosis, HINE score, gender, resuscitation status)
+  - Data quality metrics and summary statistics
+
+### Report Models (`reports/models.py`)
+- `ReportTemplate` - Configurable header/footer/logo templates
+- `ReportConfig` - System-wide report configuration settings
+
+## Delete Helpers Module
+
+### Entity Deletion (`ndas/custom_codes/delete_helpers.py`)
+```python
+from ndas.custom_codes.delete_helpers import (
+    has_delete_permission,    # Check user permission for deletion
+    validate_can_delete,      # Business rule validation
+    get_entity_display_name,  # Human-readable entity name
+    get_redirect_url,         # Post-deletion redirect
+    get_entity_warning_items, # Cascade deletion warnings
+    get_entity_detail_items,  # Entity details for modal
+)
+```
+
+**Deletion Rules:**
+- Superusers can delete any entity
+- Staff can delete their own records (based on `added_by`)
+- Videos cannot be deleted if referenced in assessments
+- Patients show warnings for cascade-deleted videos/assessments/attachments
 
 ## Development Anti-Patterns
 
@@ -233,6 +309,8 @@ file_field = models.FileField(
 - Upload files without validation
 - Bypass security middleware
 - Store sensitive config in code (use `.env`)
+- Use incorrect Patient model field names (verify above)
+- Delete entities without using delete_helpers for permission/business rule checks
 
 ## OpenSpec Integration
 

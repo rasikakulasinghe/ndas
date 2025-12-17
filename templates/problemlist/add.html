@@ -1,0 +1,300 @@
+{% extends 'src/base.html' %}
+{% load static %}
+{% block title %}Problem - Add New | NDAS{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Conditional field containers using AdminLTE callout component */
+  #date-resolved-container {
+    display: none;
+  }
+</style>
+{% endblock extra_css %}
+
+{% block main_content %}
+
+<div class="container-fluid">
+  {% csrf_token %}
+
+  <!-- Display Form Errors -->
+  {% include 'src/form_error.html' %}
+
+  <!-- Breadcrumb -->
+  <div class="row">
+    <div class="col-12">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'view-patient' patient.pk %}">{{ patient.baby_name }}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'problem-manager' patient.pk %}">Problem List</a></li>
+        <li class="breadcrumb-item active">Add Problem</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- Form Container -->
+  <div class="row justify-content-center">
+    <div class="col-12 col-xl-10">
+      <form action="{% url 'problem-add' patient.pk %}" method="POST" id="problem-form">
+        {% csrf_token %}
+
+        <div class="row">
+          <div class="col-12">
+            <div class="card card-outline card-primary">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <i class="fas fa-notes-medical mr-2"></i>
+                  Add New Problem for {{ patient.baby_name }}
+                </h3>
+                <div class="card-tools">
+                  <span class="badge badge-info">Required fields marked with *</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <!-- Left Column -->
+          <div class="col-lg-6">
+
+            <!-- Problem Identification -->
+            <div class="card card-primary card-outline">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <i class="fas fa-id-card"></i> Problem Identification
+                </h3>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label for="id_name">Problem Name <span class="text-danger">*</span></label>
+                  {{form.name}}
+                  {% if form.name.errors %}
+                    <div class="text-danger small">{{ form.name.errors.0 }}</div>
+                  {% endif %}
+                  <small class="form-text text-muted">Short clinical name (e.g., Bronchial Asthma, Developmental Delay)</small>
+                </div>
+
+                <div class="form-group">
+                  <label for="id_description">Clinical Description</label>
+                  {{form.description}}
+                  {% if form.description.errors %}
+                    <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                  {% endif %}
+                  <small class="form-text text-muted">Detailed clinical description of the problem</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Problem Status -->
+            <div class="card card-info card-outline">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <i class="fas fa-user"></i> Problem Status
+                </h3>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="id_status">Status <span class="text-danger">*</span></label>
+                      {{form.status}}
+                      {% if form.status.errors %}
+                        <div class="text-danger small">{{ form.status.errors.0 }}</div>
+                      {% endif %}
+                      <small class="form-text text-muted">Current status of the problem</small>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="id_severity">Severity</label>
+                      {{form.severity}}
+                      {% if form.severity.errors %}
+                        <div class="text-danger small">{{ form.severity.errors.0 }}</div>
+                      {% endif %}
+                      <small class="form-text text-muted">Clinical severity level</small>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="id_date_of_onset">Date of Onset</label>
+                      {{form.date_of_onset}}
+                      {% if form.date_of_onset.errors %}
+                        <div class="text-danger small">{{ form.date_of_onset.errors.0 }}</div>
+                      {% endif %}
+                      <small class="form-text text-muted">When problem first started</small>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="id_date_identified">Date Identified <span class="text-danger">*</span></label>
+                      {{form.date_identified}}
+                      {% if form.date_identified.errors %}
+                        <div class="text-danger small">{{ form.date_identified.errors.0 }}</div>
+                      {% endif %}
+                      <small class="form-text text-muted">When problem was documented</small>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Date Resolved - appears when status is 'resolved' -->
+                <div id="date-resolved-container">
+                  <div class="callout callout-success">
+                    <div class="form-group mb-0">
+                      <label for="id_date_resolved">Date Resolved</label>
+                      {{form.date_resolved}}
+                      {% if form.date_resolved.errors %}
+                        <div class="text-danger small">{{ form.date_resolved.errors.0 }}</div>
+                      {% endif %}
+                      <small class="form-text text-muted">Auto-populated when status is 'resolved'</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column -->
+          <div class="col-lg-6">
+
+            <!-- Clinical Management -->
+            <div class="card card-success card-outline">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <i class="fas fa-notes-medical"></i> Clinical Management
+                </h3>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label for="id_action_taken">Actions Taken</label>
+                  {{form.action_taken}}
+                  {% if form.action_taken.errors %}
+                    <div class="text-danger small">{{ form.action_taken.errors.0 }}</div>
+                  {% endif %}
+                  <small class="form-text text-muted">Treatment, investigations, referrals, etc.</small>
+                </div>
+
+                <div class="form-group">
+                  <label for="id_outcome">Outcome</label>
+                  {{form.outcome}}
+                  {% if form.outcome.errors %}
+                    <div class="text-danger small">{{ form.outcome.errors.0 }}</div>
+                  {% endif %}
+                  <small class="form-text text-muted">Response to treatment / current outcome</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Additional Information -->
+            <div class="card card-warning card-outline">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <i class="fas fa-stethoscope"></i> Additional Information
+                </h3>
+              </div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label for="id_comments">Comments</label>
+                  {{form.comments}}
+                  {% if form.comments.errors %}
+                    <div class="text-danger small">{{ form.comments.errors.0 }}</div>
+                  {% endif %}
+                  <small class="form-text text-muted">Additional clinical notes (optional)</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-footer">
+                <div class="row">
+                  <div class="col-sm-6">
+                    <button type="button" class="btn btn-default" onclick="window.history.back()">
+                      <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                  </div>
+                  <div class="col-sm-6 text-right">
+                    <button type="submit" class="btn btn-success" id="submit-btn">
+                      <i class="fas fa-save"></i> Add Problem
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// Cache for DOM elements - initialized once on page load
+let cachedElements = null;
+
+// Initialize element cache
+function initializeElementCache() {
+  return {
+    statusSelect: document.getElementById('id_status'),
+    dateResolvedContainer: document.getElementById('date-resolved-container'),
+    dateResolvedInput: document.getElementById('id_date_resolved'),
+    problemForm: document.getElementById('problem-form'),
+    submitBtn: document.getElementById('submit-btn'),
+    nameInput: document.getElementById('id_name')
+  };
+}
+
+// Update date resolved visibility based on status
+function updateDateResolvedVisibility() {
+  const { statusSelect, dateResolvedContainer, dateResolvedInput } = cachedElements;
+  if (!statusSelect) return;
+
+  const isResolved = statusSelect.value === 'resolved';
+  dateResolvedContainer.style.display = isResolved ? 'block' : 'none';
+
+  if (isResolved && !dateResolvedInput.value) {
+    // Auto-populate with today's date
+    const today = new Date().toISOString().split('T')[0];
+    dateResolvedInput.value = today;
+  }
+}
+
+// Disable submit button and show loading state
+function disableSubmitButton() {
+  const { submitBtn } = cachedElements;
+  if (!submitBtn) return;
+
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+}
+
+// Initialize all form functionality
+document.addEventListener('DOMContentLoaded', function() {
+  // Cache all DOM elements once
+  cachedElements = initializeElementCache();
+  const { statusSelect, problemForm, nameInput } = cachedElements;
+
+  // Initialize status change listener
+  if (statusSelect) {
+    statusSelect.addEventListener('change', updateDateResolvedVisibility);
+    updateDateResolvedVisibility(); // Set initial state
+  }
+
+  // Form submission handler
+  problemForm?.addEventListener('submit', function(e) {
+    disableSubmitButton();
+  });
+
+  // Set focus on first input
+  nameInput?.focus();
+});
+</script>
+
+{% endblock main_content %}

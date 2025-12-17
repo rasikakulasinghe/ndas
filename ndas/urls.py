@@ -12,6 +12,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("users/", include("users.urls")),
     path("reports/", include("reports.urls")),
+    path("problems/", include("problemlist.urls")),
     path("", include("patients.urls")),
     path("djrichtextfield/", include("djrichtextfield.urls")),
     path("video/", include("video.urls")),

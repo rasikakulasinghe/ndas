@@ -165,11 +165,17 @@ def get_redirect_url(entity_type: str) -> str:
         'GPARecord': '/manager/patient/',
         'Attachment': '/manager/patient/',
         'Bookmark': '/manager/patient/',
+        'Problem': lambda entity: f'/problems/manager/{entity.patient.pk}/',  # Redirect to patient's problem manager
         'CustomUser': '/users/admin/users/',
         'User': '/users/admin/users/',
     }
 
-    return redirect_map.get(entity_type, '/')
+    redirect_value = redirect_map.get(entity_type, '/')
+
+    # Handle callable redirects (like Problem)
+    # This is called from the view with entity available in closure
+    # For now, return the value as-is and handle callable in the view
+    return redirect_value
 
 
 def get_entity_warning_items(entity: Any) -> list:
@@ -195,6 +201,7 @@ def get_entity_warning_items(entity: Any) -> list:
         video_count = entity.videos.count() if hasattr(entity, 'videos') else 0
         assessment_count = entity.assessments.count() if hasattr(entity, 'assessments') else 0
         attachment_count = entity.attachments.count() if hasattr(entity, 'attachments') else 0
+        problem_count = entity.problem_list.count() if hasattr(entity, 'problem_list') else 0
 
         warnings.append("All patient data will be permanently deleted")
         if video_count > 0:
@@ -203,6 +210,8 @@ def get_entity_warning_items(entity: Any) -> list:
             warnings.append(f"{assessment_count} assessment record(s) will be deleted")
         if attachment_count > 0:
             warnings.append(f"{attachment_count} attachment(s) will be deleted")
+        if problem_count > 0:
+            warnings.append(f"{problem_count} problem record(s) will be deleted")
 
     elif entity_type == 'Video':
         warnings.append("Video file will be permanently deleted from storage")
@@ -218,6 +227,14 @@ def get_entity_warning_items(entity: Any) -> list:
 
     elif entity_type == 'Bookmark':
         warnings.append("Bookmark will be removed from your list")
+
+    elif entity_type == 'Problem':
+        # Count related problem actions
+        action_count = entity.actions.count() if hasattr(entity, 'actions') else 0
+        warnings.append("Problem record will be permanently deleted")
+        if action_count > 0:
+            warnings.append(f"{action_count} associated action log(s) will be deleted")
+        warnings.append("This will not delete the associated patient")
 
     elif entity_type == 'CustomUser' or entity_type == 'User':
         warnings.append("User account will be deactivated (soft delete)")
@@ -246,7 +263,7 @@ def get_entity_detail_items(entity: Any) -> Dict[str, str]:
 
     if entity_type == 'Patient':
         details['Name'] = entity.baby_name or 'Unknown'
-        details['BHT Number'] = entity.bht_number or 'N/A'
+        details['BHT Number'] = entity.bht or 'N/A'
         details['Gender'] = entity.get_gender_display() if hasattr(entity, 'get_gender_display') else entity.gender
 
     elif entity_type == 'Video':
@@ -269,6 +286,15 @@ def get_entity_detail_items(entity: Any) -> Dict[str, str]:
     elif entity_type == 'Bookmark':
         if hasattr(entity, 'patient'):
             details['Patient'] = str(entity.patient)
+
+    elif entity_type == 'Problem':
+        details['Problem'] = entity.name
+        if hasattr(entity, 'patient'):
+            details['Patient'] = str(entity.patient)
+        if hasattr(entity, 'status'):
+            details['Status'] = entity.get_status_display() if hasattr(entity, 'get_status_display') else entity.status
+        if hasattr(entity, 'date_identified'):
+            details['Date Identified'] = entity.date_identified.strftime('%Y-%m-%d')
 
     elif entity_type == 'CustomUser' or entity_type == 'User':
         details['Username'] = entity.username

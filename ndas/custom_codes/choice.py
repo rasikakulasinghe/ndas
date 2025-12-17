@@ -188,3 +188,16 @@ SUBSCRIPTION_STATUS_CHOICES = [
     ('expired', 'Expired'),
     ('grace_period', 'Grace Period'),
 ]
+
+# Problem List Choices
+class PROBLEM_STATUS(models.TextChoices):
+    ACTIVE = "active", "Active"
+    RESOLVED = "resolved", "Resolved"
+    CHRONIC = "chronic", "Chronic"
+    INACTIVE = "inactive", "Inactive"
+
+class SEVERITY_CHOICES(models.TextChoices):
+    MILD = "mild", "Mild"
+    MODERATE = "moderate", "Moderate"
+    SEVERE = "severe", "Severe"
+    LIFE_THREATENING = "life_threatening", "Life Threatening"

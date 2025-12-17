@@ -1,0 +1,136 @@
+{% extends 'src/base.html' %}
+{% load static %}
+{% block title %}Problem List - {{ patient.baby_name }} | NDAS{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid">
+  {% csrf_token %}
+
+  <!-- Breadcrumb -->
+  <div class="row">
+    <div class="col-12">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'view-patient' patient.pk %}">{{ patient.baby_name }}</a></li>
+        <li class="breadcrumb-item active">Problem List</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- Patient Info Card -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card card-outline card-info">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-user"></i> Patient Information
+          </h3>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4">
+              <strong>Baby Name:</strong> {{ patient.baby_name }}
+            </div>
+            <div class="col-md-4">
+              <strong>BHT:</strong> {{ patient.bht|default:"N/A" }}
+            </div>
+            <div class="col-md-4">
+              <strong>NNC:</strong> {{ patient.nnc_no|default:"N/A" }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <a href="{% url 'view-patient' patient.pk %}" class="btn btn-default">
+        <i class="fas fa-arrow-left"></i> Back to Patient
+      </a>
+      <a href="{% url 'problem-add' patient.pk %}" class="btn btn-success">
+        <i class="fas fa-plus-circle"></i> Add New Problem
+      </a>
+    </div>
+  </div>
+
+  <!-- Problems Table -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card card-primary card-outline">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-notes-medical"></i> Patient Problems ({{ count }})
+          </h3>
+        </div>
+        <div class="card-body">
+          {% if count > 0 %}
+          <div class="table-responsive">
+            <table class="table table-hover table-bordered">
+              <thead>
+                <tr>
+                  <th>Date Identified</th>
+                  <th>Problem</th>
+                  <th>Status</th>
+                  <th>Severity</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for problem in problems %}
+                <tr class="{% if problem.status in 'resolved,inactive' %}text-muted{% endif %}">
+                  <td>{{ problem.date_identified|date:"Y-m-d" }}</td>
+                  <td>
+                    <strong>{{ problem.name }}</strong>
+                    {% if problem.description %}
+                    <br><small class="text-muted">{{ problem.description|truncatewords:15 }}</small>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="badge badge-{{ problem.get_status_badge_class }}">
+                      {{ problem.get_status_display }}
+                    </span>
+                  </td>
+                  <td>
+                    {% if problem.severity %}
+                    <span class="badge badge-{{ problem.get_severity_badge_class }}">
+                      {{ problem.get_severity_display }}
+                    </span>
+                    {% else %}
+                    <span class="text-muted">N/A</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a href="{% url 'problem-view' problem.pk %}" class="btn btn-sm btn-info" title="View">
+                      <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="{% url 'problem-edit' problem.pk %}" class="btn btn-sm btn-warning" title="Edit">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="{% url 'problem-delete' problem.pk %}"
+                       class="btn btn-sm btn-danger"
+                       title="Delete">
+                      <i class="fas fa-trash"></i>
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="text-center text-muted py-4">
+            <i class="fas fa-inbox fa-3x mb-3"></i>
+            <p>No problems recorded for this patient.</p>
+            <a href="{% url 'problem-add' patient.pk %}" class="btn btn-primary">
+              <i class="fas fa-plus-circle"></i> Add First Problem
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

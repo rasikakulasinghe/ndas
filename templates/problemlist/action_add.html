@@ -1,0 +1,232 @@
+{% extends 'src/base.html' %}
+{% load static %}
+{% block title %}Add Action - {{ problem.name }} | NDAS{% endblock %}
+
+{% block main_content %}
+
+<div class="container-fluid">
+  {% csrf_token %}
+
+  <!-- Display Form Errors -->
+  {% include 'src/form_error.html' %}
+
+  <!-- Breadcrumb -->
+  <div class="row">
+    <div class="col-12">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'view-patient' problem.patient.pk %}">{{ problem.patient.baby_name }}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'problem-manager' problem.patient.pk %}">Problem List</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'problem-view' problem.pk %}">{{ problem.name }}</a></li>
+        <li class="breadcrumb-item active">Add Action</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- Form Container -->
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+      <form action="{% url 'problem-action-add' problem.pk %}" method="POST" id="action-form">
+        {% csrf_token %}
+
+        <!-- Header Card -->
+        <div class="card card-outline card-primary">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-clipboard-list mr-2"></i>
+              Add Action Log Entry
+            </h3>
+          </div>
+        </div>
+
+        <!-- Problem Context Card -->
+        <div class="card card-info card-outline">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-notes-medical"></i> Problem Context
+            </h3>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <p class="mb-1"><strong>Problem:</strong></p>
+                <p class="text-muted">{{ problem.name }}</p>
+              </div>
+              <div class="col-md-6">
+                <p class="mb-1"><strong>Patient:</strong></p>
+                <p class="text-muted">{{ problem.patient.baby_name }} ({{ problem.patient.bht|default:"No BHT" }})</p>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <p class="mb-1"><strong>Status:</strong></p>
+                <p>
+                  <span class="badge badge-{{ problem.get_status_badge_class }}">
+                    {{ problem.get_status_display }}
+                  </span>
+                </p>
+              </div>
+              <div class="col-md-6">
+                <p class="mb-1"><strong>Date Identified:</strong></p>
+                <p class="text-muted">{{ problem.date_identified|date:"Y-m-d" }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Entry Card -->
+        <div class="card card-success card-outline">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-pen"></i> Action Details
+            </h3>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label for="id_action">Action Description <span class="text-danger">*</span></label>
+              {{form.action}}
+              {% if form.action.errors %}
+                <div class="text-danger small">{{ form.action.errors.0 }}</div>
+              {% endif %}
+              <small class="form-text text-muted">
+                Describe the action taken, intervention performed, or observation made.
+                Include details such as medications prescribed, tests ordered, referrals made,
+                or clinical observations.
+              </small>
+            </div>
+
+            <div class="callout callout-info">
+              <h5><i class="icon fas fa-info"></i> Action Log Guidelines</h5>
+              <p class="mb-0">
+                This action will be recorded with a timestamp and your user information.
+                Be specific and include relevant clinical details. This audit trail helps
+                track the progression and management of the problem over time.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-footer">
+                <div class="row">
+                  <div class="col-sm-6">
+                    <a href="{% url 'problem-view' problem.pk %}" class="btn btn-default">
+                      <i class="fas fa-arrow-left"></i> Cancel
+                    </a>
+                  </div>
+                  <div class="col-sm-6 text-right">
+                    <button type="submit" class="btn btn-success" id="submit-btn">
+                      <i class="fas fa-save"></i> Add Action
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- Sidebar - Recent Actions -->
+    <div class="col-12 col-lg-4">
+      <div class="card card-warning card-outline">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-history"></i> Recent Actions
+          </h3>
+        </div>
+        <div class="card-body">
+          {% if recent_actions %}
+          <div class="timeline timeline-inverse">
+            {% for action in recent_actions %}
+            <div>
+              <i class="fas fa-clipboard-list bg-info"></i>
+              <div class="timeline-item">
+                <span class="time">
+                  <i class="fas fa-clock"></i> {{ action.date|date:"Y-m-d H:i" }}
+                </span>
+                <h3 class="timeline-header">
+                  {% if action.performed_by %}{{ action.performed_by.get_full_name|default:action.performed_by.username }}{% else %}N/A{% endif %}
+                </h3>
+                <div class="timeline-body">
+                  {{ action.action|truncatewords:20 }}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+            <div>
+              <i class="fas fa-check bg-gray"></i>
+            </div>
+          </div>
+          {% else %}
+          <div class="text-center text-muted py-3">
+            <i class="fas fa-inbox fa-2x mb-2"></i>
+            <p>No previous actions recorded.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Cache for DOM elements
+let cachedElements = null;
+
+// Initialize element cache
+function initializeElementCache() {
+  return {
+    actionForm: document.getElementById('action-form'),
+    submitBtn: document.getElementById('submit-btn'),
+    actionTextarea: document.getElementById('id_action')
+  };
+}
+
+// Disable submit button and show loading state
+function disableSubmitButton() {
+  const { submitBtn } = cachedElements;
+  if (!submitBtn) return;
+
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+}
+
+// Validate form before submission
+function validateForm() {
+  const { actionTextarea } = cachedElements;
+
+  if (!actionTextarea?.value.trim()) {
+    alert('Please enter an action description.');
+    actionTextarea.focus();
+    return false;
+  }
+
+  return true;
+}
+
+// Initialize all form functionality
+document.addEventListener('DOMContentLoaded', function() {
+  // Cache all DOM elements once
+  cachedElements = initializeElementCache();
+  const { actionForm, actionTextarea } = cachedElements;
+
+  // Form validation and submission
+  actionForm?.addEventListener('submit', function(e) {
+    if (!validateForm()) {
+      e.preventDefault();
+      return false;
+    }
+    disableSubmitButton();
+  });
+
+  // Set focus on textarea
+  actionTextarea?.focus();
+});
+</script>
+
+{% endblock main_content %}

@@ -30,7 +30,9 @@
       "Bash(pip install:*)",
       "Bash(del:*)",
       "Bash(move \"templates\\users\\subscription_add.html\" \"templates\\users\\subscription_update.html\")",
-      "Bash(timeout 5 curl:*)"
+      "Bash(timeout 5 curl:*)",
+      "Bash(ls:*)",
+      "Bash(timeout 5 python:*)"
     ],
     "deny": [],
     "ask": []

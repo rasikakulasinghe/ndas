@@ -42,6 +42,11 @@
               <i class="fas fa-diagnoses"></i> Latest Diagnosis
             </a>
           </li>
+          <li class="nav-item">
+            <a class="nav-link" id="problems-tab" data-toggle="pill" href="#problems-section" role="tab">
+              <i class="fas fa-notes-medical"></i> Problems
+            </a>
+          </li>
         </ul>
       </div>
       <div class="card-body">
@@ -277,6 +282,11 @@
                 <span class="badge badge-success p-2">DA: {{patient.getDiagnosisList.2}}</span>
               </div>
             </div>
+          </div>
+
+          <!-- Patient Problems -->
+          <div class="tab-pane fade" id="problems-section" role="tabpanel">
+            {% include 'problemlist/_problem_list_section.html' with patient=patient %}
           </div>
 
         </div>
@@ -818,6 +828,12 @@
           <div class="col-md-4 col-sm-6 mb-2">
             <a class="btn btn-primary btn-block" href="{% url 'gpa-add' patient.id %}">
               <i class="fas fa-notes-medical"></i> New GPA Record
+            </a>
+          </div>
+
+          <div class="col-md-4 col-sm-6 mb-2">
+            <a class="btn btn-success btn-block" href="{% url 'problem-add' patient.pk %}">
+              <i class="fas fa-plus-circle"></i> Add New Problem
             </a>
           </div>
 

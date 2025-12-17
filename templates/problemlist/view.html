@@ -1,0 +1,297 @@
+{% extends 'src/base.html' %}
+{% load static %}
+{% block title %}Problem - {{ problem.name }} | NDAS{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid">
+  {% csrf_token %}
+
+  <!-- Breadcrumb -->
+  <div class="row">
+    <div class="col-12">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'view-patient' problem.patient.pk %}">{{ problem.patient.baby_name }}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'problem-manager' problem.patient.pk %}">Problem List</a></li>
+        <li class="breadcrumb-item active">{{ problem.name }}</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <a href="{% url 'problem-manager' problem.patient.pk %}" class="btn btn-default">
+        <i class="fas fa-arrow-left"></i> Back to Problem List
+      </a>
+      <a href="{% url 'problem-edit' problem.pk %}" class="btn btn-warning">
+        <i class="fas fa-edit"></i> Edit
+      </a>
+      <a href="{% url 'problem-action-add' problem.pk %}" class="btn btn-primary">
+        <i class="fas fa-plus-circle"></i> Add Action
+      </a>
+      <a href="{% url 'problem-timeline' problem.pk %}" class="btn btn-info">
+        <i class="fas fa-history"></i> View Full Timeline
+      </a>
+      <a href="{% url 'problem-delete' problem.pk %}"
+         class="btn btn-danger">
+        <i class="fas fa-trash"></i> Delete
+      </a>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Left Column -->
+    <div class="col-lg-8">
+
+      <!-- Problem Details -->
+      <div class="card card-primary card-outline">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-notes-medical"></i> Problem Details
+          </h3>
+          <div class="card-tools">
+            <span class="badge badge-{{ problem.get_status_badge_class }}">
+              {{ problem.get_status_display }}
+            </span>
+            {% if problem.severity %}
+            <span class="badge badge-{{ problem.get_severity_badge_class }}">
+              {{ problem.get_severity_display }}
+            </span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <h4>{{ problem.name }}</h4>
+            </div>
+          </div>
+
+          {% if problem.description %}
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <h6 class="text-muted">Clinical Description:</h6>
+              <p class="text-justify">{{ problem.description|linebreaks }}</p>
+            </div>
+          </div>
+          {% endif %}
+
+          <div class="row">
+            <div class="col-md-4">
+              <p class="mb-1"><strong>Date of Onset:</strong></p>
+              <p class="text-muted">{{ problem.date_of_onset|date:"Y-m-d"|default:"Not specified" }}</p>
+            </div>
+            <div class="col-md-4">
+              <p class="mb-1"><strong>Date Identified:</strong></p>
+              <p class="text-muted">{{ problem.date_identified|date:"Y-m-d" }}</p>
+            </div>
+            <div class="col-md-4">
+              <p class="mb-1"><strong>Date Resolved:</strong></p>
+              <p class="text-muted">{{ problem.date_resolved|date:"Y-m-d"|default:"Not resolved" }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Clinical Management -->
+      {% if problem.action_taken or problem.outcome %}
+      <div class="card card-success card-outline">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-user-md"></i> Clinical Management
+          </h3>
+        </div>
+        <div class="card-body">
+          {% if problem.action_taken %}
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <h6 class="text-muted">Actions Taken:</h6>
+              <p class="text-justify">{{ problem.action_taken|linebreaks }}</p>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if problem.outcome %}
+          <div class="row">
+            <div class="col-md-12">
+              <h6 class="text-muted">Outcome:</h6>
+              <p class="text-justify">{{ problem.outcome|linebreaks }}</p>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Comments -->
+      {% if problem.comments %}
+      <div class="card card-warning card-outline">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-comment"></i> Additional Comments
+          </h3>
+        </div>
+        <div class="card-body">
+          <p class="text-justify">{{ problem.comments|linebreaks }}</p>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Action Timeline (Inline - Collapsible) -->
+      <div class="card card-info card-outline">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-stream"></i> Recent Actions ({{ action_count }})
+          </h3>
+          <div class="card-tools">
+            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+              <i class="fas fa-minus"></i>
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          {% if actions %}
+          <div class="timeline">
+            {% for action in actions %}
+            <div>
+              <i class="fas fa-clipboard-list bg-info"></i>
+              <div class="timeline-item">
+                <span class="time">
+                  <i class="fas fa-clock"></i> {{ action.date|date:"Y-m-d H:i" }}
+                </span>
+                <h3 class="timeline-header">
+                  {% if action.performed_by %}{{ action.performed_by.get_full_name|default:action.performed_by.username }}{% else %}N/A{% endif %}
+                </h3>
+                <div class="timeline-body">
+                  {{ action.action|linebreaks }}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+            <div>
+              <i class="fas fa-check bg-gray"></i>
+            </div>
+          </div>
+
+          {% if action_count > 5 %}
+          <div class="text-center mt-3">
+            <a href="{% url 'problem-timeline' problem.pk %}" class="btn btn-sm btn-info">
+              <i class="fas fa-external-link-alt"></i> View All {{ action_count }} Actions
+            </a>
+          </div>
+          {% endif %}
+          {% else %}
+          <div class="text-center text-muted py-3">
+            <i class="fas fa-inbox fa-2x mb-2"></i>
+            <p>No actions recorded for this problem yet.</p>
+            <a href="{% url 'problem-action-add' problem.pk %}" class="btn btn-sm btn-primary">
+              <i class="fas fa-plus-circle"></i> Add First Action
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column -->
+    <div class="col-lg-4">
+
+      <!-- Patient Information -->
+      <div class="card card-info card-outline">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-user"></i> Patient Information
+          </h3>
+        </div>
+        <div class="card-body">
+          <p class="mb-1"><strong>Baby Name:</strong></p>
+          <p class="text-muted">{{ problem.patient.baby_name }}</p>
+
+          <p class="mb-1"><strong>Mother's Name:</strong></p>
+          <p class="text-muted">{{ problem.patient.mother_name }}</p>
+
+          <p class="mb-1"><strong>BHT:</strong></p>
+          <p class="text-muted">{{ problem.patient.bht|default:"N/A" }}</p>
+
+          <p class="mb-1"><strong>NNC:</strong></p>
+          <p class="text-muted">{{ problem.patient.nnc_no|default:"N/A" }}</p>
+
+          <div class="text-center mt-3">
+            <a href="{% url 'view-patient' problem.patient.pk %}" class="btn btn-sm btn-block btn-primary">
+              <i class="fas fa-eye"></i> View Full Patient Record
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Record Information -->
+      <div class="card card-secondary card-outline">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-info-circle"></i> Record Information
+          </h3>
+        </div>
+        <div class="card-body">
+          <p class="mb-1"><strong>Added By:</strong></p>
+          <p class="text-muted">{% if problem.added_by %}{{ problem.added_by.get_full_name|default:problem.added_by.username }}{% else %}N/A{% endif %}</p>
+
+          <p class="mb-1"><strong>Created At:</strong></p>
+          <p class="text-muted">{{ problem.created_at|date:"Y-m-d H:i" }}</p>
+
+          <p class="mb-1"><strong>Last Edited By:</strong></p>
+          <p class="text-muted">{% if problem.last_edit_by %}{{ problem.last_edit_by.get_full_name|default:problem.last_edit_by.username }}{% else %}N/A{% endif %}</p>
+
+          <p class="mb-1"><strong>Last Updated:</strong></p>
+          <p class="text-muted">{{ problem.updated_at|date:"Y-m-d H:i" }}</p>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card card-light">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-bolt"></i> Quick Actions
+          </h3>
+        </div>
+        <div class="card-body">
+          {% if problem.status != 'resolved' %}
+          <form method="POST" action="{% url 'problem-status-change' problem.pk %}" class="mb-2">
+            {% csrf_token %}
+            <input type="hidden" name="status" value="resolved">
+            <button type="submit" class="btn btn-sm btn-success btn-block"
+                    onclick="return confirm('Mark this problem as resolved?');">
+              <i class="fas fa-check-circle"></i> Mark as Resolved
+            </button>
+          </form>
+          {% endif %}
+
+          {% if problem.status == 'active' %}
+          <form method="POST" action="{% url 'problem-status-change' problem.pk %}" class="mb-2">
+            {% csrf_token %}
+            <input type="hidden" name="status" value="chronic">
+            <button type="submit" class="btn btn-sm btn-info btn-block"
+                    onclick="return confirm('Mark this problem as chronic?');">
+              <i class="fas fa-stream"></i> Mark as Chronic
+            </button>
+          </form>
+          {% endif %}
+
+          {% if problem.status in 'resolved,inactive' %}
+          <form method="POST" action="{% url 'problem-status-change' problem.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="status" value="active">
+            <button type="submit" class="btn btn-sm btn-warning btn-block"
+                    onclick="return confirm('Reactivate this problem?');">
+              <i class="fas fa-redo"></i> Reactivate Problem
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

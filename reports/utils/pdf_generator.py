@@ -222,7 +222,7 @@ class PatientPDFGenerator(BasePDFGenerator):
 
         # Title
         story.append(Paragraph(
-            f"Patient Report: {patient.patient_name or 'N/A'}",
+            f"Patient Report: {patient.baby_name or 'N/A'}",
             self.styles['CustomTitle']
         ))
         story.append(Spacer(1, 0.2 * inch))
@@ -230,11 +230,11 @@ class PatientPDFGenerator(BasePDFGenerator):
         # Patient Demographics
         story.append(Paragraph("Patient Information", self.styles['CustomHeading']))
         demo_data = [
-            ['Patient Name:', patient.patient_name or 'N/A'],
+            ['Patient Name:', patient.baby_name or 'N/A'],
             ['Gender:', patient.gender or 'N/A'],
-            ['Date of Birth:', patient.date_of_birth.strftime('%Y-%m-%d') if patient.date_of_birth else 'N/A'],
-            ['BHT Number:', patient.bht_number or 'N/A'],
-            ['NNC Number:', patient.nnc_number or 'N/A'],
+            ['Date of Birth:', patient.dob_tob.strftime('%Y-%m-%d') if patient.dob_tob else 'N/A'],
+            ['BHT Number:', patient.bht or 'N/A'],
+            ['NNC Number:', patient.nnc_no or 'N/A'],
         ]
 
         demo_table = Table(demo_data, colWidths=[2.5 * inch, 3.5 * inch])
@@ -254,11 +254,11 @@ class PatientPDFGenerator(BasePDFGenerator):
         # Birth Data
         story.append(Paragraph("Birth Information", self.styles['CustomHeading']))
         birth_data = [
-            ['Gestational Age:', f"{patient.gestational_age_weeks} weeks {patient.gestational_age_days} days" if patient.gestational_age_weeks else 'N/A'],
-            ['Birth Weight:', f"{patient.birth_weight_g} g" if patient.birth_weight_g else 'N/A'],
-            ['APGAR 1 min:', str(patient.apgar_1_min) if patient.apgar_1_min is not None else 'N/A'],
-            ['APGAR 5 min:', str(patient.apgar_5_min) if patient.apgar_5_min is not None else 'N/A'],
-            ['Mode of Delivery:', patient.mode_of_delivery or 'N/A'],
+            ['Gestational Age:', f"{patient.pog_wks} weeks {patient.pog_days} days" if patient.pog_wks else 'N/A'],
+            ['Birth Weight:', f"{patient.birth_weight} g" if patient.birth_weight else 'N/A'],
+            ['APGAR 1 min:', str(patient.apgar_1) if patient.apgar_1 is not None else 'N/A'],
+            ['APGAR 5 min:', str(patient.apgar_5) if patient.apgar_5 is not None else 'N/A'],
+            ['Mode of Delivery:', patient.mo_delivery or 'N/A'],
         ]
 
         birth_table = Table(birth_data, colWidths=[2.5 * inch, 3.5 * inch])

@@ -76,6 +76,16 @@
           </a>
         </li>
 
+        <li class="nav-item">
+          <a
+            href="{% url 'problem-analysis' %}"
+            class="nav-link {% if request.resolver_match.url_name == 'problem-analysis' %}active{% endif %}"
+          >
+            <i class="nav-icon fas fa-file-medical"></i>
+            <p>Problem List Manager</p>
+          </a>
+        </li>
+
         <!-- Assessments -->
         <li
           class="nav-item {% if 'assessment' in request.resolver_match.url_name %}menu-open{% endif %}"
