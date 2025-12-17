@@ -1,22 +1,11 @@
 {% extends 'src/base.html' %}
 {% load static %}
+{% load delete_modal_tags %}
 {% block title %}Problem - {{ problem.name }} | NDAS{% endblock %}
 
 {% block main_content %}
 <div class="container-fluid">
   {% csrf_token %}
-
-  <!-- Breadcrumb -->
-  <div class="row">
-    <div class="col-12">
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'view-patient' problem.patient.pk %}">{{ problem.patient.baby_name }}</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'problem-manager' problem.patient.pk %}">Problem List</a></li>
-        <li class="breadcrumb-item active">{{ problem.name }}</li>
-      </ol>
-    </div>
-  </div>
 
   <!-- Action Buttons -->
   <div class="row mb-3">
@@ -32,11 +21,10 @@
       </a>
       <a href="{% url 'problem-timeline' problem.pk %}" class="btn btn-info">
         <i class="fas fa-history"></i> View Full Timeline
-      </a>
-      <a href="{% url 'problem-delete' problem.pk %}"
-         class="btn btn-danger">
+      </a>{% delete_modal_id 'Problem' problem.pk as problem_modal_id %}
+      <button type="button" class="btn btn-danger" onclick="DeleteConfirmation.show('{{ problem_modal_id }}')">
         <i class="fas fa-trash"></i> Delete
-      </a>
+      </button>
     </div>
   </div>
 
@@ -294,4 +282,7 @@
     </div>
   </div>
 </div>
+
+<!-- Delete Modal for Problem -->
+{% delete_modal problem %}
 {% endblock %}

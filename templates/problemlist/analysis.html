@@ -11,16 +11,6 @@
 <div class="container-fluid">
   {% csrf_token %}
 
-  <!-- Breadcrumb -->
-  <div class="row">
-    <div class="col-12">
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
-        <li class="breadcrumb-item active">Problem Analysis</li>
-      </ol>
-    </div>
-  </div>
-
   <div class="row justify-content-center">
     <div class="col-12">
       <!-- Filter Card -->
@@ -115,6 +105,55 @@
         </div>
       </div>
 
+      <!-- Summary Statistics Card -->
+      {% if count > 0 %}
+      <div class="card bg-light">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-chart-pie"></i> Summary Statistics</h3>
+        </div>
+        <div class="card-body">
+          <div class="row text-center">
+            <div class="col-md-3">
+              <div class="info-box bg-success">
+                <span class="info-box-icon"><i class="fas fa-check-circle"></i></span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Active Problems</span>
+                  <span class="info-box-number">{{ stats.active|default:0 }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="info-box bg-info">
+                <span class="info-box-icon"><i class="fas fa-stream"></i></span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Chronic Problems</span>
+                  <span class="info-box-number">{{ stats.chronic|default:0 }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="info-box bg-warning">
+                <span class="info-box-icon"><i class="fas fa-times-circle"></i></span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Resolved Problems</span>
+                  <span class="info-box-number">{{ stats.resolved|default:0 }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="info-box bg-secondary">
+                <span class="info-box-icon"><i class="fas fa-pause-circle"></i></span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Inactive Problems</span>
+                  <span class="info-box-number">{{ stats.inactive|default:0 }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
       <!-- Results Card -->
       <div class="card card-info card-outline">
         <div class="card-header">
@@ -176,57 +215,6 @@
                 {% endfor %}
               </tbody>
             </table>
-          </div>
-
-          <!-- Summary Statistics -->
-          <div class="row mt-4">
-            <div class="col-md-12">
-              <div class="card bg-light">
-                <div class="card-header">
-                  <h3 class="card-title"><i class="fas fa-chart-pie"></i> Summary Statistics</h3>
-                </div>
-                <div class="card-body">
-                  <div class="row text-center">
-                    <div class="col-md-3">
-                      <div class="info-box bg-success">
-                        <span class="info-box-icon"><i class="fas fa-check-circle"></i></span>
-                        <div class="info-box-content">
-                          <span class="info-box-text">Active Problems</span>
-                          <span class="info-box-number">{{ stats.active|default:0 }}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-md-3">
-                      <div class="info-box bg-info">
-                        <span class="info-box-icon"><i class="fas fa-stream"></i></span>
-                        <div class="info-box-content">
-                          <span class="info-box-text">Chronic Problems</span>
-                          <span class="info-box-number">{{ stats.chronic|default:0 }}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-md-3">
-                      <div class="info-box bg-warning">
-                        <span class="info-box-icon"><i class="fas fa-times-circle"></i></span>
-                        <div class="info-box-content">
-                          <span class="info-box-text">Resolved Problems</span>
-                          <span class="info-box-number">{{ stats.resolved|default:0 }}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-md-3">
-                      <div class="info-box bg-secondary">
-                        <span class="info-box-icon"><i class="fas fa-pause-circle"></i></span>
-                        <div class="info-box-content">
-                          <span class="info-box-text">Inactive Problems</span>
-                          <span class="info-box-number">{{ stats.inactive|default:0 }}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
           {% else %}
           <div class="text-center text-muted py-5">

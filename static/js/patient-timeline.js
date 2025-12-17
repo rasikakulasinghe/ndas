@@ -155,7 +155,20 @@
 
                 // Get preview data
                 const eventType = $btn.data('event-type');
-                const previewData = $btn.data('preview');
+                const previewDataRaw = $btn.data('preview');
+
+                // Parse JSON if it's a string
+                let previewData;
+                try {
+                    if (typeof previewDataRaw === 'string') {
+                        previewData = JSON.parse(previewDataRaw);
+                    } else {
+                        previewData = previewDataRaw;
+                    }
+                } catch (err) {
+                    console.error('Error parsing preview data:', err);
+                    previewData = {};
+                }
 
                 // Display preview
                 self.showPreview(eventType, previewData);

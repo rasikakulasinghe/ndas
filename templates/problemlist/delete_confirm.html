@@ -6,18 +6,6 @@
 <div class="container-fluid">
   {% csrf_token %}
 
-  <!-- Breadcrumb -->
-  <div class="row">
-    <div class="col-12">
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'view-patient' problem.patient.pk %}">{{ problem.patient.baby_name }}</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'problem-manager' problem.patient.pk %}">Problem List</a></li>
-        <li class="breadcrumb-item active">Delete Confirmation</li>
-      </ol>
-    </div>
-  </div>
-
   <!-- Delete Confirmation Card -->
   <div class="row justify-content-center">
     <div class="col-lg-8">

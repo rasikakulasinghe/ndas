@@ -98,11 +98,17 @@ def delete_modal(entity, modal_id=None):
         'GeneralPaediatricAssessment': f'/gpa/delete/{entity_id}/',
         'Attachment': f'/attachment/delete/{entity_id}/',
         'Bookmark': f'/bookmarks/delete/{entity_id}/',
+        'Problem': f'/problems/delete/{entity_id}/',
         'CustomUser': f'/users/admin/user/delete/{entity_id}/',
         'User': f'/users/admin/user/delete/{entity_id}/',
     }
 
     delete_url = url_map.get(entity_type, f'/{entity_type.lower()}/delete/{entity_id}/')
+
+    # Get patient_id for Problem entities
+    patient_id = None
+    if entity_type == 'Problem' and hasattr(entity, 'patient'):
+        patient_id = entity.patient.pk
 
     # Generate context using helper functions
     return {
@@ -110,7 +116,7 @@ def delete_modal(entity, modal_id=None):
         'entity_type': entity_type,
         'entity_name': get_entity_display_name(entity),
         'delete_url': delete_url,
-        'redirect_url': get_redirect_url(entity_type),
+        'redirect_url': get_redirect_url(entity_type, patient_id=patient_id),
         'warning_items': get_entity_warning_items(entity),
         'detail_items': get_entity_detail_items(entity),
     }

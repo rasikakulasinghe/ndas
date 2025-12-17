@@ -6,19 +6,6 @@
 <div class="container-fluid">
   {% csrf_token %}
 
-  <!-- Breadcrumb -->
-  <div class="row">
-    <div class="col-12">
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'view-patient' problem.patient.pk %}">{{ problem.patient.baby_name }}</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'problem-manager' problem.patient.pk %}">Problem List</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'problem-view' problem.pk %}">{{ problem.name }}</a></li>
-        <li class="breadcrumb-item active">Timeline</li>
-      </ol>
-    </div>
-  </div>
-
   <!-- Action Buttons -->
   <div class="row mb-3">
     <div class="col-12">

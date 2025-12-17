@@ -1,21 +1,11 @@
 {% extends 'src/base.html' %}
 {% load static %}
+{% load delete_modal_tags %}
 {% block title %}Problem List - {{ patient.baby_name }} | NDAS{% endblock %}
 
 {% block main_content %}
 <div class="container-fluid">
   {% csrf_token %}
-
-  <!-- Breadcrumb -->
-  <div class="row">
-    <div class="col-12">
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
-        <li class="breadcrumb-item"><a href="{% url 'view-patient' patient.pk %}">{{ patient.baby_name }}</a></li>
-        <li class="breadcrumb-item active">Problem List</li>
-      </ol>
-    </div>
-  </div>
 
   <!-- Patient Info Card -->
   <div class="row">
@@ -25,6 +15,14 @@
           <h3 class="card-title">
             <i class="fas fa-user"></i> Patient Information
           </h3>
+          <div class="card-tools">
+            <a href="{% url 'view-patient' patient.pk %}" class="btn btn-sm btn-default">
+              <i class="fas fa-arrow-left"></i> Back to Patient
+            </a>
+            <a href="{% url 'problem-add' patient.pk %}" class="btn btn-sm btn-success">
+              <i class="fas fa-plus-circle"></i> Add New Problem
+            </a>
+          </div>
         </div>
         <div class="card-body">
           <div class="row">
@@ -40,18 +38,6 @@
           </div>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Action Buttons -->
-  <div class="row mb-3">
-    <div class="col-12">
-      <a href="{% url 'view-patient' patient.pk %}" class="btn btn-default">
-        <i class="fas fa-arrow-left"></i> Back to Patient
-      </a>
-      <a href="{% url 'problem-add' patient.pk %}" class="btn btn-success">
-        <i class="fas fa-plus-circle"></i> Add New Problem
-      </a>
     </div>
   </div>
 
@@ -107,12 +93,11 @@
                     </a>
                     <a href="{% url 'problem-edit' problem.pk %}" class="btn btn-sm btn-warning" title="Edit">
                       <i class="fas fa-edit"></i>
-                    </a>
-                    <a href="{% url 'problem-delete' problem.pk %}"
-                       class="btn btn-sm btn-danger"
-                       title="Delete">
+                    </a>{% delete_modal_id 'Problem' problem.pk as problem_modal_id %}
+                    <button type="button" class="btn btn-sm btn-danger" title="Delete"
+                            onclick="DeleteConfirmation.show('{{ problem_modal_id }}')">
                       <i class="fas fa-trash"></i>
-                    </a>
+                    </button>
                   </td>
                 </tr>
                 {% endfor %}
@@ -133,4 +118,9 @@
     </div>
   </div>
 </div>
+
+<!-- Delete Modals for Problems -->
+{% for problem in problems %}
+{% delete_modal problem %}
+{% endfor %}
 {% endblock %}

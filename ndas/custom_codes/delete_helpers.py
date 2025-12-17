@@ -136,12 +136,13 @@ def get_entity_display_name(entity: Any) -> str:
     return f"ID: {entity.pk}"
 
 
-def get_redirect_url(entity_type: str) -> str:
+def get_redirect_url(entity_type: str, patient_id: int = None) -> str:
     """
     Get appropriate redirect URL after successful deletion.
 
     Args:
         entity_type: The class name of the deleted entity
+        patient_id: Optional patient ID for patient-specific entities (like Problem)
 
     Returns:
         str: URL path to redirect to (usually the manager/list page)
@@ -152,6 +153,7 @@ def get_redirect_url(entity_type: str) -> str:
         - Assessments → patient view (since they're patient-specific)
         - Attachments → patient view
         - Bookmarks → patient manager
+        - Problem → patient's problem manager (requires patient_id)
         - Users → user admin list
     """
     # Define redirect URL mapping
@@ -165,17 +167,15 @@ def get_redirect_url(entity_type: str) -> str:
         'GPARecord': '/manager/patient/',
         'Attachment': '/manager/patient/',
         'Bookmark': '/manager/patient/',
-        'Problem': lambda entity: f'/problems/manager/{entity.patient.pk}/',  # Redirect to patient's problem manager
         'CustomUser': '/users/admin/users/',
         'User': '/users/admin/users/',
     }
 
-    redirect_value = redirect_map.get(entity_type, '/')
+    # Handle Problem type with patient_id
+    if entity_type == 'Problem' and patient_id:
+        return f'/problems/manager/{patient_id}/'
 
-    # Handle callable redirects (like Problem)
-    # This is called from the view with entity available in closure
-    # For now, return the value as-is and handle callable in the view
-    return redirect_value
+    return redirect_map.get(entity_type, '/')
 
 
 def get_entity_warning_items(entity: Any) -> list:

@@ -18,6 +18,7 @@ from typing import Dict, List, Any, Optional
 from django.urls import reverse
 from django.utils import timezone
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -169,7 +170,7 @@ def get_patient_timeline_events(patient) -> List[Dict[str, Any]]:
                 'description': f"{patient.baby_name or 'Baby'} was born",
                 'detail_url': None,
                 'can_preview': False,
-                'preview_data': {}
+                'preview_data': json.dumps({})
             })
     except Exception as e:
         logger.error(f"Error creating birth event for patient {patient.id}: {str(e)}")
@@ -195,11 +196,12 @@ def get_patient_timeline_events(patient) -> List[Dict[str, Any]]:
                     'description': f"Video assessment - {diagnosis_text} by {gma.added_by.get_full_name() if gma.added_by else 'Unknown'}",
                     'detail_url': reverse('assessment-view', args=[gma.id]),
                     'can_preview': True,
-                    'preview_data': {
-                        'diagnosis_conclusion': diagnosis_text,
-                        'management_plan': gma.management_plan[:200] if gma.management_plan else 'No management plan recorded',
-                        'video': gma.video_file.title if gma.video_file else None
-                    }
+                    'preview_data': json.dumps({
+                        'assessor': gma.added_by.get_full_name() if gma.added_by else 'Unknown',
+                        'observation': gma.observation[:200] if gma.observation else 'No observation recorded',
+                        'diagnosis': diagnosis_text,
+                        'video': gma.video_file.title if gma.video_file else 'No video linked'
+                    })
                 })
     except Exception as e:
         logger.error(f"Error aggregating GM assessments for patient {patient.id}: {str(e)}")
@@ -223,10 +225,10 @@ def get_patient_timeline_events(patient) -> List[Dict[str, Any]]:
                     'description': f"Neurological assessment - Score: {total_score} by {hine.added_by.get_full_name() if hine.added_by else 'Unknown'}",
                     'detail_url': reverse('hine-assessment-view', args=[hine.id]),
                     'can_preview': True,
-                    'preview_data': {
+                    'preview_data': json.dumps({
                         'score': total_score,
                         'assessor': hine.added_by.get_full_name() if hine.added_by else 'Unknown'
-                    }
+                    })
                 })
     except Exception as e:
         logger.error(f"Error aggregating HINE assessments for patient {patient.id}: {str(e)}")
@@ -250,10 +252,10 @@ def get_patient_timeline_events(patient) -> List[Dict[str, Any]]:
                     'description': f"{is_normal} by {dev.added_by.get_full_name() if dev.added_by else 'Unknown'}",
                     'detail_url': reverse('da-assessment-view', args=[dev.id]),
                     'can_preview': True,
-                    'preview_data': {
+                    'preview_data': json.dumps({
                         'status': is_normal,
                         'assessor': dev.added_by.get_full_name() if dev.added_by else 'Unknown'
-                    }
+                    })
                 })
     except Exception as e:
         logger.error(f"Error aggregating developmental assessments for patient {patient.id}: {str(e)}")
@@ -279,9 +281,9 @@ def get_patient_timeline_events(patient) -> List[Dict[str, Any]]:
                     'description': f"Support assessment by {cdic.added_by.get_full_name() if cdic.added_by else 'Unknown'}",
                     'detail_url': reverse('cdic-assessment-view', args=[cdic.id]),
                     'can_preview': True,
-                    'preview_data': {
+                    'preview_data': json.dumps({
                         'assessor': cdic.added_by.get_full_name() if cdic.added_by else 'Unknown'
-                    }
+                    })
                 })
     except Exception as e:
         logger.error(f"Error aggregating CDIC records for patient {patient.id}: {str(e)}")
@@ -305,10 +307,10 @@ def get_patient_timeline_events(patient) -> List[Dict[str, Any]]:
                     'description': f"Medical assessment by {provider}",
                     'detail_url': reverse('gpa-view', args=[gpa.id]),
                     'can_preview': True,
-                    'preview_data': {
+                    'preview_data': json.dumps({
                         'provider': provider,
                         'added_by': gpa.added_by.get_full_name() if gpa.added_by else 'Unknown'
-                    }
+                    })
                 })
     except Exception as e:
         logger.error(f"Error aggregating GPA assessments for patient {patient.id}: {str(e)}")
@@ -331,7 +333,7 @@ def get_patient_timeline_events(patient) -> List[Dict[str, Any]]:
                     'description': f"Uploaded by {video.added_by.get_full_name() if video.added_by else 'Unknown'}",
                     'detail_url': reverse('video:view', args=[video.id]),
                     'can_preview': False,
-                    'preview_data': {}
+                    'preview_data': json.dumps({})
                 })
     except Exception as e:
         logger.error(f"Error aggregating videos for patient {patient.id}: {str(e)}")
@@ -361,10 +363,10 @@ def get_patient_timeline_events(patient) -> List[Dict[str, Any]]:
                     'description': f"{attachment.attachment.name.split('/')[-1] if attachment.attachment else 'Unknown file'} uploaded by {attachment.added_by.get_full_name() if attachment.added_by else 'Unknown'}",
                     'detail_url': reverse('attachment-view', args=[attachment.id]),
                     'can_preview': can_preview,
-                    'preview_data': {
+                    'preview_data': json.dumps({
                         'filename': attachment.attachment.name.split('/')[-1] if attachment.attachment else 'Unknown',
                         'type': attachment_type
-                    }
+                    })
                 })
     except Exception as e:
         logger.error(f"Error aggregating attachments for patient {patient.id}: {str(e)}")

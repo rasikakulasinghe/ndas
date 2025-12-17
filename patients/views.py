@@ -1,5 +1,5 @@
 from django.shortcuts import redirect, render, get_object_or_404
-from datetime import timedelta
+from datetime import timedelta, date
 from django.utils import timezone
 from django.urls import reverse
 import json
@@ -1654,9 +1654,6 @@ def bookmark_manager(request):
         
         # Apply date range filters
         if date_range:
-            from datetime import timedelta
-            from django.utils import timezone
-            
             now = timezone.now()
             if date_range == 'today':
                 start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -2597,12 +2594,9 @@ def cdic_assessment_manager(request):
             var_cdic_list = var_cdic_list.filter(
                 added_by__username__icontains=created_by
             )
-        
+
         # Apply date range filters
         if date_range:
-            from datetime import timedelta
-            from django.utils import timezone
-            
             now = timezone.now()
             if date_range == 'today':
                 start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -2619,12 +2613,11 @@ def cdic_assessment_manager(request):
             elif date_range == 'year':
                 start_date = now - timedelta(days=365)
                 var_cdic_list = var_cdic_list.filter(assessment_date__gte=start_date)
-        
+
         # Apply follow-up status filters
         if follow_up_status:
-            from datetime import date
             today = date.today()
-            
+
             if follow_up_status == 'pending':
                 var_cdic_list = var_cdic_list.filter(
                     next_appointment_date__isnull=False,
@@ -2639,11 +2632,10 @@ def cdic_assessment_manager(request):
                     next_appointment_date__isnull=False,
                     next_appointment_date__lt=today
                 )
-        
+
         # Calculate statistics
-        from datetime import date
         today = date.today()
-        
+
         cdic_stats = {
             'total': var_cdic_list.count(),
             'completed': var_cdic_list.filter(next_appointment_date__isnull=True).count(),
@@ -2701,11 +2693,8 @@ def cdic_assessment_manager_by_patients(request, pid):
             var_cdic_list = var_cdic_list.filter(
                 added_by__username__icontains=created_by
             )
-        
+
         if date_range:
-            from datetime import datetime, timedelta
-            from django.utils import timezone
-            
             now = timezone.now()
             if date_range == 'today':
                 start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -2722,9 +2711,8 @@ def cdic_assessment_manager_by_patients(request, pid):
             elif date_range == 'year':
                 start_date = now - timedelta(days=365)
                 var_cdic_list = var_cdic_list.filter(assessment_date__gte=start_date)
-        
+
         if follow_up_status:
-            from datetime import date
             today = date.today()
             
             if follow_up_status == 'pending':
@@ -2741,11 +2729,10 @@ def cdic_assessment_manager_by_patients(request, pid):
                     next_appointment_date__isnull=False,
                     next_appointment_date__lt=today
                 )
-        
+
         # Calculate statistics for this patient
-        from datetime import date
         today = date.today()
-        
+
         cdic_stats = {
             'total': var_cdic_list.count(),
             'completed': var_cdic_list.filter(next_appointment_date__isnull=True).count(),
@@ -3037,12 +3024,9 @@ def hine_assessment_manager(request):
                 var_hine_list = var_hine_list.filter(score__gte=40, score__lt=60)
             elif score_range == 'significant':
                 var_hine_list = var_hine_list.filter(score__lt=40)
-        
+
         # Apply date range filters
         if date_range:
-            from datetime import timedelta
-            from django.utils import timezone
-            
             now = timezone.now()
             if date_range == 'today':
                 start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -3118,11 +3102,8 @@ def hine_assessment_manager_by_patients(request, pid):
                 var_hine_list = var_hine_list.filter(score__gte=40, score__lt=60)
             elif score_range == 'significant':
                 var_hine_list = var_hine_list.filter(score__lt=40)
-        
+
         if date_range:
-            from datetime import datetime, timedelta
-            from django.utils import timezone
-            
             now = timezone.now()
             if date_range == 'today':
                 start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -3136,7 +3117,7 @@ def hine_assessment_manager_by_patients(request, pid):
             elif date_range == 'year':
                 start_date = now - timedelta(days=365)
                 var_hine_list = var_hine_list.filter(date_of_assessment__gte=start_date)
-        
+
         # Calculate statistics for this patient
         hine_stats = {
             'total': var_hine_list.count(),
