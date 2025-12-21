@@ -101,12 +101,20 @@ class Problem(TimeStampedModel, UserTrackingMixin):
         return badge_classes.get(self.severity, 'secondary')
 
 
-class ProblemAction(models.Model):
+class ProblemAction(TimeStampedModel, UserTrackingMixin):
     """
     Audit log for actions performed on patient problems.
 
     Separate from the Problem.action_taken summary field, this model provides
     timestamped action tracking for clinical audit trail.
+
+    Dual Tracking:
+    - date/performed_by: When/who performed the clinical action
+    - created_at/added_by: When/who created this database record
+    - updated_at/last_edit_by: When/who last modified this record
+
+    This separation supports retrospective data entry where the clinical
+    action date differs from the data entry date.
     """
     problem = models.ForeignKey(
         Problem,

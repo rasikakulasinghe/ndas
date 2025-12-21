@@ -28,13 +28,6 @@ class ReportTemplateAdmin(admin.ModelAdmin):
         }),
     )
 
-    def save_model(self, request, obj, form, change):
-        """Auto-populate user tracking fields"""
-        if not change:  # New object
-            obj.added_by = request.user
-        obj.last_edit_by = request.user
-        super().save_model(request, obj, form, change)
-
 
 @admin.register(ReportConfig)
 class ReportConfigAdmin(admin.ModelAdmin):
@@ -54,10 +47,3 @@ class ReportConfigAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
-
-    def save_model(self, request, obj, form, change):
-        """Auto-populate user tracking fields"""
-        if not change:  # New object
-            obj.added_by = request.user
-        obj.last_edit_by = request.user
-        super().save_model(request, obj, form, change)

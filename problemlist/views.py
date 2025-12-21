@@ -109,7 +109,7 @@ def problem_view(request, pk):
     """
     problem = get_object_or_404(Problem, pk=pk)
     patient = problem.patient
-    actions = problem.actions.all()[:10]  # Latest 10 actions for inline timeline
+    actions = problem.actions.select_related('performed_by', 'added_by', 'last_edit_by').all()[:10]  # Latest 10 actions for inline timeline
     action_count = getCountZeroIfNone(problem.actions.all())
 
     context = {
@@ -384,7 +384,7 @@ def problem_timeline(request, pk):
     """
     problem = get_object_or_404(Problem, pk=pk)
     patient = problem.patient
-    actions = problem.actions.all()  # Already ordered by -date
+    actions = problem.actions.select_related('performed_by', 'added_by', 'last_edit_by').all()  # Already ordered by -date
 
     context = {
         "problem": problem,

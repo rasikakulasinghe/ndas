@@ -84,6 +84,19 @@
                 <div class="timeline-body">
                   {{ action.action|linebreaks }}
                 </div>
+                {% if action.created_at or action.added_by %}
+                <div class="timeline-footer">
+                  <small class="text-muted">
+                    {% if action.created_at %}
+                      Record created: {{ action.created_at|date:"Y-m-d H:i" }}
+                      {% if action.added_by %}by {{ action.added_by.get_full_name|default:action.added_by.username }}{% endif %}
+                    {% endif %}
+                    {% if action.last_edit_by %}
+                      | Last edited: {{ action.updated_at|date:"Y-m-d H:i" }} by {{ action.last_edit_by.get_full_name|default:action.last_edit_by.username }}
+                    {% endif %}
+                  </small>
+                </div>
+                {% endif %}
               </div>
             </div>
             {% endfor %}

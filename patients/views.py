@@ -523,8 +523,6 @@ def patient_add(request):
             if not data_form.errors:
                 try:
                     var_pt_add = data_form.save(commit=False)
-                    var_pt_add.added_by = request.user
-                    var_pt_add.last_edit_by = None
                     var_pt_add.save()
 
                     # Save many-to-many relationships (including GMA indicators)
@@ -801,7 +799,6 @@ def patient_edit(request, pk):
             try:
                 # Save the form data
                 patient = data_form_modified.save(commit=False)
-                patient.last_edit_by = request.user
                 patient.save()
 
                 # Save many-to-many relationships
@@ -1064,8 +1061,7 @@ def assessment_add(request, ptid, fid):
                 assessment = assessment_form.save(commit=False)
                 assessment.patient = patient
                 assessment.video_file = video_file
-                assessment.added_by = request.user
-                
+
                 # Additional validation
                 if assessment.next_assessment_date and assessment.date_of_assessment:
                     if assessment.next_assessment_date <= assessment.date_of_assessment.date():
@@ -1730,7 +1726,6 @@ def bookmark_add(request, item_id, bookmark_type):
                         object_id=item_id,
                         description=description,
                         owner=request.user,
-                        added_by=request.user,
                     )
 
                     messages.success(request, "New bookmark created successfully.")
@@ -1920,7 +1915,6 @@ def bookmark_edit(request, pk):
         bm_form_data = BookmarkForm(request.POST, instance=selected_bm)
         if bm_form_data.is_valid():
             selected_bm = bm_form_data.save(commit=False)
-            selected_bm.last_edit_by = request.user
             selected_bm.save()
             messages.success(request, "Bookmark details are updated succesfully...")
             return redirect("bookmark-view", pk=selected_bm.id)
@@ -2312,9 +2306,7 @@ def attachment_edit(request, pk):
 
                     sa.attachment_type = getAttachmentType(attachment)
 
-                    sa.last_edit_by = request.user
-                    sa.last_edit_by = request.user
-                    sa.save(update_fields=["attachment_type", "last_edit_by"])
+                    sa.save(update_fields=["attachment_type"])
                     sa.save()
 
                     messages.success(
@@ -2490,7 +2482,6 @@ def cdic_assessment_add(request, pid):
             try:
                 cdic_record = cdic_assemnt_form_data.save(commit=False)
                 cdic_record.patient = selected_patient
-                cdic_record.added_by = request.user
                 cdic_record.save()
                 messages.success(request, "New CDIC record added successfully.")
                 return redirect("cdic-assessment-view", cdic_record.id)
@@ -2541,7 +2532,6 @@ def cdic_assessment_edit(request, aid):
         if cdicr_form_data.is_valid():
             cdicr = cdicr_form_data.save(commit=False)
 
-            cdicr.last_edit_by = request.user
             cdicr.save()
 
             messages.success(request, "CDIC record updated succesfully...")
@@ -2897,7 +2887,6 @@ def hine_assessment_add(request, pid):
             try:
                 hine_record = hine_form.save(commit=False)
                 hine_record.patient = sp
-                hine_record.added_by = request.user
                 hine_record.save()
                 messages.success(request, "New HINE assessment record created successfully.")
                 return redirect("hine-assessment-view", hine_record.id)
@@ -2947,7 +2936,6 @@ def hine_assessment_edit(request, hine_id):
         if hine_form.is_valid():
             hine_record = hine_form.save(commit=False)
             hine_record.patient = sp
-            hine_record.last_edit_by = request.user
             hine_record.save()
             messages.success(request, "HINE record updated successfully.")
             return redirect("hine-assessment-view", hine_record.id)
@@ -3274,7 +3262,6 @@ def da_assessment_add(request, pid):
             try:
                 da_record = da_form_data.save(commit=False)
                 da_record.patient = sp
-                da_record.added_by = request.user
                 da_record.save()
                 messages.success(
                     request, "New developmental assessment record created successfully."
@@ -3324,7 +3311,6 @@ def da_assessment_edit(request, da_id):
         assessment_form_data = DevelopmentalAssessmentForm(request.POST, instance=dar, patient=dar.patient)
         if assessment_form_data.is_valid():
             da_record = assessment_form_data.save(commit=False)
-            da_record.last_edit_by = request.user
             da_record.save()
             messages.success(
                 request, "Developmental assessment details are updated succesfully..."
