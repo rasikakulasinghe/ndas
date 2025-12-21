@@ -1,0 +1,210 @@
+[
+  {
+    "id": 1,
+    "title": "Symptomatic neonatal hypoglycemia",
+    "level": "High",
+    "description": "Symptomatic neonatal hypoglycemia",
+    "created_at": "2023-03-26T14:03:49.688000+00:00",
+    "updated_at": "2023-03-26T14:03:49.688000+00:00"
+  },
+  {
+    "id": 2,
+    "title": "Neonatal convulsions",
+    "level": "High",
+    "description": "Neonatal convulsions",
+    "created_at": "2023-03-26T14:10:17.490000+00:00",
+    "updated_at": "2023-03-26T14:10:17.490000+00:00"
+  },
+  {
+    "id": 3,
+    "title": "Eextreme prematurity (32 weeks or less)",
+    "level": "High",
+    "description": "32 weeks or less extreme prematurity (before 28 weeks and very preterm babies (28 - 32 weeks)",
+    "created_at": "2023-03-26T14:10:38.100000+00:00",
+    "updated_at": "2023-03-26T14:10:38.100000+00:00"
+  },
+  {
+    "id": 4,
+    "title": "Hypoxic ischemic encephalopathy (HIE) Grade 2 3",
+    "level": "High",
+    "description": "Hypoxic ischemic encephalopathy (HIE) Grade 2 3",
+    "created_at": "2023-04-16T12:34:07.350000+00:00",
+    "updated_at": "2023-04-16T12:34:07.350000+00:00"
+  },
+  {
+    "id": 6,
+    "title": "Post haemorrhagic ventricular dilatation/ hydrocephalus",
+    "level": "High",
+    "description": "Post haemorrhagic ventricular dilatation/ hydrocephalus",
+    "created_at": "2023-04-16T12:38:18.024000+00:00",
+    "updated_at": "2023-04-16T12:38:18.024000+00:00"
+  },
+  {
+    "id": 7,
+    "title": "Chronic lung disease",
+    "level": "High",
+    "description": "Chronic lung disease",
+    "created_at": "2023-04-16T12:38:34.743000+00:00",
+    "updated_at": "2023-04-16T12:38:34.743000+00:00"
+  },
+  {
+    "id": 8,
+    "title": "Neonatal stroke",
+    "level": "High",
+    "description": "Neonatal stroke",
+    "created_at": "2023-04-16T12:38:48.550000+00:00",
+    "updated_at": "2023-04-16T12:38:48.550000+00:00"
+  },
+  {
+    "id": 9,
+    "title": "Abnormal neurological examination",
+    "level": "High",
+    "description": "Abnormal neurological examination (ex: hypotonia/ hypertonia/ manifestations of neurocutaneous disorders/ hand preference etc)",
+    "created_at": "2023-04-16T12:39:56.908000+00:00",
+    "updated_at": "2023-04-16T12:39:56.908000+00:00"
+  },
+  {
+    "id": 10,
+    "title": "Severe neonatal hyperbilirubinemia requiring exchange transfusion",
+    "level": "High",
+    "description": "Severe neonatal hyperbilirubinemia requiring exchange transfusion",
+    "created_at": "2023-04-16T12:40:28.868000+00:00",
+    "updated_at": "2023-04-16T12:40:28.868000+00:00"
+  },
+  {
+    "id": 11,
+    "title": "Neonatal meningitis",
+    "level": "High",
+    "description": "Neonatal meningitis",
+    "created_at": "2023-04-16T12:40:42.191000+00:00",
+    "updated_at": "2023-04-16T12:40:42.191000+00:00"
+  },
+  {
+    "id": 12,
+    "title": "Structural central nervous system abnormalities",
+    "level": "High",
+    "description": "Structural central nervous system abnormalities (CNS abnormalities including spinal dysraphism)",
+    "created_at": "2023-04-16T12:41:13.334000+00:00",
+    "updated_at": "2023-04-16T12:41:13.334000+00:00"
+  },
+  {
+    "id": 13,
+    "title": "Congenital infections",
+    "level": "High",
+    "description": "Congenital infections (neonatal rubella, toxoplasmosis, cytomegalovirus, Zika, HIV, congenital syphilis etc)",
+    "created_at": "2023-04-16T12:41:35.178000+00:00",
+    "updated_at": "2023-04-16T12:41:35.178000+00:00"
+  },
+  {
+    "id": 14,
+    "title": "Neonatal septicemia",
+    "level": "High",
+    "description": "Neonatal septicemia",
+    "created_at": "2023-04-16T12:41:54.254000+00:00",
+    "updated_at": "2023-04-16T12:41:54.254000+00:00"
+  },
+  {
+    "id": 15,
+    "title": "Circulatory instability requiring NO support",
+    "level": "High",
+    "description": "Circulatory instability requiring NO support",
+    "created_at": "2023-04-16T12:42:12.414000+00:00",
+    "updated_at": "2023-04-16T12:42:12.414000+00:00"
+  },
+  {
+    "id": 16,
+    "title": "Invasive respiratory instability requiring NO support",
+    "level": "High",
+    "description": "Invasive respiratory instability requiring NO support",
+    "created_at": "2023-04-16T12:42:46.218000+00:00",
+    "updated_at": "2023-04-16T12:42:46.218000+00:00"
+  },
+  {
+    "id": 17,
+    "title": "Invasive respiratory support > 24 hours",
+    "level": "High",
+    "description": "Invasive respiratory support > 24 hours",
+    "created_at": "2023-04-16T12:43:09.878000+00:00",
+    "updated_at": "2023-04-16T12:43:09.878000+00:00"
+  },
+  {
+    "id": 18,
+    "title": "Late preterm > 32 weeks",
+    "level": "Medium",
+    "description": "Late preterm > 32 weeks",
+    "created_at": "2023-04-16T12:44:24.427000+00:00",
+    "updated_at": "2023-04-16T12:44:24.427000+00:00"
+  },
+  {
+    "id": 19,
+    "title": "Asymptomatic Hypoglycaemia",
+    "level": "Medium",
+    "description": "Asymptomatic Hypoglycaemia",
+    "created_at": "2023-04-16T12:44:53.232000+00:00",
+    "updated_at": "2023-04-16T12:44:53.232000+00:00"
+  },
+  {
+    "id": 20,
+    "title": "Dysmorphic newborn",
+    "level": "Medium",
+    "description": "Dysmorphic newborn",
+    "created_at": "2023-04-16T12:45:10.674000+00:00",
+    "updated_at": "2023-04-16T12:45:10.674000+00:00"
+  },
+  {
+    "id": 21,
+    "title": "Severe failure to thrive (birth weight < -3SD)",
+    "level": "Medium",
+    "description": "Severe failure to thrive (birth weight < -3SD)",
+    "created_at": "2023-04-16T12:45:28.388000+00:00",
+    "updated_at": "2023-04-16T12:45:28.388000+00:00"
+  },
+  {
+    "id": 22,
+    "title": "Birth trauma leading to neurological injury",
+    "level": "Medium",
+    "description": "Birth trauma leading to neurological injury",
+    "created_at": "2023-04-16T12:45:50.188000+00:00",
+    "updated_at": "2023-04-16T12:45:50.188000+00:00"
+  },
+  {
+    "id": 23,
+    "title": "Non-invessive respiratory support > 24 hours",
+    "level": "Medium",
+    "description": "Non-invessive respiratory support > 24 hours",
+    "created_at": "2023-04-16T12:46:14.215000+00:00",
+    "updated_at": "2023-04-16T12:46:14.215000+00:00"
+  },
+  {
+    "id": 24,
+    "title": "Hyperbilirubinemia",
+    "level": "Medium",
+    "description": "Hyperbilirubinemia",
+    "created_at": "2023-04-16T12:46:34.994000+00:00",
+    "updated_at": "2023-04-16T12:46:34.994000+00:00"
+  },
+  {
+    "id": 25,
+    "title": "Family history of developmental delay or disorder",
+    "level": "Medium",
+    "description": "Family history of developmental delay or disorder",
+    "created_at": "2023-04-16T12:47:02.393000+00:00",
+    "updated_at": "2023-04-16T12:47:02.393000+00:00"
+  },
+  {
+    "id": 26,
+    "title": "Hypoxic ischemic encephalopathy (HIE) Grade 1",
+    "level": "Medium",
+    "description": "Hypoxic ischemic encephalopathy (HIE) Grade 1",
+    "created_at": "2023-04-16T13:01:55.390000+00:00",
+    "updated_at": "2023-04-16T13:01:55.390000+00:00"
+  },
+  {
+    "id": 27,
+    "title": "Other",
+    "level": "Low",
+    "description": "Other",
+    "created_at": "2023-07-02T12:25:51.936000+00:00",
+    "updated_at": "2023-07-02T12:25:51.936000+00:00"
+  }
+]

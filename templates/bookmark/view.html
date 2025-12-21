@@ -1,195 +1,197 @@
 {% extends 'src/base.html' %}
 {% load static %}
 {% load delete_modal_tags %}
-{% block title %}Bookmark - View{% endblock %}
+{% block title %}Bookmark - View | NDAS{% endblock %}
+
 {% block main_content %}
 
-<div>
-  <div class="card">
-    <div class="card-header bg-info d-flex justify-content-between align-items-center">
-      <h3 class="card-title mb-0">
-        <i class="fas fa-bookmark mr-2"></i>Bookmark Details
-      </h3>
-    </div>
+<div class="container-fluid">
+  {% csrf_token %}
 
-    <div class="card-body">
-      <!-- Bookmark Information Section -->
-      <div class="info-section mb-4">
-        
-        <div class="form-group row">
-          <label class="col-sm-3 col-form-label font-weight-bold">Title:</label>
-          <div class="col-sm-9">
-            <span class="form-control-plaintext">{{bookmark.title}}</span>
-          </div>
-        </div>
+  <!-- Page Container -->
+  <div class="row justify-content-center">
+    <div class="col-12 col-xl-10">
 
-        <div class="form-group row">
-          <label class="col-sm-3 col-form-label font-weight-bold">Type:</label>
-          <div class="col-sm-9">
-            <span class="form-control-plaintext">
-              <span class="badge badge-primary mr-2">{{bookmark.bookmark_type}}</span>
-              {% if bookmark.bookmark_type  == 'Patient'%}
-                <a href="{% url 'view-patient' bookmark.object_id %}" target="_blank" 
-                   class="btn btn-sm btn-outline-primary" data-toggle="tooltip" data-placement="top" title="View Patient">
-                  <i class="fas fa-user mr-1"></i>View Patient
-                </a>
-              {% elif bookmark.bookmark_type  == 'Video' and bookmark.object_id %}
-                <a href="{% url 'video:view' bookmark.object_id %}" target="_blank" 
-                   class="btn btn-sm btn-outline-primary" data-toggle="tooltip" data-placement="top" title="View Video">
-                  <i class="fas fa-video mr-1"></i>View Video
-                </a>
-              {% elif bookmark.bookmark_type  == 'GMA' %}
-                <a href="{% url 'assessment-view' bookmark.object_id %}" target="_blank" 
-                   class="btn btn-sm btn-outline-primary" data-toggle="tooltip" data-placement="top" title="View General Movement Assessment">
-                  <i class="fas fa-stethoscope mr-1"></i>View GMA
-                </a>
-              {% elif bookmark.bookmark_type  == 'HINE' %}
-                <a href="{% url 'hine-assessment-view' bookmark.object_id %}" target="_blank" 
-                   class="btn btn-sm btn-outline-primary" data-toggle="tooltip" data-placement="top" title="View HINE Assessment">
-                  <i class="fas fa-brain mr-1"></i>View HINE
-                </a>
-              {% elif bookmark.bookmark_type  == 'Attachment' %}
-                <a href="{% url 'attachment-view' bookmark.object_id %}" target="_blank" 
-                   class="btn btn-sm btn-outline-primary" data-toggle="tooltip" data-placement="top" title="View Attachment">
-                  <i class="fas fa-paperclip mr-1"></i>View Attachment
-                </a>
-              {% elif bookmark.bookmark_type  == 'DA' %}
-                <a href="{% url 'da-assessment-view' bookmark.object_id %}" target="_blank" 
-                   class="btn btn-sm btn-outline-primary" data-toggle="tooltip" data-placement="top" title="View Developmental Assessment">
-                  <i class="fas fa-child mr-1"></i>View Dev. Assessment
-                </a>
-              {% elif bookmark.bookmark_type  == 'CDICR' %}
-                <a href="{% url 'cdic-assessment-view' bookmark.object_id %}" target="_blank" 
-                   class="btn btn-sm btn-outline-primary" data-toggle="tooltip" data-placement="top" title="View CDIC Record">
-                  <i class="fas fa-clipboard-list mr-1"></i>View CDIC Record
-                </a>
-              {% endif %}
-            </span>
-          </div>
-        </div>
-
-        {% if bookmark.description %}
-        <div class="form-group row">
-          <label class="col-sm-3 col-form-label font-weight-bold">Description:</label>
-          <div class="col-sm-9">
-            <div class="alert alert-light">
-              <i class="fas fa-comment mr-2"></i>{{bookmark.description}}
+      <!-- Page Header -->
+      <div class="row">
+        <div class="col-12">
+          <div class="card card-outline card-info">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-bookmark mr-2"></i>
+                Bookmark Details
+              </h3>
+              <div class="card-tools">
+                <span class="badge badge-info">View Mode</span>
+              </div>
             </div>
           </div>
         </div>
-        {% endif %}
+      </div>
 
-        <div class="form-group row">
-          <label class="col-sm-3 col-form-label font-weight-bold">Created By:</label>
-          <div class="col-sm-9">
-            <span class="form-control-plaintext">
-              <a href="{% url 'user-view-by-username' bookmark.owner.username %}" target="_blank" 
-                 class="text-decoration-none" data-toggle="tooltip" data-placement="top" title="View user profile">
-                <i class="fas fa-user mr-1"></i>{{bookmark.owner.username}}
-              </a>
-              <small class="text-muted ml-2">on {{bookmark.created_on|date:"F d, Y g:i A"}}</small>
-            </span>
+      <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+
+          <!-- Bookmark Information -->
+          <div class="card card-primary card-outline">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-info-circle"></i> Bookmark Information
+              </h3>
+            </div>
+            <div class="card-body">
+              <div class="form-group row">
+                <label class="col-sm-4 col-form-label font-weight-bold">Title:</label>
+                <div class="col-sm-8">
+                  <p class="form-control-plaintext">{{bookmark.title}}</p>
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label class="col-sm-4 col-form-label font-weight-bold">Type:</label>
+                <div class="col-sm-8">
+                  <span class="badge badge-primary">{{bookmark.bookmark_type}}</span>
+                </div>
+              </div>
+
+              {% if bookmark.description %}
+              <div class="form-group row">
+                <label class="col-sm-4 col-form-label font-weight-bold">Description:</label>
+                <div class="col-sm-8">
+                  <div class="callout callout-info">
+                    <i class="fas fa-comment mr-2"></i>{{bookmark.description}}
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+            </div>
           </div>
+
+          <!-- Linked Resource -->
+          <div class="card card-success card-outline">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-link"></i> Linked Resource
+              </h3>
+            </div>
+            <div class="card-body">
+              <div class="text-center py-3">
+                {% if bookmark.bookmark_type == 'Patient' %}
+                  <a href="{% url 'view-patient' bookmark.object_id %}" target="_blank"
+                     class="btn btn-outline-primary btn-lg" data-toggle="tooltip" data-placement="top" title="View Patient">
+                    <i class="fas fa-user mr-2"></i>View Patient Record
+                  </a>
+                {% elif bookmark.bookmark_type == 'Video' and bookmark.object_id %}
+                  <a href="{% url 'video:view' bookmark.object_id %}" target="_blank"
+                     class="btn btn-outline-primary btn-lg" data-toggle="tooltip" data-placement="top" title="View Video">
+                    <i class="fas fa-video mr-2"></i>View Video
+                  </a>
+                {% elif bookmark.bookmark_type == 'GMA' %}
+                  <a href="{% url 'assessment-view' bookmark.object_id %}" target="_blank"
+                     class="btn btn-outline-primary btn-lg" data-toggle="tooltip" data-placement="top" title="View General Movement Assessment">
+                    <i class="fas fa-stethoscope mr-2"></i>View GMA
+                  </a>
+                {% elif bookmark.bookmark_type == 'HINE' %}
+                  <a href="{% url 'hine-assessment-view' bookmark.object_id %}" target="_blank"
+                     class="btn btn-outline-primary btn-lg" data-toggle="tooltip" data-placement="top" title="View HINE Assessment">
+                    <i class="fas fa-brain mr-2"></i>View HINE Assessment
+                  </a>
+                {% elif bookmark.bookmark_type == 'Attachment' %}
+                  <a href="{% url 'attachment-view' bookmark.object_id %}" target="_blank"
+                     class="btn btn-outline-primary btn-lg" data-toggle="tooltip" data-placement="top" title="View Attachment">
+                    <i class="fas fa-paperclip mr-2"></i>View Attachment
+                  </a>
+                {% elif bookmark.bookmark_type == 'DA' %}
+                  <a href="{% url 'da-assessment-view' bookmark.object_id %}" target="_blank"
+                     class="btn btn-outline-primary btn-lg" data-toggle="tooltip" data-placement="top" title="View Developmental Assessment">
+                    <i class="fas fa-child mr-2"></i>View Dev. Assessment
+                  </a>
+                {% elif bookmark.bookmark_type == 'CDICR' %}
+                  <a href="{% url 'cdic-assessment-view' bookmark.object_id %}" target="_blank"
+                     class="btn btn-outline-primary btn-lg" data-toggle="tooltip" data-placement="top" title="View CDIC Record">
+                    <i class="fas fa-clipboard-list mr-2"></i>View CDIC Record
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
         </div>
 
-        {% if bookmark.last_edit_by %}
-        <div class="form-group row">
-          <label class="col-sm-3 col-form-label font-weight-bold">Last Modified:</label>
-          <div class="col-sm-9">
-            <span class="form-control-plaintext">
-              {{bookmark.last_edit_by.username}} 
-              <small class="text-muted">on {{bookmark.last_edit_on|date:"F d, Y g:i A"}}</small>
-            </span>
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+
+          <!-- Metadata Information -->
+          <div class="card card-secondary card-outline">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-clock"></i> Metadata
+              </h3>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="font-weight-bold">Created By:</label>
+                <p class="mb-0">
+                  <a href="{% url 'user-view-by-username' bookmark.owner.username %}" target="_blank"
+                     class="text-decoration-none" data-toggle="tooltip" data-placement="top" title="View user profile">
+                    <i class="fas fa-user mr-1"></i>{{bookmark.owner.username}}
+                  </a>
+                </p>
+                <small class="text-muted">{{bookmark.created_on|date:"F d, Y g:i A"}}</small>
+              </div>
+
+              {% if bookmark.last_edit_by %}
+              <div class="form-group mb-0">
+                <label class="font-weight-bold">Last Modified:</label>
+                <p class="mb-0">
+                  <i class="fas fa-user-edit mr-1"></i>{{bookmark.last_edit_by.username}}
+                </p>
+                <small class="text-muted">{{bookmark.last_edit_on|date:"F d, Y g:i A"}}</small>
+              </div>
+              {% endif %}
+            </div>
           </div>
+
         </div>
-        {% endif %}
-
-
       </div>
 
       <!-- Action Buttons -->
-      <div class="card-footer bg-light">
-        <div class="row">
-          <div class="col-md-6">
-            <div class="btn-group-vertical btn-group-sm w-100" role="group">
-              <a class="btn btn-outline-info mb-1" href="{% url 'bookmark-manager' %}">
-                <i class="fas fa-list mr-2"></i>All Bookmarks
-              </a>
-            </div>
-          </div>
-          <div class="col-md-6">{% delete_modal_id 'Bookmark' bookmark.id as modal_id %}
-            <div class="btn-group-vertical btn-group-sm w-100" role="group">
-              <a class="btn btn-outline-success mb-1" href="{% url 'bookmark-edit' bookmark.id %}">
-                <i class="fas fa-edit mr-2"></i>Edit Bookmark
-              </a>
-              <button type="button" class="btn btn-outline-danger mb-1" onclick="DeleteConfirmation.show('{{ modal_id }}')">
-                <i class="fas fa-trash mr-2"></i>Delete Bookmark
-              </button>
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-footer">
+              <div class="row">
+                <div class="col-sm-6">
+                  <a href="{% url 'bookmark-manager' %}" class="btn btn-default">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                  </a>
+                </div>
+                <div class="col-sm-6 text-right">
+                  {% delete_modal_id 'Bookmark' bookmark.id as modal_id %}
+                  <a href="{% url 'bookmark-edit' bookmark.id %}" class="btn btn-success">
+                    <i class="fas fa-edit"></i> Edit Bookmark
+                  </a>
+                  <button type="button" class="btn btn-danger" onclick="DeleteConfirmation.show('{{ modal_id }}')">
+                    <i class="fas fa-trash"></i> Delete
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
     </div>
   </div>
 </div>
-
-<style>
-.info-section {
-  background-color: #f8f9fa;
-  padding: 1.5rem;
-  border-radius: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.section-title {
-  color: #495057;
-  font-weight: 600;
-  margin-bottom: 1rem;
-}
-
-.form-control-plaintext {
-  padding: 0.375rem 0;
-  margin-bottom: 0;
-  line-height: 1.5;
-  background-color: transparent;
-  border: solid transparent;
-  border-width: 1px 0;
-}
-
-.btn-group-vertical .btn {
-  border-radius: 0.25rem !important;
-  margin-bottom: 0.25rem;
-}
-
-.card-footer {
-  border-top: 1px solid #dee2e6;
-  margin-top: 2rem;
-  padding: 1.5rem;
-}
-
-.badge {
-  font-size: 0.9em;
-}
-
-@media (max-width: 768px) {
-  .info-section {
-    padding: 1rem;
-  }
-  
-  .col-sm-3 {
-    margin-bottom: 0.5rem;
-  }
-  
-  .btn-group-vertical {
-    margin-bottom: 1rem;
-  }
-}
-</style>
 
 <script>
 $(document).ready(function(){
     $('[data-toggle="tooltip"]').tooltip();
 });
-</script>{% delete_modal bookmark %}
+</script>
+
+{% delete_modal bookmark %}
 
 {% endblock main_content %}

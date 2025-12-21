@@ -1911,7 +1911,7 @@ def bookmark_manager_user(request, username):
 @login_required(login_url="user-login")
 def bookmark_edit(request, pk):
     try:
-        selected_bm = Bookmark.objects.select_related('owner', 'patient', 'added_by', 'last_edit_by').get(id=pk)
+        selected_bm = Bookmark.objects.select_related('owner', 'added_by', 'last_edit_by').get(id=pk)
     except Bookmark.DoesNotExist:
         messages.error(request, "Bookmark not found.")
         return redirect("bookmark-manager-user", request.user.username)

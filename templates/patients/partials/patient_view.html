@@ -169,22 +169,6 @@
               <div class="col-md-6">
                 <table class="table table-sm">
                   <tr>
-                    <th width="40%">Date of Admission</th>
-                    <td>{{patient.do_admission|date:"M. j, Y, g:i a"|default:"Not specified"}}</td>
-                  </tr>
-                  <tr>
-                    <th>Date of Discharge</th>
-                    <td>{{patient.do_discharge|date:"M. j, Y, g:i a"|default:"Not discharged"}}</td>
-                  </tr>
-                  <tr>
-                    <th>Current Problems</th>
-                    <td>{{patient.problems|default:"No specific problems noted"}}</td>
-                  </tr>
-                </table>
-              </div>
-              <div class="col-md-6">
-                <table class="table table-sm">
-                  <tr>
                     <th width="40%">Antenatal History</th>
                     <td>{{patient.antenatal_hx|default:"No antenatal complications noted"}}</td>
                   </tr>
@@ -198,12 +182,10 @@
                   </tr>
                 </table>
               </div>
-            </div>
-            <div class="row">
-              <div class="col-12">
+              <div class="col-md-6">
                 <table class="table table-sm">
                   <tr>
-                    <th width="20%">Other Relevant Details</th>
+                    <th width="40%">Other Relevant Details</th>
                     <td>{{patient.other_relavent_details|default:"No additional details noted"}}</td>
                   </tr>
                 </table>

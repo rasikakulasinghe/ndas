@@ -454,14 +454,6 @@
               </div>
               <div class="card-body">
                 <div class="form-group">
-                  <label for="id_problems">Current Problems</label>
-                  {{form.problems}}
-                  {% if form.problems.errors %}
-                    <div class="text-danger small">{{ form.problems.errors.0 }}</div>
-                  {% endif %}
-                </div>
-
-                <div class="form-group">
                   <label>Indications for GMA</label>
                   <div class="border rounded p-3">
                     {{form.indecation_for_gma}}

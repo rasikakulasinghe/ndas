@@ -148,7 +148,6 @@ class PatientForm(UniqueFieldValidationMixin, forms.ModelForm):
             "tp_lan",
             "moh_area",
             "phm_area",
-            "problems",
             "indecation_for_gma",
             "indecation_for_gma_other",
             "antenatal_hx",
@@ -300,13 +299,6 @@ class PatientForm(UniqueFieldValidationMixin, forms.ModelForm):
                     "class": "form-control",
                     "placeholder": "Public Health Midwife area",
                     "maxlength": "255",
-                }
-            ),
-            "problems": forms.Textarea(
-                attrs={
-                    "class": "form-control",
-                    "rows": "3",
-                    "placeholder": "Current medical problems or concerns",
                 }
             ),
             "indecation_for_gma": forms.CheckboxSelectMultiple(attrs={"class": ""}),
