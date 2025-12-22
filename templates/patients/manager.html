@@ -342,15 +342,14 @@ Manager{% endblock title%}
                 </td>
 
                 <td class="align-middle py-3 px-3 text-center">
-                  <button
-                    type="button"
+                  <a
+                    href="{% url 'view-patient' Patient.id %}"
                     class="btn btn-link p-0 text-primary mr-1"
                     data-toggle="tooltip"
                     title="View Patient"
-                    onclick="window.location.href=&quot;{% url 'view-patient' Patient.id %}&quot;"
                   >
                     <i class="fas fa-eye" style="font-size: 1.1rem"></i>
-                  </button>
+                  </a>
                 </td>
               </tr>
               {% endfor %}
