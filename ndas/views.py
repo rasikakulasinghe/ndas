@@ -17,6 +17,14 @@ def handler500(request):
     return render(request, '500.html', status=500)
 
 
+def handler_rate_limited(request, exception=None):
+    """
+    Custom rate limit error handler
+    Shows user-friendly message when rate limit is exceeded
+    """
+    return render(request, 'errors/rate_limited.html', status=429)
+
+
 @login_required(login_url="user-login")
 def debug_bootstrap(request):
     """

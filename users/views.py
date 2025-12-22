@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from users.models import CustomUser, UserActivityLog, UserSession
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import views as auth_views
 from ndas.custom_codes.custom_methods import getCurrentDateTime, getFullDeviceDetails
 from django.contrib import messages
 from django.shortcuts import redirect, render, get_object_or_404
@@ -9,14 +10,16 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_POST, require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.core.paginator import Paginator
 from django.db.models import Q
 from datetime import date
+from django_ratelimit.decorators import ratelimit
 from .forms import CustomUserRegistrationForm, UserPasswordChange, CustomUserEditForm, SubscriptionForm
 from .models import DeveloperContacts, Subscription
 from .utils import (
-    log_user_activity, 
-    create_or_update_user_session, 
+    log_user_activity,
+    create_or_update_user_session,
     log_logout_activity,
     send_email_verification,
     check_email_verification_required,
@@ -26,6 +29,8 @@ from .utils import (
 import os
 
 # Create your views here.
+@ratelimit(key='ip', rate='5/m', method='POST', block=True)
+@ratelimit(key='post:username', rate='3/m', method='POST', block=True)
 def loginPage(request):
     logged_user = request.user
 
@@ -46,156 +51,142 @@ def loginPage(request):
         if not username:
             messages.error(request, 'Username is required.')
             return render(request, 'users/login.html', {'logged_user': logged_user, 'developer': developer})
-        
+
         if not password:
             messages.error(request, 'Password is required.')
             return render(request, 'users/login.html', {'logged_user': logged_user, 'developer': developer})
-        
-        if CustomUser.objects.filter(username=username).exists():
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                # Check if email verification is required
-                if check_email_verification_required(user):
-                    messages.warning(request, 'Please verify your email address before logging in.')
-                    return render(request, 'users/login.html', {
-                        'logged_user': logged_user,
-                        'developer': developer,
-                        'show_resend_verification': True,
-                        'unverified_user_email': user.email
-                    })
-                
-                # CRITICAL: Check subscription status BEFORE allowing login
-                # Skip for superusers only (staff are subject to subscription)
-                if not user.is_superuser:
-                    try:
-                        # Get the global subscription
-                        subscription = Subscription.get_global_subscription()
-                        # Update status to ensure it's current
-                        subscription.update_status()
 
-                        # SECURITY FIX: Block login ONLY if fully expired (past grace period)
-                        # Allow login during grace period with warnings
-                        if subscription.is_expired:
-                            messages.error(
-                                request,
-                                f'The system subscription expired on {subscription.expiration_date} and grace period ended on {subscription.grace_period_end_date}. '
-                                'Please contact support to renew the subscription before logging in.'
-                            )
-                            # Log the failed login attempt due to expired subscription
-                            try:
-                                log_user_activity(
-                                    request,
-                                    None,
-                                    UserActivityLog.LOGIN_FAILED,
-                                    attempted_username=username,
-                                    failed_reason="Global subscription fully expired (past grace period)"
-                                )
-                            except Exception:
-                                pass
-                            return render(request, 'users/login.html', {'logged_user': logged_user, 'developer': developer})
+        # SECURITY FIX: Always call authenticate() to prevent timing attacks
+        # Do NOT check if username exists first - this allows username enumeration
+        user = authenticate(request, username=username, password=password)
 
-                        # SECURITY: Show warning during grace period (after expiration but before full expiry)
-                        if subscription.is_grace_period:
-                            days_until_lockout = (subscription.grace_period_end_date - date.today()).days
-                            messages.warning(
-                                request,
-                                f'URGENT: The system subscription expired on {subscription.expiration_date}. '
-                                f'You have {days_until_lockout} days remaining in the grace period. '
-                                'Please contact support to renew the subscription.'
-                            )
+        if user is not None:
+            # Check if email verification is required
+            if check_email_verification_required(user):
+                messages.warning(request, 'Please verify your email address before logging in.')
+                return render(request, 'users/login.html', {
+                    'logged_user': logged_user,
+                    'developer': developer,
+                    'show_resend_verification': True,
+                    'unverified_user_email': user.email
+                })
 
-                    except Exception as e:
-                        # If subscription check fails, deny login (fail closed for security)
-                        import logging
-                        logger = logging.getLogger(__name__)
-                        logger.error(f"Global subscription check failed for user {username}: {e}")
+            # CRITICAL: Check subscription status BEFORE allowing login
+            # Skip for superusers only (staff are subject to subscription)
+            if not user.is_superuser:
+                try:
+                    # Get the global subscription
+                    subscription = Subscription.get_global_subscription()
+                    # Update status to ensure it's current
+                    subscription.update_status()
+
+                    # SECURITY FIX: Block login ONLY if fully expired (past grace period)
+                    # Allow login during grace period with warnings
+                    if subscription.is_expired:
                         messages.error(
                             request,
-                            'Unable to verify subscription status. Please contact support.'
+                            f'The system subscription expired on {subscription.expiration_date} and grace period ended on {subscription.grace_period_end_date}. '
+                            'Please contact support to renew the subscription before logging in.'
                         )
+                        # Log the failed login attempt due to expired subscription
+                        try:
+                            log_user_activity(
+                                request,
+                                None,
+                                UserActivityLog.LOGIN_FAILED,
+                                attempted_username=username,
+                                failed_reason="Global subscription fully expired (past grace period)"
+                            )
+                        except Exception:
+                            pass
                         return render(request, 'users/login.html', {'logged_user': logged_user, 'developer': developer})
-                
-                # Successful login
-                login(request, user)
-                
-                # Handle remember me functionality
-                if remember_me:
-                    # Set session to expire in 30 days if remember me is checked
-                    request.session.set_expiry(30 * 24 * 60 * 60)  # 30 days in seconds
-                else:
-                    # Set session to expire when browser closes (default behavior)
-                    request.session.set_expiry(0)
-                
-                # Ensure session is created/saved before logging
-                if not request.session.session_key:
-                    request.session.save()
-                
-                # Update device information (keep existing functionality)
-                try:
-                    device_details = getFullDeviceDetails(request)
-                    user.last_login_device = device_details
-                    user.save(update_fields=["last_login_device"])
+
+                    # SECURITY: Show warning during grace period (after expiration but before full expiry)
+                    if subscription.is_grace_period:
+                        days_until_lockout = (subscription.grace_period_end_date - date.today()).days
+                        messages.warning(
+                            request,
+                            f'URGENT: The system subscription expired on {subscription.expiration_date}. '
+                            f'You have {days_until_lockout} days remaining in the grace period. '
+                            'Please contact support to renew the subscription.'
+                        )
+
                 except Exception as e:
-                    # Log error but don't break login process
+                    # If subscription check fails, deny login (fail closed for security)
                     import logging
                     logger = logging.getLogger(__name__)
-                    logger.error(f"Error updating last_login_device for {user.username}: {e}")
-                
-                # Log activity with enhanced tracking
-                try:
-                    log_user_activity(request, user, UserActivityLog.LOGIN_SUCCESS)
-                except Exception as e:
-                    # Log error but don't break login process
-                    import logging
-                    logger = logging.getLogger(__name__)
-                    logger.error(f"Error logging user activity for {user.username}: {e}")
-                
-                # Create/update session tracking
-                try:
-                    create_or_update_user_session(request, user)
-                except Exception as e:
-                    # Log error but don't break login process
-                    import logging
-                    logger = logging.getLogger(__name__)
-                    logger.error(f"Error creating user session for {user.username}: {e}")
-                
-                messages.success(request, 'You have successfully logged in!')
-                return redirect('home')
-            else:
-                # Failed login
-                try:
-                    log_user_activity(
-                        request, 
-                        None, 
-                        UserActivityLog.LOGIN_FAILED, 
-                        attempted_username=username,
-                        failed_reason="Invalid password"
+                    logger.error(f"Global subscription check failed for user {username}: {e}")
+                    messages.error(
+                        request,
+                        'Unable to verify subscription status. Please contact support.'
                     )
-                except Exception as e:
-                    # Log error but don't break the flow
-                    import logging
-                    logger = logging.getLogger(__name__)
-                    logger.error(f"Error logging failed login attempt: {e}")
-                
-                messages.error(request, 'Wrong password. You are not authorized to login.')
-                return render(request, 'users/login.html', {'logged_user': logged_user, 'developer': developer})
+                    return render(request, 'users/login.html', {'logged_user': logged_user, 'developer': developer})
+
+            # Successful login
+            login(request, user)
+
+            # Handle remember me functionality
+            if remember_me:
+                # Set session to expire in 30 days if remember me is checked
+                request.session.set_expiry(30 * 24 * 60 * 60)  # 30 days in seconds
+            else:
+                # Set session to expire when browser closes (default behavior)
+                request.session.set_expiry(0)
+
+            # Ensure session is created/saved before logging
+            if not request.session.session_key:
+                request.session.save()
+
+            # Update device information (keep existing functionality)
+            try:
+                device_details = getFullDeviceDetails(request)
+                user.last_login_device = device_details
+                user.save(update_fields=["last_login_device"])
+            except Exception as e:
+                # Log error but don't break login process
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Error updating last_login_device for {user.username}: {e}")
+
+            # Log activity with enhanced tracking
+            try:
+                log_user_activity(request, user, UserActivityLog.LOGIN_SUCCESS)
+            except Exception as e:
+                # Log error but don't break login process
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Error logging user activity for {user.username}: {e}")
+
+            # Create/update session tracking
+            try:
+                create_or_update_user_session(request, user)
+            except Exception as e:
+                # Log error but don't break login process
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Error creating user session for {user.username}: {e}")
+
+            messages.success(request, 'You have successfully logged in!')
+            return redirect('home')
         else:
-            # User doesn't exist
+            # SECURITY FIX: Authentication failed - use generic message to prevent username enumeration
+            # Same message whether username doesn't exist or password is wrong
             try:
                 log_user_activity(
-                    request, 
-                    None, 
-                    UserActivityLog.LOGIN_FAILED, 
+                    request,
+                    None,
+                    UserActivityLog.LOGIN_FAILED,
                     attempted_username=username,
-                    failed_reason="Username not found"
+                    failed_reason="Invalid credentials"  # Generic reason - no details
                 )
             except Exception as e:
                 # Log error but don't break the flow
                 import logging
                 logger = logging.getLogger(__name__)
                 logger.error(f"Error logging failed login attempt: {e}")
-            
-            messages.error(request, 'Wrong username. You are not authorized to login.')
+
+            # Generic error message - same for all authentication failures
+            messages.error(request, 'Invalid username or password. Please try again.')
             return render(request, 'users/login.html', {'logged_user': logged_user, 'developer': developer})
     else:
         if request.user.is_authenticated:
@@ -356,9 +347,15 @@ def verify_email(request, token):
 
 
 @require_POST
+@ratelimit(key='ip', rate='3/h', method='POST', block=True)
+@ratelimit(key='post:email', rate='3/h', method='POST', block=True)
 def resend_verification_email(request):
     """
     Resend email verification to user.
+
+    Rate limited to:
+    - 3 requests per hour per IP address
+    - 3 requests per hour per email address
     """
     email = request.POST.get('email')
     
@@ -391,6 +388,22 @@ def resend_verification_email(request):
     except CustomUser.DoesNotExist:
         messages.error(request, 'No account found with this email address.')
         return redirect('user-login')
+
+
+@method_decorator(ratelimit(key='ip', rate='3/h', method='POST', block=True), name='post')
+class RateLimitedPasswordResetView(auth_views.PasswordResetView):
+    """
+    Password reset view with rate limiting.
+
+    Rate limited to:
+    - 3 requests per hour per IP address
+
+    This prevents abuse of the password reset functionality and protects against:
+    - Email enumeration attacks
+    - Password reset email spam
+    - Resource exhaustion
+    """
+    pass
 
 
 @login_required(login_url='user-login')
@@ -468,16 +481,17 @@ def send_verification_email_view(request):
 
 
 # API Views for AJAX requests
-@csrf_exempt
+@require_http_methods(["POST"])
 def get_user_activity_api(request):
     """
     API endpoint to get user activity data for charts/widgets.
+    Requires CSRF token for security.
     """
     if not request.user.is_authenticated:
         return JsonResponse({'error': 'Authentication required'}, status=401)
-    
+
     user = request.user
-    days = int(request.GET.get('days', 30))
+    days = int(request.POST.get('days', 30))
     
     activity_summary = get_user_activity_summary(user, days)
     

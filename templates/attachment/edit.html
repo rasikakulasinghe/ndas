@@ -38,7 +38,7 @@
                 <dd class="col-sm-7">{{ attachment.created_at|date:"M d, Y H:i" }}</dd>
                 {% if attachment.last_edit_by %}
                 <dt class="col-sm-5">Last Edit:</dt>
-                <dd class="col-sm-7">{{ attachment.last_edit_on|date:"M d, Y H:i" }}</dd>
+                <dd class="col-sm-7">{{ attachment.updated_at|date:"M d, Y H:i" }}</dd>
                 {% endif %}
               </dl>
               

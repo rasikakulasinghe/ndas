@@ -335,7 +335,7 @@ Manager{% endblock title%}
                     type="button"
                     class="btn btn-link p-0 text-primary"
                     data-toggle="tooltip"
-                    title="Added by: {{ Patient.added_by|default:'Unknown' }} on {{ Patient.added_on|date:'M d, Y'|default:'-' }}"
+                    title="Added by: {{ Patient.added_by|default:'Unknown' }} on {{ Patient.created_at|date:'M d, Y'|default:'-' }}"
                   >
                     <i class="fas fa-info-circle" style="font-size: 1.1rem"></i>
                   </button>
@@ -347,7 +347,7 @@ Manager{% endblock title%}
                     class="btn btn-link p-0 text-primary mr-1"
                     data-toggle="tooltip"
                     title="View Patient"
-                    onclick="window.location.href='{% url 'view-patient' Patient.id %}'"
+                    onclick="window.location.href=&quot;{% url 'view-patient' Patient.id %}&quot;"
                   >
                     <i class="fas fa-eye" style="font-size: 1.1rem"></i>
                   </button>

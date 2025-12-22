@@ -1,0 +1,3 @@
+"""
+Patients app test suite
+"""

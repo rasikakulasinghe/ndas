@@ -470,11 +470,42 @@ def calculate_age_string(start_date, end_date, format_type="detailed"):
         return f"{years} year{'s' if years != 1 else ''} and {months} month{'s' if months != 1 else ''}"
 
 
-# get patients according to type
 def getPatientList(pts_type):
+    """
+    Get filtered patient queryset based on patient status type.
+
+    Optimized with select_related and prefetch_related to eliminate N+1 queries
+    on user references and related assessments.
+
+    Args:
+        pts_type (PtStatus): Patient status filter type from PtStatus enum:
+            - PtStatus.ALL: All patients
+            - PtStatus.NEW: Patients without videos
+            - PtStatus.DISCHARGED: Patients marked as discharged
+            - PtStatus.DIAGNOSED: Patients with any abnormal diagnosis
+            - PtStatus.DX_NORMAL: Patients with normal diagnosis
+            - PtStatus.DX_GMA_NORMAL: Patients with normal GMA diagnosis
+            - PtStatus.DX_GMA_ABNORMAL: Patients with abnormal GMA diagnosis
+            - PtStatus.DX_HINE: Patients with HINE score < 73
+            - PtStatus.DX_DA_NORMAL: Patients with normal DA
+            - PtStatus.DX_DA_ABNORMAL: Patients with abnormal DA
+
+    Returns:
+        QuerySet: Optimized Patient queryset with related objects prefetched
+
+    Example:
+        >>> all_patients = getPatientList(PtStatus.ALL)
+        >>> diagnosed = getPatientList(PtStatus.DIAGNOSED)
+    """
     from patients.models import Patient
-    
-    var_ptl = Patient.objects.all()
+
+    # Optimized queryset with select_related and prefetch_related to reduce N+1 queries
+    var_ptl = Patient.objects.select_related(
+        'added_by', 'last_edit_by'
+    ).prefetch_related(
+        'indecation_for_gma', 'videos', 'gm_assessments',
+        'hine_assessments', 'developmental_assessments', 'cdic_records'
+    )
 
     if pts_type == PtStatus.ALL:
         return var_ptl

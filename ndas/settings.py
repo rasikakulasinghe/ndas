@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.staticfiles',
     'django_cleanup.apps.CleanupConfig',
     'csp',  # Content Security Policy
     'django_permissions_policy',
@@ -38,6 +39,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'csp.middleware.CSPMiddleware',
+    'ndas.custom_codes.security_middleware.AdditionalSecurityHeadersMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -48,6 +50,10 @@ MIDDLEWARE = [
     'django_user_agents.middleware.UserAgentMiddleware',
     'users.middleware.SubscriptionCheckMiddleware',
 ]
+
+if not DEBUG:
+    # Add security headers validation middleware in production only
+    MIDDLEWARE.append('ndas.custom_codes.security_middleware.SecurityHeadersValidationMiddleware')
 
 ROOT_URLCONF = 'ndas.urls'
 
@@ -148,24 +154,31 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 # WhiteNoise configuration for serving static files
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "static": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = "users.CustomUser"
 
-# Email Configuration
-EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
-EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = 'noreply@ndas-system.com'
-EMAIL_VERIFICATION_REQUIRED = True
-EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS = 24
+# Email Configuration - Environment-based
+if DEBUG:
+    # Development: Console backend for testing
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+else:
+    # Production: SMTP backend
+    EMAIL_BACKEND = config('EMAIL_BACKEND', default="django.core.mail.backends.smtp.EmailBackend")
+    EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+    EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+    EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+    EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
+    EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+    EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+    EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=10, cast=int)
+
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@ndas-system.com')
+EMAIL_VERIFICATION_REQUIRED = config('EMAIL_VERIFICATION_REQUIRED', default=True, cast=bool)
+EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS = config('EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS', default=24, cast=int)
 
 MESSAGE_TAGS = {
     messages.DEBUG: 'alert-secondary',
@@ -270,10 +283,11 @@ if DEBUG:
     CSP_BASE_URI = ("'self'",)
     CSP_FORM_ACTION = ("'self'",)
 else:
-    # Production CSP - Allow required CDN sources for Bootstrap, AdminLTE, etc.
+    # Production CSP - Strict policy with nonce-based inline scripts/styles
+    # No 'unsafe-inline' or 'unsafe-eval' for XSS protection
     CSP_DEFAULT_SRC = ("'self'",)
-    CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://unpkg.com", "https://vjs.zencdn.net")
-    CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "https://vjs.zencdn.net")
+    CSP_SCRIPT_SRC = ("'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://unpkg.com", "https://vjs.zencdn.net")
+    CSP_STYLE_SRC = ("'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "https://vjs.zencdn.net")
     CSP_IMG_SRC = ("'self'", "data:", "blob:", "https:")
     CSP_FONT_SRC = ("'self'", "data:", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com")
     CSP_CONNECT_SRC = ("'self'",)
@@ -375,6 +389,7 @@ SESSION_CACHE_ALIAS = 'default'
 # Rate Limiting and Brute Force Protection
 RATELIMIT_USE_CACHE = 'default'
 RATELIMIT_ENABLE = config('RATELIMIT_ENABLE', default=True, cast=bool)
+RATELIMIT_VIEW = 'ndas.views.handler_rate_limited'
 
 # Performance Optimizations
 USE_ETAGS = True

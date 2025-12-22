@@ -1,0 +1,37 @@
+{% extends 'src/basic_plane.html' %}
+{% load static %}
+
+{% block title %}Rate Limit Exceeded | NDAS{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6">
+            <div class="card card-danger">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-exclamation-triangle"></i> Rate Limit Exceeded</h3>
+                </div>
+                <div class="card-body">
+                    <p class="lead">You have made too many requests. Please wait a moment before trying again.</p>
+                    <p>For your security, we limit the number of login attempts to prevent brute force attacks.</p>
+
+                    <div class="alert alert-info">
+                        <strong><i class="fas fa-info-circle"></i> What can I do?</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Wait for a few minutes before attempting again</li>
+                            <li>Make sure you're entering the correct username and password</li>
+                            <li>Contact support if you believe this is an error</li>
+                        </ul>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <a href="{% url 'user-login' %}" class="btn btn-primary">
+                            <i class="fas fa-arrow-left"></i> Back to Login
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

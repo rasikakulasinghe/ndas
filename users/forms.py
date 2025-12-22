@@ -3,6 +3,10 @@ from ndas.custom_codes.choice import POSSITION, SUBSCRIPTION_TYPE_CHOICES, SUBSC
 from users.models import CustomUser, Subscription
 from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm, PasswordChangeForm
 from datetime import date, timedelta
+from ndas.custom_codes.sanitization import (
+    sanitize_html,
+    sanitize_plain_text,
+)
 
 class CustomUserRegistrationForm(forms.ModelForm):
     profile_picture = forms.ImageField(required=False, label='Your Profile Picture: ')
@@ -51,6 +55,48 @@ class CustomUserRegistrationForm(forms.ModelForm):
         if password1 and password2 and password1 != password2:
             raise forms.ValidationError("Passwords don't match")
         return password2
+
+    def clean_username(self):
+        """Sanitize username"""
+        username = self.cleaned_data.get("username")
+        if username:
+            username = sanitize_plain_text(username, max_length=150)
+        return username
+
+    def clean_first_name(self):
+        """Sanitize first name"""
+        first_name = self.cleaned_data.get("first_name")
+        if first_name:
+            first_name = sanitize_plain_text(first_name, max_length=150)
+        return first_name
+
+    def clean_last_name(self):
+        """Sanitize last name"""
+        last_name = self.cleaned_data.get("last_name")
+        if last_name:
+            last_name = sanitize_plain_text(last_name, max_length=150)
+        return last_name
+
+    def clean_home_address(self):
+        """Sanitize home address"""
+        home_address = self.cleaned_data.get("home_address")
+        if home_address:
+            home_address = sanitize_plain_text(home_address)
+        return home_address
+
+    def clean_station_address(self):
+        """Sanitize station address"""
+        station_address = self.cleaned_data.get("station_address")
+        if station_address:
+            station_address = sanitize_plain_text(station_address)
+        return station_address
+
+    def clean_additional_notes(self):
+        """Sanitize additional notes"""
+        additional_notes = self.cleaned_data.get("additional_notes")
+        if additional_notes:
+            additional_notes = sanitize_plain_text(additional_notes)
+        return additional_notes
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -150,15 +196,53 @@ class CustomUserEditForm(forms.ModelForm):
 
     def clean_username(self):
         """
-        Validate that username is unique (excluding current user).
+        Validate that username is unique (excluding current user) and sanitize.
         """
         username = self.cleaned_data.get('username')
         if username:
+            # Sanitize username
+            username = sanitize_plain_text(username, max_length=150)
+
             # Check if another user already has this username
             existing_user = CustomUser.objects.filter(username=username).exclude(pk=self.instance.pk)
             if existing_user.exists():
                 raise forms.ValidationError("A user with this username already exists.")
         return username
+
+    def clean_first_name(self):
+        """Sanitize first name"""
+        first_name = self.cleaned_data.get("first_name")
+        if first_name:
+            first_name = sanitize_plain_text(first_name, max_length=150)
+        return first_name
+
+    def clean_last_name(self):
+        """Sanitize last name"""
+        last_name = self.cleaned_data.get("last_name")
+        if last_name:
+            last_name = sanitize_plain_text(last_name, max_length=150)
+        return last_name
+
+    def clean_home_address(self):
+        """Sanitize home address"""
+        home_address = self.cleaned_data.get("home_address")
+        if home_address:
+            home_address = sanitize_plain_text(home_address)
+        return home_address
+
+    def clean_station_address(self):
+        """Sanitize station address"""
+        station_address = self.cleaned_data.get("station_address")
+        if station_address:
+            station_address = sanitize_plain_text(station_address)
+        return station_address
+
+    def clean_additional_notes(self):
+        """Sanitize additional notes"""
+        additional_notes = self.cleaned_data.get("additional_notes")
+        if additional_notes:
+            additional_notes = sanitize_plain_text(additional_notes)
+        return additional_notes
 
 
 class UserPasswordResetForm(PasswordResetForm):

@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, RedirectView
 
 urlpatterns = [
 
@@ -10,16 +10,21 @@ urlpatterns = [
     # URLs for patients operations
     path("", views.dashboard, name='home'),
     path("print", views.print, name='print'),
-    path("manager/patient/", views.patient_manager, name='manage-patients'),
-    path("manager/patient/new", views.patient_manager_new_only, name='manage-patients-new'),
-    path("manager/patient/normal", views.patient_manager_diagnosis_normal, name='manage-patients-diagnosis-normal'),
-    path("manager/patient/diagnosed/any", views.patient_manager_diagnosed_any, name='manage-patients-diagnosed-any'),
-    path("manager/patient/diagnosed/gma/normal", views.patient_manager_diagnosed_gma_normal, name='manage-patients-diagnosed-gma-normal'),
-    path("manager/patient/diagnosed/gma/abnormal", views.patient_manager_diagnosed_gma_abnormal, name='manage-patients-diagnosed-gma-abnormal'),
-    path("manager/patient/diagnosed/hine", views.patient_manager_diagnosed_hine, name='manage-patients-diagnosed-hine'),
-    path("manager/patient/diagnosed/da/normal", views.patient_manager_da_normal, name='manage-patients-diagnosed-da-normal'),
-    path("manager/patient/diagnosed/da/abnormal", views.patient_manager_da_abnormal, name='manage-patients-diagnosed-da-abnormal'),
-    path("manager/patient/discharged", views.patient_manager_discharged_only, name='manage-patients-discharged'),
+
+    # Unified patient manager with filter type
+    path("manager/patient/", views.patient_manager, {'filter_type': 'all'}, name='manage-patients'),
+    path("manager/patient/<str:filter_type>/", views.patient_manager, name='manage-patients-filtered'),
+
+    # Legacy URLs (redirects for backward compatibility - 6 month deprecation)
+    path("manager/patient/new", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'new'}, name='manage-patients-new'),
+    path("manager/patient/normal", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'dx_normal'}, name='manage-patients-diagnosis-normal'),
+    path("manager/patient/diagnosed/any", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'diagnosed'}, name='manage-patients-diagnosed-any'),
+    path("manager/patient/diagnosed/gma/normal", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'gma_normal'}, name='manage-patients-diagnosed-gma-normal'),
+    path("manager/patient/diagnosed/gma/abnormal", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'gma_abnormal'}, name='manage-patients-diagnosed-gma-abnormal'),
+    path("manager/patient/diagnosed/hine", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'hine'}, name='manage-patients-diagnosed-hine'),
+    path("manager/patient/diagnosed/da/normal", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'da_normal'}, name='manage-patients-diagnosed-da-normal'),
+    path("manager/patient/diagnosed/da/abnormal", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'da_abnormal'}, name='manage-patients-diagnosed-da-abnormal'),
+    path("manager/patient/discharged", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'discharged'}, name='manage-patients-discharged'),
     path("patient/add/", views.patient_add, name='add-patient'),
     path("patient/view/<str:pk>/", views.patient_view, name='view-patient'),
     path("patient/edit/<str:pk>/", views.patient_edit, name='edit-patient'),

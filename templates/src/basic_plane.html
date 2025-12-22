@@ -90,7 +90,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
 <script src="{% static 'js/main.js' %}" defer></script>
 
 <!-- CDN Health Check (runs after all scripts load) -->
-<script>
+<script nonce="{{ request.csp_nonce }}">
 // Wait for window.load to ensure all external scripts are fully loaded
 window.addEventListener('load', function() {
     // Additional delay to ensure script execution completes

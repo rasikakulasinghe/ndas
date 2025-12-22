@@ -218,7 +218,7 @@
                     type="button"
                     class="btn btn-link p-0 text-primary"
                     data-toggle="tooltip"
-                    title="Added by: {{ HINERecord.added_by|default:'Unknown' }} on {{ HINERecord.added_on|date:'M d, Y'|default:'-' }}"
+                    title="Added by: {{ HINERecord.added_by|default:'Unknown' }} on {{ HINERecord.created_at|date:'M d, Y'|default:'-' }}"
                   >
                     <i class="fas fa-info-circle" style="font-size: 1.1rem"></i>
                   </button>

@@ -172,27 +172,8 @@ class SubscriptionCheckMiddleware(MiddlewareMixin):
                 'Unable to verify subscription status. Please contact support.'
             )
             return redirect(reverse('subscription-info'))
-        
+
         return None
-
-
-# @receiver(user_logged_in)
-# def log_user_login(sender, request, user, **kwargs):
-#     """
-#     Signal handler for successful user login.
-#     """
-#     try:
-#         # Log the login activity
-#         log_user_activity(request, user, UserActivityLog.LOGIN_SUCCESS)
-#         
-#         # Create or update user session
-#         create_or_update_user_session(request, user)
-#         
-#     except Exception as e:
-#         # Log the error but don't break the login process
-#         import logging
-#         logger = logging.getLogger(__name__)
-#         logger.error(f"Error logging user activity for {user.username}: {e}")
 
 
 @receiver(user_logged_out)

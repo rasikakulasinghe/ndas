@@ -32,7 +32,13 @@
       "Bash(move \"templates\\users\\subscription_add.html\" \"templates\\users\\subscription_update.html\")",
       "Bash(timeout 5 curl:*)",
       "Bash(ls:*)",
-      "Bash(timeout 5 python:*)"
+      "Bash(timeout 5 python:*)",
+      "Bash(if [ -f .env ])",
+      "Bash(then echo \".env file exists\")",
+      "Bash(else echo \".env file missing\")",
+      "Bash(fi)",
+      "Bash(unset:*)",
+      "Bash(timeout 3 python:*)"
     ],
     "deny": [],
     "ask": []

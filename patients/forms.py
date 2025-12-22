@@ -21,6 +21,11 @@ from ndas.custom_codes.choice import (
     APGAR,
     DX_CONCLUTION,
 )
+from ndas.custom_codes.sanitization import (
+    sanitize_html,
+    sanitize_plain_text,
+    sanitize_filename,
+)
 
 
 # FIX 2.1: Reusable validation mixin to eliminate code duplication
@@ -387,9 +392,12 @@ class PatientForm(UniqueFieldValidationMixin, forms.ModelForm):
         return pin
 
     def clean_baby_name(self):
-        """Validate baby name"""
+        """Validate and sanitize baby name"""
         baby_name = self.cleaned_data.get("baby_name")
         if baby_name:
+            # Sanitize input to prevent XSS
+            baby_name = sanitize_plain_text(baby_name)
+
             # Remove extra whitespace and validate
             baby_name = " ".join(baby_name.split())
             if len(baby_name.strip()) < 2:
@@ -408,9 +416,12 @@ class PatientForm(UniqueFieldValidationMixin, forms.ModelForm):
         return baby_name
 
     def clean_mother_name(self):
-        """Validate mother name"""
+        """Validate and sanitize mother name"""
         mother_name = self.cleaned_data.get("mother_name")
         if mother_name:
+            # Sanitize input to prevent XSS
+            mother_name = sanitize_plain_text(mother_name)
+
             # Remove extra whitespace and validate
             mother_name = " ".join(mother_name.split())
             if len(mother_name.strip()) < 2:
@@ -509,6 +520,22 @@ class PatientForm(UniqueFieldValidationMixin, forms.ModelForm):
                 )
 
         return tp_lan
+
+    def clean_resustn_note(self):
+        """Sanitize resuscitation notes (allows safe HTML)"""
+        resustn_note = self.cleaned_data.get("resustn_note")
+        if resustn_note:
+            # Sanitize HTML to prevent XSS while allowing safe formatting
+            resustn_note = sanitize_html(resustn_note, strip=True)
+        return resustn_note
+
+    def clean_current_problems(self):
+        """Sanitize current problems (allows safe HTML)"""
+        current_problems = self.cleaned_data.get("current_problems")
+        if current_problems:
+            # Sanitize HTML to prevent XSS while allowing safe formatting
+            current_problems = sanitize_html(current_problems, strip=True)
+        return current_problems
 
     def clean(self):
         """Cross-field validation"""
@@ -695,6 +722,30 @@ class AttachmentkForm(forms.ModelForm):
                 }
             ),
         }
+
+    def clean_title(self):
+        """Sanitize attachment title"""
+        title = self.cleaned_data.get("title")
+        if title:
+            # Sanitize to prevent XSS
+            title = sanitize_plain_text(title, max_length=200)
+        return title
+
+    def clean_description(self):
+        """Sanitize attachment description"""
+        description = self.cleaned_data.get("description")
+        if description:
+            # Sanitize HTML to prevent XSS while allowing safe formatting
+            description = sanitize_html(description, strip=True)
+        return description
+
+    def clean_attachment(self):
+        """Sanitize uploaded filename"""
+        attachment = self.cleaned_data.get("attachment")
+        if attachment and hasattr(attachment, 'name'):
+            # Sanitize the filename to prevent directory traversal and other attacks
+            attachment.name = sanitize_filename(attachment.name)
+        return attachment
 
 
 class CDICRecordForm(TimezoneDateTimeMixin, forms.ModelForm):

@@ -71,10 +71,10 @@
                 <dt class="col-sm-5">Title:</dt>
                 <dd class="col-sm-7">
                   {% if assmnt.video_file and assmnt.video_file.id %}
-                    <a href="{% url 'video:view' assmnt.video_file.id %}" target="_blank" 
-                       data-toggle="tooltip" data-placement="top" 
+                    <a href="{% url 'video:view' assmnt.video_file.id %}" target="_blank"
+                       data-toggle="tooltip" data-placement="top"
                        title="Play this video in another window...">
-                      {{ assmnt.video_file.caption }}
+                      {{ assmnt.video_file.title }}
                       <i class="fas fa-play-circle text-primary ml-1"></i>
                     </a>
                   {% else %}

@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!-- Login Page Specific Styles - Load LAST to override AdminLTE/Bootstrap -->
 <link rel="stylesheet" href="{% static 'css/login.css' %}" type="text/css">
-<style>
+<style nonce="{{ request.csp_nonce }}">
 /* Inline critical overrides to ensure immediate application */
 body.ndas-login-body {
     background: linear-gradient(135deg, #f5f7fa 0%, #eef2f7 100%) !important;

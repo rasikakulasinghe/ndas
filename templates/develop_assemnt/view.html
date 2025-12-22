@@ -136,13 +136,13 @@
 
     <div class="form-group row d-flex align-items-center">
         <label class="col-form-label col-sm-2">Record Create : </label>
-        <div class="col-sm-10">by {{DARecord.added_by}} on {{DARecord.added_on|date:"F d, Y g:i A"}}</div>
+        <div class="col-sm-10">by {{DARecord.added_by}} on {{DARecord.created_at|date:"F d, Y g:i A"}}</div>
     </div>
 
     {% if DARecord.last_edit_by %}
         <div class="form-group row d-flex align-items-center">
             <label class="col-form-label col-sm-2">Record Edit : </label>
-            <div class="col-sm-10">by {{DARecord.last_edit_by}} on {{DARecord.last_edit_on|date:"F d, Y g:i A"}}</div>
+            <div class="col-sm-10">by {{DARecord.last_edit_by}} on {{DARecord.updated_at|date:"F d, Y g:i A"}}</div>
         </div>
     {% endif %}
 

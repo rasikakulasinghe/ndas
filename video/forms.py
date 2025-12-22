@@ -5,6 +5,11 @@ from django.utils import timezone
 import logging
 from .models import Video
 from ndas.custom_codes.choice import QUALITY_CHOICES
+from ndas.custom_codes.sanitization import (
+    sanitize_html,
+    sanitize_plain_text,
+    sanitize_filename,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -62,24 +67,28 @@ class VideoForm(forms.ModelForm):
 
     def clean_video_file(self):
         video_file = self.cleaned_data.get('video_file')
-        
+
         if video_file:
+            # Sanitize the filename to prevent directory traversal and other attacks
+            if hasattr(video_file, 'name'):
+                video_file.name = sanitize_filename(video_file.name)
+
             # Check file size (max 500MB)
             max_size = 500 * 1024 * 1024  # 500MB in bytes
             if video_file.size > max_size:
                 raise ValidationError(
                     _('Video file is too large. Maximum size allowed is 500MB.')
                 )
-            
+
             # Check file extension
             allowed_extensions = ['.mp4', '.avi', '.mov', '.wmv', '.mkv', '.webm']
             file_extension = video_file.name.lower().split('.')[-1]
-            
+
             if f'.{file_extension}' not in allowed_extensions:
                 raise ValidationError(
                     _('Unsupported file format. Allowed formats: MP4, AVI, MOV, WMV, MKV, WEBM')
                 )
-                
+
         return video_file
 
     def clean_recorded_on(self):
@@ -103,18 +112,29 @@ class VideoForm(forms.ModelForm):
 
     def clean_title(self):
         title = self.cleaned_data.get('title')
-        
+
         if title:
+            # Sanitize to prevent XSS
+            title = sanitize_plain_text(title, max_length=200)
+
             # Clean up the title
             title = title.strip()
-            
+
             # Check for minimum length
             if len(title) < 3:
                 raise ValidationError(
                     _('Title must be at least 3 characters long.')
                 )
-                
+
         return title
+
+    def clean_description(self):
+        """Sanitize video description"""
+        description = self.cleaned_data.get('description')
+        if description:
+            # Sanitize HTML to prevent XSS while allowing safe formatting
+            description = sanitize_html(description, strip=True)
+        return description
 
     def save(self, commit=True):
         instance = super().save(commit=False)

@@ -192,9 +192,9 @@
                       {% for Videos in new_videos %}
                       <li class="nav-item">
                       {% if Videos.id %}
-                      <a href="{% url 'video:view' Videos.id %}" target="_blank" class="nav-link">{{Videos.caption}} &nbsp; <small class="badge badge-danger">New</small><span class="float-right"><i class="far fa-clock"></i>&nbsp;&nbsp; {{Videos.uploaded_on|timesince}} ago</span></a>
+                      <a href="{% url 'video:view' Videos.id %}" target="_blank" class="nav-link">{{Videos.title}} &nbsp; <small class="badge badge-danger">New</small><span class="float-right"><i class="far fa-clock"></i>&nbsp;&nbsp; {{Videos.created_at|timesince}} ago</span></a>
                       {% else %}
-                      <span class="nav-link text-muted">{{Videos.caption}} (Invalid record)</span>
+                      <span class="nav-link text-muted">{{Videos.title}} (Invalid record)</span>
                       {% endif %}
                       </li>
                       {% endfor %}
@@ -211,7 +211,7 @@
                   <ul class="nav flex-column">
                       {% for Patient in Patients_new_list_10 %}
                       <li class="nav-item">
-                      <a href="{% url 'view-patient' Patient.id %}" target="_blank" class="nav-link">{{Patient.baby_name}} &nbsp; <small class="badge badge-danger">New</small><span class="float-right"><i class="far fa-clock"></i>&nbsp;&nbsp; {{Patient.added_on|timesince}} ago</span></a>
+                      <a href="{% url 'view-patient' Patient.id %}" target="_blank" class="nav-link">{{Patient.baby_name}} &nbsp; <small class="badge badge-danger">New</small><span class="float-right"><i class="far fa-clock"></i>&nbsp;&nbsp; {{Patient.created_at|timesince}} ago</span></a>
                       </li>
                       {% endfor %}
                   </ul>
@@ -264,7 +264,7 @@
 
 {% block extra_js %}
 <!-- Chart.js already loaded in base template, no need to reload -->
-<script>
+<script nonce="{{ request.csp_nonce }}">
         const ctx = document.getElementById('new-admissions-month');
         const diagnosis_gma = document.getElementById('diagnosis_gma');
         const diagnosis_all = document.getElementById('diagnosis_all');

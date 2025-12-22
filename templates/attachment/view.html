@@ -166,7 +166,7 @@
                 <dt class="col-sm-5">Last Edited:</dt>
                 <dd class="col-sm-7">
                   {{ attachment.last_edit_by.get_full_name|default:attachment.last_edit_by.username }}<br>
-                  <small class="text-muted">{{ attachment.last_edit_on|date:"M d, Y H:i" }}</small>
+                  <small class="text-muted">{{ attachment.updated_at|date:"M d, Y H:i" }}</small>
                 </dd>
                 {% endif %}
               </dl>

@@ -117,8 +117,8 @@
           <label class="col-sm-3 col-form-label font-weight-bold">Created By:</label>
           <div class="col-sm-9">
             <span class="form-control-plaintext">
-              {{HINERecord.added_by}} 
-              <small class="text-muted">on {{HINERecord.added_on|date:"F d, Y g:i A"}}</small>
+              {{HINERecord.added_by}}
+              <small class="text-muted">on {{HINERecord.created_at|date:"F d, Y g:i A"}}</small>
             </span>
           </div>
         </div>
@@ -128,8 +128,8 @@
           <label class="col-sm-3 col-form-label font-weight-bold">Last Modified:</label>
           <div class="col-sm-9">
             <span class="form-control-plaintext">
-              {{HINERecord.last_edit_by}} 
-              <small class="text-muted">on {{HINERecord.last_edit_on|date:"F d, Y g:i A"}}</small>
+              {{HINERecord.last_edit_by}}
+              <small class="text-muted">on {{HINERecord.updated_at|date:"F d, Y g:i A"}}</small>
             </span>
           </div>
         </div>

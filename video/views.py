@@ -20,10 +20,12 @@ from patients.models import Patient
 from .models import Video
 from .forms import VideoForm
 from ndas.custom_codes.choice import PROCESSING_STATUS
+from ndas.custom_codes.error_handlers import handle_view_errors
 
 logger = logging.getLogger(__name__)
 
 
+@handle_view_errors(redirect_url='video-manager', error_message='Error adding video')
 @login_required(login_url="user-login")
 def video_add(request, patient_id):
     """Enhanced video upload with proper form handling and progress tracking"""
@@ -142,6 +144,7 @@ def video_view(request, video_id):
     return render(request, "video/view.html", context)
 
 
+@handle_view_errors(redirect_url='video-manager', error_message='Error editing video')
 @login_required(login_url="user-login")
 def video_edit(request, video_id):
     """Edit video details with enhanced validation and error handling"""
@@ -449,6 +452,7 @@ def video_manager_by_patient(request, patient_id):
     return render(request, "video/manager.html", context)
 
 
+@handle_view_errors(redirect_url='video-manager', error_message='Error loading delete confirmation')
 @login_required(login_url="user-login")
 def video_delete_confirm(request, video_id):
     """Video delete confirmation page"""
@@ -483,6 +487,7 @@ def video_delete_confirm(request, video_id):
         return redirect("video:manager")
 
 
+@handle_view_errors(redirect_url='video-manager', error_message='Error deleting video')
 @login_required(login_url="user-login")
 @require_http_methods(["DELETE"])
 def video_delete(request, video_id):
