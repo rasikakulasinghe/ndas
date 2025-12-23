@@ -268,7 +268,9 @@ SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
 
 # Content Security Policy (CSP)
-CSP_INCLUDE_NONCE_IN = ['script-src', 'style-src']
+# Only include nonces for scripts - inline styles are less risky and templates use many inline styles
+# When nonces are present for styles, 'unsafe-inline' is ignored and all inline styles get blocked
+CSP_INCLUDE_NONCE_IN = ['script-src']
 CSP_EXCLUDE_URL_PREFIXES = ('/admin/',)
 
 if DEBUG:

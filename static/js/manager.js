@@ -31,13 +31,40 @@ if (typeof _ === 'undefined') {
     };
 }
 
+// Clean up animations when page is restored from cache (back button)
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+        // Page was restored from bfcache
+        console.log('🔄 Page restored from cache - cleaning up animations');
+
+        // Reset all button states
+        $('.btn[href]').each(function() {
+            const $btn = $(this);
+            if ($btn.prop('disabled') || $btn.find('.fa-spinner').length > 0) {
+                // Restore button from loading state
+                $btn.prop('disabled', false);
+                const icon = $btn.data('original-icon') || '<i class="fas fa-eye" style="font-size: 1.1rem"></i>';
+                $btn.html(icon);
+            }
+        });
+
+        // Reset pagination links
+        $('.pagination .page-link').each(function() {
+            const $link = $(this);
+            if ($link.find('.fa-spinner').length > 0) {
+                $link.html($link.data('original-content') || $link.text());
+            }
+        });
+    }
+});
+
 // Initialize patient manager functionality
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof $ === 'undefined') {
         console.error('❌ jQuery not available in patient manager');
         return;
     }
-    
+
     $(document).ready(function() {
         try {
             // Initialize tooltips for better user experience
@@ -296,18 +323,31 @@ document.addEventListener('DOMContentLoaded', function() {
             initializePatientActions();
             
             // Add loading states to direct action buttons
-            $('.btn[href]').on('click', function() {
+            // Use .off() first to prevent duplicate handlers on back navigation
+            $('.btn[href]').off('click.loading').on('click.loading', function(e) {
                 const $btn = $(this);
-                const originalText = $btn.html();
-                
-                if ($btn.attr('href').includes('delete') || 
+
+                // Store original content for restoration
+                if (!$btn.data('original-icon')) {
+                    $btn.data('original-icon', $btn.html());
+                }
+                const originalText = $btn.data('original-icon');
+
+                if ($btn.attr('href').includes('delete') ||
                     $btn.attr('href').includes('confirm')) {
                     return;
                 }
-                
+
+                // Prevent multiple clicks
+                if ($btn.prop('disabled')) {
+                    e.preventDefault();
+                    return false;
+                }
+
                 $btn.html('<i class="fas fa-spinner fa-spin"></i>');
                 $btn.prop('disabled', true);
-                
+
+                // Fallback restoration (should not be needed if navigation succeeds)
                 setTimeout(function() {
                     $btn.html(originalText);
                     $btn.prop('disabled', false);
@@ -317,7 +357,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Initialize compact pagination functionality
             function initializeCompactPagination() {
                 // Add smooth animations to pagination buttons
-                $('.pagination .page-link').on('click', function(e) {
+                // Use .off() first to prevent duplicate handlers on back navigation
+                $('.pagination .page-link').off('click.pagination').on('click.pagination', function(e) {
                     if ($(this).parent().hasClass('disabled')) {
                         e.preventDefault();
                         return false;
@@ -340,14 +381,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Add keyboard navigation for page jump
                 const pageJumpInput = document.getElementById('pageJump');
                 if (pageJumpInput) {
-                    pageJumpInput.addEventListener('keypress', function(e) {
-                        if (e.key === 'Enter') {
-                            jumpToPage();
-                        }
-                    });
+                    pageJumpInput.removeEventListener('keypress', handlePageJumpKeypress);
+                    pageJumpInput.addEventListener('keypress', handlePageJumpKeypress);
                 }
 
                 console.log('✅ Compact pagination functionality initialized');
+            }
+
+            // Separate function for page jump keypress to properly remove listener
+            function handlePageJumpKeypress(e) {
+                if (e.key === 'Enter') {
+                    jumpToPage();
+                }
             }
 
             // Add status indicators animation
@@ -467,7 +512,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             // Add loading states to dropdown items
-            $('.dropdown-item[href]').on('click', (event) => {
+            // Use .off() first to prevent duplicate handlers on back navigation
+            $('.dropdown-item[href]').off('click.dropdown').on('click.dropdown', (event) => {
                 this.handleDropdownItemClick(event);
             });
 
