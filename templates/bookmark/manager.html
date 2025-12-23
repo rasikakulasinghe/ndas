@@ -207,12 +207,12 @@
       <div class="card-body p-0">
         {% if bookmark_page_obj %}
         <div class="table-responsive">
-          <table class="table table-hover text-nowrap">
+          <table class="table table-hover">
             <thead>
               <tr>
                 <th
                   scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold"
+                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-md-table-cell"
                 >
                   TYPE
                 </th>
@@ -220,23 +220,23 @@
                   scope="col"
                   class="border-0 text-uppercase text-secondary font-weight-bold"
                 >
-                  TITLE
+                  BOOKMARK INFO
                 </th>
                 <th
                   scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold"
+                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-lg-table-cell"
                 >
                   DESCRIPTION
                 </th>
                 <th
                   scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold"
+                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-sm-table-cell"
                 >
                   CREATED
                 </th>
                 <th
                   scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold"
+                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-lg-table-cell"
                 >
                   LAST EDIT
                 </th>
@@ -252,8 +252,8 @@
 
               {% for Bookmark in bookmark_page_obj %}
               <tr class="border-bottom">
-  
-                <td class="align-middle py-3 px-3">
+
+                <td class="align-middle py-3 px-3 d-none d-md-table-cell">
                   {% if Bookmark.bookmark_type == 'Patient' %}
                     <span class="badge badge-primary px-2 py-1"><i class="fas fa-user mr-1"></i>PATIENT</span>
                   {% elif Bookmark.bookmark_type == 'Video' %}
@@ -282,7 +282,39 @@
                          title="{{ Bookmark.title }}"></i>
                     {% endif %}
                   </div>
-                  <small class="d-block d-md-none text-muted mt-1">
+
+                  <!-- Mobile-only consolidated info -->
+                  <div class="d-block d-md-none mt-1">
+                    <div class="mb-1">
+                      {% if Bookmark.bookmark_type == 'Patient' %}
+                        <span class="badge badge-primary badge-sm"><i class="fas fa-user"></i> Patient</span>
+                      {% elif Bookmark.bookmark_type == 'Video' %}
+                        <span class="badge badge-info badge-sm"><i class="fas fa-video"></i> Video</span>
+                      {% elif Bookmark.bookmark_type == 'GMA' %}
+                        <span class="badge badge-success badge-sm"><i class="fas fa-stethoscope"></i> GMA</span>
+                      {% elif Bookmark.bookmark_type == 'HINE' %}
+                        <span class="badge badge-warning badge-sm"><i class="fas fa-brain"></i> HINE</span>
+                      {% elif Bookmark.bookmark_type == 'DA' %}
+                        <span class="badge badge-secondary badge-sm"><i class="fas fa-child"></i> Dev. Assessment</span>
+                      {% elif Bookmark.bookmark_type == 'CDICR' %}
+                        <span class="badge badge-danger badge-sm"><i class="fas fa-clipboard-list"></i> CDIC</span>
+                      {% elif Bookmark.bookmark_type == 'Attachment' %}
+                        <span class="badge badge-dark badge-sm"><i class="fas fa-paperclip"></i> Attachment</span>
+                      {% else %}
+                        <span class="badge badge-light badge-sm">{{ Bookmark.bookmark_type }}</span>
+                      {% endif %}
+                    </div>
+                    <small class="text-muted">
+                      {% if Bookmark.description %}
+                        {{ Bookmark.description|truncatechars:50 }}<br>
+                      {% endif %}
+                      <i class="fas fa-user"></i> {{ Bookmark.owner.username }}<br>
+                      {{ Bookmark.created_at|date:"M d, Y" }}
+                    </small>
+                  </div>
+
+                  <!-- Tablet-only type info -->
+                  <small class="d-none d-sm-block d-md-none text-muted mt-1">
                     {% if Bookmark.bookmark_type == 'Patient' %}
                       <i class="fas fa-user mr-1"></i>Patient
                     {% elif Bookmark.bookmark_type == 'Video' %}
@@ -304,7 +336,7 @@
                 </td>
 
                 <td
-                  class="align-middle py-3 px-3 text-muted d-none d-md-table-cell"
+                  class="align-middle py-3 px-3 text-muted d-none d-lg-table-cell"
                 >
                   {% if Bookmark.description %}
                     {{ Bookmark.description|truncatechars:50 }}

@@ -174,28 +174,28 @@
 
     <!-- Responsive Table Wrapper -->
     <div class="table-responsive">
-      <table class="table table-hover text-nowrap">
+      <table class="table table-hover">
         <thead>
           <tr>
-            <th scope="col">ID</th>
-            <th scope="col">Type</th>
+            <th scope="col" class="d-none d-sm-table-cell">ID</th>
+            <th scope="col" class="d-none d-md-table-cell">Type</th>
             {% if not patient %}
-            <th scope="col">Patient</th>
+            <th scope="col" class="d-none d-md-table-cell">Patient</th>
             {% endif %}
-            <th scope="col">Title</th>
+            <th scope="col">Attachment Info</th>
             <th scope="col" class="d-none d-md-table-cell">Size</th>
             <th scope="col" class="d-none d-lg-table-cell">Description</th>
             <th scope="col" class="d-none d-lg-table-cell">Upload Date</th>
-            <th scope="col" class="d-none d-sm-table-cell">Uploaded By</th>
+            <th scope="col" class="d-none d-lg-table-cell">Uploaded By</th>
             <th scope="col">Action</th>
           </tr>
         </thead>
         <tbody>
           {% for attachment in attachment_page_obj %}
           <tr>
-            <th scope="row">{{ attachment.id }}</th>
+            <th scope="row" class="d-none d-sm-table-cell">{{ attachment.id }}</th>
 
-            <td>
+            <td class="d-none d-md-table-cell">
               <div class="d-flex align-items-center">
 
                 <!-- Attachment Type -->
@@ -241,7 +241,7 @@
             </td>
 
             {% if not patient %}
-            <td>
+            <td class="d-none d-md-table-cell">
               <strong>{{attachment.patient.baby_name}}</strong><br>
               {% if attachment.patient.bht %}
                 <small class="text-muted">BHT: {{attachment.patient.bht}}</small>
@@ -250,17 +250,57 @@
             {% endif %}
 
             <td>
-              <div data-toggle="tooltip" title="{{attachment.description|default:'No description'}}">
-                {{attachment.title|truncatechars:30}}
+              <div>
+                <strong>{{attachment.title|truncatechars:30}}</strong>
               </div>
               {% if attachment.description %}
-                <small class="text-muted">{{attachment.description|truncatechars:50}}</small>
+                <small class="text-muted d-none d-sm-block">{{attachment.description|truncatechars:50}}</small>
               {% endif %}
               {% if attachment.is_sensitive %}
-                <br><span class="badge badge-warning badge-sm" data-toggle="tooltip" title="Sensitive Content">
+                <span class="badge badge-warning badge-sm d-none d-sm-inline" data-toggle="tooltip" title="Sensitive Content">
                   <i class="fas fa-exclamation-triangle mr-1"></i>Sensitive
                 </span>
               {% endif %}
+
+              <!-- Mobile-only consolidated info -->
+              <div class="d-block d-md-none mt-1">
+                <div class="mb-1">
+                  {% if attachment.attachment_type == 'video' %}
+                    <span class="badge badge-danger badge-sm">
+                      <i class="fas fa-video"></i> Video
+                    </span>
+                  {% elif attachment.attachment_type == 'image' %}
+                    <span class="badge badge-primary badge-sm">
+                      <i class="fas fa-image"></i> Image
+                    </span>
+                  {% elif attachment.attachment_type == 'pdf' %}
+                    <span class="badge badge-warning badge-sm">
+                      <i class="fas fa-file-pdf"></i> PDF
+                    </span>
+                  {% else %}
+                    <span class="badge badge-secondary badge-sm">
+                      <i class="fas fa-file"></i> File
+                    </span>
+                  {% endif %}
+                  {% if attachment.isBookmarked %}
+                    <span class="badge badge-primary badge-sm">
+                      <i class="fas fa-bookmark"></i>
+                    </span>
+                  {% endif %}
+                  {% if attachment.is_sensitive %}
+                    <span class="badge badge-warning badge-sm">
+                      <i class="fas fa-exclamation-triangle"></i> Sensitive
+                    </span>
+                  {% endif %}
+                </div>
+                <small class="text-muted">
+                  {% if not patient %}
+                    <strong>{{attachment.patient.baby_name}}</strong><br>
+                  {% endif %}
+                  Size: {{attachment.file_size_display|default:"Unknown"}}<br>
+                  Uploaded: {{attachment.created_at|date:"M d, Y"}}
+                </small>
+              </div>
             </td>
 
             <td class="d-none d-md-table-cell">
@@ -284,7 +324,7 @@
               {{attachment.created_at|date:"M d, Y"}}
             </td>
 
-            <td class="d-none d-sm-table-cell">
+            <td class="d-none d-lg-table-cell">
               {{attachment.added_by.get_full_name|default:attachment.added_by.username}}
               {% if attachment.last_edit_by and attachment.last_edit_by != attachment.added_by %}
                 <br><small class="text-muted">Modified by: {{attachment.last_edit_by.username}}</small>

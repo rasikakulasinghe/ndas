@@ -168,29 +168,29 @@
 
     <!-- Responsive Table Wrapper -->
     <div class="table-responsive">
-      <table class="table table-hover text-nowrap">
+      <table class="table table-hover">
         <thead>
     <tr>
-      <th scope="col">ID</th>
-      <th scope="col">Status</th>
-      <th scope="col">Patient</th>
-      <th scope="col">Title</th>
+      <th scope="col" class="d-none d-sm-table-cell">ID</th>
+      <th scope="col" class="d-none d-md-table-cell">Status</th>
+      <th scope="col" class="d-none d-md-table-cell">Patient</th>
+      <th scope="col">Video Info</th>
       <th scope="col" class="d-none d-md-table-cell">Duration</th>
       <th scope="col" class="d-none d-lg-table-cell">Size</th>
       <th scope="col" class="d-none d-lg-table-cell">Recorded</th>
-      <th scope="col" class="d-none d-sm-table-cell">Uploaded</th>
-      <th scope="col" class="d-none d-sm-table-cell">By</th>
+      <th scope="col" class="d-none d-md-table-cell">Uploaded</th>
+      <th scope="col" class="d-none d-lg-table-cell">By</th>
       <th scope="col">Action</th>
     </tr>
   </thead>
   <tbody>
     {% for video in file_list %}
     <tr>
-      <th scope="row">{{ video.id }}</th>
-      
-      <td>
+      <th scope="row" class="d-none d-sm-table-cell">{{ video.id }}</th>
+
+      <td class="d-none d-md-table-cell">
         <div class="d-flex align-items-center">
-          
+
           <!-- Assessment Status -->
           <div class="ml-2">
             {% if video.is_new_file %}
@@ -220,19 +220,41 @@
           {% endif %}
         </div>
       </td>
-      
-      <td>
+
+      <td class="d-none d-md-table-cell">
         <strong>{{video.patient.baby_name}}</strong><br>
         <small class="text-muted">{{video.video_count}}</small>
       </td>
-      
+
       <td>
-        <div data-toggle="tooltip" title="{{video.description|default:'No description'}}">
-          {{video.title|truncatechars:30}}
+        <div>
+          <strong>{{video.title|truncatechars:30}}</strong>
         </div>
         {% if video.description %}
-          <small class="text-muted">{{video.description|truncatechars:50}}</small>
+          <small class="text-muted d-none d-sm-block">{{video.description|truncatechars:50}}</small>
         {% endif %}
+
+        <!-- Mobile-only consolidated info -->
+        <div class="d-block d-md-none mt-1">
+          <div class="mb-1">
+            {% if video.is_new_file %}
+              <span class="badge badge-danger badge-sm">New</span>
+            {% else %}
+              <span class="badge badge-success badge-sm">Assessed</span>
+            {% endif %}
+            {% if video.is_bookmarked %}
+              <span class="badge badge-primary badge-sm">
+                <i class="fas fa-bookmark"></i>
+              </span>
+            {% endif %}
+          </div>
+          <small class="text-muted">
+            <strong>{{video.patient.baby_name}}</strong><br>
+            <i class="fas fa-play-circle text-danger"></i> {{video.duration_formatted}}
+            <span class="d-none d-sm-inline">• {{video.file_size_mb}} MB</span><br>
+            Uploaded: {{video.created_at|date:"M d, Y"}}
+          </small>
+        </div>
       </td>
 
       <td class="d-none d-md-table-cell">
@@ -250,27 +272,27 @@
         {% endif %}
       </td>
 
-      <td class="d-none d-sm-table-cell">
+      <td class="d-none d-lg-table-cell">
         {{video.recorded_on|date:"M d, Y"}}
         {% if video.age_string_recorded %}
           <br><small class="text-info">{{video.age_string_recorded}}</small>
         {% endif %}
       </td>
 
-      <td class="d-none d-sm-table-cell">
+      <td class="d-none d-md-table-cell">
         {{video.created_at|date:"M d, Y"}}
         {% if video.age_string_uploaded %}
           <br><small class="text-info">{{video.age_string_uploaded}}</small>
         {% endif %}
       </td>
 
-      <td class="d-none d-sm-table-cell">
+      <td class="d-none d-lg-table-cell">
         {{video.added_by.get_full_name|default:video.added_by.username}}
         {% if video.last_edit_by and video.last_edit_by != video.added_by %}
           <br><small class="text-muted">Modified by: {{video.last_edit_by.username}}</small>
         {% endif %}
       </td>
-      
+
       <td>
         <div class="btn-group" role="group">
           <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">

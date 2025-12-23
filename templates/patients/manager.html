@@ -55,12 +55,12 @@ Manager{% endblock title%}
 
         <div class="card-tools d-flex align-items-center">
           <!-- Search Bar -->
-          <form method="GET" class="mr-3">
-            <div class="input-group input-group-sm" style="width: 200px">
+          <form method="GET" class="mr-2 mr-sm-3">
+            <div class="input-group input-group-sm" style="width: 150px;">
               <input
                 type="text"
                 class="form-control form-control-sm"
-                placeholder="Search patients..."
+                placeholder="Search..."
                 name="search"
                 value="{{ search_query|default:'' }}"
                 id="cardSearchInput"
@@ -172,19 +172,19 @@ Manager{% endblock title%}
       <div class="card-body p-0">
         {% if patients_page_obj %}
         <div class="table-responsive">
-          <table class="table table-hover text-nowrap">
+          <table class="table table-hover">
             <thead class="bg-light">
               <tr>
                 <th
                   scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold"
+                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-sm-table-cell"
                   style="font-size: 0.75rem; padding: 1rem 0.75rem"
                 >
                   INDEX
                 </th>
                 <th
                   scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold"
+                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-md-table-cell"
                   style="font-size: 0.75rem; padding: 1rem 0.75rem"
                 >
                   STATUS
@@ -194,11 +194,11 @@ Manager{% endblock title%}
                   class="border-0 text-uppercase text-secondary font-weight-bold"
                   style="font-size: 0.75rem; padding: 1rem 0.75rem"
                 >
-                  PATIENT NAME
+                  PATIENT INFO
                 </th>
                 <th
                   scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold"
+                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-sm-table-cell"
                   style="font-size: 0.75rem; padding: 1rem 0.75rem"
                 >
                   BHT
@@ -226,14 +226,14 @@ Manager{% endblock title%}
                 </th>
                 <th
                   scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold"
+                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-sm-table-cell"
                   style="font-size: 0.75rem; padding: 1rem 0.75rem"
                 >
                   DIAGNOSIS
                 </th>
                 <th
                   scope="col"
-                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-sm-table-cell"
+                  class="border-0 text-uppercase text-secondary font-weight-bold d-none d-md-table-cell"
                   style="font-size: 0.75rem; padding: 1rem 0.75rem"
                 >
                   CREATED BY
@@ -251,12 +251,12 @@ Manager{% endblock title%}
               {% for Patient in patients_page_obj %}
               <tr class="border-bottom">
                 <td
-                  class="align-middle py-3 px-3 text-muted font-weight-medium"
+                  class="align-middle py-3 px-3 text-muted font-weight-medium d-none d-sm-table-cell"
                 >
                   {{ Patient.id }}
                 </td>
 
-                <td class="align-middle py-3 px-3">
+                <td class="align-middle py-3 px-3 d-none d-md-table-cell">
                   {% if Patient.isBookmarked %}
                   <span class="badge badge-warning px-2 py-1">
                     <i class="fas fa-star mr-1"></i>BOOKMARKED
@@ -280,13 +280,49 @@ Manager{% endblock title%}
                   <div class="font-weight-medium text-dark">
                     {{ Patient.baby_name|default:"Unnamed" }}
                   </div>
-                  <small class="d-block d-lg-none text-muted mt-1">
-                    {{ Patient.gender|default:"-" }} • {{
-                    Patient.dob_tob|date:"M d, Y"|default:"-" }}
+                  <!-- Mobile-only status badge -->
+                  <div class="d-block d-md-none mt-1">
+                    {% if Patient.isBookmarked %}
+                    <span class="badge badge-warning badge-sm">
+                      <i class="fas fa-star"></i> BOOKMARKED
+                    </span>
+                    {% elif Patient.isNewPatient %}
+                    <span class="badge badge-danger badge-sm">
+                      <i class="fas fa-plus"></i> NEW
+                    </span>
+                    {% elif Patient.isDischarged %}
+                    <span class="badge badge-secondary badge-sm">
+                      <i class="fas fa-sign-out-alt"></i> DISCHARGED
+                    </span>
+                    {% else %}
+                    <span class="badge badge-success badge-sm">
+                      <i class="fas fa-check"></i> ACTIVE
+                    </span>
+                    {% endif %}
+                  </div>
+                  <!-- Mobile-only additional info -->
+                  <small class="d-block d-sm-none text-muted mt-1">
+                    BHT: {{ Patient.bht|default:"-" }}<br>
+                    {% if Patient.gender or Patient.dob_tob %}
+                    {{ Patient.gender|default:"-" }} • {{ Patient.dob_tob|date:"M d, Y"|default:"-" }}<br>
+                    {% endif %}
+                    {% if Patient.isScreeningPositive %}
+                    <span class="badge badge-warning badge-sm mt-1">
+                      <i class="fas fa-exclamation-triangle"></i> ABNORMAL
+                    </span>
+                    {% else %}
+                    <span class="badge badge-success badge-sm mt-1">
+                      <i class="fas fa-check"></i> NORMAL
+                    </span>
+                    {% endif %}
+                  </small>
+                  <!-- Tablet-only additional info -->
+                  <small class="d-none d-sm-block d-lg-none text-muted mt-1">
+                    {{ Patient.gender|default:"-" }} • {{ Patient.dob_tob|date:"M d, Y"|default:"-" }}
                   </small>
                 </td>
 
-                <td class="align-middle py-3 px-3 text-muted">
+                <td class="align-middle py-3 px-3 text-muted d-none d-sm-table-cell">
                   {{ Patient.bht|default:"-" }}
                 </td>
 
@@ -308,7 +344,7 @@ Manager{% endblock title%}
                   {{ Patient.dob_tob|date:"M d, Y"|default:"-" }}
                 </td>
 
-                <td class="align-middle py-3 px-3">
+                <td class="align-middle py-3 px-3 d-none d-sm-table-cell">
                   {% if Patient.isScreeningPositive %}
                   <span
                     class="badge badge-warning px-2 py-1"
@@ -329,7 +365,7 @@ Manager{% endblock title%}
                 </td>
 
                 <td
-                  class="align-middle py-3 px-3 d-none d-sm-table-cell text-center"
+                  class="align-middle py-3 px-3 d-none d-md-table-cell text-center"
                 >
                   <button
                     type="button"

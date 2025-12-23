@@ -285,11 +285,12 @@ if DEBUG:
     CSP_BASE_URI = ("'self'",)
     CSP_FORM_ACTION = ("'self'",)
 else:
-    # Production CSP - Strict policy with nonce-based inline scripts/styles
-    # No 'unsafe-inline' or 'unsafe-eval' for XSS protection
+    # Production CSP - Strict policy with nonce-based inline scripts
+    # 'unsafe-inline' allowed for styles (templates and libraries use inline styles)
+    # No 'unsafe-inline' or 'unsafe-eval' for scripts for XSS protection
     CSP_DEFAULT_SRC = ("'self'",)
     CSP_SCRIPT_SRC = ("'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://unpkg.com", "https://vjs.zencdn.net")
-    CSP_STYLE_SRC = ("'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "https://vjs.zencdn.net")
+    CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "https://vjs.zencdn.net")
     CSP_IMG_SRC = ("'self'", "data:", "blob:", "https:")
     CSP_FONT_SRC = ("'self'", "data:", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com")
     CSP_CONNECT_SRC = ("'self'",)
