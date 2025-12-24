@@ -513,120 +513,150 @@
   </div>
 </div>
 
-<script>
-// Cache for DOM elements - initialized once on page load
-let cachedElements = null;
+<script nonce="{{ request.csp_nonce }}">
+(function() {
+  'use strict';
 
-// Initialize element cache
-function initializeElementCache() {
-  return {
-    resuscitationCheckbox: document.getElementById('id_resuscitated'),
-    resuscitationNote: document.getElementById('resuscitation-note'),
-    resuscitationTextArea: document.getElementById('id_resustn_note'),
-    gmaOtherContainer: document.getElementById('gma-other-note'),
-    gmaOtherTextArea: document.getElementById('id_indecation_for_gma_other'),
-    gmaOtherCheckbox: document.querySelector('input[name="indecation_for_gma"][value="27"]'),
-    patientForm: document.getElementById('patient-form'),
-    submitBtn: document.getElementById('submit-btn'),
-    bhtInput: document.getElementById('id_bht')
-  };
-}
+  console.log('[Patient Edit Form] Initializing...');
 
-// Update resuscitation note visibility
-function updateResuscitationVisibility() {
-  const { resuscitationCheckbox, resuscitationNote, resuscitationTextArea } = cachedElements;
-  if (!resuscitationCheckbox) return;
-
-  const isChecked = resuscitationCheckbox.checked;
-  resuscitationNote.style.display = isChecked ? 'block' : 'none';
-
-  if (isChecked) {
-    resuscitationTextArea.setAttribute('required', 'required');
+  // Wait for DOM to be fully loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPatientEditForm);
   } else {
-    resuscitationTextArea.removeAttribute('required');
-  }
-}
-
-// Update GMA other note visibility
-function updateGMAOtherVisibility() {
-  const { gmaOtherCheckbox, gmaOtherContainer, gmaOtherTextArea } = cachedElements;
-  if (!gmaOtherCheckbox) return;
-
-  const isChecked = gmaOtherCheckbox.checked;
-  gmaOtherContainer.style.display = isChecked ? 'block' : 'none';
-
-  if (isChecked) {
-    gmaOtherTextArea.setAttribute('required', 'required');
-  } else {
-    gmaOtherTextArea.removeAttribute('required');
-  }
-}
-
-// Validate form before submission
-function validateForm() {
-  const { resuscitationCheckbox, resuscitationTextArea, gmaOtherCheckbox, gmaOtherTextArea } = cachedElements;
-
-  // Resuscitation validation
-  if (resuscitationCheckbox?.checked && !resuscitationTextArea?.value.trim()) {
-    alert('Please provide resuscitation notes when "Required Resuscitation" is checked.');
-    resuscitationTextArea.focus();
-    return false;
+    // DOM already loaded
+    initPatientEditForm();
   }
 
-  // GMA Other validation
-  if (gmaOtherCheckbox?.checked && !gmaOtherTextArea?.value.trim()) {
-    alert('Please provide details when "Other" GMA indication is selected.');
-    gmaOtherTextArea.focus();
-    return false;
-  }
+  function initPatientEditForm() {
+    console.log('[Patient Edit Form] DOM loaded, setting up form controls...');
 
-  return true;
-}
+    // Get DOM elements
+    const resuscitationCheckbox = document.getElementById('id_resuscitated');
+    const resuscitationNote = document.getElementById('resuscitation-note');
+    const resuscitationTextArea = document.getElementById('id_resustn_note');
+    const gmaOtherContainer = document.getElementById('gma-other-note');
+    const gmaOtherTextArea = document.getElementById('id_indecation_for_gma_other');
+    const gmaOtherCheckbox = document.querySelector('input[name="indecation_for_gma"][value="27"]');
+    const patientForm = document.getElementById('patient-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const bhtInput = document.getElementById('id_bht');
 
-// Disable submit button and show loading state
-function disableSubmitButton() {
-  const { submitBtn } = cachedElements;
-  if (!submitBtn) return;
-
-  submitBtn.disabled = true;
-  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-}
-
-// Initialize all form functionality
-document.addEventListener('DOMContentLoaded', function() {
-  // Cache all DOM elements once
-  cachedElements = initializeElementCache();
-  const { resuscitationCheckbox, gmaOtherCheckbox, patientForm, bhtInput } = cachedElements;
-
-  // Initialize resuscitation toggle
-  if (resuscitationCheckbox) {
-    resuscitationCheckbox.addEventListener('change', updateResuscitationVisibility);
-    updateResuscitationVisibility(); // Set initial state
-  }
-
-  // Initialize GMA toggle with event delegation
-  const gmaFieldContainer = gmaOtherCheckbox?.closest('.form-group');
-  if (gmaFieldContainer) {
-    gmaFieldContainer.addEventListener('change', function(e) {
-      if (e.target.name === 'indecation_for_gma') {
-        updateGMAOtherVisibility();
-      }
+    // Debug: Log found elements
+    console.log('[Patient Edit Form] Elements found:', {
+      resuscitationCheckbox: !!resuscitationCheckbox,
+      resuscitationNote: !!resuscitationNote,
+      resuscitationTextArea: !!resuscitationTextArea,
+      gmaOtherCheckbox: !!gmaOtherCheckbox,
+      gmaOtherContainer: !!gmaOtherContainer,
+      patientForm: !!patientForm
     });
-    updateGMAOtherVisibility(); // Set initial state
-  }
 
-  // Form validation and submission
-  patientForm?.addEventListener('submit', function(e) {
-    if (!validateForm()) {
-      e.preventDefault();
-      return false;
+    // Function to toggle resuscitation note visibility
+    function toggleResuscitationNote() {
+      if (!resuscitationCheckbox || !resuscitationNote || !resuscitationTextArea) {
+        console.error('[Patient Edit Form] Missing required elements for resuscitation toggle');
+        return;
+      }
+
+      const isChecked = resuscitationCheckbox.checked;
+      console.log('[Patient Edit Form] Resuscitation checkbox checked:', isChecked);
+
+      if (isChecked) {
+        resuscitationNote.style.display = 'block';
+        resuscitationTextArea.required = true;
+        console.log('[Patient Edit Form] Showing resuscitation notes field');
+      } else {
+        resuscitationNote.style.display = 'none';
+        resuscitationTextArea.required = false;
+        console.log('[Patient Edit Form] Hiding resuscitation notes field');
+      }
     }
-    disableSubmitButton();
-  });
 
-  // Set focus on first input
-  bhtInput?.focus();
-});
+    // Function to toggle GMA other note visibility
+    function toggleGMAOtherNote() {
+      if (!gmaOtherCheckbox || !gmaOtherContainer || !gmaOtherTextArea) {
+        return;
+      }
+
+      const isChecked = gmaOtherCheckbox.checked;
+
+      if (isChecked) {
+        gmaOtherContainer.style.display = 'block';
+        gmaOtherTextArea.required = true;
+      } else {
+        gmaOtherContainer.style.display = 'none';
+        gmaOtherTextArea.required = false;
+      }
+    }
+
+    // Setup resuscitation checkbox event listener
+    if (resuscitationCheckbox) {
+      resuscitationCheckbox.addEventListener('change', function() {
+        console.log('[Patient Edit Form] Resuscitation checkbox changed event fired');
+        toggleResuscitationNote();
+      });
+
+      // Set initial state
+      toggleResuscitationNote();
+      console.log('[Patient Edit Form] Resuscitation toggle initialized');
+    } else {
+      console.error('[Patient Edit Form] Resuscitation checkbox not found!');
+    }
+
+    // Setup GMA other checkbox event listener
+    if (gmaOtherCheckbox) {
+      const gmaContainer = gmaOtherCheckbox.closest('.form-group');
+      if (gmaContainer) {
+        gmaContainer.addEventListener('change', function(e) {
+          if (e.target.name === 'indecation_for_gma') {
+            toggleGMAOtherNote();
+          }
+        });
+        toggleGMAOtherNote();
+      }
+    }
+
+    // Form submission validation
+    if (patientForm) {
+      patientForm.addEventListener('submit', function(e) {
+        // Validate resuscitation note
+        if (resuscitationCheckbox && resuscitationCheckbox.checked) {
+          if (!resuscitationTextArea || !resuscitationTextArea.value.trim()) {
+            e.preventDefault();
+            alert('Please provide resuscitation notes when "Required Resuscitation" is checked.');
+            if (resuscitationTextArea) resuscitationTextArea.focus();
+            return false;
+          }
+        }
+
+        // Validate GMA other note
+        if (gmaOtherCheckbox && gmaOtherCheckbox.checked) {
+          if (!gmaOtherTextArea || !gmaOtherTextArea.value.trim()) {
+            e.preventDefault();
+            alert('Please provide details when "Other" GMA indication is selected.');
+            if (gmaOtherTextArea) gmaOtherTextArea.focus();
+            return false;
+          }
+        }
+
+        // Disable submit button to prevent double submission
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        }
+      });
+    }
+
+    // Set focus on first input
+    if (bhtInput) {
+      setTimeout(function() {
+        bhtInput.focus();
+      }, 100);
+    }
+
+    console.log('[Patient Edit Form] Initialization complete');
+  }
+})();
 </script>
 
 <!-- Unified Delete Confirmation Modal -->{% delete_modal patient %}

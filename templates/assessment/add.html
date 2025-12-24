@@ -236,8 +236,22 @@
   </section>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
+<script nonce="{{ request.csp_nonce }}">
+(function() {
+  'use strict';
+
+  console.log('[Assessment Add Form] Initializing...');
+
+  // Wait for DOM to be fully loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAssessmentAddForm);
+  } else {
+    // DOM already loaded
+    initAssessmentAddForm();
+  }
+
+  function initAssessmentAddForm() {
+    console.log('[Assessment Add Form] DOM loaded, setting up form controls...');
     const form = document.getElementById('assessment-form');
     const saveBtn = document.getElementById('save-btn');
     const progressDiv = document.getElementById('save-progress');
@@ -552,7 +566,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         assessmentDateInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
     }
-});
+
+    console.log('[Assessment Add Form] Initialization complete');
+  }
+})();
 </script>
 
 <style>

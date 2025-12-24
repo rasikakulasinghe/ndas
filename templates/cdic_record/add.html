@@ -247,8 +247,22 @@
 </div>
 
 <!-- JavaScript code -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
+<script nonce="{{ request.csp_nonce }}">
+(function() {
+  'use strict';
+
+  console.log('[CDIC Add Form] Initializing...');
+
+  // Wait for DOM to be fully loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCDICAddForm);
+  } else {
+    // DOM already loaded
+    initCDICAddForm();
+  }
+
+  function initCDICAddForm() {
+    console.log('[CDIC Add Form] DOM loaded, setting up form controls...');
     // Initialize tooltips
     $('[data-toggle="tooltip"]').tooltip();
 
@@ -378,7 +392,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-});
+
+    console.log('[CDIC Add Form] Initialization complete');
+  }
+})();
 </script>
 
 <style>

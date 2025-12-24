@@ -147,8 +147,8 @@ body.ndas-login-body {
             <div class="modal-header ndas-contact-modal-header">
                 <div class="d-flex align-items-center w-100">
                     <div class="mr-3">
-                        {% if developer.logo %}
-                            <img src="{{ developer.logo.url }}" class="ndas-contact-modal-avatar" alt="{{ developer.name }}">
+                        {% if developer.logo and developer.logo.name %}
+                            <img src="{{ developer.logo.url }}" class="ndas-contact-modal-avatar" alt="{{ developer.name }}" onerror="this.style.display='none'; this.parentNode.innerHTML='<div class=\'ndas-contact-modal-avatar-placeholder\'><i class=\'fas fa-user-tie\'></i></div>';">
                         {% else %}
                             <div class="ndas-contact-modal-avatar-placeholder">
                                 <i class="fas fa-user-tie"></i>

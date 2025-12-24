@@ -254,9 +254,14 @@
   </div>
 </div>
 
-<script>
-// Cache for DOM elements - initialized once on page load
-let cachedElements = null;
+<script nonce="{{ request.csp_nonce }}">
+(function() {
+  'use strict';
+
+  console.log('[Problem List Edit Form] Initializing...');
+
+  // Cache for DOM elements - initialized once on page load
+  let cachedElements = null;
 
 // Initialize element cache
 function initializeElementCache() {
@@ -313,7 +318,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Set focus on first input
   nameInput?.focus();
+
+  console.log('[Problem List Edit Form] Initialization complete');
 });
+})();
 </script>
 
 {% endblock main_content %}

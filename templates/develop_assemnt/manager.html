@@ -223,7 +223,7 @@
                     type="button"
                     class="btn btn-link p-0 text-primary"
                     data-toggle="tooltip"
-                    title="Created by: {{ DARecord.added_by.username|default:'Unknown' }} on {{ DARecord.created_at|date:'M d, Y'|default:'-' }}{% if DARecord.last_edit_by %} | Last edited: {{ DARecord.updated_at|date:'M d, Y'|default:'-' }} by {{ DARecord.last_edit_by.username }}{% endif %}"
+                    title="Created by: {% if DARecord.added_by %}{{ DARecord.added_by.username }}{% else %}Unknown{% endif %} on {{ DARecord.created_at|date:'M d, Y'|default:'-' }}{% if DARecord.last_edit_by %} | Last edited: {{ DARecord.updated_at|date:'M d, Y'|default:'-' }} by {{ DARecord.last_edit_by.username }}{% endif %}"
                   >
                     <i class="fas fa-info-circle fa-icon-lg"></i>
                   </button>

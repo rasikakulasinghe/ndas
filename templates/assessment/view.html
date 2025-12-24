@@ -160,7 +160,7 @@
 
                      <dt class="col-lg-3 col-md-4 col-6">Created By:</dt>
                     <dd class="col-lg-9 col-md-8 col-6">
-                      <i class="fas fa-user mr-1"></i>{{ assessment.added_by.get_full_name|default:assessment.added_by.username }}
+                      <i class="fas fa-user mr-1"></i>{% if assessment.added_by %}{{ assessment.added_by.get_full_name|default:assessment.added_by.username }}{% else %}Unknown{% endif %}
                     </dd>
                     
                     <dt class="col-lg-3 col-md-4 col-6">Created On:</dt>

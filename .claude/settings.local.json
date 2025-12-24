@@ -38,7 +38,8 @@
       "Bash(else echo \".env file missing\")",
       "Bash(fi)",
       "Bash(unset:*)",
-      "Bash(timeout 3 python:*)"
+      "Bash(timeout 3 python:*)",
+      "Bash(awk:*)"
     ],
     "deny": [],
     "ask": []

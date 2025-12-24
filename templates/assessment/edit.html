@@ -252,8 +252,22 @@
   </section>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
+<script nonce="{{ request.csp_nonce }}">
+(function() {
+  'use strict';
+
+  console.log('[Assessment Edit Form] Initializing...');
+
+  // Wait for DOM to be fully loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAssessmentEditForm);
+  } else {
+    // DOM already loaded
+    initAssessmentEditForm();
+  }
+
+  function initAssessmentEditForm() {
+    console.log('[Assessment Edit Form] DOM loaded, setting up form controls...');
     const form = document.getElementById('assessment-form');
     const otherDiagnosisToggle = document.getElementById('otherDiagnosisToggle');
     const otherDiagnosisGroup = document.getElementById('otherDiagnosisGroup');
@@ -426,7 +440,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof $().collapse === 'function') {
         $('.collapse').collapse('hide');
     }
-});
+
+    console.log('[Assessment Edit Form] Initialization complete');
+  }
+})();
 </script>
 
 <style>

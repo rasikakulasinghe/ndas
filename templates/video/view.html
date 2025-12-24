@@ -55,7 +55,7 @@
                 </div>
                 <div class="col-sm-6 text-right">
                   <small class="text-muted">
-                    <i class="fas fa-user mr-1"></i>By: {{ video.added_by.get_full_name|default:video.added_by.username }}
+                    <i class="fas fa-user mr-1"></i>By: {% if video.added_by %}{{ video.added_by.get_full_name|default:video.added_by.username }}{% else %}Unknown{% endif %}
                   </small>
                 </div>
               </div>
@@ -103,7 +103,7 @@
                 {% endif %}
                 
                 <dt class="col-sm-5">Uploaded By:</dt>
-                <dd class="col-sm-7">{{ video.added_by.get_full_name|default:video.added_by.username }}</dd>
+                <dd class="col-sm-7">{% if video.added_by %}{{ video.added_by.get_full_name|default:video.added_by.username }}{% else %}Unknown{% endif %}</dd>
                 
                 <dt class="col-sm-5">Uploaded On:</dt>
                 <dd class="col-sm-7">{{ video.created_at|date:"M d, Y H:i" }}</dd>

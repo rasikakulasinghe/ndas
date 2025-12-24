@@ -200,9 +200,22 @@
 {% endblock main_content %}
 
 {% block extra_js %}
-<script>
-// Wait for document and all dependencies to be ready
-document.addEventListener('DOMContentLoaded', function() {
+<script nonce="{{ request.csp_nonce }}">
+(function() {
+  'use strict';
+
+  console.log('[Attachment Add Form] Initializing...');
+
+  // Wait for document and all dependencies to be ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAttachmentAddForm);
+  } else {
+    // DOM already loaded
+    initAttachmentAddForm();
+  }
+
+  function initAttachmentAddForm() {
+    console.log('[Attachment Add Form] DOM loaded, setting up form controls...');
   // Verify jQuery is loaded
   if (typeof $ === 'undefined') {
     console.error('jQuery is not loaded');
@@ -514,5 +527,9 @@ function cleanupUploadResources() {
     console.warn('Error during upload cleanup:', e);
   }
 }
+
+    console.log('[Attachment Add Form] Initialization complete');
+  }
+})();
 </script>
 {% endblock extra_js %}

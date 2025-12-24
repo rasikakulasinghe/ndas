@@ -272,9 +272,11 @@
                       <a class="dropdown-item" href="{% url 'view-patient' Assessment.patient.id %}">
                         <i class="fas fa-user mr-2"></i>View Patient
                       </a>
+                      {% if Assessment.added_by %}
                       <a class="dropdown-item" href="{% url 'user-view-by-username' Assessment.added_by.username %}">
                         <i class="fas fa-user-tie mr-2"></i>View Creator
                       </a>
+                      {% endif %}
                       <div class="dropdown-divider"></div>
                       {% if Assessment.isBookmarked %}
                       <a class="dropdown-item" href="{% url 'bookmark-view' Assessment.isBookmarked.id %}">

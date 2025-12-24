@@ -59,32 +59,75 @@
 
       <div class="form-group row">
         <label class="col-form-label col-sm-2">Is Discharged : </label>
-        <div class="col-sm">{{cdic_assemnt_form.is_discharged}}</div>
-      </div>
-
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Discharge Date : </label>
         <div class="col-sm">
-          <div class=" d-flex align-items-center">
-            <div>{{cdic_assemnt_form.discharge_date}}</div>
-            &nbsp; &nbsp; <div><a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Select the date of discharge patient from CDIC..."></span></a></div>
+          <div class="form-check">
+            {{cdic_assemnt_form.is_discharged}}
+            <label class="form-check-label ml-2" for="{{ cdic_assemnt_form.is_discharged.id_for_label }}">
+              Patient has been discharged from CDIC care
+            </label>
+          </div>
+          {% if cdic_assemnt_form.is_discharged.errors %}
+            <div class="invalid-feedback d-block">
+              {% for error in cdic_assemnt_form.is_discharged.errors %}
+                <small class="text-danger">{{ error }}</small><br>
+              {% endfor %}
             </div>
+          {% endif %}
         </div>
       </div>
 
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Discharge By : </label>
-        <div class="col-sm">
-          <div class=" d-flex align-items-center">
-            <div>{{cdic_assemnt_form.discharged_by}}</div>
-            &nbsp; &nbsp; <div><a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Select patient discharge date from clinic..."></span></a></div>
+      <div id="container_discharge" style="display: none;">
+        <div class="form-group row">
+          <label class="col-form-label col-sm-2">
+            Discharge Date <span class="text-danger">*</span> :
+          </label>
+          <div class="col-sm">
+            <div class="d-flex align-items-center">
+              <div>{{cdic_assemnt_form.discharge_date}}</div>
+              &nbsp; &nbsp; <div><a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Select the date of discharge patient from CDIC..."></span></a></div>
             </div>
+            {% if cdic_assemnt_form.discharge_date.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in cdic_assemnt_form.discharge_date.errors %}
+                  <small class="text-danger">{{ error }}</small><br>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
         </div>
-      </div>
-      
-      <div class="form-group row">
-        <label class="col-form-label col-sm-2">Discharge Plan : </label>
-        <div class="col-sm">{{cdic_assemnt_form.discharge_plan}}</div>
+
+        <div class="form-group row">
+          <label class="col-form-label col-sm-2">
+            Discharge By <span class="text-danger">*</span> :
+          </label>
+          <div class="col-sm">
+            <div class="d-flex align-items-center">
+              <div>{{cdic_assemnt_form.discharged_by}}</div>
+              &nbsp; &nbsp; <div><a href="#"><span class="fa fa-question-circle" data-toggle="tooltip" data-original-title="Mention the officer who authorized the discharge..."></span></a></div>
+            </div>
+            {% if cdic_assemnt_form.discharged_by.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in cdic_assemnt_form.discharged_by.errors %}
+                  <small class="text-danger">{{ error }}</small><br>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-form-label col-sm-2">Discharge Plan : </label>
+          <div class="col-sm">
+            {{cdic_assemnt_form.discharge_plan}}
+            {% if cdic_assemnt_form.discharge_plan.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in cdic_assemnt_form.discharge_plan.errors %}
+                  <small class="text-danger">{{ error }}</small><br>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
       </div>
 
       <div class="form-group row">
@@ -101,4 +144,78 @@
   </div>
   <!-- /.card -->
 </div>
+
+<!-- JavaScript code -->
+<script nonce="{{ request.csp_nonce }}">
+(function() {
+  'use strict';
+
+  console.log('[CDIC Edit Form] Initializing...');
+
+  // Wait for DOM to be fully loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCDICEditForm);
+  } else {
+    // DOM already loaded
+    initCDICEditForm();
+  }
+
+  function initCDICEditForm() {
+    console.log('[CDIC Edit Form] DOM loaded, setting up form controls...');
+
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+
+    // Get form elements
+    const isDischargedField = document.getElementById('{{ cdic_assemnt_form.is_discharged.id_for_label }}');
+    const dischargeDateField = document.getElementById('{{ cdic_assemnt_form.discharge_date.id_for_label }}');
+    const dischargedByField = document.getElementById('{{ cdic_assemnt_form.discharged_by.id_for_label }}');
+
+    // Toggle discharge fields visibility
+    function toggleis_discharged_fromCDIC() {
+        const textboxContainer = document.getElementById("container_discharge");
+        const requiredFields = [dischargeDateField, dischargedByField];
+
+        if (isDischargedField && isDischargedField.checked) {
+            textboxContainer.style.display = "block";
+            console.log('[CDIC Edit Form] Showing discharge fields');
+            // Add required attributes
+            requiredFields.forEach(field => {
+                if (field) field.setAttribute('required', 'required');
+            });
+        } else {
+            textboxContainer.style.display = "none";
+            console.log('[CDIC Edit Form] Hiding discharge fields');
+            // Remove required attributes
+            requiredFields.forEach(field => {
+                if (field) {
+                    field.removeAttribute('required');
+                }
+            });
+        }
+    }
+
+    // Set up discharge toggle
+    if (isDischargedField) {
+        isDischargedField.addEventListener('change', toggleis_discharged_fromCDIC);
+        // Initialize on page load
+        toggleis_discharged_fromCDIC();
+        console.log('[CDIC Edit Form] Discharge toggle initialized');
+    }
+
+    console.log('[CDIC Edit Form] Initialization complete');
+  }
+})();
+</script>
+
+<style>
+.form-check {
+    padding-left: 0;
+}
+
+.form-check .form-check-input {
+    margin-left: 0;
+}
+</style>
+
 {% endblock main_content %}

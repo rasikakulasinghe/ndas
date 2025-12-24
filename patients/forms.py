@@ -231,8 +231,6 @@ class PatientForm(UniqueFieldValidationMixin, forms.ModelForm):
             "resuscitated": forms.CheckboxInput(
                 attrs={
                     "class": "form-check-input",
-                    "id": "id_resuscitated",
-                    "onchange": "toggleResuscitationNote()",
                 }
             ),
             "resustn_note": forms.Textarea(
@@ -657,7 +655,6 @@ class GMAssessmentForm(TimezoneDateTimeMixin, forms.ModelForm):
                 attrs={
                     "class": "big-checkbox",
                     "id": "is_assessment_completed",
-                    "onchange": "toggleis_assessment_completed()",
                 }
             ),
             "diagnosis": forms.CheckboxSelectMultiple(attrs={"class": ""}),
@@ -815,7 +812,6 @@ class CDICRecordForm(TimezoneDateTimeMixin, forms.ModelForm):
                 attrs={
                     "class": "big-checkbox",
                     "id": "is_discharged",
-                    "onchange": "toggleis_discharged_fromCDIC()",
                 }
             ),
             "discharged_by": forms.TextInput(
@@ -1099,7 +1095,6 @@ class GeneralPaediatricAssessmentForm(TimezoneDateTimeMixin, forms.ModelForm):
                 attrs={
                     "class": "big-checkbox",
                     "id": "is_discharged",
-                    "onchange": "toggleDischarged()",
                 }
             ),
             "discharged_authorized_by": forms.Select(
