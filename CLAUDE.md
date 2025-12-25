@@ -437,12 +437,27 @@ Major performance and security improvements completed across three phases:
 - Supports linear interpolation for POG+days
 - 20 comprehensive tests added
 
+### Phase 4: Maintainability Improvements (Partial)
+
+**Model Meta Classes (Good Practice):**
+- `IndicationsForGMA`: verbose names, ordering by level/title, indexes
+- `DiagnosisList`: verbose names, ordering by title, indexes
+- Improves admin interface display and query consistency
+
+**HTTP Method Restrictions (Security):**
+- Added `@require_GET` to detail/list views (patient_manager, patient_view)
+- Added `@require_http_methods(["GET", "POST"])` to form views (patient_add, patient_edit)
+- Prevents incorrect HTTP methods, returns 405 Method Not Allowed
+- Security hardening: reduces attack surface
+
 ### Remaining Known Issues
 
 See `temp_documents/BUG_AND_PERFORMANCE_ANALYSIS.md` and `temp_documents/BUG_FIX_PLAN.md` for:
 - Additional performance optimizations (template caching, prefetch_related)
 - Static file optimization opportunities
-- HTTP method restrictions (require_GET, require_POST)
+- App URL namespacing (requires template updates)
+
+**Note:** All critical bugs fixed. Remaining items are low-priority optimizations.
 
 ## Quick Reference
 
