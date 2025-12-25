@@ -534,8 +534,8 @@ def admin_dashboard(request):
     # Get recent activities (last 10)
     recent_activities = UserActivityLog.objects.select_related('user').order_by('-login_timestamp')[:10]
     
-    # Get recently added users (last 5)
-    recent_users = CustomUser.objects.order_by('-date_joined')[:5]
+    # Get recently added users (last 5) - optimized to only fetch needed fields
+    recent_users = CustomUser.objects.only('id', 'username', 'position', 'is_active', 'date_joined').order_by('-date_joined')[:5]
     
     context = {
         'total_users': total_users,

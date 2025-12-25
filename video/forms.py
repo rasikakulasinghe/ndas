@@ -89,6 +89,56 @@ class VideoForm(forms.ModelForm):
                     _('Unsupported file format. Allowed formats: MP4, AVI, MOV, WMV, MKV, WEBM')
                 )
 
+            # MIME type validation - verify file content matches video format
+            try:
+                import magic
+
+                # Read first 2048 bytes for MIME detection
+                video_file.seek(0)
+                file_header = video_file.read(2048)
+                video_file.seek(0)  # Reset file pointer
+
+                # Detect MIME type from file content
+                mime = magic.Magic(mime=True)
+                detected_mime = mime.from_buffer(file_header)
+
+                # Define allowed MIME types
+                allowed_mimes = [
+                    'video/mp4',
+                    'video/x-m4v',           # MP4 variant
+                    'video/quicktime',        # .mov
+                    'video/x-msvideo',        # .avi
+                    'video/avi',              # .avi variant
+                    'video/x-matroska',       # .mkv
+                    'video/webm',             # .webm
+                    'video/x-ms-wmv',         # .wmv
+                    'video/x-ms-asf',         # .wmv variant
+                ]
+
+                if detected_mime not in allowed_mimes:
+                    logger.warning(
+                        f"Video upload rejected - Invalid MIME type: {detected_mime} "
+                        f"for file: {video_file.name}"
+                    )
+                    raise ValidationError(
+                        _(f'Invalid video file. Detected file type: {detected_mime}. '
+                          f'Please upload a valid video file (MP4, AVI, MOV, WMV, MKV, WEBM).')
+                    )
+
+                logger.info(
+                    f"Video file validated - MIME type: {detected_mime}, "
+                    f"Filename: {video_file.name}, Size: {video_file.size} bytes"
+                )
+
+            except ImportError:
+                logger.error("python-magic library not installed. MIME type validation skipped.")
+                # Continue without MIME validation if library not available
+            except Exception as e:
+                logger.error(f"Error during MIME type validation: {str(e)}")
+                raise ValidationError(
+                    _('Unable to validate video file. Please ensure you are uploading a valid video file.')
+                )
+
         return video_file
 
     def clean_recorded_on(self):

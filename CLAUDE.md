@@ -407,6 +407,19 @@ Major performance and security improvements completed across three phases:
 - Added `select_related('user')` to 3 queries
 - 96% query reduction (51 to 2 queries for 50 logs)
 
+**Username List Query Optimization:**
+- Optimized `recent_users` query in admin dashboard
+- Uses `.only('id', 'username', 'position', 'is_active', 'date_joined')`
+- Reduces memory usage and query overhead
+
+**Video MIME Type Validation (Security):**
+- Added `python-magic-bin` dependency for content-based file type detection
+- Validates video file content (not just extension) in `video/forms.py`
+- Prevents malicious file uploads disguised as videos
+- Supports 9 video MIME types (mp4, mov, avi, mkv, webm, wmv variants)
+- Security logging for rejected uploads
+- Graceful fallback if python-magic unavailable
+
 **Date Cross-Validation in problemlist Forms:**
 - `date_identified >= date_of_onset`
 - `date_resolved >= date_of_onset`
