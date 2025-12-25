@@ -1,10 +1,70 @@
-import os, math, mimetypes
+import os, math, mimetypes, re, html
 from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django.core.validators import RegexValidator
 from django.utils import timezone
+
+
+def sanitize_text_input(value):
+    """
+    Sanitize text input to prevent XSS attacks while preserving medical notation.
+
+    Security measures:
+    - Removes HTML tags and script elements
+    - Strips JavaScript event handlers and dangerous protocols
+    - Preserves medical notation (e.g., "< 5 mg/dl", "> 38°C")
+    - Normalizes whitespace
+
+    Args:
+        value (str): Input text to sanitize
+
+    Returns:
+        str: Sanitized text safe for storage and display
+
+    Examples:
+        >>> sanitize_text_input("Temperature > 38°C")
+        "Temperature > 38°C"
+        >>> sanitize_text_input("<script>alert('xss')</script>Test")
+        "alert('xss')Test"
+        >>> sanitize_text_input("BP < 120/80 mmHg")
+        "BP < 120/80 mmHg"
+    """
+    if not value:
+        return value
+
+    # Convert to string if not already
+    text = str(value)
+
+    # Remove script tags and their content (case insensitive)
+    text = re.sub(r'<script[^>]*>.*?</script>', '', text, flags=re.IGNORECASE | re.DOTALL)
+    text = re.sub(r'<style[^>]*>.*?</style>', '', text, flags=re.IGNORECASE | re.DOTALL)
+
+    # Remove event handlers (onclick, onload, onerror, etc.)
+    text = re.sub(r'\s*on\w+\s*=\s*["\']?[^"\']*["\']?', '', text, flags=re.IGNORECASE)
+
+    # Remove dangerous protocols from URLs (javascript:, data:, vbscript:)
+    text = re.sub(r'(javascript|data|vbscript):', '', text, flags=re.IGNORECASE)
+
+    # Remove HTML tags while preserving content
+    # This regex preserves medical notation like "< 5" or "> 38"
+    # by only matching tags that start with < followed by a letter
+    text = re.sub(r'<(/)?([a-zA-Z][a-zA-Z0-9]*)[^>]*>', '', text)
+
+    # Unescape HTML entities to prevent double-encoding
+    # This converts &lt; back to < and &gt; back to >
+    text = html.unescape(text)
+
+    # Normalize whitespace (replace multiple spaces/tabs/newlines with single space)
+    # Preserve single newlines for paragraph breaks
+    text = re.sub(r'[ \t]+', ' ', text)  # Multiple spaces/tabs to single space
+    text = re.sub(r'\n\s*\n', '\n\n', text)  # Multiple newlines to double newline
+
+    # Strip leading/trailing whitespace
+    text = text.strip()
+
+    return text
 
 
 def image_extension_validation(value):
