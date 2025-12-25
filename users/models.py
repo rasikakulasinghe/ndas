@@ -777,8 +777,9 @@ class Subscription(TimeStampedModel, UserTrackingMixin):
                 subscription.save(update_fields=['status', 'updated_at'])
                 # Update the current instance
                 self.status = new_status
-                # Clear cache again after update
-                self._clear_cache()
+
+            # Clear cache AFTER transaction commits (not inside transaction)
+            self._clear_cache()
     
     def _clear_cache(self):
         """
