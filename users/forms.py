@@ -98,6 +98,58 @@ class CustomUserRegistrationForm(forms.ModelForm):
             additional_notes = sanitize_plain_text(additional_notes)
         return additional_notes
 
+    def clean_profile_picture(self):
+        """Validate profile picture upload"""
+        import os
+        from PIL import Image
+
+        profile_picture = self.cleaned_data.get('profile_picture')
+
+        if profile_picture:
+            # Validate file size (5MB max)
+            max_size = 5 * 1024 * 1024  # 5MB in bytes
+            if profile_picture.size > max_size:
+                raise forms.ValidationError(
+                    f'Profile picture file size is {profile_picture.size / (1024 * 1024):.2f}MB. '
+                    f'Maximum allowed size is 5MB.'
+                )
+
+            # Validate file extension
+            allowed_extensions = ['.jpg', '.jpeg', '.png']
+            ext = os.path.splitext(profile_picture.name)[1].lower()
+            if ext not in allowed_extensions:
+                raise forms.ValidationError(
+                    f'Unsupported file extension: {ext}. '
+                    f'Allowed extensions: JPG, JPEG, PNG'
+                )
+
+            # Validate actual image content using PIL
+            try:
+                image = Image.open(profile_picture)
+                image.verify()  # Verify it's actually an image
+
+                # Re-open for dimension check (verify() closes the file)
+                profile_picture.seek(0)
+                image = Image.open(profile_picture)
+                width, height = image.size
+
+                # Validate dimensions (4000x4000 max)
+                max_dimension = 4000
+                if width > max_dimension or height > max_dimension:
+                    raise forms.ValidationError(
+                        f'Image dimensions ({width}x{height}) exceed maximum allowed size of {max_dimension}x{max_dimension} pixels.'
+                    )
+
+                # Reset file pointer for subsequent processing
+                profile_picture.seek(0)
+
+            except (IOError, SyntaxError) as e:
+                raise forms.ValidationError(
+                    'Invalid image file. Please upload a valid JPG, JPEG, or PNG image.'
+                )
+
+        return profile_picture
+
     def save(self, commit=True):
         user = super().save(commit=False)
         user.set_password(self.cleaned_data["password1"])
@@ -243,6 +295,58 @@ class CustomUserEditForm(forms.ModelForm):
         if additional_notes:
             additional_notes = sanitize_plain_text(additional_notes)
         return additional_notes
+
+    def clean_profile_picture(self):
+        """Validate profile picture upload"""
+        import os
+        from PIL import Image
+
+        profile_picture = self.cleaned_data.get('profile_picture')
+
+        if profile_picture:
+            # Validate file size (5MB max)
+            max_size = 5 * 1024 * 1024  # 5MB in bytes
+            if profile_picture.size > max_size:
+                raise forms.ValidationError(
+                    f'Profile picture file size is {profile_picture.size / (1024 * 1024):.2f}MB. '
+                    f'Maximum allowed size is 5MB.'
+                )
+
+            # Validate file extension
+            allowed_extensions = ['.jpg', '.jpeg', '.png']
+            ext = os.path.splitext(profile_picture.name)[1].lower()
+            if ext not in allowed_extensions:
+                raise forms.ValidationError(
+                    f'Unsupported file extension: {ext}. '
+                    f'Allowed extensions: JPG, JPEG, PNG'
+                )
+
+            # Validate actual image content using PIL
+            try:
+                image = Image.open(profile_picture)
+                image.verify()  # Verify it's actually an image
+
+                # Re-open for dimension check (verify() closes the file)
+                profile_picture.seek(0)
+                image = Image.open(profile_picture)
+                width, height = image.size
+
+                # Validate dimensions (4000x4000 max)
+                max_dimension = 4000
+                if width > max_dimension or height > max_dimension:
+                    raise forms.ValidationError(
+                        f'Image dimensions ({width}x{height}) exceed maximum allowed size of {max_dimension}x{max_dimension} pixels.'
+                    )
+
+                # Reset file pointer for subsequent processing
+                profile_picture.seek(0)
+
+            except (IOError, SyntaxError) as e:
+                raise forms.ValidationError(
+                    'Invalid image file. Please upload a valid JPG, JPEG, or PNG image.'
+                )
+
+        return profile_picture
 
 
 class UserPasswordResetForm(PasswordResetForm):
