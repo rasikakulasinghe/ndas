@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from django.db.models.functions import TruncMonth
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Exists, OuterRef
 import os, math
 from django.utils.timezone import localtime, now
 from django.utils import timezone
@@ -507,16 +507,26 @@ def getPatientList(pts_type):
         'hine_assessments', 'developmental_assessments', 'cdic_records'
     )
 
+    # Exists subquery for video filtering (optimized to avoid LEFT JOIN)
+    from video.models import Video
+    has_videos = Video.objects.filter(patient=OuterRef('pk'))
+
     if pts_type == PtStatus.ALL:
         return var_ptl
     elif pts_type == PtStatus.NEW:
-        return var_ptl.filter(videos__isnull=True).distinct()
+        # Optimized: Use Exists() subquery instead of videos__isnull=True (avoids LEFT JOIN)
+        return var_ptl.annotate(has_videos=Exists(has_videos)).filter(has_videos=False)
     elif pts_type == PtStatus.DISCHARGED:
         return var_ptl.filter(cdic_records__is_discharged=True).distinct()
     elif pts_type == PtStatus.DIAGNOSED:
         return var_ptl.filter(Q(gmassessment__diagnosis_conclusion='ABNORMAL') | Q(hine_assessments__score__lt = 73) | Q(developmental_assessments__is_dx_normal=False)).distinct()
     elif pts_type == PtStatus.DX_NORMAL:
-        return var_ptl.exclude(Q(gmassessment__diagnosis_conclusion='ABNORMAL') and Q(hine_assessments__score__lt = 73) and Q(developmental_assessments__is_dx_normal=False)).exclude(videos__isnull=True).distinct()
+        # Optimized: Use Exists() subquery instead of videos__isnull exclusion (avoids LEFT JOIN)
+        return var_ptl.exclude(
+            Q(gmassessment__diagnosis_conclusion='ABNORMAL') and
+            Q(hine_assessments__score__lt = 73) and
+            Q(developmental_assessments__is_dx_normal=False)
+        ).annotate(has_videos=Exists(has_videos)).filter(has_videos=True).distinct()
     elif pts_type == PtStatus.DX_GMA_ABNORMAL:
         return var_ptl.filter(gmassessment__diagnosis_conclusion='ABNORMAL').distinct()
     elif pts_type == PtStatus.DX_GMA_NORMAL:
