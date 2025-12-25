@@ -81,10 +81,11 @@ class MyModel(TimeStampedModel, UserTrackingMixin):
 **Custom Code Organization:**
 - `ndas/custom_codes/Custom_abstract_class.py` - Base models
 - `ndas/custom_codes/choice.py` - All TextChoices for dropdowns
-- `ndas/custom_codes/validators.py` - Field validators
+- `ndas/custom_codes/validators.py` - Field validators and sanitization functions
 - `ndas/custom_codes/custom_methods.py` - Utilities (e.g., `getCountZeroIfNone()`, `calculate_age_string()`, `extract_video_metadata()`)
 - `ndas/custom_codes/ndas_enums.py` - Enumerations (e.g., `PtStatus`)
 - `ndas/custom_codes/delete_helpers.py` - Centralized entity deletion utilities (permission checks, business rules, redirects)
+- `ndas/custom_codes/security_middleware.py` - Custom security headers and CSP middleware
 
 **Model Rules:**
 1. Add choices to `choice.py` (use Django TextChoices)
@@ -169,7 +170,16 @@ class MyForm(forms.ModelForm):
 
 **Security Features:**
 - Session timeout: 1 hour with browser-close expiry
-- Rate limiting with django-ratelimit
+- Rate limiting with django-ratelimit (24 CRUD operations protected)
+  * Create/Edit: 10/min per user + 20/min per IP
+  * Delete: 5/min per user + 10/min per IP
+- Input sanitization for XSS prevention (`sanitize_text_input()`)
+  * Removes HTML tags, scripts, event handlers
+  * Preserves medical notation (e.g., "< 5 mg/dL", "> 38°C")
+- Filename sanitization (`sanitize_filename()`)
+  * Prevents path traversal attacks (../, ..\)
+  * Removes invalid filesystem characters
+  * Applied to all file uploads (videos, attachments, thumbnails)
 - File upload validation (type, size, content)
 - Medical data privacy (HIPAA awareness)
 - Password validation: minimum 12 characters, complexity checks
@@ -186,9 +196,31 @@ class MyForm(forms.ModelForm):
 **Patient Identifiers:** BHT, NNC, PTC, PC, PIN, Disk No.
 
 **Validation Ranges:**
-- Birth weight: 300g - 8000g
+- Birth weight: 300g - 8000g (basic), or POG-specific ranges (enhanced)
 - APGAR scores: 0-10
 - Gestational age: 20-44 weeks + 0-6 days
+
+**POG-Specific Birth Weight Validation:**
+The system provides enhanced birth weight validation based on gestational age:
+```python
+from ndas.custom_codes.validators import (
+    validate_birth_weight_for_gestational_age,
+    BIRTH_WEIGHT_RANGES_BY_POG
+)
+
+# Example usage
+is_valid, message = validate_birth_weight_for_gestational_age(
+    birth_weight=500,   # grams
+    pog_weeks=22,       # weeks
+    pog_days=3,         # optional additional days
+    strict=False        # True uses typical ranges, False uses absolute ranges
+)
+
+# Ranges support linear interpolation for POG+days
+# Example ranges (BIRTH_WEIGHT_RANGES_BY_POG):
+# 22 weeks: min=350g, max=700g, typical_min=400g, typical_max=600g
+# 37 weeks: min=2200g, max=4500g, typical_min=2500g, typical_max=4000g
+```
 
 **Assessment Types:** GPA, HINE, CDIC, Developmental
 
@@ -326,19 +358,78 @@ from ndas.custom_codes.delete_helpers import (
 <!-- Modal renders with password verification and AJAX handling -->
 ```
 
-## Known Issues and Active Bug Fixes
+## Recent Optimizations (December 2025)
 
-See `BUG_AND_PERFORMANCE_ANALYSIS.md` and `BUG_FIX_PLAN.md` for comprehensive analysis of:
-- Critical bugs requiring immediate attention (DevelopmentalAssessment.save(), N+1 queries)
-- Performance optimizations (select_related, database indexes)
-- Security improvements (rate limiting, validation)
-- Template optimizations (caching, heavy method calls)
+Major performance and security improvements completed across three phases:
 
-**Priority Fixes in Progress:**
-- Missing `super().save()` in DevelopmentalAssessment model
-- Missing `get_object_or_404()` in 24+ views
-- File handle resource leaks in reports/views.py
-- Database query on every request in UserActivityMiddleware
+### Phase 2: Performance & Security
+
+**Input Sanitization (XSS Prevention):**
+- `sanitize_text_input()` function in validators.py
+- Applied to 6 text fields in ProblemForm and ProblemActionForm
+- Preserves medical notation (e.g., "< 5 mg/dL", "> 38C")
+- Removes HTML tags, script elements, event handlers
+- 7 comprehensive tests added
+
+**Rate Limiting on CRUD Operations (24 operations protected):**
+- Pattern: 10/min user + 20/min IP for create/edit
+- Pattern: 5/min user + 10/min IP for delete
+- Applied to: patients, video, problemlist, HINE, CDIC, DA, GPA, attachments
+
+**Video Filter Optimization:**
+- Replaced LEFT JOIN filters with Exists() subqueries in `getPatientList()`
+- Optimized PtStatus.NEW and PtStatus.DX_NORMAL filters
+- Significant query performance improvement
+
+**Count Query Optimization:**
+- Replaced 4 separate `.count()` calls with single `aggregate()` query in 7 manager functions
+- 75% query reduction using Q objects and conditional aggregation
+
+### Phase 3: Database Optimization
+
+**Database Indexes Added (5 fields):**
+- `CustomUser.mobile_primary`
+- `IndicationsForGMA.title` and `.level`
+- `DiagnosisList.abr` and `.title`
+
+**TextField to CharField Conversion:**
+- `DiagnosisList.title`: TextField to CharField(255)
+- Better database performance (VARCHAR vs TEXT)
+
+**Unique Constraints Added (3 fields):**
+- `DiagnosisList.abr`
+- `IndicationsForGMA.title`
+
+**Subscription Race Condition Fix:**
+- Moved `_clear_cache()` outside `transaction.atomic()`
+
+**Activity Log Query Optimization:**
+- Added `select_related('user')` to 3 queries
+- 96% query reduction (51 to 2 queries for 50 logs)
+
+**Date Cross-Validation in problemlist Forms:**
+- `date_identified >= date_of_onset`
+- `date_resolved >= date_of_onset`
+- `date_resolved >= date_identified`
+
+**Comprehensive Filename Sanitization:**
+- `sanitize_filename()` function in validators.py
+- Prevents path traversal attacks (../, ..\)
+- Removes invalid filesystem characters
+- Applied to 4 upload_to functions (videos, attachments, thumbnails)
+
+**POG-Specific Birth Weight Validation:**
+- `BIRTH_WEIGHT_RANGES_BY_POG` dictionary with medical ranges (20-44 weeks)
+- `validate_birth_weight_for_gestational_age()` function
+- Supports linear interpolation for POG+days
+- 20 comprehensive tests added
+
+### Remaining Known Issues
+
+See `temp_documents/BUG_AND_PERFORMANCE_ANALYSIS.md` and `temp_documents/BUG_FIX_PLAN.md` for:
+- Additional performance optimizations (template caching, prefetch_related)
+- Static file optimization opportunities
+- HTTP method restrictions (require_GET, require_POST)
 
 ## Quick Reference
 
@@ -349,15 +440,37 @@ from ndas.custom_codes.Custom_abstract_class import TimeStampedModel, UserTracki
 # Custom utilities
 from ndas.custom_codes.custom_methods import getCountZeroIfNone, calculate_age_string, extract_video_metadata
 from ndas.custom_codes.choice import MY_CHOICES  # Replace with actual choice class
-from ndas.custom_codes.validators import validate_video_file
 from ndas.custom_codes.ndas_enums import PtStatus
 from ndas.custom_codes.delete_helpers import (
     has_delete_permission, validate_can_delete, get_redirect_url,
     get_entity_warning_items, get_entity_detail_items
 )
 
+# Validators (validators.py - comprehensive validation and sanitization)
+from ndas.custom_codes.validators import (
+    # File validation
+    validate_video_file,
+    validate_attachment_file,
+    sanitize_filename,           # Prevents path traversal, removes invalid chars
+
+    # Text sanitization (XSS prevention)
+    sanitize_text_input,         # Removes HTML/scripts, preserves medical notation
+
+    # Medical validation
+    validate_birth_weight,       # Basic range: 300g - 8000g
+    validate_birth_weight_for_gestational_age,  # POG-specific validation
+    BIRTH_WEIGHT_RANGES_BY_POG,  # Reference ranges by gestational age
+    validate_apgar_score,        # Range: 0-10
+    validate_pog_weeks,          # Range: 20-44 weeks
+    validate_pog_days,           # Range: 0-6 days
+)
+
 # Django shortcuts (ALWAYS use get_object_or_404 instead of .objects.get())
 from django.shortcuts import render, redirect, get_object_or_404
+
+# Rate limiting (applied to 24 CRUD operations)
+from django_ratelimit.decorators import ratelimit
+# Patterns: 10/m user + 20/m IP for create/edit, 5/m user + 10/m IP for delete
 
 # Middleware auto-tracking (no manual intervention needed)
 # added_by - Set on creation
@@ -375,6 +488,13 @@ metadata = extract_video_metadata(video_path)
 from django.conf import settings
 max_video_size = settings.FILE_UPLOAD_LIMITS['VIDEO_MAX_SIZE']  # 2GB
 allowed_video_ext = settings.ALLOWED_FILE_EXTENSIONS['VIDEO']  # ['.mp4', '.mov', ...]
+
+# Sanitization examples
+clean_text = sanitize_text_input("<script>alert('xss')</script>Test")  # Returns: "alert('xss')Test"
+clean_name = sanitize_filename("../../etc/passwd")  # Returns: "etc_passwd"
+
+# POG-specific birth weight validation
+is_valid, msg = validate_birth_weight_for_gestational_age(500, 22, pog_days=3, strict=False)
 ```
 
 ## Environment Configuration
