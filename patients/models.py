@@ -330,6 +330,8 @@ class Patient(TimeStampedModel, UserTrackingMixin):
 
     def clean(self):
         """Model-wide validation"""
+        from ndas.custom_codes.validators import validate_birth_weight_for_gestational_age
+
         super().clean()
 
         # Validate birth date is not in the future
@@ -343,12 +345,17 @@ class Patient(TimeStampedModel, UserTrackingMixin):
                     {"do_discharge": _("Discharge date must be after admission date")}
                 )
 
-        # Validate birth weight consistency with gestational age
+        # Comprehensive POG-specific birth weight validation
         if self.birth_weight and self.pog_wks:
-            if self.pog_wks < 28 and self.birth_weight > 2000:
-                raise ValidationError(
-                    {"birth_weight": _("Birth weight seems high for gestational age")}
-                )
+            pog_days = self.pog_days if self.pog_days else 0
+            is_valid, message = validate_birth_weight_for_gestational_age(
+                self.birth_weight,
+                self.pog_wks,
+                pog_days,
+                strict=False  # Use absolute min/max ranges, not typical ranges
+            )
+            if not is_valid:
+                raise ValidationError({"birth_weight": _(message)})
 
     def save(self, *args, **kwargs):
         """Override save to perform additional validation"""
@@ -2248,37 +2255,46 @@ class Bookmark(TimeStampedModel, UserTrackingMixin):
 
 
 class IndicationsForGMA(TimeStampedModel, UserTrackingMixin):
-    title = models.CharField(max_length=75, null=False, blank=False)
-    level = models.CharField(max_length=6, choices=LEVEL_OF_INDICATION, null=False)
+    title = models.CharField(max_length=75, null=False, blank=False, unique=True, db_index=True)
+    level = models.CharField(max_length=6, choices=LEVEL_OF_INDICATION, null=False, db_index=True)
     description = models.TextField(null=True, blank=True)
 
     class Meta:
-        pass
+        verbose_name = "Indication for GMA"
+        verbose_name_plural = "Indications for GMA"
+        ordering = ['level', 'title']
+        indexes = [
+            models.Index(fields=['title']),
+            models.Index(fields=['level']),
+        ]
 
     def __str__(self):
         return str(self.title + " | " + self.level)
 
-    @property
-    def getIndicationList(self):
-        return IndicationsForGMA.objects.all().values_list("title", flat=True)
-
 
 class DiagnosisList(TimeStampedModel, UserTrackingMixin):
-    abr = models.CharField(max_length=6, null=False, blank=False)
-    title = models.TextField()
+    abr = models.CharField(max_length=6, null=False, blank=False, unique=True, db_index=True)
+    title = models.CharField(max_length=255, null=False, blank=False, db_index=True)
     description = models.TextField()
 
     class Meta:
-        pass
+        verbose_name = "Diagnosis"
+        verbose_name_plural = "Diagnoses"
+        ordering = ['title']
+        indexes = [
+            models.Index(fields=['title']),
+            models.Index(fields=['abr']),
+        ]
 
     def __str__(self):
-        return str(self.title + " (" + self.title + ")")
+        return str(self.title + " (" + self.abr + ")")
 
 
 class Help(TimeStampedModel, UserTrackingMixin):
 
     title = models.CharField(
         max_length=200,
+        unique=True,
         db_index=True,
         verbose_name=_("Title"),
         help_text=_("Title of the help content"),

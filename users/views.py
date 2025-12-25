@@ -212,13 +212,13 @@ def test_logout_modal(request):
 
 @login_required(login_url='user-login')
 def userView(request, pk):
-    custom_user = CustomUser.objects.get(id=pk)
+    custom_user = get_object_or_404(CustomUser, id=pk)
     loged_user = request.user
     return render(request, 'users/user_view.html', {'custom_user': custom_user, 'user' : loged_user})
 
 @login_required(login_url='user-login')
 def userViewByUsername(request, username):
-    custom_user = CustomUser.objects.get(username=username)
+    custom_user = get_object_or_404(CustomUser, username=username)
     return render(request, 'users/user_view.html', {'custom_user': custom_user,})
 
 @login_required(login_url='user-login')
@@ -418,7 +418,7 @@ def user_activity(request):
     
     # Get recent activities with pagination
     page = request.GET.get('page', 1)
-    activities = UserActivityLog.objects.filter(user=user).order_by('-login_timestamp')[:50]
+    activities = UserActivityLog.objects.select_related('user').filter(user=user).order_by('-login_timestamp')[:50]
     
     # Get active sessions
     active_sessions = user.active_sessions.filter(is_active=True).order_by('-last_activity')
@@ -439,12 +439,9 @@ def terminate_session(request, session_id):
     """
     Terminate a specific user session.
     """
-    try:
-        user_session = UserSession.objects.get(id=session_id, user=request.user)
-        user_session.deactivate()
-        messages.success(request, 'Session terminated successfully.')
-    except UserSession.DoesNotExist:
-        messages.error(request, 'Session not found.')
+    user_session = get_object_or_404(UserSession, id=session_id, user=request.user)
+    user_session.deactivate()
+    messages.success(request, 'Session terminated successfully.')
     
     return redirect('user-activity')
 
@@ -537,8 +534,8 @@ def admin_dashboard(request):
     # Get recent activities (last 10)
     recent_activities = UserActivityLog.objects.select_related('user').order_by('-login_timestamp')[:10]
     
-    # Get recently added users (last 5)
-    recent_users = CustomUser.objects.order_by('-date_joined')[:5]
+    # Get recently added users (last 5) - optimized to only fetch needed fields
+    recent_users = CustomUser.objects.only('id', 'username', 'position', 'is_active', 'date_joined').order_by('-date_joined')[:5]
     
     context = {
         'total_users': total_users,
@@ -815,7 +812,7 @@ def admin_user_toggle_status(request, pk):
 def admin_user_activity(request, pk):
     """Admin view to see specific user's activity."""
     user = get_object_or_404(CustomUser, pk=pk)
-    activities = UserActivityLog.objects.filter(user=user).order_by('-login_timestamp')
+    activities = UserActivityLog.objects.select_related('user').filter(user=user).order_by('-login_timestamp')
     
     # Pagination
     paginator = Paginator(activities, 50)
@@ -834,7 +831,7 @@ def admin_user_activity(request, pk):
 @admin_required
 def admin_activity_logs(request):
     """Admin view to see all system activity logs."""
-    activities = UserActivityLog.objects.all().order_by('-login_timestamp')
+    activities = UserActivityLog.objects.select_related('user').all().order_by('-login_timestamp')
     
     # Pagination
     paginator = Paginator(activities, 100)

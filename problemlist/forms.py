@@ -1,6 +1,7 @@
 from django import forms
 from django.utils import timezone
 from problemlist.models import Problem, ProblemAction
+from ndas.custom_codes.validators import sanitize_text_input
 
 
 class ProblemForm(forms.ModelForm):
@@ -70,6 +71,31 @@ class ProblemForm(forms.ModelForm):
             }),
         }
 
+    def clean_name(self):
+        """Sanitize problem name to prevent XSS attacks"""
+        name = self.cleaned_data.get('name')
+        return sanitize_text_input(name)
+
+    def clean_description(self):
+        """Sanitize description to prevent XSS attacks"""
+        description = self.cleaned_data.get('description')
+        return sanitize_text_input(description)
+
+    def clean_action_taken(self):
+        """Sanitize action_taken to prevent XSS attacks"""
+        action_taken = self.cleaned_data.get('action_taken')
+        return sanitize_text_input(action_taken)
+
+    def clean_outcome(self):
+        """Sanitize outcome to prevent XSS attacks"""
+        outcome = self.cleaned_data.get('outcome')
+        return sanitize_text_input(outcome)
+
+    def clean_comments(self):
+        """Sanitize comments to prevent XSS attacks"""
+        comments = self.cleaned_data.get('comments')
+        return sanitize_text_input(comments)
+
     def clean(self):
         """
         Custom validation for problem form.
@@ -111,6 +137,27 @@ class ProblemForm(forms.ModelForm):
                 'date_resolved': 'Date resolved cannot be in the future.'
             })
 
+        # Cross-validation: date_identified should be >= date_of_onset
+        if date_of_onset and date_identified:
+            if date_identified < date_of_onset:
+                raise forms.ValidationError({
+                    'date_identified': 'Date identified cannot be earlier than date of onset.'
+                })
+
+        # Cross-validation: date_resolved should be >= date_of_onset
+        if date_of_onset and date_resolved:
+            if date_resolved < date_of_onset:
+                raise forms.ValidationError({
+                    'date_resolved': 'Date resolved cannot be earlier than date of onset.'
+                })
+
+        # Cross-validation: date_resolved should be >= date_identified (usually)
+        if date_identified and date_resolved:
+            if date_resolved < date_identified:
+                raise forms.ValidationError({
+                    'date_resolved': 'Date resolved should not be earlier than date identified.'
+                })
+
         return cleaned_data
 
 
@@ -131,3 +178,8 @@ class ProblemActionForm(forms.ModelForm):
                 "required": True,
             }),
         }
+
+    def clean_action(self):
+        """Sanitize action to prevent XSS attacks"""
+        action = self.cleaned_data.get('action')
+        return sanitize_text_input(action)

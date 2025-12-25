@@ -437,3 +437,185 @@ class ProblemAnalysisViewTest(TestCase):
         self.assertContains(response, 'Chronic Problems')
         self.assertContains(response, 'Resolved Problems')
         self.assertContains(response, 'Inactive Problems')
+
+
+class ProblemXSSPreventionTest(TestCase):
+    """Test XSS prevention in problem forms and data sanitization"""
+
+    def setUp(self):
+        """Set up test user and patient"""
+        self.user = User.objects.create_user(
+            username='testuser',
+            password='testpass123',
+            is_staff=True
+        )
+        self.patient = Patient.objects.create(
+            baby_name='Test Baby',
+            mother_name='Test Mother',
+            bht='BHT001',
+            gender='Male',
+            dob_tob=timezone.now(),
+            mo_delivery='Normal vaginal delivery (NVD)',
+            birth_weight=3000,
+            ofc=34.0,
+            tp_mobile='0771234567',
+            pog_wks=38,
+            pog_days=0
+        )
+        self.client.login(username='testuser', password='testpass123')
+
+    def test_problem_name_sanitization(self):
+        """Test that problem name is sanitized to prevent XSS"""
+        from problemlist.forms import ProblemForm
+
+        # Test with malicious script tag
+        form_data = {
+            'name': '<script>alert("xss")</script>Test Problem',
+            'description': 'Test description',
+            'date_identified': timezone.now().date(),
+            'status': 'active',
+        }
+        form = ProblemForm(data=form_data)
+        self.assertTrue(form.is_valid())
+
+        # Verify sanitization removed script tags AND their content
+        cleaned_name = form.cleaned_data['name']
+        self.assertNotIn('<script>', cleaned_name)
+        self.assertNotIn('</script>', cleaned_name)
+        self.assertNotIn('alert', cleaned_name)  # Script content removed for security
+        self.assertIn('Test Problem', cleaned_name)  # Safe content preserved
+
+    def test_problem_description_sanitization(self):
+        """Test that problem description is sanitized"""
+        from problemlist.forms import ProblemForm
+
+        # Test with HTML tags and event handlers
+        form_data = {
+            'name': 'Test Problem',
+            'description': '<img src=x onerror="alert(1)">BP < 120/80 mmHg',
+            'date_identified': timezone.now().date(),
+            'status': 'active',
+        }
+        form = ProblemForm(data=form_data)
+        self.assertTrue(form.is_valid())
+
+        # Verify sanitization
+        cleaned_description = form.cleaned_data['description']
+        self.assertNotIn('onerror', cleaned_description)
+        self.assertNotIn('<img', cleaned_description)
+        # Medical notation should be preserved
+        self.assertIn('BP < 120/80 mmHg', cleaned_description)
+
+    def test_medical_notation_preserved(self):
+        """Test that legitimate medical notation is preserved"""
+        from problemlist.forms import ProblemForm
+
+        # Test medical notation preservation
+        form_data = {
+            'name': 'Hypoglycemia',
+            'description': 'Blood glucose < 50 mg/dL, temperature > 38°C',
+            'action_taken': 'Administered IV glucose, repeat labs in 2-4 hours',
+            'outcome': 'Glucose increased to > 70 mg/dL',
+            'comments': 'Monitor for signs: lethargy, poor feeding, etc.',
+            'date_identified': timezone.now().date(),
+            'status': 'active',
+        }
+        form = ProblemForm(data=form_data)
+        self.assertTrue(form.is_valid())
+
+        # Verify medical notation is preserved
+        self.assertIn('< 50 mg/dL', form.cleaned_data['description'])
+        self.assertIn('> 38°C', form.cleaned_data['description'])
+        self.assertIn('2-4 hours', form.cleaned_data['action_taken'])
+        self.assertIn('> 70 mg/dL', form.cleaned_data['outcome'])
+
+    def test_action_sanitization(self):
+        """Test that action_taken field is sanitized"""
+        from problemlist.forms import ProblemForm
+
+        form_data = {
+            'name': 'Test Problem',
+            'action_taken': '<a href="javascript:void(0)">Click here</a>',
+            'date_identified': timezone.now().date(),
+            'status': 'active',
+        }
+        form = ProblemForm(data=form_data)
+        self.assertTrue(form.is_valid())
+
+        # Verify sanitization removed dangerous protocol
+        cleaned_action = form.cleaned_data['action_taken']
+        self.assertNotIn('javascript:', cleaned_action)
+        self.assertNotIn('<a', cleaned_action)
+        self.assertIn('Click here', cleaned_action)
+
+    def test_problem_action_form_sanitization(self):
+        """Test that ProblemActionForm sanitizes action field"""
+        from problemlist.forms import ProblemActionForm
+
+        # Test with malicious input
+        form_data = {
+            'action': '<style>body{display:none}</style>Administered medication',
+        }
+        form = ProblemActionForm(data=form_data)
+        self.assertTrue(form.is_valid())
+
+        # Verify sanitization
+        cleaned_action = form.cleaned_data['action']
+        self.assertNotIn('<style>', cleaned_action)
+        self.assertNotIn('</style>', cleaned_action)
+        self.assertIn('Administered medication', cleaned_action)
+
+    def test_whitespace_normalization(self):
+        """Test that excessive whitespace is normalized"""
+        from problemlist.forms import ProblemForm
+
+        form_data = {
+            'name': 'Test    Problem    With    Spaces',
+            'description': 'Line1\n\n\n\nLine2',
+            'date_identified': timezone.now().date(),
+            'status': 'active',
+        }
+        form = ProblemForm(data=form_data)
+        self.assertTrue(form.is_valid())
+
+        # Verify whitespace normalization
+        cleaned_name = form.cleaned_data['name']
+        self.assertEqual('Test Problem With Spaces', cleaned_name)
+
+        # Multiple newlines should be normalized to double newline
+        cleaned_description = form.cleaned_data['description']
+        self.assertIn('Line1', cleaned_description)
+        self.assertIn('Line2', cleaned_description)
+
+    def test_xss_in_database_save(self):
+        """Test that XSS is prevented when saving to database"""
+        # Create problem with malicious input via form
+        form_data = {
+            'name': '<script>alert("xss")</script>Seizure Disorder',
+            'description': '<img src=x onerror="alert(1)">Patient presents with seizures',
+            'action_taken': 'Started on <b>anti-epileptics</b>',
+            'outcome': 'Seizure free for > 24 hours',
+            'comments': '<a href="javascript:alert(1)">Follow-up</a> in 2 weeks',
+            'date_identified': timezone.now().date(),
+            'status': 'active',
+        }
+
+        from problemlist.forms import ProblemForm
+        form = ProblemForm(data=form_data)
+        self.assertTrue(form.is_valid())
+
+        # Save to database
+        problem = form.save(commit=False)
+        problem.patient = self.patient
+        problem.added_by = self.user
+        problem.save()
+
+        # Retrieve from database and verify
+        saved_problem = Problem.objects.get(id=problem.id)
+        self.assertNotIn('<script>', saved_problem.name)
+        self.assertNotIn('onerror', saved_problem.description)
+        self.assertNotIn('<b>', saved_problem.action_taken)
+        self.assertNotIn('javascript:', saved_problem.comments)
+
+        # Verify medical notation is preserved
+        self.assertIn('> 24 hours', saved_problem.outcome)

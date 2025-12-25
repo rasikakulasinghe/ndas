@@ -5,7 +5,7 @@
 This file provides workflow guidance for AI agents working on the NDAS project.
 
 <!-- OPENSPEC:START -->
-## OpenSpec Instructions
+# OpenSpec Instructions
 
 These instructions are for AI assistants working in this project.
 

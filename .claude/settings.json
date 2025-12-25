@@ -1,0 +1,6 @@
+{
+  "statusLine": {
+    "type": "command",
+    "command": "bash \"D:\\Projects\\Current Projects\\NDAS - Project\\NDAS\\.claude\\statusline-command.sh\""
+  }
+}

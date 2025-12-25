@@ -34,6 +34,7 @@ class CustomUser(AbstractUser, TimeStampedModel):
         validators=[validate_phone_number],
         help_text="Primary mobile number (required)",
         verbose_name="Primary Mobile",
+        db_index=True,
     )
     mobile_secondary = models.CharField(
         max_length=15,
@@ -776,8 +777,9 @@ class Subscription(TimeStampedModel, UserTrackingMixin):
                 subscription.save(update_fields=['status', 'updated_at'])
                 # Update the current instance
                 self.status = new_status
-                # Clear cache again after update
-                self._clear_cache()
+
+            # Clear cache AFTER transaction commits (not inside transaction)
+            self._clear_cache()
     
     def _clear_cache(self):
         """

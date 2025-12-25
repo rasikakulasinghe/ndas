@@ -26,21 +26,31 @@ class UserActivityMiddleware(MiddlewareMixin):
     def process_request(self, request):
         """
         Process incoming requests to update session activity.
+        Throttled to update once per minute to reduce database load.
         """
         # Update session activity for authenticated users
         if hasattr(request, 'user') and request.user.is_authenticated:
             try:
                 session_key = request.session.session_key
                 if session_key:
-                    UserSession.objects.filter(
-                        user=request.user,
-                        session_key=session_key,
-                        is_active=True
-                    ).update(last_activity=timezone.now())
+                    # Throttle updates to once per minute per user session
+                    from django.core.cache import cache
+                    cache_key = f"user_session_update_{request.user.id}_{session_key}"
+                    last_update = cache.get(cache_key)
+
+                    if last_update is None:
+                        # Update session activity
+                        UserSession.objects.filter(
+                            user=request.user,
+                            session_key=session_key,
+                            is_active=True
+                        ).update(last_activity=timezone.now())
+                        # Cache for 60 seconds to prevent updates
+                        cache.set(cache_key, timezone.now(), 60)
             except Exception:
                 # Fail silently to avoid breaking the application
                 pass
-        
+
         return None
 
 

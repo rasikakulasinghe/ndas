@@ -31,6 +31,7 @@ from ndas.custom_codes.choice import BOOKMARK_TYPE
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django_ratelimit.decorators import ratelimit
 from ndas.custom_codes.validators import (
     Name_baby_validation,
     Name_mother_validation,
@@ -59,7 +60,7 @@ from ndas.custom_codes.error_handlers import handle_view_errors
 from patients.timeline_utils import get_patient_timeline_events
 from datetime import datetime
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_GET, require_POST
 import pytz, os, logging, subprocess, tempfile
 from django.http import JsonResponse
 from django.utils.timezone import localtime, now
@@ -199,6 +200,7 @@ def dashboard(request):
 
 
 @login_required(login_url="user-login")
+@require_GET
 def patient_manager(request, filter_type='all'):
     """
     Unified patient manager view with filter support.
@@ -275,7 +277,10 @@ def patient_manager(request, filter_type='all'):
 # Duplicate patient_manager_* functions removed - now using unified patient_manager() with filter_type parameter
 
 @handle_view_errors(redirect_url='manage-patients', error_message='Error adding patient')
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
+@require_http_methods(["GET", "POST"])
 def patient_add(request):
     if not request.user.is_authenticated:
         messages.error(
@@ -373,36 +378,37 @@ def patient_add(request):
 
 
 @login_required(login_url="user-login")
+@require_GET
 def patient_view(request, pk):
-    selected_patient = Patient.objects.get(id=pk)
+    selected_patient = get_object_or_404(Patient, id=pk)
     indications = selected_patient.indecation_for_gma
 
-    var_file_video = Video.objects.filter(patient=selected_patient).order_by("-id")
+    var_file_video = Video.objects.select_related('added_by', 'last_edit_by').filter(patient=selected_patient).order_by("-id")
     file_video_count = var_file_video.count()
     file_videos = var_file_video[:5]
 
-    var_file_attachments = Attachment.objects.filter(patient=selected_patient).order_by(
+    var_file_attachments = Attachment.objects.select_related('added_by', 'last_edit_by').filter(patient=selected_patient).order_by(
         "-id"
     )
     file_attachment_count = var_file_attachments.count()
     file_attachment = var_file_attachments[:5]
 
-    var_gma = GMAssessment.objects.filter(patient=selected_patient).order_by("-id")
+    var_gma = GMAssessment.objects.select_related('added_by', 'last_edit_by', 'video_file').filter(patient=selected_patient).order_by("-id")
     gm_assessments_count = var_gma.count()
     gm_assessments = var_gma[:5]
     gm_last_assessment = var_gma.last
 
-    var_hine = HINEAssessment.objects.filter(patient=selected_patient).order_by("-id")
+    var_hine = HINEAssessment.objects.select_related('added_by', 'last_edit_by').filter(patient=selected_patient).order_by("-id")
     hine_assessments_count = var_hine.count()
     hine_assessments = var_hine[:5]
 
-    var_da = DevelopmentalAssessment.objects.filter(patient=selected_patient).order_by(
+    var_da = DevelopmentalAssessment.objects.select_related('added_by', 'last_edit_by').filter(patient=selected_patient).order_by(
         "-id"
     )
     da_assessments_count = var_da.count()
     da_assessments = var_da[:5]
 
-    var_cdic = CDICRecord.objects.filter(patient=selected_patient).order_by("-id")
+    var_cdic = CDICRecord.objects.select_related('added_by', 'last_edit_by').filter(patient=selected_patient).order_by("-id")
     cdic_record_count = var_cdic.count()
     cdic_record = var_cdic[:5]
 
@@ -475,6 +481,8 @@ def patient_view(request, pk):
 
 
 @handle_view_errors(redirect_url='manage-patients', error_message='Error deleting patient')
+@ratelimit(key='user', rate='5/m', method='DELETE')
+@ratelimit(key='ip', rate='10/m', method='DELETE')
 @login_required(login_url="user-login")
 @require_http_methods(["DELETE"])
 def patient_delete(request, pk):
@@ -589,7 +597,7 @@ def patient_delete(request, pk):
 @handle_view_errors(redirect_url='manage-patients', error_message='Error loading delete confirmation')
 @login_required(login_url="user-login")
 def patient_delete_confirm(request, pk):
-    patient = Patient.objects.get(id=pk)
+    patient = get_object_or_404(Patient, id=pk)
     user = request.user
     if user.is_superuser:
         return render(request, "patients/delete-confirm.html", {"patient": patient})
@@ -604,13 +612,12 @@ def patient_delete_confirm(request, pk):
 
 
 @handle_view_errors(redirect_url='manage-patients', error_message='Error editing patient')
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
+@require_http_methods(["GET", "POST"])
 def patient_edit(request, pk):
-    try:
-        selected_patient = Patient.objects.get(id=pk)
-    except Patient.DoesNotExist:
-        messages.error(request, "Patient not found.")
-        return redirect("manage-patients")
+    selected_patient = get_object_or_404(Patient, id=pk)
 
     if request.method == "POST":
         data_form_modified = PatientForm(request.POST, instance=selected_patient)
@@ -859,12 +866,8 @@ def assessment_add(request, ptid, fid):
     
     logger = logging.getLogger(__name__)
     
-    try:
-        patient = Patient.objects.get(pk=ptid)
-        video_file = Video.objects.get(pk=fid)
-    except (Patient.DoesNotExist, Video.DoesNotExist) as e:
-        messages.error(request, "Patient or video file not found.")
-        return redirect("manage-patients")
+    patient = get_object_or_404(Patient, pk=ptid)
+    video_file = get_object_or_404(Video, pk=fid)
 
     # Check if assessment already exists for this video
     existing_assessment = GMAssessment.objects.filter(video_file=video_file).first()
@@ -1052,7 +1055,7 @@ def assessment_edit(request, pk):
             messages.success(request, "Assessment details are updated succesfully...")
             return redirect("assessment-view", pk=assmnt.id)
         else:
-            messages.success(request, assessment_form_data.errors)
+            messages.error(request, assessment_form_data.errors)
             return render(
                 request,
                 "assessment/edit.html",
@@ -1074,7 +1077,7 @@ def assessment_edit_by_fileid(request, pk):
             messages.success(request, "Assessment details are updated succesfully...")
             return redirect("assessment-view", pk=assmnt.id)
         else:
-            messages.success(request, assessment_form_data.errors)
+            messages.error(request, assessment_form_data.errors)
             return render(
                 request,
                 "assessment/edit.html",
@@ -1088,8 +1091,8 @@ def assessment_edit_by_fileid(request, pk):
 @login_required(login_url="user-login")
 def assessment_delete_start(request, pk):
     """DEPRECATED: Use unified delete modal instead"""
-    assemnt = GMAssessment.objects.get(id=pk)
-    patient = Patient.objects.get(id=assemnt.patient.id)
+    assemnt = get_object_or_404(GMAssessment, id=pk)
+    patient = get_object_or_404(Patient, id=assemnt.patient.id)
     return render(
         request,
         "assessment/delete-confirm.html",
@@ -1208,14 +1211,18 @@ def assessment_manager(request):
 
     # Filter assessments based on search query
     if search_query:
-        assessment_list = GMAssessment.objects.filter(
+        assessment_list = GMAssessment.objects.select_related(
+            'patient', 'added_by', 'last_edit_by', 'video_file'
+        ).filter(
             Q(patient__baby_name__icontains=search_query) |
             Q(patient__mother_name__icontains=search_query) |
             Q(patient__bht__icontains=search_query) |
             Q(patient__nnc_no__icontains=search_query)
         ).order_by("-id")
     else:
-        assessment_list = GMAssessment.objects.all().order_by("-id")
+        assessment_list = GMAssessment.objects.select_related(
+            'patient', 'added_by', 'last_edit_by', 'video_file'
+        ).all().order_by("-id")
 
     paginator = Paginator(assessment_list, 10)
     page_number = request.GET.get("page")
@@ -1236,7 +1243,9 @@ def assessment_manager_recent(request):
 
     # Get assessments from last 30 days
     thirty_days_ago = timezone.now() - timedelta(days=30)
-    assessment_list = GMAssessment.objects.filter(created_at__gte=thirty_days_ago)
+    assessment_list = GMAssessment.objects.select_related(
+        'patient', 'added_by', 'last_edit_by', 'video_file'
+    ).filter(created_at__gte=thirty_days_ago)
 
     # Apply search filter if provided
     if search_query:
@@ -1267,7 +1276,9 @@ def assessment_manager_normal(request):
     search_query = request.GET.get('search', '').strip()
 
     # Get assessments with normal diagnosis
-    assessment_list = GMAssessment.objects.filter(diagnosis_conclusion='NORMAL')
+    assessment_list = GMAssessment.objects.select_related(
+        'patient', 'added_by', 'last_edit_by', 'video_file'
+    ).filter(diagnosis_conclusion='NORMAL')
 
     # Apply search filter if provided
     if search_query:
@@ -1298,7 +1309,9 @@ def assessment_manager_abnormal(request):
     search_query = request.GET.get('search', '').strip()
 
     # Get assessments with abnormal diagnosis
-    assessment_list = GMAssessment.objects.filter(diagnosis_conclusion='ABNORMAL')
+    assessment_list = GMAssessment.objects.select_related(
+        'patient', 'added_by', 'last_edit_by', 'video_file'
+    ).filter(diagnosis_conclusion='ABNORMAL')
 
     # Apply search filter if provided
     if search_query:
@@ -1329,7 +1342,9 @@ def assessment_manager_informed(request):
     search_query = request.GET.get('search', '').strip()
 
     # Get assessments where parent is informed
-    assessment_list = GMAssessment.objects.filter(parent_informed=True)
+    assessment_list = GMAssessment.objects.select_related(
+        'patient', 'added_by', 'last_edit_by', 'video_file'
+    ).filter(parent_informed=True)
 
     # Apply search filter if provided
     if search_query:
@@ -1360,7 +1375,9 @@ def assessment_manager_not_informed(request):
     search_query = request.GET.get('search', '').strip()
 
     # Get assessments where parent is not informed
-    assessment_list = GMAssessment.objects.filter(parent_informed=False)
+    assessment_list = GMAssessment.objects.select_related(
+        'patient', 'added_by', 'last_edit_by', 'video_file'
+    ).filter(parent_informed=False)
 
     # Apply search filter if provided
     if search_query:
@@ -1387,7 +1404,7 @@ def assessment_manager_not_informed(request):
 
 @login_required(login_url="user-login")
 def assessment_manager_by_patients(request, pk):
-    patient = Patient.objects.get(id=pk)
+    patient = get_object_or_404(Patient, id=pk)
     # Get search parameter
     search_query = request.GET.get('search', '').strip()
 
@@ -1484,14 +1501,19 @@ def bookmark_manager(request):
                 start_date = now - timedelta(days=365)
                 var_bookmarks_list = var_bookmarks_list.filter(created_at__gte=start_date)
         
-        # Calculate statistics
+        # Calculate statistics (optimized: 1 query instead of 4)
+        stats = var_bookmarks_list.aggregate(
+            total=Count('id'),
+            patient=Count('id', filter=Q(bookmark_type='Patient')),
+            video=Count('id', filter=Q(bookmark_type='Video')),
+            assessment=Count('id', filter=Q(bookmark_type__in=['GMA', 'HINE', 'DA', 'CDICR']))
+        )
+
         bookmark_stats = {
-            'total': var_bookmarks_list.count(),
-            'patient': var_bookmarks_list.filter(bookmark_type='Patient').count(),
-            'video': var_bookmarks_list.filter(bookmark_type='Video').count(),
-            'assessment': var_bookmarks_list.filter(
-                bookmark_type__in=['GMA', 'HINE', 'DA', 'CDICR']
-            ).count(),
+            'total': stats['total'] or 0,
+            'patient': stats['patient'] or 0,
+            'video': stats['video'] or 0,
+            'assessment': stats['assessment'] or 0,
         }
         
         # Pagination
@@ -1739,7 +1761,7 @@ def bookmark_edit(request, pk):
             messages.success(request, "Bookmark details are updated succesfully...")
             return redirect("bookmark-view", pk=selected_bm.id)
         else:
-            messages.success(request, bm_form_data.errors)
+            messages.error(request, bm_form_data.errors)
             return render(
                 request,
                 "bookmark/edit.html",
@@ -1875,7 +1897,7 @@ def attachment_manager(request):
 @login_required(login_url="user-login")
 def attachment_manager_patient(request, pid):
     """Enhanced patient-specific attachment manager with filtering and search"""
-    patient = Patient.objects.get(pk=pid)
+    patient = get_object_or_404(Patient, pk=pid)
 
     # Get search and filter parameters with proper defaults
     search_query = request.GET.get("search", "").strip()
@@ -1993,22 +2015,15 @@ def attachment_manager_patient(request, pid):
     return render(request, "attachment/manager.html", context)
 
 
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def attachment_add(request, pid):
     """
     Handle attachment upload for a patient.
     Updated to support new Attachment model fields and proper error handling.
     """
-    try:
-        selected_patient = Patient.objects.get(pk=pid)
-    except Patient.DoesNotExist:
-        if request.method == "POST":
-            return JsonResponse(
-                {"success": False, "msg": "Patient not found."},
-                status=404
-            )
-        messages.error(request, "Patient not found.")
-        return redirect("manage-patients")
+    selected_patient = get_object_or_404(Patient, pk=pid)
 
     attachment_form = AttachmentkForm()
 
@@ -2105,6 +2120,8 @@ def attachment_view(request, pk):
     )
 
 
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def attachment_edit(request, pk):
     try:
@@ -2149,7 +2166,7 @@ def attachment_edit(request, pk):
                     request, "attachment/edit.html", {"form": a_form, "attachment": sa}
                 )
         else:
-            messages.success(request, bm_form_data.errors)
+            messages.error(request, bm_form_data.errors)
             return render(
                 request,
                 "attachment/edit.html",
@@ -2173,6 +2190,8 @@ def attachment_delete_confirm(request, pk):
     )
 
 
+@ratelimit(key='user', rate='5/m', method='DELETE')
+@ratelimit(key='ip', rate='10/m', method='DELETE')
 @login_required(login_url="user-login")
 @require_http_methods(["DELETE"])
 def attachment_delete(request, pk):
@@ -2286,14 +2305,11 @@ def attachment_delete(request, pk):
 
 
 
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def cdic_assessment_add(request, pid):
-    try:
-        selected_patient = Patient.objects.get(pk=pid)
-    except Patient.DoesNotExist:
-        messages.error(request, "Patient not found.")
-        return redirect("manage-patients")
-    
+    selected_patient = get_object_or_404(Patient, pk=pid)
     cdic_assemnt_form = CDICRecordForm()
 
     if request.method == "POST":
@@ -2336,6 +2352,8 @@ def cdic_assessment_add(request, pid):
         )
 
 
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def cdic_assessment_edit(request, aid):
     try:
@@ -2357,7 +2375,7 @@ def cdic_assessment_edit(request, aid):
             messages.success(request, "CDIC record updated succesfully...")
             return redirect("cdic-assessment-view", cdicr.id)
         else:
-            messages.success(request, cdicr_form_data.errors)
+            messages.error(request, cdicr_form_data.errors)
             return render(
                 request,
                 "cdic_record/edit.html",
@@ -2443,19 +2461,24 @@ def cdic_assessment_manager(request):
                     next_appointment_date__lt=today
                 )
 
-        # Calculate statistics
+        # Calculate statistics using aggregation (single query instead of 4)
+        from django.db.models import Count, Q
+
         today = date.today()
+        one_week_ago = today - timedelta(days=7)
+
+        stats = var_cdic_list.aggregate(
+            total=Count('id'),
+            completed=Count('id', filter=Q(next_appointment_date__isnull=True)),
+            pending=Count('id', filter=Q(next_appointment_date__isnull=False, next_appointment_date__gte=today)),
+            this_week=Count('id', filter=Q(assessment_date__gte=one_week_ago))
+        )
 
         cdic_stats = {
-            'total': var_cdic_list.count(),
-            'completed': var_cdic_list.filter(next_appointment_date__isnull=True).count(),
-            'pending': var_cdic_list.filter(
-                next_appointment_date__isnull=False,
-                next_appointment_date__gte=today
-            ).count(),
-            'this_week': var_cdic_list.filter(
-                assessment_date__gte=today - timedelta(days=7)
-            ).count(),
+            'total': stats['total'] or 0,
+            'completed': stats['completed'] or 0,
+            'pending': stats['pending'] or 0,
+            'this_week': stats['this_week'] or 0,
         }
         
         # Pagination
@@ -2484,11 +2507,7 @@ def cdic_assessment_manager(request):
 def cdic_assessment_manager_by_patients(request, pid):
     try:
         # Get patient with error handling
-        try:
-            sp = Patient.objects.get(pk=pid)
-        except Patient.DoesNotExist:
-            messages.error(request, "Patient not found.")
-            return redirect("manage-patients")
+        sp = get_object_or_404(Patient, pk=pid)
         
         # Get CDIC records for this patient
         var_cdic_list = CDICRecord.objects.select_related('patient', 'added_by', 'last_edit_by').filter(patient=sp.id).order_by("-id")
@@ -2540,19 +2559,24 @@ def cdic_assessment_manager_by_patients(request, pid):
                     next_appointment_date__lt=today
                 )
 
-        # Calculate statistics for this patient
+        # Calculate statistics for this patient using aggregation (single query instead of 4)
+        from django.db.models import Count, Q
+
         today = date.today()
+        one_week_ago = today - timedelta(days=7)
+
+        stats = var_cdic_list.aggregate(
+            total=Count('id'),
+            completed=Count('id', filter=Q(next_appointment_date__isnull=True)),
+            pending=Count('id', filter=Q(next_appointment_date__isnull=False, next_appointment_date__gte=today)),
+            this_week=Count('id', filter=Q(assessment_date__gte=one_week_ago))
+        )
 
         cdic_stats = {
-            'total': var_cdic_list.count(),
-            'completed': var_cdic_list.filter(next_appointment_date__isnull=True).count(),
-            'pending': var_cdic_list.filter(
-                next_appointment_date__isnull=False,
-                next_appointment_date__gte=today
-            ).count(),
-            'this_week': var_cdic_list.filter(
-                assessment_date__gte=today - timedelta(days=7)
-            ).count(),
+            'total': stats['total'] or 0,
+            'completed': stats['completed'] or 0,
+            'pending': stats['pending'] or 0,
+            'this_week': stats['this_week'] or 0,
         }
         
         # Pagination
@@ -2588,6 +2612,8 @@ def cdic_assessment_delete_start(request, aid):
     )
 
 
+@ratelimit(key='user', rate='5/m', method='DELETE')
+@ratelimit(key='ip', rate='10/m', method='DELETE')
 @login_required(login_url="user-login")
 @require_http_methods(["DELETE"])
 def cdic_assessment_delete(request, aid):
@@ -2693,13 +2719,11 @@ def cdic_assessment_delete(request, aid):
 
 
 # Functions for HINE assessments
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def hine_assessment_add(request, pid):
-    try:
-        sp = Patient.objects.get(pk=pid)
-    except Patient.DoesNotExist:
-        messages.error(request, "Patient not found.")
-        return redirect("manage-patients")
+    sp = get_object_or_404(Patient, pk=pid)
     
     if request.method == "POST":
         hine_form = HINEAssessmentForm(request.POST, patient=sp)
@@ -2742,6 +2766,8 @@ def hine_assessment_add(request, pid):
         return render(request, "hine/add.html", {"patient": sp, "hine_form": hine_form})
 
 
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def hine_assessment_edit(request, hine_id):
     try:
@@ -2849,12 +2875,21 @@ def hine_assessment_manager(request):
                 start_date = now - timedelta(days=365)
                 var_hine_list = var_hine_list.filter(date_of_assessment__gte=start_date)
         
-        # Calculate statistics
+        # Calculate statistics using aggregation (single query instead of 4)
+        from django.db.models import Count, Case, When, IntegerField, Q
+
+        stats = var_hine_list.aggregate(
+            total=Count('id'),
+            normal=Count('id', filter=Q(score__gte=60)),
+            moderate=Count('id', filter=Q(score__gte=40, score__lt=60)),
+            significant=Count('id', filter=Q(score__lt=40))
+        )
+
         hine_stats = {
-            'total': var_hine_list.count(),
-            'normal': var_hine_list.filter(score__gte=60).count(),
-            'moderate': var_hine_list.filter(score__gte=40, score__lt=60).count(),
-            'significant': var_hine_list.filter(score__lt=40).count(),
+            'total': stats['total'] or 0,
+            'normal': stats['normal'] or 0,
+            'moderate': stats['moderate'] or 0,
+            'significant': stats['significant'] or 0,
         }
         
         # Pagination
@@ -2883,11 +2918,7 @@ def hine_assessment_manager(request):
 def hine_assessment_manager_by_patients(request, pid):
     try:
         # Get patient with error handling
-        try:
-            sp = Patient.objects.get(pk=pid)
-        except Patient.DoesNotExist:
-            messages.error(request, "Patient not found.")
-            return redirect("manage-patients")
+        sp = get_object_or_404(Patient, pk=pid)
         
         # Get HINE assessments for this patient
         var_hine_list = HINEAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').filter(patient=sp.id).order_by("-id")
@@ -2926,12 +2957,21 @@ def hine_assessment_manager_by_patients(request, pid):
                 start_date = now - timedelta(days=365)
                 var_hine_list = var_hine_list.filter(date_of_assessment__gte=start_date)
 
-        # Calculate statistics for this patient
+        # Calculate statistics for this patient using aggregation (single query instead of 4)
+        from django.db.models import Count, Q
+
+        stats = var_hine_list.aggregate(
+            total=Count('id'),
+            normal=Count('id', filter=Q(score__gte=60)),
+            moderate=Count('id', filter=Q(score__gte=40, score__lt=60)),
+            significant=Count('id', filter=Q(score__lt=40))
+        )
+
         hine_stats = {
-            'total': var_hine_list.count(),
-            'normal': var_hine_list.filter(score__gte=60).count(),
-            'moderate': var_hine_list.filter(score__gte=40, score__lt=60).count(),
-            'significant': var_hine_list.filter(score__lt=40).count(),
+            'total': stats['total'] or 0,
+            'normal': stats['normal'] or 0,
+            'moderate': stats['moderate'] or 0,
+            'significant': stats['significant'] or 0,
         }
         
         # Pagination
@@ -2963,6 +3003,8 @@ def hine_assessment_delete_start(request, hine_id):
     )
 
 
+@ratelimit(key='user', rate='5/m', method='DELETE')
+@ratelimit(key='ip', rate='10/m', method='DELETE')
 @login_required(login_url="user-login")
 @require_http_methods(["DELETE"])
 def hine_assessment_delete(request, hine_id):
@@ -3068,13 +3110,11 @@ def hine_assessment_delete(request, hine_id):
 
 
 # Functions for Developmental assessments
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def da_assessment_add(request, pid):
-    try:
-        sp = Patient.objects.get(pk=pid)
-    except Patient.DoesNotExist:
-        messages.error(request, "Patient not found.")
-        return redirect("manage-patients")
+    sp = get_object_or_404(Patient, pk=pid)
 
     if request.method == "POST":
         da_form_data = DevelopmentalAssessmentForm(request.POST, patient=sp)
@@ -3119,6 +3159,8 @@ def da_assessment_add(request, pid):
         )
 
 
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def da_assessment_edit(request, da_id):
     try:
@@ -3137,7 +3179,7 @@ def da_assessment_edit(request, da_id):
             )
             return redirect("da-assessment-view", dar.id)
         else:
-            messages.success(request, assessment_form_data.errors)
+            messages.error(request, assessment_form_data.errors)
             return render(
                 request,
                 "develop_assemnt/edit.html",
@@ -3236,14 +3278,22 @@ def da_assessment_manager(request):
                 start_date = now - timedelta(days=365)
                 var_da_list = var_da_list.filter(date_of_assessment__gte=start_date)
         
-        # Calculate statistics
+        # Calculate statistics using aggregation (single query instead of 4)
+        from django.db.models import Count, Q
+
+        one_month_ago = timezone.now() - timedelta(days=30)
+        stats = var_da_list.aggregate(
+            total=Count('id'),
+            normal=Count('id', filter=Q(is_dx_normal=True)),
+            delayed=Count('id', filter=Q(is_dx_normal=False)),
+            this_month=Count('id', filter=Q(date_of_assessment__gte=one_month_ago))
+        )
+
         da_stats = {
-            'total': var_da_list.count(),
-            'normal': var_da_list.filter(is_dx_normal=True).count(),
-            'delayed': var_da_list.filter(is_dx_normal=False).count(),
-            'this_month': var_da_list.filter(
-                date_of_assessment__gte=timezone.now() - timedelta(days=30)
-            ).count(),
+            'total': stats['total'] or 0,
+            'normal': stats['normal'] or 0,
+            'delayed': stats['delayed'] or 0,
+            'this_month': stats['this_month'] or 0,
         }
         
         # Pagination
@@ -3272,11 +3322,7 @@ def da_assessment_manager(request):
 def da_assessment_manager_by_patients(request, pid):
     try:
         # Get patient with error handling
-        try:
-            sp = Patient.objects.get(pk=pid)
-        except Patient.DoesNotExist:
-            messages.error(request, "Patient not found.")
-            return redirect("manage-patients")
+        sp = get_object_or_404(Patient, pk=pid)
         
         # Get developmental assessments for this patient
         var_da_list = DevelopmentalAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').filter(patient=sp.id).order_by("-id")
@@ -3342,14 +3388,22 @@ def da_assessment_manager_by_patients(request, pid):
                 start_date = now - timedelta(days=365)
                 var_da_list = var_da_list.filter(date_of_assessment__gte=start_date)
         
-        # Calculate statistics for this patient
+        # Calculate statistics for this patient using aggregation (single query instead of 4)
+        from django.db.models import Count, Q
+
+        one_month_ago = timezone.now() - timedelta(days=30)
+        stats = var_da_list.aggregate(
+            total=Count('id'),
+            normal=Count('id', filter=Q(is_dx_normal=True)),
+            delayed=Count('id', filter=Q(is_dx_normal=False)),
+            this_month=Count('id', filter=Q(date_of_assessment__gte=one_month_ago))
+        )
+
         da_stats = {
-            'total': var_da_list.count(),
-            'normal': var_da_list.filter(is_dx_normal=True).count(),
-            'delayed': var_da_list.filter(is_dx_normal=False).count(),
-            'this_month': var_da_list.filter(
-                date_of_assessment__gte=timezone.now() - timedelta(days=30)
-            ).count(),
+            'total': stats['total'] or 0,
+            'normal': stats['normal'] or 0,
+            'delayed': stats['delayed'] or 0,
+            'this_month': stats['this_month'] or 0,
         }
         
         # Pagination
@@ -3385,6 +3439,8 @@ def da_assessment_delete_start(request, da_id):
     )
 
 
+@ratelimit(key='user', rate='5/m', method='DELETE')
+@ratelimit(key='ip', rate='10/m', method='DELETE')
 @login_required(login_url="user-login")
 @require_http_methods(["DELETE"])
 def da_assessment_delete(request, da_id):
@@ -3498,14 +3554,12 @@ def print(request):
 # General Paediatric Assessment (GPA) Views
 # ================================
 
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def gpa_add(request, pid):
     """Create a new General Paediatric Assessment record for a patient"""
-    try:
-        patient = Patient.objects.get(pk=pid)
-    except Patient.DoesNotExist:
-        messages.error(request, "Patient not found")
-        return redirect("patient-manager")
+    patient = get_object_or_404(Patient, pk=pid)
 
     if request.method == "POST":
         form = GeneralPaediatricAssessmentForm(request.POST)
@@ -3530,6 +3584,8 @@ def gpa_add(request, pid):
     return render(request, "gpa_record/add.html", context)
 
 
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def gpa_edit(request, gpa_id):
     """Edit an existing General Paediatric Assessment record"""
@@ -3646,11 +3702,7 @@ def gpa_manager(request):
 @login_required(login_url="user-login")
 def gpa_manager_by_patient(request, pid):
     """List all GPA records for a specific patient with search and pagination"""
-    try:
-        patient = Patient.objects.get(pk=pid)
-    except Patient.DoesNotExist:
-        messages.error(request, "Patient not found")
-        return redirect("patient-manager")
+    patient = get_object_or_404(Patient, pk=pid)
 
     # Get search parameter
     search_query = request.GET.get("search", "").strip()
@@ -3714,6 +3766,8 @@ def gpa_delete_start(request, gpa_id):
     return render(request, "gpa_record/delete_confirm.html", context)
 
 
+@ratelimit(key='user', rate='5/m', method='DELETE')
+@ratelimit(key='ip', rate='10/m', method='DELETE')
 @login_required(login_url="user-login")
 @require_http_methods(["DELETE"])
 def gpa_delete(request, gpa_id):

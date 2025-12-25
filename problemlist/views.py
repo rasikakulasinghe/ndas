@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django_ratelimit.decorators import ratelimit
 from django.db.models import Case, When, Value, IntegerField
 from django.utils import timezone
 from django.http import HttpResponse, JsonResponse
@@ -58,6 +59,8 @@ def problem_manager(request, pid):
     return render(request, "problemlist/manager.html", context)
 
 
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def problem_add(request, pid):
     """
@@ -121,6 +124,8 @@ def problem_view(request, pk):
     return render(request, "problemlist/view.html", context)
 
 
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def problem_edit(request, pk):
     """
@@ -158,6 +163,8 @@ def problem_edit(request, pk):
     return render(request, "problemlist/edit.html", context)
 
 
+@ratelimit(key='user', rate='5/m', method=['DELETE', 'POST'])
+@ratelimit(key='ip', rate='10/m', method=['DELETE', 'POST'])
 @login_required(login_url="user-login")
 def problem_delete(request, pk):
     """
