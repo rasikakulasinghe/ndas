@@ -31,6 +31,7 @@ from ndas.custom_codes.choice import BOOKMARK_TYPE
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django_ratelimit.decorators import ratelimit
 from ndas.custom_codes.validators import (
     Name_baby_validation,
     Name_mother_validation,
@@ -275,6 +276,8 @@ def patient_manager(request, filter_type='all'):
 # Duplicate patient_manager_* functions removed - now using unified patient_manager() with filter_type parameter
 
 @handle_view_errors(redirect_url='manage-patients', error_message='Error adding patient')
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def patient_add(request):
     if not request.user.is_authenticated:
@@ -475,6 +478,8 @@ def patient_view(request, pk):
 
 
 @handle_view_errors(redirect_url='manage-patients', error_message='Error deleting patient')
+@ratelimit(key='user', rate='5/m', method='DELETE')
+@ratelimit(key='ip', rate='10/m', method='DELETE')
 @login_required(login_url="user-login")
 @require_http_methods(["DELETE"])
 def patient_delete(request, pk):
@@ -604,6 +609,8 @@ def patient_delete_confirm(request, pk):
 
 
 @handle_view_errors(redirect_url='manage-patients', error_message='Error editing patient')
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def patient_edit(request, pk):
     selected_patient = get_object_or_404(Patient, id=pk)
@@ -2696,6 +2703,8 @@ def cdic_assessment_delete(request, aid):
 
 
 # Functions for HINE assessments
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def hine_assessment_add(request, pid):
     sp = get_object_or_404(Patient, pk=pid)
@@ -2741,6 +2750,8 @@ def hine_assessment_add(request, pid):
         return render(request, "hine/add.html", {"patient": sp, "hine_form": hine_form})
 
 
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def hine_assessment_edit(request, hine_id):
     try:
@@ -2976,6 +2987,8 @@ def hine_assessment_delete_start(request, hine_id):
     )
 
 
+@ratelimit(key='user', rate='5/m', method='DELETE')
+@ratelimit(key='ip', rate='10/m', method='DELETE')
 @login_required(login_url="user-login")
 @require_http_methods(["DELETE"])
 def hine_assessment_delete(request, hine_id):
