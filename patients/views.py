@@ -2011,6 +2011,8 @@ def attachment_manager_patient(request, pid):
     return render(request, "attachment/manager.html", context)
 
 
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def attachment_add(request, pid):
     """
@@ -2114,6 +2116,8 @@ def attachment_view(request, pk):
     )
 
 
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def attachment_edit(request, pk):
     try:
@@ -2182,6 +2186,8 @@ def attachment_delete_confirm(request, pk):
     )
 
 
+@ratelimit(key='user', rate='5/m', method='DELETE')
+@ratelimit(key='ip', rate='10/m', method='DELETE')
 @login_required(login_url="user-login")
 @require_http_methods(["DELETE"])
 def attachment_delete(request, pk):
@@ -2295,6 +2301,8 @@ def attachment_delete(request, pk):
 
 
 
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def cdic_assessment_add(request, pid):
     selected_patient = get_object_or_404(Patient, pk=pid)
@@ -2340,6 +2348,8 @@ def cdic_assessment_add(request, pid):
         )
 
 
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def cdic_assessment_edit(request, aid):
     try:
@@ -2598,6 +2608,8 @@ def cdic_assessment_delete_start(request, aid):
     )
 
 
+@ratelimit(key='user', rate='5/m', method='DELETE')
+@ratelimit(key='ip', rate='10/m', method='DELETE')
 @login_required(login_url="user-login")
 @require_http_methods(["DELETE"])
 def cdic_assessment_delete(request, aid):
@@ -3094,6 +3106,8 @@ def hine_assessment_delete(request, hine_id):
 
 
 # Functions for Developmental assessments
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def da_assessment_add(request, pid):
     sp = get_object_or_404(Patient, pk=pid)
@@ -3141,6 +3155,8 @@ def da_assessment_add(request, pid):
         )
 
 
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def da_assessment_edit(request, da_id):
     try:
@@ -3419,6 +3435,8 @@ def da_assessment_delete_start(request, da_id):
     )
 
 
+@ratelimit(key='user', rate='5/m', method='DELETE')
+@ratelimit(key='ip', rate='10/m', method='DELETE')
 @login_required(login_url="user-login")
 @require_http_methods(["DELETE"])
 def da_assessment_delete(request, da_id):
@@ -3532,6 +3550,8 @@ def print(request):
 # General Paediatric Assessment (GPA) Views
 # ================================
 
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def gpa_add(request, pid):
     """Create a new General Paediatric Assessment record for a patient"""
@@ -3560,6 +3580,8 @@ def gpa_add(request, pid):
     return render(request, "gpa_record/add.html", context)
 
 
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def gpa_edit(request, gpa_id):
     """Edit an existing General Paediatric Assessment record"""
@@ -3740,6 +3762,8 @@ def gpa_delete_start(request, gpa_id):
     return render(request, "gpa_record/delete_confirm.html", context)
 
 
+@ratelimit(key='user', rate='5/m', method='DELETE')
+@ratelimit(key='ip', rate='10/m', method='DELETE')
 @login_required(login_url="user-login")
 @require_http_methods(["DELETE"])
 def gpa_delete(request, gpa_id):

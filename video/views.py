@@ -7,6 +7,7 @@ import logging
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django_ratelimit.decorators import ratelimit
 from django.http import JsonResponse, HttpResponseForbidden, Http404
 from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
@@ -26,6 +27,8 @@ logger = logging.getLogger(__name__)
 
 
 @handle_view_errors(redirect_url='video-manager', error_message='Error adding video')
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def video_add(request, patient_id):
     """Enhanced video upload with proper form handling and progress tracking"""
@@ -145,6 +148,8 @@ def video_view(request, video_id):
 
 
 @handle_view_errors(redirect_url='video-manager', error_message='Error editing video')
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def video_edit(request, video_id):
     """Edit video details with enhanced validation and error handling"""
@@ -488,6 +493,8 @@ def video_delete_confirm(request, video_id):
 
 
 @handle_view_errors(redirect_url='video-manager', error_message='Error deleting video')
+@ratelimit(key='user', rate='5/m', method='DELETE')
+@ratelimit(key='ip', rate='10/m', method='DELETE')
 @login_required(login_url="user-login")
 @require_http_methods(["DELETE"])
 def video_delete(request, video_id):
