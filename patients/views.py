@@ -377,32 +377,32 @@ def patient_view(request, pk):
     selected_patient = get_object_or_404(Patient, id=pk)
     indications = selected_patient.indecation_for_gma
 
-    var_file_video = Video.objects.filter(patient=selected_patient).order_by("-id")
+    var_file_video = Video.objects.select_related('added_by', 'last_edit_by').filter(patient=selected_patient).order_by("-id")
     file_video_count = var_file_video.count()
     file_videos = var_file_video[:5]
 
-    var_file_attachments = Attachment.objects.filter(patient=selected_patient).order_by(
+    var_file_attachments = Attachment.objects.select_related('added_by', 'last_edit_by').filter(patient=selected_patient).order_by(
         "-id"
     )
     file_attachment_count = var_file_attachments.count()
     file_attachment = var_file_attachments[:5]
 
-    var_gma = GMAssessment.objects.filter(patient=selected_patient).order_by("-id")
+    var_gma = GMAssessment.objects.select_related('added_by', 'last_edit_by', 'video_file').filter(patient=selected_patient).order_by("-id")
     gm_assessments_count = var_gma.count()
     gm_assessments = var_gma[:5]
     gm_last_assessment = var_gma.last
 
-    var_hine = HINEAssessment.objects.filter(patient=selected_patient).order_by("-id")
+    var_hine = HINEAssessment.objects.select_related('added_by', 'last_edit_by').filter(patient=selected_patient).order_by("-id")
     hine_assessments_count = var_hine.count()
     hine_assessments = var_hine[:5]
 
-    var_da = DevelopmentalAssessment.objects.filter(patient=selected_patient).order_by(
+    var_da = DevelopmentalAssessment.objects.select_related('added_by', 'last_edit_by').filter(patient=selected_patient).order_by(
         "-id"
     )
     da_assessments_count = var_da.count()
     da_assessments = var_da[:5]
 
-    var_cdic = CDICRecord.objects.filter(patient=selected_patient).order_by("-id")
+    var_cdic = CDICRecord.objects.select_related('added_by', 'last_edit_by').filter(patient=selected_patient).order_by("-id")
     cdic_record_count = var_cdic.count()
     cdic_record = var_cdic[:5]
 
@@ -1200,14 +1200,18 @@ def assessment_manager(request):
 
     # Filter assessments based on search query
     if search_query:
-        assessment_list = GMAssessment.objects.filter(
+        assessment_list = GMAssessment.objects.select_related(
+            'patient', 'added_by', 'last_edit_by', 'video_file'
+        ).filter(
             Q(patient__baby_name__icontains=search_query) |
             Q(patient__mother_name__icontains=search_query) |
             Q(patient__bht__icontains=search_query) |
             Q(patient__nnc_no__icontains=search_query)
         ).order_by("-id")
     else:
-        assessment_list = GMAssessment.objects.all().order_by("-id")
+        assessment_list = GMAssessment.objects.select_related(
+            'patient', 'added_by', 'last_edit_by', 'video_file'
+        ).all().order_by("-id")
 
     paginator = Paginator(assessment_list, 10)
     page_number = request.GET.get("page")
@@ -1228,7 +1232,9 @@ def assessment_manager_recent(request):
 
     # Get assessments from last 30 days
     thirty_days_ago = timezone.now() - timedelta(days=30)
-    assessment_list = GMAssessment.objects.filter(created_at__gte=thirty_days_ago)
+    assessment_list = GMAssessment.objects.select_related(
+        'patient', 'added_by', 'last_edit_by', 'video_file'
+    ).filter(created_at__gte=thirty_days_ago)
 
     # Apply search filter if provided
     if search_query:
@@ -1259,7 +1265,9 @@ def assessment_manager_normal(request):
     search_query = request.GET.get('search', '').strip()
 
     # Get assessments with normal diagnosis
-    assessment_list = GMAssessment.objects.filter(diagnosis_conclusion='NORMAL')
+    assessment_list = GMAssessment.objects.select_related(
+        'patient', 'added_by', 'last_edit_by', 'video_file'
+    ).filter(diagnosis_conclusion='NORMAL')
 
     # Apply search filter if provided
     if search_query:
@@ -1290,7 +1298,9 @@ def assessment_manager_abnormal(request):
     search_query = request.GET.get('search', '').strip()
 
     # Get assessments with abnormal diagnosis
-    assessment_list = GMAssessment.objects.filter(diagnosis_conclusion='ABNORMAL')
+    assessment_list = GMAssessment.objects.select_related(
+        'patient', 'added_by', 'last_edit_by', 'video_file'
+    ).filter(diagnosis_conclusion='ABNORMAL')
 
     # Apply search filter if provided
     if search_query:
@@ -1321,7 +1331,9 @@ def assessment_manager_informed(request):
     search_query = request.GET.get('search', '').strip()
 
     # Get assessments where parent is informed
-    assessment_list = GMAssessment.objects.filter(parent_informed=True)
+    assessment_list = GMAssessment.objects.select_related(
+        'patient', 'added_by', 'last_edit_by', 'video_file'
+    ).filter(parent_informed=True)
 
     # Apply search filter if provided
     if search_query:
@@ -1352,7 +1364,9 @@ def assessment_manager_not_informed(request):
     search_query = request.GET.get('search', '').strip()
 
     # Get assessments where parent is not informed
-    assessment_list = GMAssessment.objects.filter(parent_informed=False)
+    assessment_list = GMAssessment.objects.select_related(
+        'patient', 'added_by', 'last_edit_by', 'video_file'
+    ).filter(parent_informed=False)
 
     # Apply search filter if provided
     if search_query:
