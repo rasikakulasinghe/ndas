@@ -34,6 +34,7 @@ class CustomUser(AbstractUser, TimeStampedModel):
         validators=[validate_phone_number],
         help_text="Primary mobile number (required)",
         verbose_name="Primary Mobile",
+        db_index=True,
     )
     mobile_secondary = models.CharField(
         max_length=15,

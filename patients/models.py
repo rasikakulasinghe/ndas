@@ -2248,8 +2248,8 @@ class Bookmark(TimeStampedModel, UserTrackingMixin):
 
 
 class IndicationsForGMA(TimeStampedModel, UserTrackingMixin):
-    title = models.CharField(max_length=75, null=False, blank=False)
-    level = models.CharField(max_length=6, choices=LEVEL_OF_INDICATION, null=False)
+    title = models.CharField(max_length=75, null=False, blank=False, db_index=True)
+    level = models.CharField(max_length=6, choices=LEVEL_OF_INDICATION, null=False, db_index=True)
     description = models.TextField(null=True, blank=True)
 
     class Meta:
@@ -2260,8 +2260,8 @@ class IndicationsForGMA(TimeStampedModel, UserTrackingMixin):
 
 
 class DiagnosisList(TimeStampedModel, UserTrackingMixin):
-    abr = models.CharField(max_length=6, null=False, blank=False)
-    title = models.TextField()
+    abr = models.CharField(max_length=6, null=False, blank=False, db_index=True)
+    title = models.TextField(db_index=True)
     description = models.TextField()
 
     class Meta:
