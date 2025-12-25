@@ -2261,7 +2261,7 @@ class IndicationsForGMA(TimeStampedModel, UserTrackingMixin):
 
 class DiagnosisList(TimeStampedModel, UserTrackingMixin):
     abr = models.CharField(max_length=6, null=False, blank=False, db_index=True)
-    title = models.TextField(db_index=True)
+    title = models.CharField(max_length=255, null=False, blank=False, db_index=True)
     description = models.TextField()
 
     class Meta:
