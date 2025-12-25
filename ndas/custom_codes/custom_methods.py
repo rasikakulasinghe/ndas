@@ -6,6 +6,7 @@ from django.utils.timezone import localtime, now
 from django.utils import timezone
 from django.utils.text import slugify
 from .ndas_enums import PtStatus
+from .validators import sanitize_filename
 
 
 def get_gma_diagnosis_data():
@@ -120,81 +121,133 @@ def getFullDeviceDetails(request):
 # set uploaded video name
 def get_video_path_file_name(instance, filename):
     """
-    Enhanced video file naming with proper organization
+    Enhanced video file naming with proper organization and security.
+
+    Security: Sanitizes filename and extension to prevent path traversal.
     """
     import os
     from django.utils.text import slugify
     from django.utils import timezone
-    
-    ext = filename.split('.')[-1]
+
+    # Sanitize filename first, then extract extension safely
+    sanitized = sanitize_filename(filename)
+    ext = os.path.splitext(sanitized)[1].lower()
+    if not ext:
+        ext = '.mp4'  # Default to mp4 if no extension
+
     patient_name = slugify(instance.patient.baby_name) if instance.patient else 'unknown'
     title = slugify(instance.title) if hasattr(instance, 'title') and instance.title else slugify(instance.caption if hasattr(instance, 'caption') else 'video')
-    
+
     # Create organized folder structure: videos/YYYY/MM/patient_name/
     now = timezone.now()
     year = now.strftime('%Y')
     month = now.strftime('%m')
-    
+
     # Generate unique filename
     timestamp = now.strftime('%Y%m%d_%H%M%S')
-    filename = f"{patient_name}_{title}_original_{timestamp}.{ext}"
-    
+    filename = f"{patient_name}_{title}_original_{timestamp}{ext}"
+
     return os.path.join('videos', year, month, patient_name, filename)
 
 
 def get_compressed_video_path(instance, filename):
     """
-    Generate path for compressed video files
+    Generate path for compressed video files with security sanitization.
+
+    Security: Sanitizes filename to prevent path traversal.
+    Note: Always uses .mp4 for compressed videos regardless of input.
     """
     import os
     from django.utils.text import slugify
     from django.utils import timezone
-    
-    ext = os.path.splitext(filename)[1].lower()
-    # Use .mp4 for all compressed videos for consistency
+
+    # Sanitize input filename (defensive, even though we override extension)
+    sanitized = sanitize_filename(filename)
+
+    # Always use .mp4 for all compressed videos for consistency
     compressed_ext = '.mp4'
-    
+
     patient_name = slugify(instance.patient.baby_name) if instance.patient else 'unknown'
     title = slugify(instance.title) if hasattr(instance, 'title') and instance.title else slugify(instance.caption if hasattr(instance, 'caption') else 'video')
-    
+
     # Create organized folder structure
     now = timezone.now()
     year = now.strftime('%Y')
     month = now.strftime('%m')
-    
+
     timestamp = now.strftime('%Y%m%d_%H%M%S')
     filename = f"{patient_name}_{title}_compressed_{timestamp}{compressed_ext}"
-    
+
     return os.path.join('videos', year, month, patient_name, 'compressed', filename)
 
 
 def get_video_thumbnail_path(instance, filename):
     """
-    Generate path for video thumbnail images
+    Generate path for video thumbnail images with security sanitization.
+
+    Security: Sanitizes filename to prevent path traversal.
+    Note: Always uses .jpg for thumbnails regardless of input.
     """
     import os
     from django.utils.text import slugify
     from django.utils import timezone
-    
+
+    # Sanitize input filename (defensive, even though we override extension)
+    sanitized = sanitize_filename(filename)
+
     patient_name = slugify(instance.patient.baby_name) if instance.patient else 'unknown'
     title = slugify(instance.title) if hasattr(instance, 'title') and instance.title else slugify(instance.caption if hasattr(instance, 'caption') else 'video')
-    
+
     # Create organized folder structure
     now = timezone.now()
     year = now.strftime('%Y')
     month = now.strftime('%m')
-    
+
     timestamp = now.strftime('%Y%m%d_%H%M%S')
     filename = f"{patient_name}_{title}_thumb_{timestamp}.jpg"
-    
+
     return os.path.join('videos', year, month, patient_name, 'thumbnails', filename)
 
 # set uploaded attachment name
 def get_attachment_path_file_name(instance, filename):
-    ext = filename.split('.')[-1]
-    
-    filename = f"{instance.title}_{getAttachmentType(filename)}_{instance.added_by}_{getCurrentDateTime()}.{ext}"
-    return os.path.join('attachments/', filename)
+    """
+    Generate secure file path for attachment uploads with sanitization.
+
+    Security measures:
+    - Sanitizes instance.title to prevent path traversal
+    - Sanitizes original filename and extension
+    - Ensures filename is filesystem-safe
+
+    Args:
+        instance: Attachment model instance
+        filename: Original uploaded filename
+
+    Returns:
+        str: Secure file path for storage
+    """
+    # Sanitize the original filename first to get a safe extension
+    sanitized_original = sanitize_filename(filename)
+    ext = os.path.splitext(sanitized_original)[1].lower()
+
+    # If no valid extension, try to get from original (but sanitized)
+    if not ext:
+        ext = '.bin'  # Default extension for unknown types
+
+    # Sanitize the title (user input) to prevent path traversal
+    safe_title = sanitize_filename(instance.title, max_length=50)
+
+    # Build filename components (all safe at this point)
+    attachment_type = getAttachmentType(filename)
+    timestamp = getCurrentDateTime()
+
+    # Combine into final filename
+    filename_parts = [safe_title, attachment_type, str(instance.added_by), timestamp]
+    base_name = '_'.join(filename_parts)
+
+    # Final sanitization of complete filename (defensive)
+    final_filename = sanitize_filename(f"{base_name}{ext}", max_length=200)
+
+    return os.path.join('attachments/', final_filename)
 
 # get attachment type according to file extension
 def getAttachmentType(var_attachment):

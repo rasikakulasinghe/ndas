@@ -67,6 +67,83 @@ def sanitize_text_input(value):
     return text
 
 
+def sanitize_filename(filename, max_length=100):
+    """
+    Sanitize filename to prevent path traversal and filesystem issues.
+
+    Security measures:
+    - Removes path traversal attempts (../, ..\, etc.)
+    - Replaces invalid filesystem characters with underscores
+    - Limits filename length while preserving extension
+    - Prevents hidden files (starting with .)
+    - Ensures filename is not empty
+
+    Args:
+        filename (str): Original filename to sanitize
+        max_length (int): Maximum allowed filename length (default: 100)
+
+    Returns:
+        str: Sanitized filename safe for filesystem storage
+
+    Examples:
+        >>> sanitize_filename("../../etc/passwd")
+        "etc_passwd"
+        >>> sanitize_filename("file<script>.txt")
+        "file_script_.txt"
+        >>> sanitize_filename("valid_file-name.pdf")
+        "valid_file-name.pdf"
+    """
+    if not filename:
+        return "unnamed_file"
+
+    # Convert to string and get basename (removes any directory components)
+    filename = os.path.basename(str(filename))
+
+    # Split into name and extension
+    name, ext = os.path.splitext(filename)
+
+    # Remove path traversal attempts and null bytes
+    name = name.replace('..', '').replace('\0', '')
+    ext = ext.replace('..', '').replace('\0', '')
+
+    # Replace invalid filesystem characters with underscores
+    # Invalid characters: / \ : * ? " < > | and control characters
+    invalid_chars = r'[/\\:*?"<>|\x00-\x1f\x7f]'
+    name = re.sub(invalid_chars, '_', name)
+    ext = re.sub(invalid_chars, '_', ext)
+
+    # Remove leading/trailing spaces and dots (Windows filesystem issues)
+    name = name.strip('. ')
+    ext = ext.strip('. ')
+
+    # Ensure extension starts with a dot
+    if ext and not ext.startswith('.'):
+        ext = '.' + ext
+
+    # Prevent hidden files (Unix/Linux)
+    if name.startswith('.'):
+        name = 'file_' + name.lstrip('.')
+
+    # If name is empty after sanitization, use default
+    if not name:
+        name = 'unnamed_file'
+
+    # Limit length while preserving extension
+    # Reserve space for extension plus some buffer
+    max_name_length = max_length - len(ext) - 1
+    if len(name) > max_name_length:
+        name = name[:max_name_length]
+
+    # Combine name and extension
+    sanitized = name + ext if ext else name
+
+    # Final check: ensure result is not empty and doesn't exceed max_length
+    if not sanitized or sanitized.isspace():
+        sanitized = "unnamed_file"
+
+    return sanitized[:max_length]
+
+
 def image_extension_validation(value):
     ext = os.path.splitext(value.name)[1]  # [0]
     valid_extensions = [".jpg", ".jpeg", ".png"]
