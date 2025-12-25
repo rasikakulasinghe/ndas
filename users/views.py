@@ -212,13 +212,13 @@ def test_logout_modal(request):
 
 @login_required(login_url='user-login')
 def userView(request, pk):
-    custom_user = CustomUser.objects.get(id=pk)
+    custom_user = get_object_or_404(CustomUser, id=pk)
     loged_user = request.user
     return render(request, 'users/user_view.html', {'custom_user': custom_user, 'user' : loged_user})
 
 @login_required(login_url='user-login')
 def userViewByUsername(request, username):
-    custom_user = CustomUser.objects.get(username=username)
+    custom_user = get_object_or_404(CustomUser, username=username)
     return render(request, 'users/user_view.html', {'custom_user': custom_user,})
 
 @login_required(login_url='user-login')
@@ -439,12 +439,9 @@ def terminate_session(request, session_id):
     """
     Terminate a specific user session.
     """
-    try:
-        user_session = UserSession.objects.get(id=session_id, user=request.user)
-        user_session.deactivate()
-        messages.success(request, 'Session terminated successfully.')
-    except UserSession.DoesNotExist:
-        messages.error(request, 'Session not found.')
+    user_session = get_object_or_404(UserSession, id=session_id, user=request.user)
+    user_session.deactivate()
+    messages.success(request, 'Session terminated successfully.')
     
     return redirect('user-activity')
 

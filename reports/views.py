@@ -317,11 +317,10 @@ def download_report(request, file_id):
         filename = f"report_{datetime.now().strftime('%Y%m%d')}.pdf"
 
     # Serve file with proper resource management
-    file_handle = open(file_path, 'rb')
-    response = FileResponse(file_handle, content_type=content_type)
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-
-    return response
+    with open(file_path, 'rb') as file_handle:
+        response = FileResponse(file_handle.read(), content_type=content_type)
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
 
 
 # Assessment PDF Download Views
@@ -338,11 +337,10 @@ def download_gm_assessment_pdf(request, assessment_id):
 
     # Serve file with proper resource management
     filename = f"GM_Assessment_{assessment_id}_{datetime.now().strftime('%Y%m%d')}.pdf"
-    file_handle = open(file_path, 'rb')
-    response = FileResponse(file_handle, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-
-    return response
+    with open(file_path, 'rb') as file_handle:
+        response = FileResponse(file_handle.read(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
 
 
 @login_required(login_url='user-login')
@@ -357,11 +355,10 @@ def download_hine_assessment_pdf(request, assessment_id):
 
     # Serve file with proper resource management
     filename = f"HINE_Assessment_{assessment_id}_{datetime.now().strftime('%Y%m%d')}.pdf"
-    file_handle = open(file_path, 'rb')
-    response = FileResponse(file_handle, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-
-    return response
+    with open(file_path, 'rb') as file_handle:
+        response = FileResponse(file_handle.read(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
 
 
 @login_required(login_url='user-login')
@@ -376,11 +373,10 @@ def download_da_assessment_pdf(request, assessment_id):
 
     # Serve file with proper resource management
     filename = f"DA_Assessment_{assessment_id}_{datetime.now().strftime('%Y%m%d')}.pdf"
-    file_handle = open(file_path, 'rb')
-    response = FileResponse(file_handle, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-
-    return response
+    with open(file_path, 'rb') as file_handle:
+        response = FileResponse(file_handle.read(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
 
 
 @login_required(login_url='user-login')
@@ -395,11 +391,10 @@ def download_cdic_assessment_pdf(request, assessment_id):
 
     # Serve file with proper resource management
     filename = f"CDIC_Record_{assessment_id}_{datetime.now().strftime('%Y%m%d')}.pdf"
-    file_handle = open(file_path, 'rb')
-    response = FileResponse(file_handle, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-
-    return response
+    with open(file_path, 'rb') as file_handle:
+        response = FileResponse(file_handle.read(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
 
 
 @login_required(login_url='user-login')
@@ -414,11 +409,10 @@ def download_gpa_assessment_pdf(request, assessment_id):
 
     # Serve file with proper resource management
     filename = f"GPA_Assessment_{assessment_id}_{datetime.now().strftime('%Y%m%d')}.pdf"
-    file_handle = open(file_path, 'rb')
-    response = FileResponse(file_handle, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-
-    return response
+    with open(file_path, 'rb') as file_handle:
+        response = FileResponse(file_handle.read(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
 
 
 # Helper Functions

@@ -374,7 +374,7 @@ def patient_add(request):
 
 @login_required(login_url="user-login")
 def patient_view(request, pk):
-    selected_patient = Patient.objects.get(id=pk)
+    selected_patient = get_object_or_404(Patient, id=pk)
     indications = selected_patient.indecation_for_gma
 
     var_file_video = Video.objects.filter(patient=selected_patient).order_by("-id")
@@ -589,7 +589,7 @@ def patient_delete(request, pk):
 @handle_view_errors(redirect_url='manage-patients', error_message='Error loading delete confirmation')
 @login_required(login_url="user-login")
 def patient_delete_confirm(request, pk):
-    patient = Patient.objects.get(id=pk)
+    patient = get_object_or_404(Patient, id=pk)
     user = request.user
     if user.is_superuser:
         return render(request, "patients/delete-confirm.html", {"patient": patient})
@@ -606,11 +606,7 @@ def patient_delete_confirm(request, pk):
 @handle_view_errors(redirect_url='manage-patients', error_message='Error editing patient')
 @login_required(login_url="user-login")
 def patient_edit(request, pk):
-    try:
-        selected_patient = Patient.objects.get(id=pk)
-    except Patient.DoesNotExist:
-        messages.error(request, "Patient not found.")
-        return redirect("manage-patients")
+    selected_patient = get_object_or_404(Patient, id=pk)
 
     if request.method == "POST":
         data_form_modified = PatientForm(request.POST, instance=selected_patient)
@@ -859,12 +855,8 @@ def assessment_add(request, ptid, fid):
     
     logger = logging.getLogger(__name__)
     
-    try:
-        patient = Patient.objects.get(pk=ptid)
-        video_file = Video.objects.get(pk=fid)
-    except (Patient.DoesNotExist, Video.DoesNotExist) as e:
-        messages.error(request, "Patient or video file not found.")
-        return redirect("manage-patients")
+    patient = get_object_or_404(Patient, pk=ptid)
+    video_file = get_object_or_404(Video, pk=fid)
 
     # Check if assessment already exists for this video
     existing_assessment = GMAssessment.objects.filter(video_file=video_file).first()
@@ -1052,7 +1044,7 @@ def assessment_edit(request, pk):
             messages.success(request, "Assessment details are updated succesfully...")
             return redirect("assessment-view", pk=assmnt.id)
         else:
-            messages.success(request, assessment_form_data.errors)
+            messages.error(request, assessment_form_data.errors)
             return render(
                 request,
                 "assessment/edit.html",
@@ -1074,7 +1066,7 @@ def assessment_edit_by_fileid(request, pk):
             messages.success(request, "Assessment details are updated succesfully...")
             return redirect("assessment-view", pk=assmnt.id)
         else:
-            messages.success(request, assessment_form_data.errors)
+            messages.error(request, assessment_form_data.errors)
             return render(
                 request,
                 "assessment/edit.html",
@@ -1088,8 +1080,8 @@ def assessment_edit_by_fileid(request, pk):
 @login_required(login_url="user-login")
 def assessment_delete_start(request, pk):
     """DEPRECATED: Use unified delete modal instead"""
-    assemnt = GMAssessment.objects.get(id=pk)
-    patient = Patient.objects.get(id=assemnt.patient.id)
+    assemnt = get_object_or_404(GMAssessment, id=pk)
+    patient = get_object_or_404(Patient, id=assemnt.patient.id)
     return render(
         request,
         "assessment/delete-confirm.html",
@@ -1387,7 +1379,7 @@ def assessment_manager_not_informed(request):
 
 @login_required(login_url="user-login")
 def assessment_manager_by_patients(request, pk):
-    patient = Patient.objects.get(id=pk)
+    patient = get_object_or_404(Patient, id=pk)
     # Get search parameter
     search_query = request.GET.get('search', '').strip()
 
@@ -1739,7 +1731,7 @@ def bookmark_edit(request, pk):
             messages.success(request, "Bookmark details are updated succesfully...")
             return redirect("bookmark-view", pk=selected_bm.id)
         else:
-            messages.success(request, bm_form_data.errors)
+            messages.error(request, bm_form_data.errors)
             return render(
                 request,
                 "bookmark/edit.html",
@@ -1875,7 +1867,7 @@ def attachment_manager(request):
 @login_required(login_url="user-login")
 def attachment_manager_patient(request, pid):
     """Enhanced patient-specific attachment manager with filtering and search"""
-    patient = Patient.objects.get(pk=pid)
+    patient = get_object_or_404(Patient, pk=pid)
 
     # Get search and filter parameters with proper defaults
     search_query = request.GET.get("search", "").strip()
@@ -1999,16 +1991,7 @@ def attachment_add(request, pid):
     Handle attachment upload for a patient.
     Updated to support new Attachment model fields and proper error handling.
     """
-    try:
-        selected_patient = Patient.objects.get(pk=pid)
-    except Patient.DoesNotExist:
-        if request.method == "POST":
-            return JsonResponse(
-                {"success": False, "msg": "Patient not found."},
-                status=404
-            )
-        messages.error(request, "Patient not found.")
-        return redirect("manage-patients")
+    selected_patient = get_object_or_404(Patient, pk=pid)
 
     attachment_form = AttachmentkForm()
 
@@ -2149,7 +2132,7 @@ def attachment_edit(request, pk):
                     request, "attachment/edit.html", {"form": a_form, "attachment": sa}
                 )
         else:
-            messages.success(request, bm_form_data.errors)
+            messages.error(request, bm_form_data.errors)
             return render(
                 request,
                 "attachment/edit.html",
@@ -2288,12 +2271,7 @@ def attachment_delete(request, pk):
 
 @login_required(login_url="user-login")
 def cdic_assessment_add(request, pid):
-    try:
-        selected_patient = Patient.objects.get(pk=pid)
-    except Patient.DoesNotExist:
-        messages.error(request, "Patient not found.")
-        return redirect("manage-patients")
-    
+    selected_patient = get_object_or_404(Patient, pk=pid)
     cdic_assemnt_form = CDICRecordForm()
 
     if request.method == "POST":
@@ -2357,7 +2335,7 @@ def cdic_assessment_edit(request, aid):
             messages.success(request, "CDIC record updated succesfully...")
             return redirect("cdic-assessment-view", cdicr.id)
         else:
-            messages.success(request, cdicr_form_data.errors)
+            messages.error(request, cdicr_form_data.errors)
             return render(
                 request,
                 "cdic_record/edit.html",
@@ -2484,11 +2462,7 @@ def cdic_assessment_manager(request):
 def cdic_assessment_manager_by_patients(request, pid):
     try:
         # Get patient with error handling
-        try:
-            sp = Patient.objects.get(pk=pid)
-        except Patient.DoesNotExist:
-            messages.error(request, "Patient not found.")
-            return redirect("manage-patients")
+        sp = get_object_or_404(Patient, pk=pid)
         
         # Get CDIC records for this patient
         var_cdic_list = CDICRecord.objects.select_related('patient', 'added_by', 'last_edit_by').filter(patient=sp.id).order_by("-id")
@@ -2695,11 +2669,7 @@ def cdic_assessment_delete(request, aid):
 # Functions for HINE assessments
 @login_required(login_url="user-login")
 def hine_assessment_add(request, pid):
-    try:
-        sp = Patient.objects.get(pk=pid)
-    except Patient.DoesNotExist:
-        messages.error(request, "Patient not found.")
-        return redirect("manage-patients")
+    sp = get_object_or_404(Patient, pk=pid)
     
     if request.method == "POST":
         hine_form = HINEAssessmentForm(request.POST, patient=sp)
@@ -2883,11 +2853,7 @@ def hine_assessment_manager(request):
 def hine_assessment_manager_by_patients(request, pid):
     try:
         # Get patient with error handling
-        try:
-            sp = Patient.objects.get(pk=pid)
-        except Patient.DoesNotExist:
-            messages.error(request, "Patient not found.")
-            return redirect("manage-patients")
+        sp = get_object_or_404(Patient, pk=pid)
         
         # Get HINE assessments for this patient
         var_hine_list = HINEAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').filter(patient=sp.id).order_by("-id")
@@ -3070,11 +3036,7 @@ def hine_assessment_delete(request, hine_id):
 # Functions for Developmental assessments
 @login_required(login_url="user-login")
 def da_assessment_add(request, pid):
-    try:
-        sp = Patient.objects.get(pk=pid)
-    except Patient.DoesNotExist:
-        messages.error(request, "Patient not found.")
-        return redirect("manage-patients")
+    sp = get_object_or_404(Patient, pk=pid)
 
     if request.method == "POST":
         da_form_data = DevelopmentalAssessmentForm(request.POST, patient=sp)
@@ -3137,7 +3099,7 @@ def da_assessment_edit(request, da_id):
             )
             return redirect("da-assessment-view", dar.id)
         else:
-            messages.success(request, assessment_form_data.errors)
+            messages.error(request, assessment_form_data.errors)
             return render(
                 request,
                 "develop_assemnt/edit.html",
@@ -3272,11 +3234,7 @@ def da_assessment_manager(request):
 def da_assessment_manager_by_patients(request, pid):
     try:
         # Get patient with error handling
-        try:
-            sp = Patient.objects.get(pk=pid)
-        except Patient.DoesNotExist:
-            messages.error(request, "Patient not found.")
-            return redirect("manage-patients")
+        sp = get_object_or_404(Patient, pk=pid)
         
         # Get developmental assessments for this patient
         var_da_list = DevelopmentalAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').filter(patient=sp.id).order_by("-id")
@@ -3501,11 +3459,7 @@ def print(request):
 @login_required(login_url="user-login")
 def gpa_add(request, pid):
     """Create a new General Paediatric Assessment record for a patient"""
-    try:
-        patient = Patient.objects.get(pk=pid)
-    except Patient.DoesNotExist:
-        messages.error(request, "Patient not found")
-        return redirect("patient-manager")
+    patient = get_object_or_404(Patient, pk=pid)
 
     if request.method == "POST":
         form = GeneralPaediatricAssessmentForm(request.POST)
@@ -3646,11 +3600,7 @@ def gpa_manager(request):
 @login_required(login_url="user-login")
 def gpa_manager_by_patient(request, pid):
     """List all GPA records for a specific patient with search and pagination"""
-    try:
-        patient = Patient.objects.get(pk=pid)
-    except Patient.DoesNotExist:
-        messages.error(request, "Patient not found")
-        return redirect("patient-manager")
+    patient = get_object_or_404(Patient, pk=pid)
 
     # Get search parameter
     search_query = request.GET.get("search", "").strip()

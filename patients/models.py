@@ -2258,10 +2258,6 @@ class IndicationsForGMA(TimeStampedModel, UserTrackingMixin):
     def __str__(self):
         return str(self.title + " | " + self.level)
 
-    @property
-    def getIndicationList(self):
-        return IndicationsForGMA.objects.all().values_list("title", flat=True)
-
 
 class DiagnosisList(TimeStampedModel, UserTrackingMixin):
     abr = models.CharField(max_length=6, null=False, blank=False)
@@ -2272,7 +2268,7 @@ class DiagnosisList(TimeStampedModel, UserTrackingMixin):
         pass
 
     def __str__(self):
-        return str(self.title + " (" + self.title + ")")
+        return str(self.title + " (" + self.abr + ")")
 
 
 class Help(TimeStampedModel, UserTrackingMixin):

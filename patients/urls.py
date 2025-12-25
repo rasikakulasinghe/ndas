@@ -9,22 +9,22 @@ urlpatterns = [
 
     # URLs for patients operations
     path("", views.dashboard, name='home'),
-    path("print", views.print, name='print'),
+    path("print/", views.print, name='print'),
 
     # Unified patient manager with filter type
     path("manager/patient/", views.patient_manager, {'filter_type': 'all'}, name='manage-patients'),
     path("manager/patient/<str:filter_type>/", views.patient_manager, name='manage-patients-filtered'),
 
     # Legacy URLs (redirects for backward compatibility - 6 month deprecation)
-    path("manager/patient/new", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'new'}, name='manage-patients-new'),
-    path("manager/patient/normal", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'dx_normal'}, name='manage-patients-diagnosis-normal'),
-    path("manager/patient/diagnosed/any", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'diagnosed'}, name='manage-patients-diagnosed-any'),
-    path("manager/patient/diagnosed/gma/normal", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'gma_normal'}, name='manage-patients-diagnosed-gma-normal'),
-    path("manager/patient/diagnosed/gma/abnormal", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'gma_abnormal'}, name='manage-patients-diagnosed-gma-abnormal'),
-    path("manager/patient/diagnosed/hine", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'hine'}, name='manage-patients-diagnosed-hine'),
-    path("manager/patient/diagnosed/da/normal", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'da_normal'}, name='manage-patients-diagnosed-da-normal'),
-    path("manager/patient/diagnosed/da/abnormal", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'da_abnormal'}, name='manage-patients-diagnosed-da-abnormal'),
-    path("manager/patient/discharged", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'discharged'}, name='manage-patients-discharged'),
+    path("manager/patient/new/", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'new'}, name='manage-patients-new'),
+    path("manager/patient/normal/", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'dx_normal'}, name='manage-patients-diagnosis-normal'),
+    path("manager/patient/diagnosed/any/", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'diagnosed'}, name='manage-patients-diagnosed-any'),
+    path("manager/patient/diagnosed/gma/normal/", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'gma_normal'}, name='manage-patients-diagnosed-gma-normal'),
+    path("manager/patient/diagnosed/gma/abnormal/", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'gma_abnormal'}, name='manage-patients-diagnosed-gma-abnormal'),
+    path("manager/patient/diagnosed/hine/", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'hine'}, name='manage-patients-diagnosed-hine'),
+    path("manager/patient/diagnosed/da/normal/", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'da_normal'}, name='manage-patients-diagnosed-da-normal'),
+    path("manager/patient/diagnosed/da/abnormal/", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'da_abnormal'}, name='manage-patients-diagnosed-da-abnormal'),
+    path("manager/patient/discharged/", RedirectView.as_view(pattern_name='manage-patients-filtered', permanent=False), {'filter_type': 'discharged'}, name='manage-patients-discharged'),
     path("patient/add/", views.patient_add, name='add-patient'),
     path("patient/view/<str:pk>/", views.patient_view, name='view-patient'),
     path("patient/edit/<str:pk>/", views.patient_edit, name='edit-patient'),
@@ -46,7 +46,7 @@ urlpatterns = [
     
     # URLs for attachments
     path("attachment/manager/", views.attachment_manager, name='attachment-manager'),
-    path("attachment/manager/patient/<str:pid>", views.attachment_manager_patient, name='attachment-manager-patient'),
+    path("attachment/manager/patient/<str:pid>/", views.attachment_manager_patient, name='attachment-manager-patient'),
     path("attachment/add/<str:pid>/", views.attachment_add, name='attachment-add'),
     path("attachment/view/<str:pk>/", views.attachment_view, name='attachment-view'),
     path("attachment/edit/<str:pk>/", views.attachment_edit, name='attachment-edit'),
@@ -61,11 +61,11 @@ urlpatterns = [
     path("assessment/view/<str:pk>/", views.assessment_view, name='assessment-view'),
     path("assessment/view/file/id/<str:file_id>/", views.assessment_view_by_fileid, name='assessment-view-by-file-id'),
     path("manager/assessment/", views.assessment_manager, name='assessment-manager'),
-    path("manager/assessment/recent", views.assessment_manager_recent, name='assessment-manager-recent'),
-    path("manager/assessment/normal", views.assessment_manager_normal, name='assessment-manager-normal'),
-    path("manager/assessment/abnormal", views.assessment_manager_abnormal, name='assessment-manager-abnormal'),
-    path("manager/assessment/informed", views.assessment_manager_informed, name='assessment-manager-informed'),
-    path("manager/assessment/not-informed", views.assessment_manager_not_informed, name='assessment-manager-not-informed'),
+    path("manager/assessment/recent/", views.assessment_manager_recent, name='assessment-manager-recent'),
+    path("manager/assessment/normal/", views.assessment_manager_normal, name='assessment-manager-normal'),
+    path("manager/assessment/abnormal/", views.assessment_manager_abnormal, name='assessment-manager-abnormal'),
+    path("manager/assessment/informed/", views.assessment_manager_informed, name='assessment-manager-informed'),
+    path("manager/assessment/not-informed/", views.assessment_manager_not_informed, name='assessment-manager-not-informed'),
     path("manager/assessment/patient/<str:pk>/", views.assessment_manager_by_patients, name='assessment-manager-patient'),
     # DEPRECATED: Use unified delete modal instead (refactor-delete-confirmation)
     # path("assessment/delete/confirm/<str:pk>/", views.assessment_delete_start, name='assessment-delete_start'),
