@@ -418,7 +418,7 @@ def user_activity(request):
     
     # Get recent activities with pagination
     page = request.GET.get('page', 1)
-    activities = UserActivityLog.objects.filter(user=user).order_by('-login_timestamp')[:50]
+    activities = UserActivityLog.objects.select_related('user').filter(user=user).order_by('-login_timestamp')[:50]
     
     # Get active sessions
     active_sessions = user.active_sessions.filter(is_active=True).order_by('-last_activity')
@@ -812,7 +812,7 @@ def admin_user_toggle_status(request, pk):
 def admin_user_activity(request, pk):
     """Admin view to see specific user's activity."""
     user = get_object_or_404(CustomUser, pk=pk)
-    activities = UserActivityLog.objects.filter(user=user).order_by('-login_timestamp')
+    activities = UserActivityLog.objects.select_related('user').filter(user=user).order_by('-login_timestamp')
     
     # Pagination
     paginator = Paginator(activities, 50)
@@ -831,7 +831,7 @@ def admin_user_activity(request, pk):
 @admin_required
 def admin_activity_logs(request):
     """Admin view to see all system activity logs."""
-    activities = UserActivityLog.objects.all().order_by('-login_timestamp')
+    activities = UserActivityLog.objects.select_related('user').all().order_by('-login_timestamp')
     
     # Pagination
     paginator = Paginator(activities, 100)
