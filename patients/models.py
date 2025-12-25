@@ -2260,7 +2260,13 @@ class IndicationsForGMA(TimeStampedModel, UserTrackingMixin):
     description = models.TextField(null=True, blank=True)
 
     class Meta:
-        pass
+        verbose_name = "Indication for GMA"
+        verbose_name_plural = "Indications for GMA"
+        ordering = ['level', 'title']
+        indexes = [
+            models.Index(fields=['title']),
+            models.Index(fields=['level']),
+        ]
 
     def __str__(self):
         return str(self.title + " | " + self.level)
@@ -2272,7 +2278,13 @@ class DiagnosisList(TimeStampedModel, UserTrackingMixin):
     description = models.TextField()
 
     class Meta:
-        pass
+        verbose_name = "Diagnosis"
+        verbose_name_plural = "Diagnoses"
+        ordering = ['title']
+        indexes = [
+            models.Index(fields=['title']),
+            models.Index(fields=['abr']),
+        ]
 
     def __str__(self):
         return str(self.title + " (" + self.abr + ")")

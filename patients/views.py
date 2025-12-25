@@ -60,7 +60,7 @@ from ndas.custom_codes.error_handlers import handle_view_errors
 from patients.timeline_utils import get_patient_timeline_events
 from datetime import datetime
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_GET, require_POST
 import pytz, os, logging, subprocess, tempfile
 from django.http import JsonResponse
 from django.utils.timezone import localtime, now
@@ -200,6 +200,7 @@ def dashboard(request):
 
 
 @login_required(login_url="user-login")
+@require_GET
 def patient_manager(request, filter_type='all'):
     """
     Unified patient manager view with filter support.
@@ -279,6 +280,7 @@ def patient_manager(request, filter_type='all'):
 @ratelimit(key='user', rate='10/m', method='POST')
 @ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
+@require_http_methods(["GET", "POST"])
 def patient_add(request):
     if not request.user.is_authenticated:
         messages.error(
@@ -376,6 +378,7 @@ def patient_add(request):
 
 
 @login_required(login_url="user-login")
+@require_GET
 def patient_view(request, pk):
     selected_patient = get_object_or_404(Patient, id=pk)
     indications = selected_patient.indecation_for_gma
@@ -612,6 +615,7 @@ def patient_delete_confirm(request, pk):
 @ratelimit(key='user', rate='10/m', method='POST')
 @ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
+@require_http_methods(["GET", "POST"])
 def patient_edit(request, pk):
     selected_patient = get_object_or_404(Patient, id=pk)
 
