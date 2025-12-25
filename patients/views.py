@@ -2833,12 +2833,21 @@ def hine_assessment_manager(request):
                 start_date = now - timedelta(days=365)
                 var_hine_list = var_hine_list.filter(date_of_assessment__gte=start_date)
         
-        # Calculate statistics
+        # Calculate statistics using aggregation (single query instead of 4)
+        from django.db.models import Count, Case, When, IntegerField, Q
+
+        stats = var_hine_list.aggregate(
+            total=Count('id'),
+            normal=Count('id', filter=Q(score__gte=60)),
+            moderate=Count('id', filter=Q(score__gte=40, score__lt=60)),
+            significant=Count('id', filter=Q(score__lt=40))
+        )
+
         hine_stats = {
-            'total': var_hine_list.count(),
-            'normal': var_hine_list.filter(score__gte=60).count(),
-            'moderate': var_hine_list.filter(score__gte=40, score__lt=60).count(),
-            'significant': var_hine_list.filter(score__lt=40).count(),
+            'total': stats['total'] or 0,
+            'normal': stats['normal'] or 0,
+            'moderate': stats['moderate'] or 0,
+            'significant': stats['significant'] or 0,
         }
         
         # Pagination
@@ -2906,12 +2915,21 @@ def hine_assessment_manager_by_patients(request, pid):
                 start_date = now - timedelta(days=365)
                 var_hine_list = var_hine_list.filter(date_of_assessment__gte=start_date)
 
-        # Calculate statistics for this patient
+        # Calculate statistics for this patient using aggregation (single query instead of 4)
+        from django.db.models import Count, Q
+
+        stats = var_hine_list.aggregate(
+            total=Count('id'),
+            normal=Count('id', filter=Q(score__gte=60)),
+            moderate=Count('id', filter=Q(score__gte=40, score__lt=60)),
+            significant=Count('id', filter=Q(score__lt=40))
+        )
+
         hine_stats = {
-            'total': var_hine_list.count(),
-            'normal': var_hine_list.filter(score__gte=60).count(),
-            'moderate': var_hine_list.filter(score__gte=40, score__lt=60).count(),
-            'significant': var_hine_list.filter(score__lt=40).count(),
+            'total': stats['total'] or 0,
+            'normal': stats['normal'] or 0,
+            'moderate': stats['moderate'] or 0,
+            'significant': stats['significant'] or 0,
         }
         
         # Pagination
@@ -3212,14 +3230,22 @@ def da_assessment_manager(request):
                 start_date = now - timedelta(days=365)
                 var_da_list = var_da_list.filter(date_of_assessment__gte=start_date)
         
-        # Calculate statistics
+        # Calculate statistics using aggregation (single query instead of 4)
+        from django.db.models import Count, Q
+
+        one_month_ago = timezone.now() - timedelta(days=30)
+        stats = var_da_list.aggregate(
+            total=Count('id'),
+            normal=Count('id', filter=Q(is_dx_normal=True)),
+            delayed=Count('id', filter=Q(is_dx_normal=False)),
+            this_month=Count('id', filter=Q(date_of_assessment__gte=one_month_ago))
+        )
+
         da_stats = {
-            'total': var_da_list.count(),
-            'normal': var_da_list.filter(is_dx_normal=True).count(),
-            'delayed': var_da_list.filter(is_dx_normal=False).count(),
-            'this_month': var_da_list.filter(
-                date_of_assessment__gte=timezone.now() - timedelta(days=30)
-            ).count(),
+            'total': stats['total'] or 0,
+            'normal': stats['normal'] or 0,
+            'delayed': stats['delayed'] or 0,
+            'this_month': stats['this_month'] or 0,
         }
         
         # Pagination
