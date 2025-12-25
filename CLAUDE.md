@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Last Updated:** 2025-12-25
+**Last Updated:** 2025-12-25 (Context Sync)
 
 <!-- OPENSPEC:START -->
 # OpenSpec Instructions
@@ -450,14 +450,37 @@ Major performance and security improvements completed across three phases:
 - Prevents incorrect HTTP methods, returns 405 Method Not Allowed
 - Security hardening: reduces attack surface
 
+### Phase 4: Maintainability Improvements (Partial)
+
+**Model Meta Classes (Good Practice):**
+- `IndicationsForGMA`: verbose names, ordering by level/title, indexes
+- `DiagnosisList`: verbose names, ordering by title, indexes
+- Improves admin interface display and query consistency
+
+**HTTP Method Restrictions (Security):**
+- Added `@require_GET` to detail/list views (patient_manager, patient_view)
+- Added `@require_http_methods(["GET", "POST"])` to form views (patient_add, patient_edit)
+- Prevents incorrect HTTP methods, returns 405 Method Not Allowed
+- Security hardening: reduces attack surface
+
+### Summary of All Optimizations
+
+| Phase | Category | Status | Key Improvements |
+|-------|----------|--------|------------------|
+| Phase 1 | Critical Bug Fixes | 95% Complete | Model save methods, URL slashes, get_object_or_404 |
+| Phase 2 | Performance & Security | 85% Complete | Query optimization, rate limiting, input sanitization |
+| Phase 3 | Database Optimization | 100% Complete | Indexes, unique constraints, MIME validation |
+| Phase 4 | Maintainability | 20% Complete | Meta classes, HTTP method restrictions |
+
 ### Remaining Known Issues
 
 See `temp_documents/BUG_AND_PERFORMANCE_ANALYSIS.md` and `temp_documents/BUG_FIX_PLAN.md` for:
-- Additional performance optimizations (template caching, prefetch_related)
-- Static file optimization opportunities
-- App URL namespacing (requires template updates)
+- Template caching (Phase 4.3)
+- Move template computations to views (Phase 4.4)
+- App URL namespacing (Phase 4.1 - requires template updates)
+- Static file optimization (Phase 4.6)
 
-**Note:** All critical bugs fixed. Remaining items are low-priority optimizations.
+**Note:** All critical bugs fixed. Remaining items are low-priority optimizations that can be addressed in future iterations.
 
 ## Quick Reference
 
@@ -499,6 +522,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 # Rate limiting (applied to 24 CRUD operations)
 from django_ratelimit.decorators import ratelimit
 # Patterns: 10/m user + 20/m IP for create/edit, 5/m user + 10/m IP for delete
+
+# HTTP method restrictions (security hardening)
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
+# Use @require_GET for read-only views, @require_http_methods(["GET", "POST"]) for forms
 
 # Middleware auto-tracking (no manual intervention needed)
 # added_by - Set on creation

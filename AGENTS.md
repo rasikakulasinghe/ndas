@@ -1,6 +1,6 @@
 # NDAS AI Agent Instructions
 
-**Last Updated:** 2025-12-25
+**Last Updated:** 2025-12-25 (Context Sync)
 
 This file provides workflow guidance for AI agents working on the NDAS project.
 
@@ -119,6 +119,41 @@ settings.FILE_UPLOAD_LIMITS['PROFILE_PICTURE_MAX_SIZE']  # 5MB
 settings.ALLOWED_FILE_EXTENSIONS['VIDEO']          # ['.mp4', '.mov', ...]
 ```
 
+### 7. Security Implementation Workflow
+
+When implementing security features:
+1. **Use rate limiting** for CRUD operations:
+   ```python
+   from django_ratelimit.decorators import ratelimit
+   @ratelimit(key='user_or_ip', rate='10/m')  # Create/Edit: 10/min
+   @ratelimit(key='user_or_ip', rate='5/m')   # Delete: 5/min
+   ```
+2. **Sanitize user input** using `sanitize_text_input()` from validators
+3. **Validate file uploads** with MIME type checking (python-magic)
+4. **Add HTTP method restrictions**:
+   ```python
+   from django.views.decorators.http import require_GET, require_http_methods
+   @require_GET  # For read-only views
+   @require_http_methods(["GET", "POST"])  # For form views
+   ```
+5. **Check middleware order** before modifying security configuration
+
+### 8. Performance Optimization Workflow
+
+When optimizing queries:
+1. **Use select_related()** for ForeignKey fields
+2. **Use prefetch_related()** for reverse relations and ManyToMany
+3. **Use aggregate()** instead of multiple `.count()` calls:
+   ```python
+   from django.db.models import Count, Q
+   stats = Model.objects.aggregate(
+       total=Count('id'),
+       active=Count('id', filter=Q(status='active'))
+   )
+   ```
+4. **Use Exists()** subqueries instead of loading IDs into memory
+5. **Use .only()** to load only needed fields
+
 ## Pre-Commit Checklist
 
 Before completing any task:
@@ -128,4 +163,37 @@ Before completing any task:
 - [ ] CSRF tokens included in forms
 - [ ] File uploads validated with proper limits
 - [ ] No N+1 query issues (use select_related/prefetch_related)
+- [ ] Rate limiting applied to state-changing operations
+- [ ] Input sanitization for user-provided text
+- [ ] HTTP method decorators on views
 - [ ] Tests pass: `python manage.py test`
+
+## Recent Optimizations Reference
+
+### Performance Improvements (December 2025)
+
+| Optimization | Impact | Location |
+|--------------|--------|----------|
+| Query count reduction | 60-96% | patients/views.py, users/views.py |
+| Middleware session throttling | 95% DB write reduction | users/middleware.py |
+| Aggregate count queries | 75% query reduction | All manager views |
+| Exists() subqueries | Improved filter performance | video/views.py |
+
+### Security Hardening (December 2025)
+
+| Feature | Coverage | Status |
+|---------|----------|--------|
+| Rate limiting | 24 CRUD operations | Complete |
+| Input sanitization | problemlist forms | Complete |
+| MIME type validation | Video uploads | Complete |
+| Filename sanitization | All file uploads | Complete |
+| HTTP method restrictions | Key patient views | Complete |
+
+### Database Optimizations (December 2025)
+
+| Change | Fields/Tables | Purpose |
+|--------|---------------|---------|
+| Added indexes | 5 fields | Query performance |
+| Unique constraints | DiagnosisList.abr, IndicationsForGMA.title | Data integrity |
+| TextField to CharField | DiagnosisList.title | Better indexing |
+| Meta classes | 2 models | Admin display, ordering |

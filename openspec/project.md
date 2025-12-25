@@ -1,5 +1,7 @@
 # Project Context
 
+**Last Updated:** 2025-12-25 (Context Sync)
+
 ## Purpose
 **Neurodevelopmental Assessment System (NDAS)** - A comprehensive Django-based medical information system for managing patient records, neurodevelopmental assessments, and video-based evaluations in pediatric healthcare settings.
 
@@ -34,10 +36,12 @@
 - **Static Files**: WhiteNoise for production serving
 
 ### Security & Middleware
-- **Security Headers**: django-csp, django-permissions-policy
-- **Rate Limiting**: django-ratelimit
+- **Security Headers**: django-csp, django-permissions-policy, custom security_middleware.py
+- **Rate Limiting**: django-ratelimit (24 CRUD operations protected)
 - **Monitoring**: Sentry SDK
 - **Session Security**: 1-hour timeout with activity tracking
+- **Input Sanitization**: Custom validators for XSS prevention
+- **File Validation**: python-magic-bin for MIME type verification
 
 ### File Processing
 - **Video Processing**: FFmpeg
@@ -129,18 +133,21 @@ class MyForm(forms.ModelForm):
 {% endblock %}
 ```
 
-**Security Middleware Stack Order:**
+**Security Middleware Stack Order (CRITICAL):**
 1. SecurityMiddleware
 2. WhiteNoiseMiddleware
 3. CSPMiddleware
-4. SessionMiddleware
-5. CommonMiddleware
-6. CsrfViewMiddleware
-7. AuthenticationMiddleware
-8. UserActivityMiddleware (custom)
-9. MessageMiddleware
-10. XFrameOptionsMiddleware
-11. UserAgentMiddleware
+4. AdditionalSecurityHeadersMiddleware (custom - Referrer-Policy, Permissions-Policy)
+5. SessionMiddleware
+6. CommonMiddleware
+7. CsrfViewMiddleware
+8. AuthenticationMiddleware
+9. UserActivityMiddleware (custom - auto-populates added_by/last_edit_by)
+10. MessageMiddleware
+11. XFrameOptionsMiddleware
+12. UserAgentMiddleware
+13. SubscriptionCheckMiddleware (custom)
+14. SecurityHeadersValidationMiddleware (production only)
 
 ### Testing Strategy
 
@@ -194,10 +201,12 @@ class MyForm(forms.ModelForm):
   - **Developmental Assessments**: Comprehensive developmental tracking
 
 **Medical Data Validation:**
-- Birth weights: 300g - 8000g range validation
+- Birth weights: 300g - 8000g range validation (basic)
+- POG-specific birth weight validation with linear interpolation (enhanced)
 - APGAR scores: 0-10 scale with standardized interpretation
-- Gestational age (POG): 20-44 weeks validation
+- Gestational age (POG): 20-44 weeks + 0-6 days validation
 - Date validations for medical timelines
+- Date cross-validations (e.g., date_identified >= date_of_onset)
 
 **User Roles:**
 - Medical professionals with varying access levels
@@ -223,8 +232,11 @@ class MyForm(forms.ModelForm):
 - **Access Control**: Login required for all patient data access
 - **User Tracking**: All CUD operations must track user for audit
 - **CSRF Protection**: Required on all forms
-- **File Upload Security**: Comprehensive validation and type checking
+- **File Upload Security**: Comprehensive validation including MIME type checking
 - **Content Security Policy**: Strict CSP headers enforced
+- **Rate Limiting**: Required on all state-changing operations (24 operations protected)
+- **Input Sanitization**: XSS prevention on user-provided text fields
+- **HTTP Method Restrictions**: Views must enforce proper HTTP methods
 
 **Business Constraints:**
 - **Medical-Grade UI**: Professional appearance required (AdminLTE)

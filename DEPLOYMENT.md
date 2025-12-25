@@ -602,5 +602,5 @@ sudo systemctl start ndas
 
 ---
 
-**Last Updated**: 2025-12-23
-**Version**: 1.0
+**Last Updated**: 2025-12-25
+**Version**: 1.1
