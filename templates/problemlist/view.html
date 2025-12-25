@@ -22,7 +22,7 @@
       <a href="{% url 'problem-timeline' problem.pk %}" class="btn btn-info">
         <i class="fas fa-history"></i> View Full Timeline
       </a>{% delete_modal_id 'Problem' problem.pk as problem_modal_id %}
-      <button type="button" class="btn btn-danger" onclick="DeleteConfirmation.show('{{ problem_modal_id }}')">
+      <button type="button" class="btn btn-danger delete-trigger-btn" data-modal-target="{{ problem_modal_id }}">
         <i class="fas fa-trash"></i> Delete
       </button>
     </div>

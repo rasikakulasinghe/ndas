@@ -439,7 +439,7 @@
                       </a>
                       <div class="dropdown-divider"></div>
                       {% delete_modal_id 'Bookmark' Bookmark.id as bookmark_modal_id %}
-                      <a class="dropdown-item text-danger" href="#" onclick="DeleteConfirmation.show('{{ bookmark_modal_id }}'); return false;">
+                      <a class="dropdown-item text-danger delete-trigger-btn" href="#" data-modal-target="{{ bookmark_modal_id }}">
                         <i class="fas fa-trash-alt mr-2"></i>Delete Bookmark
                       </a>
                     </div>

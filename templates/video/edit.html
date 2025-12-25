@@ -181,7 +181,7 @@
                     <button type="button" class="btn btn-secondary mr-2" onclick="window.location.href='{% url 'video:view' video.id %}'">
                       <i class="fas fa-arrow-left mr-2"></i>Back to Video
                     </button>{% delete_modal_id 'Video' video.id as modal_id %}
-                    <button type="button" class="btn btn-outline-danger" onclick="DeleteConfirmation.show('{{ modal_id }}')">
+                    <button type="button" class="btn btn-outline-danger delete-trigger-btn" data-modal-target="{{ modal_id }}">
                       <i class="fas fa-trash mr-2"></i>Delete Video
                     </button>
                   </div>

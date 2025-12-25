@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**Last Updated:** 2025-12-25
+
 <!-- OPENSPEC:START -->
 # OpenSpec Instructions
 
@@ -32,6 +34,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 - `video/` - Video file handling and processing
 - `users/` - Authentication, profiles, subscriptions, activity tracking
 - `reports/` - Report generation (PDF and Excel exports with data anonymization)
+- `problemlist/` - Patient problem tracking and management
 
 ## Development Commands
 
@@ -141,26 +144,42 @@ class MyForm(forms.ModelForm):
 1. SecurityMiddleware
 2. WhiteNoiseMiddleware
 3. CSPMiddleware
-4. SessionMiddleware
-5. CommonMiddleware
-6. CsrfViewMiddleware
-7. AuthenticationMiddleware
-8. UserActivityMiddleware (custom - auto-tracks user changes)
-9. MessageMiddleware
-10. XFrameOptionsMiddleware
-11. UserAgentMiddleware
-12. SubscriptionCheckMiddleware (custom)
+4. AdditionalSecurityHeadersMiddleware (custom - adds Referrer-Policy, Permissions-Policy)
+5. SessionMiddleware
+6. CommonMiddleware
+7. CsrfViewMiddleware
+8. AuthenticationMiddleware
+9. UserActivityMiddleware (custom - auto-tracks user changes)
+10. MessageMiddleware
+11. XFrameOptionsMiddleware
+12. UserAgentMiddleware
+13. SubscriptionCheckMiddleware (custom)
+14. SecurityHeadersValidationMiddleware (production only - validates headers)
+
+**Security Headers (via `ndas/custom_codes/security_middleware.py`):**
+- Referrer-Policy: strict-origin-when-cross-origin
+- Cross-Origin-Opener-Policy: same-origin
+- X-Permitted-Cross-Domain-Policies: none
+- Permissions-Policy: disables geolocation, camera, microphone, payment, usb
+
+**Content Security Policy (CSP):**
+- Nonces enabled for script-src (production only)
+- Inline styles allowed (templates use many inline styles)
+- CDN sources whitelisted: jsdelivr, cdnjs, googleapis, zencdn
 
 **Security Features:**
 - Session timeout: 1 hour with browser-close expiry
 - Rate limiting with django-ratelimit
 - File upload validation (type, size, content)
 - Medical data privacy (HIPAA awareness)
+- Password validation: minimum 12 characters, complexity checks
 
-**File Upload Limits:**
+**File Upload Limits (from `settings.FILE_UPLOAD_LIMITS`):**
 - Videos: 2GB (mp4, mov, avi, mkv, webm)
-- General: 100MB memory limit
+- Images: 10MB (jpg, jpeg, png, gif, bmp, webp)
+- Documents: 100MB (doc, docx, txt, rtf, odt, pdf)
 - Profile pictures: 5MB
+- Memory limit: 100MB
 
 ## Medical Domain
 
@@ -275,28 +294,110 @@ from ndas.custom_codes.delete_helpers import (
 - Videos cannot be deleted if referenced in assessments
 - Patients show cascade warnings for related videos/assessments/attachments
 
+## Unified Delete Confirmation System
+
+**JavaScript Module** (`static/js/delete-confirmation.js`):
+- Singleton `window.DeleteConfirmation` object
+- Handles password-verified deletion via AJAX DELETE requests
+- Uses event delegation for dynamic content support
+
+**Modal Template** (`templates/src/partials/delete_confirmation_modal.html`):
+```django
+{% load delete_modal_tags %}
+{% include 'src/partials/delete_confirmation_modal.html' with
+    modal_id="deletePatientModal"
+    entity_type="Patient"
+    delete_url=delete_url
+    redirect_url=redirect_url
+    warning_items=warning_items
+    detail_items=detail_items
+%}
+```
+
+**Template Tag** (`{% load delete_modal_tags %}`):
+- Provides `{% delete_modal entity %}` for quick modal generation
+
+**Usage Pattern:**
+```html
+<!-- Trigger button -->
+<button class="delete-trigger-btn" data-modal-target="deletePatientModal">
+    <i class="fas fa-trash"></i> Delete
+</button>
+<!-- Modal renders with password verification and AJAX handling -->
+```
+
+## Known Issues and Active Bug Fixes
+
+See `BUG_AND_PERFORMANCE_ANALYSIS.md` and `BUG_FIX_PLAN.md` for comprehensive analysis of:
+- Critical bugs requiring immediate attention (DevelopmentalAssessment.save(), N+1 queries)
+- Performance optimizations (select_related, database indexes)
+- Security improvements (rate limiting, validation)
+- Template optimizations (caching, heavy method calls)
+
+**Priority Fixes in Progress:**
+- Missing `super().save()` in DevelopmentalAssessment model
+- Missing `get_object_or_404()` in 24+ views
+- File handle resource leaks in reports/views.py
+- Database query on every request in UserActivityMiddleware
+
 ## Quick Reference
 
 ```python
-# Base imports
+# Base model imports (MANDATORY for all new models)
 from ndas.custom_codes.Custom_abstract_class import TimeStampedModel, UserTrackingMixin
+
+# Custom utilities
 from ndas.custom_codes.custom_methods import getCountZeroIfNone, calculate_age_string, extract_video_metadata
-from ndas.custom_codes.choice import MY_CHOICES
+from ndas.custom_codes.choice import MY_CHOICES  # Replace with actual choice class
 from ndas.custom_codes.validators import validate_video_file
 from ndas.custom_codes.ndas_enums import PtStatus
-from ndas.custom_codes.delete_helpers import has_delete_permission, validate_can_delete
+from ndas.custom_codes.delete_helpers import (
+    has_delete_permission, validate_can_delete, get_redirect_url,
+    get_entity_warning_items, get_entity_detail_items
+)
+
+# Django shortcuts (ALWAYS use get_object_or_404 instead of .objects.get())
+from django.shortcuts import render, redirect, get_object_or_404
 
 # Middleware auto-tracking (no manual intervention needed)
 # added_by - Set on creation
 # last_edit_by - Updated on save
 
 # Age calculation utility
-from ndas.custom_codes.custom_methods import calculate_age_string
 age_str = calculate_age_string(birth_date, current_date, format_type="medical")
 # Returns: "2 weeks and 3 days", "1 year and 2 months", etc.
 
 # Video metadata extraction
-from ndas.custom_codes.custom_methods import extract_video_metadata
 metadata = extract_video_metadata(video_path)
 # Returns: {'duration_seconds': 120, 'resolution': '1920x1080', ...}
+
+# File upload limits (from settings)
+from django.conf import settings
+max_video_size = settings.FILE_UPLOAD_LIMITS['VIDEO_MAX_SIZE']  # 2GB
+allowed_video_ext = settings.ALLOWED_FILE_EXTENSIONS['VIDEO']  # ['.mp4', '.mov', ...]
+```
+
+## Environment Configuration
+
+**Required Environment Variables (.env):**
+```bash
+SECRET_KEY=your-secret-key
+DEBUG=True/False
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Database (optional - defaults to SQLite)
+DB_ENGINE=django.db.backends.postgresql
+DB_NAME=ndas
+DB_USER=user
+DB_PASSWORD=password
+DB_HOST=localhost
+DB_PORT=5432
+
+# Cache (optional - defaults to LocMem)
+REDIS_URL=redis://localhost:6379/0
+
+# Security (production)
+SECURE_SSL_REDIRECT=True
+SESSION_COOKIE_SECURE=True
+CSRF_COOKIE_SECURE=True
 ```

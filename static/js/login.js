@@ -26,6 +26,12 @@ function togglePasswordVisibility() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Password visibility toggle - attach event listener
+    const passwordToggleBtn = document.querySelector('#passwordToggleBtn');
+    if (passwordToggleBtn) {
+        passwordToggleBtn.addEventListener('click', togglePasswordVisibility);
+    }
+
     // Form submission with loading state
     const loginForm = document.querySelector('#loginForm');
     const submitBtn = loginForm ? loginForm.querySelector('.ndas-signin-btn') : null;

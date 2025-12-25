@@ -22,12 +22,13 @@
          * @param {string} config.entityName - Name/identifier of entity
          */
         show: function(modalId, config) {
+            console.log('DeleteConfirmation.show() called with modalId:', modalId);
             const modal = $('#' + modalId);
 
             if (modal.length === 0) {
                 console.error('DeleteConfirmation: Modal not found with ID:', modalId);
                 console.error('DeleteConfirmation: Available modals:', $('[id*="Modal"]').map(function() { return this.id; }).get());
-                
+
                 // Show user-friendly error
                 if (typeof window.showAlert === 'function') {
                     window.showAlert('Error: Delete modal not found. Please refresh the page and try again.', 'danger');
@@ -37,17 +38,26 @@
                 return;
             }
 
+            console.log('DeleteConfirmation: Modal found, element:', modal[0]);
+
             // Store configuration if provided
             if (config) {
                 modal.data('delete-config', config);
             }
 
             // Clear previous state
-            const passwordField = $('#deletePassword' + modalId);
+            const passwordFieldId = 'deletePassword' + modalId;
+            const passwordField = $('#' + passwordFieldId);
             const errorDiv = $('#deleteError' + modalId);
+
+            console.log('DeleteConfirmation: Looking for password field with ID:', passwordFieldId);
+            console.log('DeleteConfirmation: Password field found:', passwordField.length > 0);
 
             if (passwordField.length === 0) {
                 console.error('DeleteConfirmation: Password field not found for modal:', modalId);
+                console.error('DeleteConfirmation: Expected password field ID:', passwordFieldId);
+                console.error('DeleteConfirmation: Available password fields:', $('[id*="deletePassword"]').map(function() { return this.id; }).get());
+                alert('Error: Password field not found in delete modal. Modal ID: ' + modalId + ', Expected field ID: ' + passwordFieldId);
                 return;
             }
 
@@ -281,6 +291,23 @@
          */
         init: function() {
             const self = this;
+
+            // Handle delete trigger buttons (show modal) - using event delegation
+            $(document).on('click', '.delete-trigger-btn', function(e) {
+                e.preventDefault();
+                const modalTarget = $(this).data('modal-target');
+                if (modalTarget) {
+                    self.show(modalTarget);
+                } else {
+                    console.error('DeleteConfirmation: No modal-target specified on delete trigger button');
+                }
+            });
+
+            // Handle delete confirm buttons (execute deletion) - using event delegation
+            $(document).on('click', '.delete-confirm-btn', function(e) {
+                e.preventDefault();
+                self.execute(this);
+            });
 
             // Handle Enter key in password fields
             $(document).on('keypress', '[id^="deletePassword"]', function(e) {

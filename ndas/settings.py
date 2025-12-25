@@ -132,8 +132,15 @@ USE_I18N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = config('STATIC_URL', default='/static/')
-MEDIA_URL = config('MEDIA_URL', default='/media/')
+# Git Bash on Windows may convert /media/ paths to absolute paths (e.g., C:/Program Files/Git/media/)
+# Ensure we always use relative URLs for STATIC_URL and MEDIA_URL
+_static_url = config('STATIC_URL', default='/static/')
+_media_url = config('MEDIA_URL', default='/media/')
+
+# Sanitize URLs to prevent Git Bash path mangling
+# If the URL contains a colon (indicating an absolute path), use default
+STATIC_URL = '/static/' if ':' in _static_url else _static_url
+MEDIA_URL = '/media/' if ':' in _media_url else _media_url
 
 # Use environment paths if provided, otherwise use defaults
 STATIC_ROOT_ENV = config('STATIC_ROOT', default=None)
@@ -143,7 +150,8 @@ else:
     STATIC_ROOT = BASE_DIR / 'staticfiles'  # Changed from 'static' to 'staticfiles'
 
 MEDIA_ROOT_ENV = config('MEDIA_ROOT', default=None)
-if MEDIA_ROOT_ENV:
+# Only use environment MEDIA_ROOT if it's a valid path and doesn't contain Git Bash artifacts
+if MEDIA_ROOT_ENV and MEDIA_ROOT_ENV.strip() and 'Program Files/Git' not in MEDIA_ROOT_ENV:
     MEDIA_ROOT = MEDIA_ROOT_ENV
 else:
     MEDIA_ROOT = BASE_DIR / 'media'

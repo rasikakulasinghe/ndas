@@ -39,7 +39,10 @@
       "Bash(fi)",
       "Bash(unset:*)",
       "Bash(timeout 3 python:*)",
-      "Bash(awk:*)"
+      "Bash(awk:*)",
+      "Bash(node -c:*)",
+      "Bash(setx:*)",
+      "Bash(tasklist:*)"
     ],
     "deny": [],
     "ask": []

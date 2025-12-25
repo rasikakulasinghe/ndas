@@ -267,8 +267,8 @@
                       {% endif %}
                       <div class="dropdown-divider"></div>
                       {% delete_modal_id 'CDICRecord' CDICRecord.id as cdic_modal_id %}
-                      <button class="dropdown-item text-danger" type="button"
-                              onclick="DeleteConfirmation.show('{{ cdic_modal_id }}')">
+                      <button class="dropdown-item text-danger delete-trigger-btn" type="button"
+                              data-modal-target="{{ cdic_modal_id }}">
                         <i class="fas fa-trash-alt mr-2"></i>Delete Record
                       </button>
                     </div>

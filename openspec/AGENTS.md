@@ -454,3 +454,44 @@ openspec archive <change-id> [--yes|-y]  # Mark complete (add --yes for automati
 ```
 
 Remember: Specs are truth. Changes are proposals. Keep them in sync.
+
+---
+
+## NDAS Project-Specific Guidance
+
+### When to Create a Proposal
+
+For NDAS, create an OpenSpec proposal when:
+- Adding new assessment types (GPA, HINE, CDIC, etc.)
+- Modifying the Patient model schema
+- Changing security middleware order or configuration
+- Adding new report types (PDF/Excel generators)
+- Modifying the delete confirmation system
+- Adding new file upload types or changing limits
+
+### NDAS Capability Areas
+
+Current spec categories for NDAS:
+- `patients/` - Patient management, identifiers, medical data
+- `assessments/` - GM, HINE, DA, CDIC, GPA assessment workflows
+- `video/` - Video upload, processing, metadata extraction
+- `reports/` - PDF/Excel generation, data anonymization
+- `security/` - Authentication, authorization, rate limiting
+- `delete-confirmation/` - Unified deletion with password verification
+
+### Mandatory NDAS Patterns
+
+When writing specs for NDAS changes, ensure:
+1. **Model changes** reference `TimeStampedModel` and `UserTrackingMixin` inheritance
+2. **View changes** specify `get_object_or_404()` usage
+3. **Template changes** reference proper base template extension
+4. **Security changes** document middleware order impact
+5. **File upload changes** reference `settings.FILE_UPLOAD_LIMITS`
+
+### Related Documentation
+
+- `CLAUDE.md` - Main project documentation
+- `AGENTS.md` - AI agent workflow instructions
+- `.github/copilot-instructions.md` - IDE assistant guidance
+- `BUG_AND_PERFORMANCE_ANALYSIS.md` - Known issues and fixes
+- `BUG_FIX_PLAN.md` - Prioritized bug fix implementation plan

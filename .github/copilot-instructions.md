@@ -1,5 +1,7 @@
 # NDAS - Neurodevelopmental Assessment System
 
+**Last Updated:** 2025-12-25
+
 Django-based medical records system for managing patient assessments, video recordings, and comprehensive medical data with security-focused architecture.
 
 ## Core Architecture Patterns
@@ -28,6 +30,7 @@ class MyModel(TimeStampedModel, UserTrackingMixin):
 - `users/` → Authentication, profiles, subscriptions, activity tracking
 - `video/` → Video file management and processing
 - `reports/` → Report generation (PDF and Excel exports with data anonymization)
+- `problemlist/` → Patient problem tracking and management
 - `admin/` → Django admin with custom branding
 
 ## Key Models
@@ -87,11 +90,20 @@ class MyForm(forms.ModelForm):
 
 ### View Pattern
 ```python
+from django.shortcuts import render, redirect, get_object_or_404
+
 @login_required(login_url="user-login")
-def my_view(request):
-    var_objects = MyModel.objects.all()
-    count = getCountZeroIfNone(var_objects)  # Custom utility
-    context = {"var_objects": var_objects, "count": count}
+def my_view(request, pk):
+    # ALWAYS use get_object_or_404() instead of .objects.get()
+    selected_object = get_object_or_404(MyModel, id=pk)
+
+    # Use select_related for foreign keys to avoid N+1 queries
+    related_objects = RelatedModel.objects.filter(parent=selected_object).select_related(
+        'added_by', 'last_edit_by'
+    ).order_by("-id")
+
+    count = getCountZeroIfNone(related_objects)  # Custom utility
+    context = {"object": selected_object, "related": related_objects, "count": count}
     return render(request, "myapp/template.html", context)
 ```
 
@@ -141,19 +153,27 @@ def my_view(request):
 
 ## Security Architecture
 
-### Middleware Stack (in order)
+### Middleware Stack (in order - CRITICAL)
 1. SecurityMiddleware
 2. WhiteNoiseMiddleware
 3. CSPMiddleware (Content Security Policy)
-4. SessionMiddleware
-5. CommonMiddleware
-6. CsrfViewMiddleware
-7. AuthenticationMiddleware
-8. UserActivityMiddleware (custom - auto-populates added_by/last_edit_by)
-9. MessageMiddleware
-10. XFrameOptionsMiddleware
-11. UserAgentMiddleware
-12. SubscriptionCheckMiddleware (custom)
+4. AdditionalSecurityHeadersMiddleware (custom - Referrer-Policy, Permissions-Policy)
+5. SessionMiddleware
+6. CommonMiddleware
+7. CsrfViewMiddleware
+8. AuthenticationMiddleware
+9. UserActivityMiddleware (custom - auto-populates added_by/last_edit_by)
+10. MessageMiddleware
+11. XFrameOptionsMiddleware
+12. UserAgentMiddleware
+13. SubscriptionCheckMiddleware (custom)
+14. SecurityHeadersValidationMiddleware (production only)
+
+### Security Headers (via `ndas/custom_codes/security_middleware.py`)
+- Referrer-Policy: strict-origin-when-cross-origin
+- Cross-Origin-Opener-Policy: same-origin
+- X-Permitted-Cross-Domain-Policies: none
+- Permissions-Policy: disables geolocation, camera, microphone, payment, usb
 
 ### Security Features
 - CSRF protection on all forms
@@ -161,11 +181,15 @@ def my_view(request):
 - Session timeout: 1 hour with browser close expiry
 - Comprehensive file upload validation
 - User activity tracking for audit trails
+- Password validation: minimum 12 characters, complexity checks
+- CSP nonces for scripts in production
 
-### File Upload Limits
+### File Upload Limits (from `settings.FILE_UPLOAD_LIMITS`)
 - Video files: 2GB max (mp4, mov, avi, mkv, webm)
-- General uploads: 100MB memory limit
+- Images: 10MB max (jpg, jpeg, png, gif, bmp, webp)
+- Documents: 100MB max (doc, docx, txt, rtf, odt, pdf)
 - Profile pictures: 5MB max
+- Memory limit: 100MB
 
 ## Critical Rules
 
@@ -296,6 +320,41 @@ from ndas.custom_codes.delete_helpers import (
 - Videos cannot be deleted if referenced in assessments
 - Patients show warnings for cascade-deleted videos/assessments/attachments
 
+## Unified Delete Confirmation System
+
+### JavaScript Module (`static/js/delete-confirmation.js`)
+- Singleton `window.DeleteConfirmation` object
+- Password-verified deletion via AJAX DELETE requests
+- Event delegation for dynamic content support
+
+### Modal Template (`templates/src/partials/delete_confirmation_modal.html`)
+```django
+{% load delete_modal_tags %}
+{% include 'src/partials/delete_confirmation_modal.html' with
+    modal_id="deletePatientModal"
+    entity_type="Patient"
+    delete_url=delete_url
+    redirect_url=redirect_url
+    warning_items=warning_items
+    detail_items=detail_items
+%}
+```
+
+### Usage Pattern
+```html
+<!-- Trigger button -->
+<button class="delete-trigger-btn" data-modal-target="deletePatientModal">
+    <i class="fas fa-trash"></i> Delete
+</button>
+```
+
+## Known Issues
+
+See `BUG_AND_PERFORMANCE_ANALYSIS.md` and `BUG_FIX_PLAN.md` for:
+- Critical bugs (DevelopmentalAssessment.save(), missing get_object_or_404)
+- Performance optimizations (N+1 queries, database indexes)
+- Security improvements (rate limiting, validation)
+
 ## Development Anti-Patterns
 
 **Never:**
@@ -311,6 +370,9 @@ from ndas.custom_codes.delete_helpers import (
 - Store sensitive config in code (use `.env`)
 - Use incorrect Patient model field names (verify above)
 - Delete entities without using delete_helpers for permission/business rule checks
+- Use `.objects.get()` without try/except (use `get_object_or_404()` instead)
+- Query related objects without `select_related()` or `prefetch_related()`
+- Call heavy methods or calculations in templates (compute in views)
 
 ## OpenSpec Integration
 

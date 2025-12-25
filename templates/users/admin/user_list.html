@@ -131,8 +131,8 @@
                                                 </form>
                                                 {% delete_modal_id 'CustomUser' user.pk as user_modal_id %}
                                                 <button type="button"
-                                                        class="btn btn-danger btn-sm"
-                                                        onclick="DeleteConfirmation.show('{{ user_modal_id }}')"
+                                                        class="btn btn-danger btn-sm delete-trigger-btn"
+                                                        data-modal-target="{{ user_modal_id }}"
                                                         title="Delete">
                                                     <i class="fas fa-trash"></i>
                                                 </button>

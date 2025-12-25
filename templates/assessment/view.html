@@ -231,8 +231,8 @@
                       <a href="{% url 'reports:pdf-gm' assessment.id %}" class="btn btn-outline-primary mr-2 px-3">
                         <i class="fas fa-file-pdf mr-1"></i>Download PDF
                       </a>{% delete_modal_id 'GMAssessment' assessment.id as modal_id %}
-                      <button type="button" class="btn btn-outline-danger px-3"
-                         onclick="DeleteConfirmation.show('{{ modal_id }}')"
+                      <button type="button" class="btn btn-outline-danger px-3 delete-trigger-btn"
+                         data-modal-target="{{ modal_id }}"
                          data-toggle="tooltip" title="Delete this assessment">
                         <i class="fas fa-trash mr-1"></i>Delete
                       </button>

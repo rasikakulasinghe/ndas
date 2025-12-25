@@ -161,7 +161,7 @@
               <a href="{% url 'video:edit' video.id %}" class="btn btn-outline-info btn-block">
               <i class="fas fa-edit"></i>Edit Video Details
               </a>{% delete_modal_id 'Video' video.id as modal_id %}
-              <button type="button" class="btn btn-outline-danger btn-block" onclick="DeleteConfirmation.show('{{ modal_id }}')">
+              <button type="button" class="btn btn-outline-danger btn-block delete-trigger-btn" data-modal-target="{{ modal_id }}">
               <i class="fas fa-trash"></i>Delete Video
               </button>
 

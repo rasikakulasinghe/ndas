@@ -344,8 +344,8 @@
                         <a href="{% url 'assessment-edit' Assessment.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
                         </a>{% delete_modal_id 'GMAssessment' Assessment.id as gma_modal_id %}
-                        <button type="button" class="btn btn-danger btn-sm" title="Delete"
-                                onclick="DeleteConfirmation.show('{{ gma_modal_id }}')">
+                        <button type="button" class="btn btn-danger btn-sm delete-trigger-btn" title="Delete"
+                                data-modal-target="{{ gma_modal_id }}">
                           <i class="fas fa-trash"></i>
                         </button>
                       </div>
@@ -398,8 +398,8 @@
                         <a href="{% url 'hine-assessment-edit' HINE.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
                         </a>{% delete_modal_id 'HINEAssessment' HINE.id as hine_modal_id %}
-                        <button type="button" class="btn btn-danger btn-sm" title="Delete"
-                                onclick="DeleteConfirmation.show('{{ hine_modal_id }}')">
+                        <button type="button" class="btn btn-danger btn-sm delete-trigger-btn" title="Delete"
+                                data-modal-target="{{ hine_modal_id }}">
                           <i class="fas fa-trash"></i>
                         </button>
                       </div>
@@ -454,8 +454,8 @@
                         <a href="{% url 'da-assessment-edit' DA.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
                         </a>{% delete_modal_id 'DevelopmentalAssessment' DA.id as da_modal_id %}
-                        <button type="button" class="btn btn-danger btn-sm" title="Delete"
-                                onclick="DeleteConfirmation.show('{{ da_modal_id }}')">
+                        <button type="button" class="btn btn-danger btn-sm delete-trigger-btn" title="Delete"
+                                data-modal-target="{{ da_modal_id }}">
                           <i class="fas fa-trash"></i>
                         </button>
                       </div>
@@ -508,8 +508,8 @@
                         <a href="{% url 'cdic-assessment-edit' CDIC.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
                         </a>{% delete_modal_id 'CDICRecord' CDIC.id as cdic_modal_id %}
-                        <button type="button" class="btn btn-danger btn-sm" title="Delete"
-                                onclick="DeleteConfirmation.show('{{ cdic_modal_id }}')">
+                        <button type="button" class="btn btn-danger btn-sm delete-trigger-btn" title="Delete"
+                                data-modal-target="{{ cdic_modal_id }}">
                           <i class="fas fa-trash"></i>
                         </button>
                       </div>
@@ -582,8 +582,8 @@
                         <a href="{% url 'gpa-edit' GPA.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
                         </a>{% delete_modal_id 'GeneralPaediatricAssessment' GPA.id as gpa_modal_id %}
-                        <button type="button" class="btn btn-danger btn-sm" title="Delete"
-                                onclick="DeleteConfirmation.show('{{ gpa_modal_id }}')">
+                        <button type="button" class="btn btn-danger btn-sm delete-trigger-btn" title="Delete"
+                                data-modal-target="{{ gpa_modal_id }}">
                           <i class="fas fa-trash"></i>
                         </button>
                       </div>
@@ -670,7 +670,8 @@
                         <a href="{% url 'video:edit' video.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
                         </a>{% delete_modal_id 'Video' video.id as video_modal_id %}
-                        <button type="button" class="btn btn-danger btn-sm" title="Delete" onclick="DeleteConfirmation.show('{{ video_modal_id }}')">
+                        <button type="button" class="btn btn-danger btn-sm delete-trigger-btn" title="Delete"
+                                data-modal-target="{{ video_modal_id }}">
                           <i class="fas fa-trash"></i>
                         </button>
                       </div>
@@ -738,7 +739,8 @@
                         <a href="{% url 'attachment-edit' Attachment.id %}" class="btn btn-warning btn-sm" title="Edit">
                           <i class="fas fa-edit"></i>
                         </a>{% delete_modal_id 'Attachment' Attachment.id as attachment_modal_id %}
-                        <button type="button" class="btn btn-danger btn-sm" title="Delete" onclick="DeleteConfirmation.show('{{ attachment_modal_id }}')">
+                        <button type="button" class="btn btn-danger btn-sm delete-trigger-btn" title="Delete"
+                                data-modal-target="{{ attachment_modal_id }}">
                           <i class="fas fa-trash"></i>
                         </button>
                       </div>
@@ -837,9 +839,10 @@
             </a>
           </div>
           {% endif %}
-          {% if user.is_superuser %}
+          {% if user.is_superuser or user.is_staff %}
           <div class="col-md-4 col-sm-6 mb-2">
-            <button class="btn btn-danger btn-block" onclick="DeleteConfirmation.show('deletePatientModal')" type="button">
+            <button class="btn btn-danger btn-block delete-trigger-btn" type="button"
+                    data-modal-target="deletePatientModal">
               <i class="fas fa-trash-alt"></i> Delete Patient
             </button>
           </div>

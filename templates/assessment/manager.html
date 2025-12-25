@@ -253,8 +253,8 @@
                         <i class="fas fa-pencil-alt mr-2"></i>Edit Assessment
                       </a>
                       {% delete_modal_id 'GMAssessment' Assessment.id as gma_modal_id %}
-                      <button class="dropdown-item text-danger" type="button"
-                              onclick="DeleteConfirmation.show('{{ gma_modal_id }}')">
+                      <button class="dropdown-item text-danger delete-trigger-btn" type="button"
+                              data-modal-target="{{ gma_modal_id }}">
                         <i class="far fa-trash-alt mr-2"></i>Delete Assessment
                       </button>
                       <div class="dropdown-divider"></div>

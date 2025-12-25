@@ -211,7 +211,7 @@
                     <i class="far fa-bookmark"></i> <span class="btn-text">Save</span>
                   </a>
                 {% endif %}
-                <button type="button" class="btn btn-danger btn-sm mx-1 mb-1" onclick="DeleteConfirmation.show('{{ modal_id }}')">
+                <button type="button" class="btn btn-danger btn-sm mx-1 mb-1 delete-trigger-btn" data-modal-target="{{ modal_id }}">
                   <i class="fas fa-trash"></i> <span class="btn-text">Delete</span>
                 </button>
               </div>

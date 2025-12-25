@@ -45,11 +45,12 @@
         {% endif %}
 
         <!-- Password verification -->
-        <div class="form-group mt-3">
-          <label for="deletePassword{{ modal_id }}"><strong>Enter your password to confirm:</strong></label>
+        <div class="form-group mt-3" style="display: block !important; visibility: visible !important;">
+          <label for="deletePassword{{ modal_id }}" class="d-block"><strong>Enter your password to confirm:</strong></label>
           <input type="password" class="form-control" id="deletePassword{{ modal_id }}"
                  placeholder="Enter your password" required autocomplete="current-password"
-                 aria-required="true" aria-describedby="deleteError{{ modal_id }}">
+                 aria-required="true" aria-describedby="deleteError{{ modal_id }}"
+                 style="display: block !important; visibility: visible !important;">
           <div id="deleteError{{ modal_id }}" class="text-danger mt-2" style="display: none;" role="alert"></div>
         </div>
       </div>
@@ -59,11 +60,10 @@
         <button type="button" class="btn btn-secondary" data-dismiss="modal">
           <i class="fas fa-times"></i> Cancel
         </button>
-        <button type="button" class="btn btn-danger" id="confirmDeleteBtn{{ modal_id }}"
+        <button type="button" class="btn btn-danger delete-confirm-btn" id="confirmDeleteBtn{{ modal_id }}"
                 data-delete-url="{{ delete_url }}"
                 data-redirect-url="{{ redirect_url }}"
-                data-modal-id="{{ modal_id }}"
-                onclick="DeleteConfirmation.execute(this)">
+                data-modal-id="{{ modal_id }}">
           <span class="spinner-border spinner-border-sm" style="display: none;"></span>
           <i class="fas fa-trash-alt"></i> Delete {{ entity_type }}
         </button>

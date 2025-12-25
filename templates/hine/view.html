@@ -166,8 +166,8 @@
                   <i class="fas fa-bookmark-o mr-2"></i>Add Bookmark
                 </a>
               {% endif %}{% delete_modal_id 'HINEAssessment' HINERecord.id as modal_id %}
-              <button type="button" class="btn btn-outline-danger mb-1"
-                 onclick="DeleteConfirmation.show('{{ modal_id }}')">
+              <button type="button" class="btn btn-outline-danger mb-1 delete-trigger-btn"
+                 data-modal-target="{{ modal_id }}">
                 <i class="fas fa-trash mr-2"></i>Delete Record
               </button>
             </div>

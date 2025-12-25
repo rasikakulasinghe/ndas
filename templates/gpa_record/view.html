@@ -93,7 +93,7 @@
           <a href="{% url 'reports:pdf-gpa' gpa_record.id %}" class="btn btn-outline-primary btn-block">
             <i class="fas fa-file-pdf"></i> Download PDF
           </a>{% delete_modal_id 'GeneralPaediatricAssessment' gpa_record.id as modal_id %}
-          <button type="button" class="btn btn-danger btn-block" onclick="DeleteConfirmation.show('{{ modal_id }}')">
+          <button type="button" class="btn btn-danger btn-block delete-trigger-btn" data-modal-target="{{ modal_id }}">
             <i class="fas fa-trash"></i> Delete Record
           </button>
           <a href="{% url 'gpa-manager-patient' patient.id %}" class="btn btn-secondary btn-block">

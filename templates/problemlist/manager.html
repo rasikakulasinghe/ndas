@@ -94,8 +94,8 @@
                     <a href="{% url 'problem-edit' problem.pk %}" class="btn btn-sm btn-warning" title="Edit">
                       <i class="fas fa-edit"></i>
                     </a>{% delete_modal_id 'Problem' problem.pk as problem_modal_id %}
-                    <button type="button" class="btn btn-sm btn-danger" title="Delete"
-                            onclick="DeleteConfirmation.show('{{ problem_modal_id }}')">
+                    <button type="button" class="btn btn-sm btn-danger delete-trigger-btn" title="Delete"
+                            data-modal-target="{{ problem_modal_id }}">
                       <i class="fas fa-trash"></i>
                     </button>
                   </td>

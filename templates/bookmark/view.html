@@ -172,7 +172,7 @@
                   <a href="{% url 'bookmark-edit' bookmark.id %}" class="btn btn-success">
                     <i class="fas fa-edit"></i> Edit Bookmark
                   </a>
-                  <button type="button" class="btn btn-danger" onclick="DeleteConfirmation.show('{{ modal_id }}')">
+                  <button type="button" class="btn btn-danger delete-trigger-btn" data-modal-target="{{ modal_id }}">
                     <i class="fas fa-trash"></i> Delete
                   </button>
                 </div>

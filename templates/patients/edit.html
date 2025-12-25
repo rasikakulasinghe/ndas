@@ -497,7 +497,7 @@
                       <i class="fas fa-save"></i> Update Patient
                     </button>
                     {% if user.is_superuser %}{% delete_modal_id 'Patient' patient.id as modal_id %}
-                    <button type="button" class="btn btn-danger ml-2" onclick="DeleteConfirmation.show('{{ modal_id }}')">
+                    <button type="button" class="btn btn-danger ml-2 delete-trigger-btn" data-modal-target="{{ modal_id }}">
                       <i class="fas fa-trash-alt"></i> Delete Patient
                     </button>
                     {% endif %}

@@ -93,7 +93,7 @@
         </div>
 
         <div class="col-auto m-2">{% delete_modal_id 'CDICRecord' CDICRecord.id as modal_id %}
-          <button type="button" class="btn btn-primary" onclick="DeleteConfirmation.show('{{ modal_id }}')"><i class="right far fa-trash-alt"></i>  Delete</button>
+          <button type="button" class="btn btn-primary delete-trigger-btn" data-modal-target="{{ modal_id }}"><i class="right far fa-trash-alt"></i>  Delete</button>
         </div>
         
         <div class="col-auto m-2">
