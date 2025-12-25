@@ -137,6 +137,27 @@ class ProblemForm(forms.ModelForm):
                 'date_resolved': 'Date resolved cannot be in the future.'
             })
 
+        # Cross-validation: date_identified should be >= date_of_onset
+        if date_of_onset and date_identified:
+            if date_identified < date_of_onset:
+                raise forms.ValidationError({
+                    'date_identified': 'Date identified cannot be earlier than date of onset.'
+                })
+
+        # Cross-validation: date_resolved should be >= date_of_onset
+        if date_of_onset and date_resolved:
+            if date_resolved < date_of_onset:
+                raise forms.ValidationError({
+                    'date_resolved': 'Date resolved cannot be earlier than date of onset.'
+                })
+
+        # Cross-validation: date_resolved should be >= date_identified (usually)
+        if date_identified and date_resolved:
+            if date_resolved < date_identified:
+                raise forms.ValidationError({
+                    'date_resolved': 'Date resolved should not be earlier than date identified.'
+                })
+
         return cleaned_data
 
 
