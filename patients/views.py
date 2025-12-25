@@ -1490,14 +1490,19 @@ def bookmark_manager(request):
                 start_date = now - timedelta(days=365)
                 var_bookmarks_list = var_bookmarks_list.filter(created_at__gte=start_date)
         
-        # Calculate statistics
+        # Calculate statistics (optimized: 1 query instead of 4)
+        stats = var_bookmarks_list.aggregate(
+            total=Count('id'),
+            patient=Count('id', filter=Q(bookmark_type='Patient')),
+            video=Count('id', filter=Q(bookmark_type='Video')),
+            assessment=Count('id', filter=Q(bookmark_type__in=['GMA', 'HINE', 'DA', 'CDICR']))
+        )
+
         bookmark_stats = {
-            'total': var_bookmarks_list.count(),
-            'patient': var_bookmarks_list.filter(bookmark_type='Patient').count(),
-            'video': var_bookmarks_list.filter(bookmark_type='Video').count(),
-            'assessment': var_bookmarks_list.filter(
-                bookmark_type__in=['GMA', 'HINE', 'DA', 'CDICR']
-            ).count(),
+            'total': stats['total'] or 0,
+            'patient': stats['patient'] or 0,
+            'video': stats['video'] or 0,
+            'assessment': stats['assessment'] or 0,
         }
         
         # Pagination
@@ -2435,19 +2440,24 @@ def cdic_assessment_manager(request):
                     next_appointment_date__lt=today
                 )
 
-        # Calculate statistics
+        # Calculate statistics using aggregation (single query instead of 4)
+        from django.db.models import Count, Q
+
         today = date.today()
+        one_week_ago = today - timedelta(days=7)
+
+        stats = var_cdic_list.aggregate(
+            total=Count('id'),
+            completed=Count('id', filter=Q(next_appointment_date__isnull=True)),
+            pending=Count('id', filter=Q(next_appointment_date__isnull=False, next_appointment_date__gte=today)),
+            this_week=Count('id', filter=Q(assessment_date__gte=one_week_ago))
+        )
 
         cdic_stats = {
-            'total': var_cdic_list.count(),
-            'completed': var_cdic_list.filter(next_appointment_date__isnull=True).count(),
-            'pending': var_cdic_list.filter(
-                next_appointment_date__isnull=False,
-                next_appointment_date__gte=today
-            ).count(),
-            'this_week': var_cdic_list.filter(
-                assessment_date__gte=today - timedelta(days=7)
-            ).count(),
+            'total': stats['total'] or 0,
+            'completed': stats['completed'] or 0,
+            'pending': stats['pending'] or 0,
+            'this_week': stats['this_week'] or 0,
         }
         
         # Pagination
@@ -2528,19 +2538,24 @@ def cdic_assessment_manager_by_patients(request, pid):
                     next_appointment_date__lt=today
                 )
 
-        # Calculate statistics for this patient
+        # Calculate statistics for this patient using aggregation (single query instead of 4)
+        from django.db.models import Count, Q
+
         today = date.today()
+        one_week_ago = today - timedelta(days=7)
+
+        stats = var_cdic_list.aggregate(
+            total=Count('id'),
+            completed=Count('id', filter=Q(next_appointment_date__isnull=True)),
+            pending=Count('id', filter=Q(next_appointment_date__isnull=False, next_appointment_date__gte=today)),
+            this_week=Count('id', filter=Q(assessment_date__gte=one_week_ago))
+        )
 
         cdic_stats = {
-            'total': var_cdic_list.count(),
-            'completed': var_cdic_list.filter(next_appointment_date__isnull=True).count(),
-            'pending': var_cdic_list.filter(
-                next_appointment_date__isnull=False,
-                next_appointment_date__gte=today
-            ).count(),
-            'this_week': var_cdic_list.filter(
-                assessment_date__gte=today - timedelta(days=7)
-            ).count(),
+            'total': stats['total'] or 0,
+            'completed': stats['completed'] or 0,
+            'pending': stats['pending'] or 0,
+            'this_week': stats['this_week'] or 0,
         }
         
         # Pagination
@@ -3340,14 +3355,22 @@ def da_assessment_manager_by_patients(request, pid):
                 start_date = now - timedelta(days=365)
                 var_da_list = var_da_list.filter(date_of_assessment__gte=start_date)
         
-        # Calculate statistics for this patient
+        # Calculate statistics for this patient using aggregation (single query instead of 4)
+        from django.db.models import Count, Q
+
+        one_month_ago = timezone.now() - timedelta(days=30)
+        stats = var_da_list.aggregate(
+            total=Count('id'),
+            normal=Count('id', filter=Q(is_dx_normal=True)),
+            delayed=Count('id', filter=Q(is_dx_normal=False)),
+            this_month=Count('id', filter=Q(date_of_assessment__gte=one_month_ago))
+        )
+
         da_stats = {
-            'total': var_da_list.count(),
-            'normal': var_da_list.filter(is_dx_normal=True).count(),
-            'delayed': var_da_list.filter(is_dx_normal=False).count(),
-            'this_month': var_da_list.filter(
-                date_of_assessment__gte=timezone.now() - timedelta(days=30)
-            ).count(),
+            'total': stats['total'] or 0,
+            'normal': stats['normal'] or 0,
+            'delayed': stats['delayed'] or 0,
+            'this_month': stats['this_month'] or 0,
         }
         
         # Pagination
