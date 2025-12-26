@@ -285,7 +285,7 @@
                       <input type="number" class="form-control form-control-sm" style="width: 50px;"
                              min="1" max="{{ gpa_page_obj.paginator.num_pages }}"
                              value="{{ gpa_page_obj.number }}" id="pageJump">
-                      <button class="btn btn-sm btn-outline-info ml-1 px-2" onclick="jumpToPage()" title="Go to page">
+                      <button class="btn btn-sm btn-outline-info ml-1 px-2" data-action="jump-page" title="Go to page">
                         <i class="fas fa-arrow-right fa-xs"></i>
                       </button>
                     </div>
@@ -337,12 +337,6 @@
     $('[data-toggle="tooltip"]').tooltip();
   });
 
-  // Page jump functionality
-  function jumpToPage() {
-    const pageNum = document.getElementById('pageJump').value;
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set('page', pageNum);
-    window.location.href = currentUrl.toString();
-  }
+  // Page jump functionality handled by NDASEventHandlers module
 </script>
 {% endblock extra_js %}

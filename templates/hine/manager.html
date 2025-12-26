@@ -308,7 +308,7 @@
                       <input type="number" class="form-control form-control-sm" style="width: 50px;"
                              min="1" max="{{ hine_record_list.paginator.num_pages }}"
                              value="{{ hine_record_list.number }}" id="pageJump">
-                      <button class="btn btn-sm btn-outline-info ml-1 px-2" onclick="jumpToPage()" title="Go to page">
+                      <button class="btn btn-sm btn-outline-info ml-1 px-2" data-action="jump-page" title="Go to page">
                         <i class="fas fa-arrow-right fa-xs"></i>
                       </button>
                     </div>

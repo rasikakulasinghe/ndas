@@ -460,7 +460,7 @@ Manager{% endblock title%}
                       <input type="number" class="form-control form-control-sm" style="width: 50px;"
                              min="1" max="{{ patients_page_obj.paginator.num_pages }}"
                              value="{{ patients_page_obj.number }}" id="pageJump">
-                      <button class="btn btn-sm btn-outline-info ml-1 px-2" onclick="jumpToPage('{{ search_query|default:'' }}')" title="Go to page">
+                      <button class="btn btn-sm btn-outline-info ml-1 px-2" data-action="jump-page" data-search-query="{{ search_query|default:'' }}" title="Go to page">
                         <i class="fas fa-arrow-right fa-xs"></i>
                       </button>
                     </div>
@@ -495,15 +495,6 @@ Manager{% endblock title%}
 {% block extra_js %}
 <script src="{% static 'js/manager.js' %}"></script>
 <script nonce="{{ request.csp_nonce }}">
-function jumpToPage(searchQuery) {
-    const pageNum = document.getElementById('pageJump').value;
-    let url = '?page=' + pageNum;
-    if (searchQuery && searchQuery.trim() !== '') {
-        url += '&search=' + encodeURIComponent(searchQuery);
-    }
-    window.location.href = url;
-}
-
 // Add Enter key support for search input
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('cardSearchInput');

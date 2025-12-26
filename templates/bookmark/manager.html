@@ -550,7 +550,7 @@
             <input type="number" class="form-control form-control-sm w-page-jump-lg"
                    min="1" max="{{ bookmark_page_obj.paginator.num_pages }}"
                    value="{{ bookmark_page_obj.number }}" id="pageJump">
-            <button class="btn btn-sm btn-outline-secondary ml-1" onclick="jumpToPage()">
+            <button class="btn btn-sm btn-outline-secondary ml-1" data-action="jump-page">
               <i class="fas fa-arrow-right"></i>
             </button>
           </div>
@@ -569,13 +569,6 @@
 {% block extra_js %}
 <script src="{% static 'js/manager.js' %}"></script>
 <script nonce="{{ request.csp_nonce }}">
-function jumpToPage() {
-    const pageNum = document.getElementById('pageJump').value;
-    const urlParams = new URLSearchParams(window.location.search);
-    urlParams.set('page', pageNum);
-    window.location.href = '?' + urlParams.toString();
-}
-
 // Add Enter key support for search input
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('cardSearchInput');

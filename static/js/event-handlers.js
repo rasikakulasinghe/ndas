@@ -92,10 +92,10 @@
          * @param {string} searchQuery - Optional search query to preserve in URL
          */
         jumpToPage: function(searchQuery) {
-            var pageInput = document.getElementById('jumpToPageInput');
+            var pageInput = document.getElementById('pageJump');
 
             if (!pageInput) {
-                console.error('NDASEventHandlers: Page input field not found');
+                console.error('NDASEventHandlers: Page input field not found (expected id="pageJump")');
                 return;
             }
 
