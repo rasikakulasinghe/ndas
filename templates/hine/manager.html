@@ -230,7 +230,8 @@
                     class="btn btn-link p-0 text-primary mr-1"
                     data-toggle="tooltip"
                     title="View HINE Record"
-                    onclick="window.location.href='{% url 'hine-assessment-view' HINERecord.id %}'"
+                    data-action="navigate"
+                    data-url="{% url 'hine-assessment-view' HINERecord.id %}"
                   >
                     <i class="fas fa-eye" style="font-size: 1.1rem"></i>
                   </button>
