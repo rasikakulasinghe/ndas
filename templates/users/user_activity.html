@@ -232,7 +232,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ request.csp_nonce }}">
     // Auto-refresh page every 5 minutes to update session data
     setTimeout(function() {
         location.reload();

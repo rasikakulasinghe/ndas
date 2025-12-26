@@ -568,7 +568,7 @@
 
 {% block extra_js %}
 <script src="{% static 'js/manager.js' %}"></script>
-<script>
+<script nonce="{{ request.csp_nonce }}">
 function jumpToPage() {
     const pageNum = document.getElementById('pageJump').value;
     const urlParams = new URLSearchParams(window.location.search);

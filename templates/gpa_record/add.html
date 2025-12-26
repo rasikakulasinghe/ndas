@@ -224,7 +224,7 @@
 {% endblock main_content %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ request.csp_nonce }}">
   $(document).ready(function() {
     // Show/hide discharge fields based on checkbox
     $('#{{ form.is_discharged.id_for_label }}').on('change', function() {

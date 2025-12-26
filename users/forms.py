@@ -105,7 +105,9 @@ class CustomUserRegistrationForm(forms.ModelForm):
 
         profile_picture = self.cleaned_data.get('profile_picture')
 
-        if profile_picture:
+        # Only validate if a new file is being uploaded
+        # When editing without uploading a new file, this will skip validation
+        if profile_picture and hasattr(profile_picture, 'read'):
             # Validate file size (5MB max)
             max_size = 5 * 1024 * 1024  # 5MB in bytes
             if profile_picture.size > max_size:
@@ -303,7 +305,9 @@ class CustomUserEditForm(forms.ModelForm):
 
         profile_picture = self.cleaned_data.get('profile_picture')
 
-        if profile_picture:
+        # Only validate if a new file is being uploaded
+        # When editing without uploading a new file, this will skip validation
+        if profile_picture and hasattr(profile_picture, 'read'):
             # Validate file size (5MB max)
             max_size = 5 * 1024 * 1024  # 5MB in bytes
             if profile_picture.size > max_size:

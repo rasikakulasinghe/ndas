@@ -219,7 +219,7 @@
 </div>
 
 <!-- JavaScript for Dynamic Form Behavior -->
-<script>
+<script nonce="{{ request.csp_nonce }}">
 // Initialize Select2 on page load
 $(document).ready(function() {
   $('.select2').select2({

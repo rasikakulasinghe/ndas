@@ -739,9 +739,12 @@ class AttachmentkForm(forms.ModelForm):
     def clean_attachment(self):
         """Sanitize uploaded filename"""
         attachment = self.cleaned_data.get("attachment")
-        if attachment and hasattr(attachment, 'name'):
+        # Only sanitize if a new file is being uploaded
+        # When editing without uploading a new file, this will skip sanitization
+        if attachment and hasattr(attachment, 'read'):
             # Sanitize the filename to prevent directory traversal and other attacks
-            attachment.name = sanitize_filename(attachment.name)
+            if hasattr(attachment, 'name'):
+                attachment.name = sanitize_filename(attachment.name)
         return attachment
 
 

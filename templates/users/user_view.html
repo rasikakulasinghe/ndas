@@ -543,7 +543,7 @@
 {% endblock main_content %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ request.csp_nonce }}">
   // Function to confirm logout action
   function confirmLogout() {
     if (confirm("Are you sure you want to logout?")) {

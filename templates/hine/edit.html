@@ -130,7 +130,7 @@
     <!-- /.card -->
 </div>
 
-<script>
+<script nonce="{{ request.csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
     // Add form validation
     const form = document.querySelector('form');

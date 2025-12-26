@@ -142,7 +142,7 @@
 </style>
 
 <!-- Custom JavaScript for enhanced interaction -->
-<script>
+<script nonce="{{ request.csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
     // Add smooth hover effects
     const buttons = document.querySelectorAll('.btn');

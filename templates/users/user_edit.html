@@ -155,7 +155,7 @@
 {% endblock main_content %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ request.csp_nonce }}">
 // Form validation
 (function() {
     'use strict';

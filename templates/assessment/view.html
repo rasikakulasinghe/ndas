@@ -253,7 +253,7 @@
   </section>
 </div>
 
-<script>
+<script nonce="{{ request.csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize tooltips
     if (typeof $().tooltip === 'function') {

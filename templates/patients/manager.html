@@ -494,7 +494,7 @@ Manager{% endblock title%}
 
 {% block extra_js %}
 <script src="{% static 'js/manager.js' %}"></script>
-<script>
+<script nonce="{{ request.csp_nonce }}">
 function jumpToPage(searchQuery) {
     const pageNum = document.getElementById('pageJump').value;
     let url = '?page=' + pageNum;

@@ -52,7 +52,7 @@ class VideoForm(forms.ModelForm):
             'accept': 'video/mp4,video/avi,video/mov,video/wmv,video/mkv,video/webm'
         }),
         help_text='Upload video file (supported formats: MP4, AVI, MOV, WMV, MKV, WEBM - max 500MB)',
-        required=True
+        required=False  # Will be set to True in __init__ for new videos
     )
 
     class Meta:
@@ -64,11 +64,18 @@ class VideoForm(forms.ModelForm):
         # Set default recorded_on to now if not editing existing record
         if not self.instance.pk:
             self.fields['recorded_on'].initial = timezone.now()
+            # Require video file for new uploads
+            self.fields['video_file'].required = True
+        else:
+            # Video file is optional when editing (only required if replacing)
+            self.fields['video_file'].required = False
 
     def clean_video_file(self):
         video_file = self.cleaned_data.get('video_file')
 
-        if video_file:
+        # Only validate if a new file is being uploaded
+        # When editing without uploading a new file, video_file will be False (not None)
+        if video_file and hasattr(video_file, 'read'):
             # Sanitize the filename to prevent directory traversal and other attacks
             if hasattr(video_file, 'name'):
                 video_file.name = sanitize_filename(video_file.name)

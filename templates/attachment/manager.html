@@ -460,7 +460,7 @@
 
 {% block extra_js %}
 <script src="{% static 'js/manager.js' %}"></script>
-<script>
+<script nonce="{{ request.csp_nonce }}">
 // Wait for document ready and ensure jQuery is available
 $(document).ready(function() {
   // Check if jQuery is loaded

@@ -178,7 +178,7 @@
               <div class="card-footer">
                 <div class="row">
                   <div class="col-sm-6">
-                    <button type="button" class="btn btn-secondary mr-2" onclick="window.location.href='{% url 'video:view' video.id %}'">
+                    <button type="button" id="back-to-video-btn" class="btn btn-secondary mr-2">
                       <i class="fas fa-arrow-left mr-2"></i>Back to Video
                     </button>{% delete_modal_id 'Video' video.id as modal_id %}
                     <button type="button" class="btn btn-outline-danger delete-trigger-btn" data-modal-target="{{ modal_id }}">
@@ -200,7 +200,7 @@
   </section>
 </div>
 
-<script>
+<script nonce="{{ request.csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('video-edit-form');
     const fileInput = form.querySelector('input[type="file"]');
@@ -209,8 +209,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const progressDiv = document.getElementById('update-progress');
     const progressBar = document.getElementById('progress-bar');
     const progressText = document.getElementById('progress-text');
-    
+    const backToVideoBtn = document.getElementById('back-to-video-btn');
+
     let currentXHR = null;
+
+    // Handle back to video button click
+    backToVideoBtn.addEventListener('click', function() {
+        window.location.href = '{% url "video:view" video.id %}';
+    });
     
     // Update file label when file is selected
     if (fileInput && fileLabel) {

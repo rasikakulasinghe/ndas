@@ -383,7 +383,7 @@ iframe {
 </style>
 
 <!-- JavaScript for enhanced functionality -->
-<script>
+<script nonce="{{ request.csp_nonce }}">
 $(document).ready(function() {
   // Image click to open in modal (for better mobile viewing)
   $('.card-body img').on('click', function() {

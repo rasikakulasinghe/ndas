@@ -26,7 +26,7 @@ from ndas.custom_codes.error_handlers import handle_view_errors
 logger = logging.getLogger(__name__)
 
 
-@handle_view_errors(redirect_url='video-manager', error_message='Error adding video')
+@handle_view_errors(redirect_url='video:manager', error_message='Error adding video')
 @ratelimit(key='user', rate='10/m', method='POST')
 @ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
@@ -147,7 +147,7 @@ def video_view(request, video_id):
     return render(request, "video/view.html", context)
 
 
-@handle_view_errors(redirect_url='video-manager', error_message='Error editing video')
+@handle_view_errors(redirect_url='video:manager', error_message='Error editing video')
 @ratelimit(key='user', rate='10/m', method='POST')
 @ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
@@ -457,7 +457,7 @@ def video_manager_by_patient(request, patient_id):
     return render(request, "video/manager.html", context)
 
 
-@handle_view_errors(redirect_url='video-manager', error_message='Error loading delete confirmation')
+@handle_view_errors(redirect_url='video:manager', error_message='Error loading delete confirmation')
 @login_required(login_url="user-login")
 def video_delete_confirm(request, video_id):
     """Video delete confirmation page"""
@@ -492,7 +492,7 @@ def video_delete_confirm(request, video_id):
         return redirect("video:manager")
 
 
-@handle_view_errors(redirect_url='video-manager', error_message='Error deleting video')
+@handle_view_errors(redirect_url='video:manager', error_message='Error deleting video')
 @ratelimit(key='user', rate='5/m', method='DELETE')
 @ratelimit(key='ip', rate='10/m', method='DELETE')
 @login_required(login_url="user-login")

@@ -78,7 +78,7 @@
           <button type="submit" class="btn btn-primary float-right">
             <i class="fas fa-bookmark"></i> Add Bookmark
           </button>
-          <button type="button" class="btn btn-secondary float-right mr-2" onclick="history.back()">
+          <button type="button" class="btn btn-secondary float-right mr-2" data-action="back">
             <i class="fas fa-times"></i> Cancel
           </button>
         </div>
@@ -94,7 +94,7 @@
   <!-- /.card -->
 </div>
 
-<script>
+<script nonce="{{ request.csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
     // Add form validation
     const form = document.querySelector('form');

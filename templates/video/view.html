@@ -229,21 +229,21 @@
   </section>
 </div>
 
-<script>
+<script nonce="{{ request.csp_nonce }}">
 document.addEventListener('DOMContentLoaded', function() {
     // Video player enhancements
     const video = document.getElementById('video-player');
-    
+
     if (video) {
         // Show loading indicator when video is loading
         video.addEventListener('loadstart', function() {
             console.log('Video loading started');
         });
-        
+
         // Handle video load errors gracefully
         video.addEventListener('error', function(e) {
             console.error('Video loading error:', e);
-            const errorMsg = video.parentNode.querySelector('.video-error-msg') || 
+            const errorMsg = video.parentNode.querySelector('.video-error-msg') ||
                            document.createElement('div');
             errorMsg.className = 'alert alert-warning mt-3 video-error-msg';
             errorMsg.innerHTML = `
@@ -259,7 +259,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 video.parentNode.appendChild(errorMsg);
             }
         });
-        
+
         // Update video poster if needed
         video.addEventListener('loadeddata', function() {
             console.log('Video loaded successfully');

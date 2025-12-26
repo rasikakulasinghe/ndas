@@ -316,11 +316,10 @@ def download_report(request, file_id):
         content_type = 'application/pdf'
         filename = f"report_{datetime.now().strftime('%Y%m%d')}.pdf"
 
-    # Serve file with proper resource management
-    with open(file_path, 'rb') as file_handle:
-        response = FileResponse(file_handle.read(), content_type=content_type)
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
-        return response
+    # Serve file - FileResponse handles closing the file
+    response = FileResponse(open(file_path, 'rb'), content_type=content_type)
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
 
 
 # Assessment PDF Download Views
@@ -335,12 +334,11 @@ def download_gm_assessment_pdf(request, assessment_id):
     generator = GMAssessmentPDFGenerator()
     file_path = generator.generate(assessment_id)
 
-    # Serve file with proper resource management
+    # Serve file - FileResponse handles closing the file
     filename = f"GM_Assessment_{assessment_id}_{datetime.now().strftime('%Y%m%d')}.pdf"
-    with open(file_path, 'rb') as file_handle:
-        response = FileResponse(file_handle.read(), content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
-        return response
+    response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
 
 
 @login_required(login_url='user-login')
@@ -353,12 +351,11 @@ def download_hine_assessment_pdf(request, assessment_id):
     generator = HINEAssessmentPDFGenerator()
     file_path = generator.generate(assessment_id)
 
-    # Serve file with proper resource management
+    # Serve file - FileResponse handles closing the file
     filename = f"HINE_Assessment_{assessment_id}_{datetime.now().strftime('%Y%m%d')}.pdf"
-    with open(file_path, 'rb') as file_handle:
-        response = FileResponse(file_handle.read(), content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
-        return response
+    response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
 
 
 @login_required(login_url='user-login')
@@ -371,12 +368,11 @@ def download_da_assessment_pdf(request, assessment_id):
     generator = DAAssessmentPDFGenerator()
     file_path = generator.generate(assessment_id)
 
-    # Serve file with proper resource management
+    # Serve file - FileResponse handles closing the file
     filename = f"DA_Assessment_{assessment_id}_{datetime.now().strftime('%Y%m%d')}.pdf"
-    with open(file_path, 'rb') as file_handle:
-        response = FileResponse(file_handle.read(), content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
-        return response
+    response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
 
 
 @login_required(login_url='user-login')
@@ -389,12 +385,11 @@ def download_cdic_assessment_pdf(request, assessment_id):
     generator = CDICAssessmentPDFGenerator()
     file_path = generator.generate(assessment_id)
 
-    # Serve file with proper resource management
+    # Serve file - FileResponse handles closing the file
     filename = f"CDIC_Record_{assessment_id}_{datetime.now().strftime('%Y%m%d')}.pdf"
-    with open(file_path, 'rb') as file_handle:
-        response = FileResponse(file_handle.read(), content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
-        return response
+    response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
 
 
 @login_required(login_url='user-login')
@@ -407,12 +402,11 @@ def download_gpa_assessment_pdf(request, assessment_id):
     generator = GPAAssessmentPDFGenerator()
     file_path = generator.generate(assessment_id)
 
-    # Serve file with proper resource management
+    # Serve file - FileResponse handles closing the file
     filename = f"GPA_Assessment_{assessment_id}_{datetime.now().strftime('%Y%m%d')}.pdf"
-    with open(file_path, 'rb') as file_handle:
-        response = FileResponse(file_handle.read(), content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
-        return response
+    response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
 
 
 # Helper Functions
