@@ -124,7 +124,7 @@
                                                     {% csrf_token %}
                                                     <button type="submit"
                                                             class="btn btn-{% if user.is_active %}warning{% else %}success{% endif %} btn-sm"
-                                                            onclick="return confirm('Are you sure you want to {% if user.is_active %}deactivate{% else %}activate{% endif %} this user?')"
+                                                            data-confirm="Are you sure you want to {% if user.is_active %}deactivate{% else %}activate{% endif %} this user?"
                                                             title="{% if user.is_active %}Deactivate{% else %}Activate{% endif %}">
                                                         <i class="fas fa-{% if user.is_active %}ban{% else %}check{% endif %}"></i>
                                                     </button>

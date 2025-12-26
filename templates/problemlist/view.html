@@ -262,7 +262,7 @@
             {% csrf_token %}
             <input type="hidden" name="status" value="resolved">
             <button type="submit" class="btn btn-sm btn-success btn-block"
-                    onclick="return confirm('Mark this problem as resolved?');">
+                    data-confirm="Mark this problem as resolved?">
               <i class="fas fa-check-circle"></i> Mark as Resolved
             </button>
           </form>
@@ -273,7 +273,7 @@
             {% csrf_token %}
             <input type="hidden" name="status" value="chronic">
             <button type="submit" class="btn btn-sm btn-info btn-block"
-                    onclick="return confirm('Mark this problem as chronic?');">
+                    data-confirm="Mark this problem as chronic?">
               <i class="fas fa-stream"></i> Mark as Chronic
             </button>
           </form>
@@ -284,7 +284,7 @@
             {% csrf_token %}
             <input type="hidden" name="status" value="active">
             <button type="submit" class="btn btn-sm btn-warning btn-block"
-                    onclick="return confirm('Reactivate this problem?');">
+                    data-confirm="Reactivate this problem?">
               <i class="fas fa-redo"></i> Reactivate Problem
             </button>
           </form>
