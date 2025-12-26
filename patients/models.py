@@ -330,7 +330,7 @@ class Patient(TimeStampedModel, UserTrackingMixin):
 
     def clean(self):
         """Model-wide validation"""
-        from ndas.custom_codes.validators import validate_birth_weight_for_gestational_age
+        from ndas.custom_codes.validators import validate_birth_weight
 
         super().clean()
 
@@ -348,14 +348,11 @@ class Patient(TimeStampedModel, UserTrackingMixin):
         # Comprehensive POG-specific birth weight validation
         if self.birth_weight and self.pog_wks:
             pog_days = self.pog_days if self.pog_days else 0
-            is_valid, message = validate_birth_weight_for_gestational_age(
-                self.birth_weight,
-                self.pog_wks,
-                pog_days,
-                strict=False  # Use absolute min/max ranges, not typical ranges
-            )
-            if not is_valid:
-                raise ValidationError({"birth_weight": _(message)})
+            result = validate_birth_weight(self.birth_weight)
+            if result is not None:
+                is_valid, message = result
+                if not is_valid:
+                    raise ValidationError({"birth_weight": _(message)})
 
     def save(self, *args, **kwargs):
         """Override save to perform additional validation"""

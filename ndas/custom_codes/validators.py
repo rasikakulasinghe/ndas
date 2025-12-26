@@ -38,19 +38,21 @@ def sanitize_text_input(value):
     text = str(value)
 
     # Remove script tags and their content (case insensitive)
-    text = re.sub(r'<script[^>]*>.*?</script>', '', text, flags=re.IGNORECASE | re.DOTALL)
-    text = re.sub(r'<style[^>]*>.*?</style>', '', text, flags=re.IGNORECASE | re.DOTALL)
+    text = re.sub(
+        r"<script[^>]*>.*?</script>", "", text, flags=re.IGNORECASE | re.DOTALL
+    )
+    text = re.sub(r"<style[^>]*>.*?</style>", "", text, flags=re.IGNORECASE | re.DOTALL)
 
     # Remove event handlers (onclick, onload, onerror, etc.)
-    text = re.sub(r'\s*on\w+\s*=\s*["\']?[^"\']*["\']?', '', text, flags=re.IGNORECASE)
+    text = re.sub(r'\s*on\w+\s*=\s*["\']?[^"\']*["\']?', "", text, flags=re.IGNORECASE)
 
     # Remove dangerous protocols from URLs (javascript:, data:, vbscript:)
-    text = re.sub(r'(javascript|data|vbscript):', '', text, flags=re.IGNORECASE)
+    text = re.sub(r"(javascript|data|vbscript):", "", text, flags=re.IGNORECASE)
 
     # Remove HTML tags while preserving content
     # This regex preserves medical notation like "< 5" or "> 38"
     # by only matching tags that start with < followed by a letter
-    text = re.sub(r'<(/)?([a-zA-Z][a-zA-Z0-9]*)[^>]*>', '', text)
+    text = re.sub(r"<(/)?([a-zA-Z][a-zA-Z0-9]*)[^>]*>", "", text)
 
     # Unescape HTML entities to prevent double-encoding
     # This converts &lt; back to < and &gt; back to >
@@ -58,8 +60,8 @@ def sanitize_text_input(value):
 
     # Normalize whitespace (replace multiple spaces/tabs/newlines with single space)
     # Preserve single newlines for paragraph breaks
-    text = re.sub(r'[ \t]+', ' ', text)  # Multiple spaces/tabs to single space
-    text = re.sub(r'\n\s*\n', '\n\n', text)  # Multiple newlines to double newline
+    text = re.sub(r"[ \t]+", " ", text)  # Multiple spaces/tabs to single space
+    text = re.sub(r"\n\s*\n", "\n\n", text)  # Multiple newlines to double newline
 
     # Strip leading/trailing whitespace
     text = text.strip()
@@ -103,30 +105,30 @@ def sanitize_filename(filename, max_length=100):
     name, ext = os.path.splitext(filename)
 
     # Remove path traversal attempts and null bytes
-    name = name.replace('..', '').replace('\0', '')
-    ext = ext.replace('..', '').replace('\0', '')
+    name = name.replace("..", "").replace("\0", "")
+    ext = ext.replace("..", "").replace("\0", "")
 
     # Replace invalid filesystem characters with underscores
     # Invalid characters: / \ : * ? " < > | and control characters
     invalid_chars = r'[/\\:*?"<>|\x00-\x1f\x7f]'
-    name = re.sub(invalid_chars, '_', name)
-    ext = re.sub(invalid_chars, '_', ext)
+    name = re.sub(invalid_chars, "_", name)
+    ext = re.sub(invalid_chars, "_", ext)
 
     # Remove leading/trailing spaces and dots (Windows filesystem issues)
-    name = name.strip('. ')
-    ext = ext.strip('. ')
+    name = name.strip(". ")
+    ext = ext.strip(". ")
 
     # Ensure extension starts with a dot
-    if ext and not ext.startswith('.'):
-        ext = '.' + ext
+    if ext and not ext.startswith("."):
+        ext = "." + ext
 
     # Prevent hidden files (Unix/Linux)
-    if name.startswith('.'):
-        name = 'file_' + name.lstrip('.')
+    if name.startswith("."):
+        name = "file_" + name.lstrip(".")
 
     # If name is empty after sanitization, use default
     if not name:
-        name = 'unnamed_file'
+        name = "unnamed_file"
 
     # Limit length while preserving extension
     # Reserve space for extension plus some buffer
@@ -181,16 +183,16 @@ def validate_video_file_upload(var_uploaded_file):
 def getVideoMaxSizeMB():
     """Get maximum video file size in MB from settings - FIX 3.1"""
     # Use centralized FILE_UPLOAD_LIMITS from settings
-    limits = getattr(settings, 'FILE_UPLOAD_LIMITS', {})
-    max_size_bytes = limits.get('VIDEO_MAX_SIZE', 2 * 1024 * 1024 * 1024)
+    limits = getattr(settings, "FILE_UPLOAD_LIMITS", {})
+    max_size_bytes = limits.get("VIDEO_MAX_SIZE", 2 * 1024 * 1024 * 1024)
     return max_size_bytes // (1024 * 1024)
 
 
 def validateVideoSize(var_uploaded_file):
     """Enhanced video size validation - FIX 3.1"""
     # Use centralized FILE_UPLOAD_LIMITS from settings
-    limits = getattr(settings, 'FILE_UPLOAD_LIMITS', {})
-    max_size_bytes = limits.get('VIDEO_MAX_SIZE', 2 * 1024 * 1024 * 1024)
+    limits = getattr(settings, "FILE_UPLOAD_LIMITS", {})
+    max_size_bytes = limits.get("VIDEO_MAX_SIZE", 2 * 1024 * 1024 * 1024)
     return var_uploaded_file.size <= max_size_bytes
 
 
@@ -242,9 +244,9 @@ def validateVideoMetadata(var_uploaded_file):
         #     return False, "Video duration exceeds maximum allowed length (1 hour)"
         #
         # return True, "Video metadata is valid"
-        
+
         return True, "Metadata validation skipped (ffmpeg not available)"
-        
+
     except Exception as e:
         return False, f"Metadata validation error: {str(e)}"
 
@@ -344,137 +346,10 @@ def validateAttachmentType(var_uploaded_file):
 
 # New Django Model Validators for NDAS System
 
+
 def validate_birth_weight(value):
-    """Validate birth weight is within realistic range (300g - 8000g)"""
-    if value < 300 or value > 8000:
-        raise ValidationError("Birth weight must be between 300g and 8000g")
-
-
-# Comprehensive POG-specific birth weight ranges
-# Based on medical research and WHO growth charts for premature and term infants
-BIRTH_WEIGHT_RANGES_BY_POG = {
-    # Extremely premature (20-23 weeks)
-    20: {'min': 300, 'max': 600, 'typical_min': 350, 'typical_max': 500},
-    21: {'min': 300, 'max': 650, 'typical_min': 350, 'typical_max': 550},
-    22: {'min': 350, 'max': 700, 'typical_min': 400, 'typical_max': 600},
-    23: {'min': 400, 'max': 750, 'typical_min': 450, 'typical_max': 650},
-
-    # Very premature (24-27 weeks)
-    24: {'min': 400, 'max': 900, 'typical_min': 500, 'typical_max': 800},
-    25: {'min': 450, 'max': 1000, 'typical_min': 550, 'typical_max': 900},
-    26: {'min': 500, 'max': 1200, 'typical_min': 600, 'typical_max': 1000},
-    27: {'min': 600, 'max': 1400, 'typical_min': 700, 'typical_max': 1200},
-
-    # Moderate to late premature (28-31 weeks)
-    28: {'min': 700, 'max': 1600, 'typical_min': 800, 'typical_max': 1400},
-    29: {'min': 800, 'max': 1800, 'typical_min': 900, 'typical_max': 1600},
-    30: {'min': 900, 'max': 2000, 'typical_min': 1000, 'typical_max': 1800},
-    31: {'min': 1000, 'max': 2200, 'typical_min': 1200, 'typical_max': 2000},
-
-    # Late premature (32-36 weeks)
-    32: {'min': 1200, 'max': 2500, 'typical_min': 1400, 'typical_max': 2200},
-    33: {'min': 1400, 'max': 2800, 'typical_min': 1600, 'typical_max': 2500},
-    34: {'min': 1600, 'max': 3200, 'typical_min': 1800, 'typical_max': 2800},
-    35: {'min': 1800, 'max': 3500, 'typical_min': 2000, 'typical_max': 3200},
-    36: {'min': 2000, 'max': 4000, 'typical_min': 2200, 'typical_max': 3500},
-
-    # Full term (37-42 weeks)
-    37: {'min': 2200, 'max': 4500, 'typical_min': 2500, 'typical_max': 4000},
-    38: {'min': 2400, 'max': 4800, 'typical_min': 2700, 'typical_max': 4200},
-    39: {'min': 2500, 'max': 5000, 'typical_min': 2800, 'typical_max': 4400},
-    40: {'min': 2600, 'max': 5200, 'typical_min': 2900, 'typical_max': 4500},
-    41: {'min': 2700, 'max': 5500, 'typical_min': 3000, 'typical_max': 4800},
-    42: {'min': 2800, 'max': 5800, 'typical_min': 3000, 'typical_max': 5000},
-
-    # Post-term (43-44 weeks) - rare but possible
-    43: {'min': 2800, 'max': 6000, 'typical_min': 3000, 'typical_max': 5200},
-    44: {'min': 2800, 'max': 6500, 'typical_min': 3000, 'typical_max': 5500},
-}
-
-
-def validate_birth_weight_for_gestational_age(birth_weight, pog_weeks, pog_days=0, strict=False):
-    """
-    Validate birth weight against gestational age with contextual warnings.
-
-    This function provides POG-specific birth weight validation based on
-    medical research and WHO growth charts for premature and term infants.
-
-    Args:
-        birth_weight (int): Birth weight in grams
-        pog_weeks (int): Period of gestation in weeks (20-44)
-        pog_days (int): Additional days (0-6), default 0
-        strict (bool): If True, uses typical ranges; if False, uses absolute min/max
-
-    Returns:
-        tuple: (is_valid, message)
-            - is_valid (bool): True if validation passes
-            - message (str): Validation message (empty if valid, warning/error if invalid)
-
-    Examples:
-        >>> validate_birth_weight_for_gestational_age(500, 22)
-        (True, '')
-        >>> validate_birth_weight_for_gestational_age(3000, 22)
-        (False, 'Birth weight (3000g) is unusually high for 22 weeks gestation...')
-        >>> validate_birth_weight_for_gestational_age(2500, 37, strict=True)
-        (True, '')
-    """
-    if not birth_weight:
-        return True, ""  # No weight provided, skip validation
-
-    if not pog_weeks:
-        return True, ""  # No POG provided, skip validation
-
-    # Validate POG is within acceptable range
-    if pog_weeks < 20 or pog_weeks > 44:
-        return False, f"Period of gestation ({pog_weeks} weeks) is outside medical range (20-44 weeks)"
-
-    # Get the appropriate range for this gestational age
-    if pog_weeks not in BIRTH_WEIGHT_RANGES_BY_POG:
-        # If exact week not in table, use nearest week
-        nearest_week = min(BIRTH_WEIGHT_RANGES_BY_POG.keys(), key=lambda x: abs(x - pog_weeks))
-        ranges = BIRTH_WEIGHT_RANGES_BY_POG[nearest_week]
-    else:
-        ranges = BIRTH_WEIGHT_RANGES_BY_POG[pog_weeks]
-
-    # Adjust for additional days (pro-rate between current and next week)
-    if pog_days > 0 and pog_weeks < 44:
-        next_week = pog_weeks + 1
-        if next_week in BIRTH_WEIGHT_RANGES_BY_POG:
-            next_ranges = BIRTH_WEIGHT_RANGES_BY_POG[next_week]
-            # Linear interpolation based on days
-            ratio = pog_days / 7.0
-            ranges = {
-                'min': int(ranges['min'] + (next_ranges['min'] - ranges['min']) * ratio),
-                'max': int(ranges['max'] + (next_ranges['max'] - ranges['max']) * ratio),
-                'typical_min': int(ranges['typical_min'] + (next_ranges['typical_min'] - ranges['typical_min']) * ratio),
-                'typical_max': int(ranges['typical_max'] + (next_ranges['typical_max'] - ranges['typical_max']) * ratio),
-            }
-
-    # Determine which range to use
-    min_weight = ranges['typical_min'] if strict else ranges['min']
-    max_weight = ranges['typical_max'] if strict else ranges['max']
-
-    # Format POG display string
-    pog_display = f"{pog_weeks}+{pog_days} weeks" if pog_days > 0 else f"{pog_weeks} weeks"
-
-    # Validate birth weight
-    if birth_weight < min_weight:
-        severity = "extremely low" if strict else "unusually low"
-        return False, (
-            f"Birth weight ({birth_weight}g) is {severity} for {pog_display} gestation. "
-            f"Expected range: {min_weight}g - {max_weight}g. "
-            f"Please verify the entered values are correct."
-        )
-
-    if birth_weight > max_weight:
-        severity = "extremely high" if strict else "unusually high"
-        return False, (
-            f"Birth weight ({birth_weight}g) is {severity} for {pog_display} gestation. "
-            f"Expected range: {min_weight}g - {max_weight}g. "
-            f"Please verify the entered values are correct."
-        )
-
-    return True, ""
+    if value < 200 or value > 8000:
+        return False, (f"Birth weight must be between 200g and 8000g")
 
 
 def validate_apgar_score(value):
@@ -500,8 +375,10 @@ def validate_video_file(value):
         return
 
     # Get allowed extensions from settings
-    allowed_extensions_dict = getattr(settings, 'ALLOWED_FILE_EXTENSIONS', {})
-    valid_extensions = allowed_extensions_dict.get('VIDEO', [".mp4", ".mov", ".avi", ".mkv", ".webm"])
+    allowed_extensions_dict = getattr(settings, "ALLOWED_FILE_EXTENSIONS", {})
+    valid_extensions = allowed_extensions_dict.get(
+        "VIDEO", [".mp4", ".mov", ".avi", ".mkv", ".webm"]
+    )
 
     # Check file extension
     ext = os.path.splitext(value.name)[1].lower()
@@ -512,8 +389,8 @@ def validate_video_file(value):
         )
 
     # Check file size using centralized limits
-    limits = getattr(settings, 'FILE_UPLOAD_LIMITS', {})
-    max_size = limits.get('VIDEO_MAX_SIZE', 2 * 1024 * 1024 * 1024)
+    limits = getattr(settings, "FILE_UPLOAD_LIMITS", {})
+    max_size = limits.get("VIDEO_MAX_SIZE", 2 * 1024 * 1024 * 1024)
     if value.size > max_size:
         max_size_mb = max_size / (1024 * 1024)
         raise ValidationError(
@@ -532,7 +409,7 @@ def validate_recording_date(value):
     """
     if not value:
         return
-        
+
     # Cannot be in the future
     if value > timezone.now():
         raise ValidationError("Recording date cannot be in the future.")
@@ -560,13 +437,13 @@ def validate_attachment_file(value):
     Comprehensive file validation for attachments - FIX 3.1
     """
     # Get file size limits from settings
-    limits = getattr(settings, 'FILE_UPLOAD_LIMITS', {})
-    MAX_ATTACHMENT_SIZE = limits.get('ATTACHMENT_MAX_SIZE', 100 * 1024 * 1024)
-    MAX_IMAGE_SIZE = limits.get('IMAGE_MAX_SIZE', 10 * 1024 * 1024)
-    MAX_VIDEO_SIZE = limits.get('VIDEO_MAX_SIZE', 2 * 1024 * 1024 * 1024)
+    limits = getattr(settings, "FILE_UPLOAD_LIMITS", {})
+    MAX_ATTACHMENT_SIZE = limits.get("ATTACHMENT_MAX_SIZE", 100 * 1024 * 1024)
+    MAX_IMAGE_SIZE = limits.get("IMAGE_MAX_SIZE", 10 * 1024 * 1024)
+    MAX_VIDEO_SIZE = limits.get("VIDEO_MAX_SIZE", 2 * 1024 * 1024 * 1024)
 
     # Get allowed extensions from settings
-    allowed_extensions_dict = getattr(settings, 'ALLOWED_FILE_EXTENSIONS', {})
+    allowed_extensions_dict = getattr(settings, "ALLOWED_FILE_EXTENSIONS", {})
 
     # Check file extension
     ext = os.path.splitext(value.name)[1].lower()
@@ -579,9 +456,23 @@ def validate_attachment_file(value):
     # Fallback defaults if settings not configured
     if not all_allowed_extensions:
         all_allowed_extensions = [
-            ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp",
-            ".pdf", ".mp4", ".mov", ".avi", ".mkv", ".webm",
-            ".doc", ".docx", ".txt", ".rtf", ".odt"
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".gif",
+            ".bmp",
+            ".webp",
+            ".pdf",
+            ".mp4",
+            ".mov",
+            ".avi",
+            ".mkv",
+            ".webm",
+            ".doc",
+            ".docx",
+            ".txt",
+            ".rtf",
+            ".odt",
         ]
 
     if ext not in all_allowed_extensions:
@@ -610,4 +501,6 @@ def validate_attachment_file(value):
             "application/x-dosexec",
         ]
         if mime_type in dangerous_types:
-            raise ValidationError("Executable files are not allowed for security reasons.")
+            raise ValidationError(
+                "Executable files are not allowed for security reasons."
+            )

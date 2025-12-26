@@ -244,7 +244,7 @@ class PatientForm(UniqueFieldValidationMixin, forms.ModelForm):
                 attrs={
                     "class": "form-control",
                     "placeholder": "In grams (g), Ex : 2500",
-                    "min": "300",
+                    "min": "200",
                     "max": "8000",
                     "required": True,
                 }
@@ -462,8 +462,8 @@ class PatientForm(UniqueFieldValidationMixin, forms.ModelForm):
         """Validate birth weight"""
         birth_weight = self.cleaned_data.get("birth_weight")
         if birth_weight is not None:
-            if birth_weight < 300 or birth_weight > 8000:
-                raise ValidationError(_("Birth weight must be between 300g and 8000g."))
+            if birth_weight < 200 or birth_weight > 8000:
+                raise ValidationError(_("Birth weight must be between 200g and 8000g."))
 
         return birth_weight
 
