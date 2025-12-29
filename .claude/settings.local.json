@@ -52,7 +52,12 @@
       "Bash(git commit:*)",
       "Bash(Get-ChildItem -Path \"D:\\\\Projects\\\\Current Projects\\\\NDAS - Project\\\\NDAS\" -Recurse -Filter \"*.md\" -ErrorAction SilentlyContinue)",
       "Bash(Select-Object -ExpandProperty FullName)",
-      "Bash(pip show:*)"
+      "Bash(pip show:*)",
+      "Bash(tree:*)",
+      "Bash(for file in architecture.md technology-stack.md api-contracts.md data-models.md source-tree-analysis.md)",
+      "Bash(do if [ -f \"$file\" ])",
+      "Bash(then echo \"✓ $file exists\")",
+      "Bash(else echo \"✗ $file MISSING\")"
     ],
     "deny": [],
     "ask": []
