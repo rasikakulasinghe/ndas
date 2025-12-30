@@ -1481,9 +1481,9 @@ class Attachment(TimeStampedModel, UserTrackingMixin):
         help_text=_("Descriptive title for the attachment (max 200 characters)"),
         validators=[
             RegexValidator(
-                regex=r"^[a-zA-Z0-9\s\-_\.(),]+$",
+                regex=r"^[a-zA-Z0-9\s\-_\.(),!?]+$",
                 message=_(
-                    "Title can only contain letters, numbers, spaces, hyphens, underscores, dots, commas, and parentheses."
+                    "Title can only contain letters, numbers, spaces, and basic punctuation (-, _, ., comma, parentheses, !, ?)."
                 ),
             )
         ],
@@ -1601,6 +1601,66 @@ class Attachment(TimeStampedModel, UserTrackingMixin):
         )
         return f"{self.title} | {attachment_type_display} | {patient_name}"
 
+    @property
+    def file_exists(self):
+        """Check if the physical file exists on disk"""
+        if not self.attachment:
+            return False
+        try:
+            return self.attachment.storage.exists(self.attachment.name)
+        except (FileNotFoundError, OSError, Exception):
+            return False
+
+    @property
+    def safe_url(self):
+        """
+        Safely get file URL, returning None if file doesn't exist.
+        Works in both local (file might not exist) and production environments.
+        """
+        if not self.file_exists:
+            return None
+        try:
+            return self.attachment.url
+        except (ValueError, FileNotFoundError, OSError, Exception):
+            return None
+
+    @property
+    def is_safe_to_view(self):
+        """
+        Determine if attachment is safe to view.
+        Checks both scan status and file existence.
+        """
+        # File must exist to be viewed
+        if not self.file_exists:
+            return False
+
+        # Check scan results
+        if self.scan_result == "infected":
+            return False
+
+        # Allow viewing if clean or pending (with warning)
+        return True
+
+    @property
+    def file_size_display(self):
+        """Human-readable file size"""
+        if not self.file_size:
+            if self.file_exists:
+                try:
+                    self.file_size = self.attachment.size
+                    self.save(update_fields=['file_size'])
+                except (FileNotFoundError, OSError):
+                    return "Unknown"
+            else:
+                return "File not available"
+
+        size = self.file_size
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if size < 1024.0:
+                return f"{size:.1f} {unit}"
+            size /= 1024.0
+        return f"{size:.1f} TB"
+
     def clean(self):
         """Model-wide validation"""
         super().clean()
@@ -1701,7 +1761,19 @@ class Attachment(TimeStampedModel, UserTrackingMixin):
         elif self.attachment_type == "video":
             max_size = FILE_SIZE_LIMITS["MAX_VIDEO_SIZE"]
 
-        if self.attachment.size > max_size:
+        # Only validate if file exists and is accessible
+        # Skip validation for existing attachments where file may not be present locally
+        try:
+            file_size = self.attachment.size
+        except (FileNotFoundError, OSError):
+            # File doesn't exist (e.g., database from production, file not on local machine)
+            # Skip validation for existing records
+            if self.pk is not None:
+                return
+            # For new uploads, re-raise the error
+            raise
+
+        if file_size > max_size:
             max_size_mb = max_size / (1024 * 1024)
             attachment_type_display = dict(ATTACHMENT_TYPE_CHOICES).get(
                 self.attachment_type, self.attachment_type

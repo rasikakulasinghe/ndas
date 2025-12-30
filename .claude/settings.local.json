@@ -57,7 +57,9 @@
       "Bash(for file in architecture.md technology-stack.md api-contracts.md data-models.md source-tree-analysis.md)",
       "Bash(do if [ -f \"$file\" ])",
       "Bash(then echo \"✓ $file exists\")",
-      "Bash(else echo \"✗ $file MISSING\")"
+      "Bash(else echo \"✗ $file MISSING\")",
+      "Skill(bmad:bmm:workflows:create-prd)",
+      "Bash(if exist test_attachment_validators.py del test_attachment_validators.py)"
     ],
     "deny": [],
     "ask": []

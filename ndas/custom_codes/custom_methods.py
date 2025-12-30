@@ -238,10 +238,13 @@ def get_attachment_path_file_name(instance, filename):
 
     # Build filename components (all safe at this point)
     attachment_type = getAttachmentType(filename)
-    timestamp = getCurrentDateTime()
+    timestamp = getCurrentDateTime().strftime('%Y%m%d_%H%M%S')
+
+    # Handle added_by which may be None during initial save (before middleware runs)
+    user_identifier = str(instance.added_by.id) if instance.added_by else 'system'
 
     # Combine into final filename
-    filename_parts = [safe_title, attachment_type, str(instance.added_by), timestamp]
+    filename_parts = [safe_title, attachment_type, user_identifier, timestamp]
     base_name = '_'.join(filename_parts)
 
     # Final sanitization of complete filename (defensive)

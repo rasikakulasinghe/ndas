@@ -695,6 +695,13 @@ class BookmarkForm(forms.ModelForm):
 
 
 class AttachmentkForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        """Make attachment field optional when editing existing records"""
+        super().__init__(*args, **kwargs)
+        # When editing (instance exists), make file upload optional
+        if self.instance and self.instance.pk:
+            self.fields['attachment'].required = False
+
     class Meta:
         model = Attachment
         fields = ["title", "attachment", "description"]
@@ -737,14 +744,17 @@ class AttachmentkForm(forms.ModelForm):
         return description
 
     def clean_attachment(self):
-        """Sanitize uploaded filename"""
+        """Sanitize uploaded filename and preserve existing file during edits"""
         attachment = self.cleaned_data.get("attachment")
         # Only sanitize if a new file is being uploaded
-        # When editing without uploading a new file, this will skip sanitization
+        # When editing without uploading a new file, this will return the existing file reference
         if attachment and hasattr(attachment, 'read'):
             # Sanitize the filename to prevent directory traversal and other attacks
             if hasattr(attachment, 'name'):
                 attachment.name = sanitize_filename(attachment.name)
+        elif not attachment and self.instance and self.instance.pk:
+            # Preserve existing file when editing and no new file is provided
+            return self.instance.attachment
         return attachment
 
 

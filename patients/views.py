@@ -2074,7 +2074,7 @@ def attachment_add(request, pid):
                 description=description,
                 original_filename=attachment.name,
                 file_size=attachment.size,
-                # User tracking handled by middleware
+                added_by=request.user,  # Set the user who uploaded the file
             )
 
             temp_file.save()
@@ -2136,35 +2136,62 @@ def attachment_edit(request, pk):
         bm_form_data = AttachmentkForm(request.POST, request.FILES, instance=sa)
 
         if bm_form_data.is_valid():
-            attachment = bm_form_data.cleaned_data["attachment"]
-            if validateAttachmentSize(attachment):
-                if validateAttachmentType(attachment):
-                    bm_form_data.save()
+            # Check if a new file was uploaded
+            new_file_uploaded = 'attachment' in request.FILES
 
-                    sa.attachment_type = getAttachmentType(attachment)
+            if new_file_uploaded:
+                attachment = bm_form_data.cleaned_data["attachment"]
+                if validateAttachmentSize(attachment):
+                    if validateAttachmentType(attachment):
+                        # Store old file path for cleanup
+                        old_file = sa.attachment if sa.attachment else None
 
-                    sa.save(update_fields=["attachment_type"])
-                    sa.save()
+                        updated_attachment = bm_form_data.save(commit=False)
+                        updated_attachment.last_edit_by = request.user
+                        updated_attachment.attachment_type = getAttachmentType(attachment)
+                        updated_attachment.save()
 
-                    messages.success(
-                        request, "Attachment details are updated succesfully..."
-                    )
-                    return redirect("attachment-view", pk=sa.id)
+                        # Delete old file if it exists and is different from new file
+                        if old_file and old_file.name != updated_attachment.attachment.name:
+                            try:
+                                if old_file.storage.exists(old_file.name):
+                                    old_file.delete(save=False)
+                            except (FileNotFoundError, OSError, Exception):
+                                # Old file doesn't exist or can't be deleted - not critical
+                                pass
+
+                        messages.success(
+                            request, "Attachment file and details updated successfully."
+                        )
+                        return redirect("attachment-view", pk=sa.id)
+                    else:
+                        messages.warning(
+                            request,
+                            "You cant upload files other dan videos(mp4, mov), image(jpg, jpeg), PDF...",
+                        )
+                        return render(
+                            request,
+                            "attachment/edit.html",
+                            {"form": a_form, "attachment": sa},
+                        )
                 else:
-                    messages.warning(
-                        request,
-                        "You cant upload files other dan videos(mp4, mov), image(jpg, jpeg), PDF...",
-                    )
+                    messages.warning(request, "You cant upload file size >100mb...")
                     return render(
-                        request,
-                        "attachment/edit.html",
-                        {"form": a_form, "attachment": sa},
+                        request, "attachment/edit.html", {"form": a_form, "attachment": sa}
                     )
             else:
-                messages.warning(request, "You cant upload file size >100mb...")
-                return render(
-                    request, "attachment/edit.html", {"form": a_form, "attachment": sa}
+                # No new file uploaded, just update other fields
+                # CRITICAL: Use update_fields to prevent FileField from being re-processed
+                # This ensures the physical file path remains intact in both dev and production
+                updated_attachment = bm_form_data.save(commit=False)
+                updated_attachment.last_edit_by = request.user
+                # Only update the fields that actually changed (exclude 'attachment' FileField)
+                updated_attachment.save(update_fields=['title', 'description', 'last_edit_by', 'updated_at'])
+
+                messages.success(
+                    request, "Attachment details updated successfully."
                 )
+                return redirect("attachment-view", pk=sa.id)
         else:
             messages.error(request, bm_form_data.errors)
             return render(

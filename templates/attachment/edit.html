@@ -123,7 +123,7 @@
                 {% if attachment.attachment %}
                 <div class="form-group">
                   <label>Current File</label>
-                  <div class="card card-light">
+                  <div class="card {% if attachment.file_exists %}card-light{% else %}card-warning{% endif %}">
                     <div class="card-body p-3">
                       <div class="d-flex align-items-center">
                         {% if attachment.attachment_type == 'image' %}
@@ -138,6 +138,9 @@
                         <div>
                           <strong>{{ attachment.original_filename|default:"Unnamed file" }}</strong><br>
                           <small class="text-muted">{{ attachment.file_size_display }} | Uploaded {{ attachment.created_at|date:"M d, Y" }}</small>
+                          {% if not attachment.file_exists %}
+                            <br><small class="text-danger"><i class="fas fa-exclamation-circle"></i> File not found on this server - please upload a new file</small>
+                          {% endif %}
                         </div>
                       </div>
                     </div>
@@ -177,32 +180,6 @@
                     </div>
                   {% endif %}
                 </div>
-
-                <!-- Access Control (if user has permission) -->
-                {% if user.is_staff or user == attachment.added_by %}
-                <div class="row">
-                  <div class="col-md-6">
-                    <div class="form-group">
-                      <label>Access Level</label>
-                      <select class="form-control" name="access_level">
-                        {% for value, label in attachment.ACCESS_LEVEL_CHOICES %}
-                          <option value="{{ value }}" {% if attachment.access_level == value %}selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                      </select>
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="form-group">
-                      <div class="form-check mt-4">
-                        <input class="form-check-input" type="checkbox" name="is_sensitive" id="is_sensitive" {% if attachment.is_sensitive %}checked{% endif %}>
-                        <label class="form-check-label" for="is_sensitive">
-                          Contains sensitive content
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {% endif %}
               </div>
               
               <div class="card-footer">{% delete_modal_id 'Attachment' attachment.id as modal_id %}

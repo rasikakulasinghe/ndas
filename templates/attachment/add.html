@@ -111,7 +111,7 @@
               <h3 class="card-title"><i class="fas fa-upload"></i> Upload Attachment</h3>
             </div>
             
-            <form id="file-upload-form" enctype="multipart/form-data" onsubmit="onFormSubmit(event)">
+            <form id="file-upload-form" enctype="multipart/form-data">
               {% csrf_token %}
               <div class="card-body">
                 <!-- File Type Information -->
@@ -223,6 +223,11 @@
   }
 
   $(document).ready(function() {
+    // Attach form submit handler (CSP-compliant - no inline handlers)
+    $('#file-upload-form').on('submit', function(event) {
+      onFormSubmit(event);
+    });
+
     // File input change handler - update label and validate
     $('#id_attachment').on('change', function() {
       // Update custom file input label
@@ -246,8 +251,20 @@
       const remaining = 1000 - $(this).val().length;
       $(this).next('.form-text').text(`${remaining} characters remaining`);
     });
+
+    // Back button handler (CSP-compliant)
+    $('[data-action="back"]').on('click', function() {
+      window.history.back();
+    });
+
+    // Add another button handler (CSP-compliant)
+    $('[data-action="reload"]').on('click', function() {
+      window.location.reload();
+    });
   });
-});
+
+  console.log('[Attachment Add Form] Initialization complete');
+}
 
 function validateFile(file) {
   const fileInput = document.getElementById('id_attachment');
@@ -424,26 +441,20 @@ function onFormSubmit(event) {
           if (response.success) {
             // Success
             progressDiv.style.display = 'none';
-            showMessage('success', 'File uploaded successfully! You can now view, edit, or upload another attachment.');
+            showMessage('success', 'File uploaded successfully! Redirecting to attachment details...');
 
-            // Show success action buttons
-            btn_add.style.display = 'none';
-            successActions.style.display = 'block';
-
-            // Setup button click handlers
-            const viewUrl = `/attachment/view/${response.f_id}`;
-            const editUrl = `/attachment/edit/${response.f_id}`;
-
-            btn_view.onclick = function() {
-              window.location.href = viewUrl;
-            };
-
-            btn_edit.onclick = function() {
-              window.location.href = editUrl;
-            };
+            // Disable the upload button
+            btn_add.disabled = true;
+            btn_add.innerHTML = '<i class="fas fa-check"></i> Upload Complete';
 
             // FIX 2.4: Memory cleanup after successful upload
             cleanupUploadResources();
+
+            // Redirect to attachment view page after a short delay
+            const viewUrl = `/attachment/view/${response.f_id}`;
+            setTimeout(function() {
+              window.location.href = viewUrl;
+            }, 1500); // 1.5 second delay to show success message
 
           } else {
             // Server-side validation error
@@ -527,9 +538,6 @@ function cleanupUploadResources() {
     console.warn('Error during upload cleanup:', e);
   }
 }
-
-    console.log('[Attachment Add Form] Initialization complete');
-  }
 })();
 </script>
 {% endblock extra_js %}

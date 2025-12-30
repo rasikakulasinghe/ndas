@@ -327,21 +327,56 @@ def Name_mother_validation(request, value):
 
 
 def validateAttachmentSize(var_uploaded_file):
-    file_size_mb = math.ceil(
-        var_uploaded_file.size / (1024 * 1024)
-    )  # round up to the nearest whole number
-    if file_size_mb > 100:
-        return False
-    else:
-        return True
+    """
+    Validate attachment file size based on file type.
+    Uses settings-based limits: Images (10MB), Videos (2GB), Documents (100MB)
+    """
+    from django.conf import settings
+
+    extension = os.path.splitext(var_uploaded_file.name)[1].lower()
+    file_size = var_uploaded_file.size
+
+    # Get limits from settings
+    limits = getattr(settings, "FILE_UPLOAD_LIMITS", {})
+    allowed_extensions = getattr(settings, "ALLOWED_FILE_EXTENSIONS", {})
+
+    # Determine file type and get appropriate limit
+    max_size = limits.get("ATTACHMENT_MAX_SIZE", 100 * 1024 * 1024)  # Default 100MB
+
+    if extension in allowed_extensions.get("IMAGE", []):
+        max_size = limits.get("IMAGE_MAX_SIZE", 10 * 1024 * 1024)
+    elif extension in allowed_extensions.get("VIDEO", []):
+        max_size = limits.get("VIDEO_MAX_SIZE", 2 * 1024 * 1024 * 1024)
+    elif extension in allowed_extensions.get("PDF", []) or extension in allowed_extensions.get("DOCUMENT", []):
+        max_size = limits.get("DOCUMENT_MAX_SIZE", 100 * 1024 * 1024)
+
+    return file_size <= max_size
 
 
 def validateAttachmentType(var_uploaded_file):
+    """
+    Validate attachment file type.
+    Uses settings-based allowed extensions for all attachment types.
+    """
+    from django.conf import settings
+
     extension = os.path.splitext(var_uploaded_file.name)[1].lower()
-    if extension in [".jpg", ".jpeg", ".mp4", ".mov", ".pdf"]:
-        return True
-    else:
-        return False
+
+    # Get allowed extensions from settings
+    allowed_extensions_dict = getattr(settings, "ALLOWED_FILE_EXTENSIONS", {})
+
+    # Collect all allowed extensions
+    all_allowed = []
+    for ext_list in allowed_extensions_dict.values():
+        all_allowed.extend(ext_list)
+
+    # Fallback to basic extensions if settings not configured
+    if not all_allowed:
+        all_allowed = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp',
+                      '.mp4', '.mov', '.avi', '.mkv', '.webm',
+                      '.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt']
+
+    return extension in all_allowed
 
 
 # New Django Model Validators for NDAS System
@@ -435,7 +470,19 @@ def validate_pog_days(value):
 def validate_attachment_file(value):
     """
     Comprehensive file validation for attachments - FIX 3.1
+
+    Validates newly uploaded files. Skips validation for existing files (FieldFile)
+    to avoid FileNotFoundError when files are stored on different servers.
     """
+    from django.db.models.fields.files import FieldFile
+    from django.core.files.uploadedfile import UploadedFile
+
+    # Skip validation for existing files (not being changed)
+    # Only validate new uploads (InMemoryUploadedFile, TemporaryUploadedFile)
+    if isinstance(value, FieldFile) and not isinstance(value.file, UploadedFile):
+        # This is an existing file that's not being replaced, skip validation
+        return
+
     # Get file size limits from settings
     limits = getattr(settings, "FILE_UPLOAD_LIMITS", {})
     MAX_ATTACHMENT_SIZE = limits.get("ATTACHMENT_MAX_SIZE", 100 * 1024 * 1024)
