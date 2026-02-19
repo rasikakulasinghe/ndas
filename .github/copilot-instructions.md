@@ -1,105 +1,58 @@
-# NDAS - GitHub Copilot Instructions
+<!-- BMAD:START -->
+# BMAD Method — Project Instructions
 
-IDE-specific guidance for GitHub Copilot. For full project documentation, see `CLAUDE.md`.
+## Project Configuration
 
-**Last Updated:** 2025-12-25
+- **Project**: NDAS
+- **User**: Rasika
+- **Communication Language**: English
+- **Document Output Language**: English
+- **User Skill Level**: intermediate
+- **Output Folder**: {project-root}/_bmad-output
+- **Planning Artifacts**: {project-root}/_bmad-output/planning-artifacts
+- **Implementation Artifacts**: {project-root}/_bmad-output/implementation-artifacts
+- **Project Knowledge**: {project-root}/docs
 
-## Project Context
+## BMAD Runtime Structure
 
-**NDAS** - Django 4.2.16 medical system | AdminLTE 3.2 | Bootstrap 4.6
+- **Agent definitions**: `_bmad/bmm/agents/` (BMM module) and `_bmad/core/agents/` (core)
+- **Workflow definitions**: `_bmad/bmm/workflows/` (organized by phase)
+- **Core tasks**: `_bmad/core/tasks/` (help, editorial review, indexing, sharding, adversarial review)
+- **Core workflows**: `_bmad/core/workflows/` (brainstorming, party-mode, advanced-elicitation)
+- **Workflow engine**: `_bmad/core/tasks/workflow.xml` (executes YAML-based workflows)
+- **Module configuration**: `_bmad/bmm/config.yaml`
+- **Core configuration**: `_bmad/core/config.yaml`
+- **Agent manifest**: `_bmad/_config/agent-manifest.csv`
+- **Workflow manifest**: `_bmad/_config/workflow-manifest.csv`
+- **Help manifest**: `_bmad/_config/bmad-help.csv`
+- **Agent memory**: `_bmad/_memory/`
 
-**Apps:** `patients/` (root), `users/`, `video/`, `reports/`, `problemlist/`
+## Key Conventions
 
-## Code Generation Rules
+- Always load `_bmad/bmm/config.yaml` before any agent activation or workflow execution
+- Store all config fields as session variables: `{user_name}`, `{communication_language}`, `{output_folder}`, `{planning_artifacts}`, `{implementation_artifacts}`, `{project_knowledge}`
+- MD-based workflows execute directly — load and follow the `.md` file
+- YAML-based workflows require the workflow engine — load `workflow.xml` first, then pass the `.yaml` config
+- Follow step-based workflow execution: load steps JIT, never multiple at once
+- Save outputs after EACH step when using the workflow engine
+- The `{project-root}` variable resolves to the workspace root at runtime
 
-### Models - Always Include
+## Available Agents
 
-```python
-from ndas.custom_codes.Custom_abstract_class import TimeStampedModel, UserTrackingMixin
+| Agent | Persona | Title | Capabilities |
+|---|---|---|---|
+| bmad-master | BMad Master | BMad Master Executor, Knowledge Custodian, and Workflow Orchestrator | runtime resource management, workflow orchestration, task execution, knowledge custodian |
+| analyst | Mary | Business Analyst | market research, competitive analysis, requirements elicitation, domain expertise |
+| architect | Winston | Architect | distributed systems, cloud infrastructure, API design, scalable patterns |
+| dev | Amelia | Developer Agent | story execution, test-driven development, code implementation |
+| pm | John | Product Manager | PRD creation, requirements discovery, stakeholder alignment, user interviews |
+| qa | Quinn | QA Engineer | test automation, API testing, E2E testing, coverage analysis |
+| quick-flow-solo-dev | Barry | Quick Flow Solo Dev | rapid spec creation, lean implementation, minimum ceremony |
+| sm | Bob | Scrum Master | sprint planning, story preparation, agile ceremonies, backlog management |
+| tech-writer | Paige | Technical Writer | documentation, Mermaid diagrams, standards compliance, concept explanation |
+| ux-designer | Sally | UX Designer | user research, interaction design, UI patterns, experience strategy |
 
-class MyModel(TimeStampedModel, UserTrackingMixin):
-    # Provides: created_at, updated_at, added_by, last_edit_by
-    field = models.CharField(max_length=100, db_index=True)  # Index searchable fields
-```
+## Slash Commands
 
-- Choices go in `ndas/custom_codes/choice.py`
-- Validators go in `ndas/custom_codes/validators.py`
-
-### Views - Standard Pattern
-
-```python
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_http_methods
-from django_ratelimit.decorators import ratelimit
-
-@login_required(login_url="user-login")
-@require_http_methods(["GET", "POST"])
-@ratelimit(key='user_or_ip', rate='10/m')
-def my_view(request, pk):
-    obj = get_object_or_404(MyModel, id=pk)
-    related = Related.objects.filter(parent=obj).select_related('added_by')
-    return render(request, "app/template.html", {"obj": obj})
-```
-
-### Forms - Bootstrap Styling
-
-```python
-class MyForm(forms.ModelForm):
-    class Meta:
-        model = MyModel
-        fields = ["field1", "field2"]
-        widgets = {
-            "text": forms.TextInput(attrs={"class": "form-control"}),
-            "date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
-            "select": forms.Select(attrs={"class": "form-control"}),
-        }
-```
-
-### Templates - Base Structure
-
-```django
-{% extends 'src/base.html' %}
-{% load static %}
-{% block title %}Section - Action{% endblock %}
-{% block main_content %}
-<div class="container-fluid">{% csrf_token %}<!-- Content --></div>
-{% endblock %}
-```
-
-Naming: `manager.html` (list), `add.html` (create), `edit.html` (update), `view.html` (detail)
-
-## Patient Model Fields
-
-```python
-# Correct field names (common mistakes to avoid)
-patient.bht              # NOT bht_number
-patient.nnc_no           # NOT nnc_number
-patient.baby_name        # NOT patient_name
-patient.dob_tob          # NOT date_of_birth
-patient.pog_wks          # NOT gestational_age_weeks
-patient.birth_weight     # NOT birth_weight_g
-patient.hc               # NOT head_circumference
-patient.apgar_1          # NOT apgar_1_min
-```
-
-## Custom Utilities
-
-```python
-# Import patterns
-from ndas.custom_codes.custom_methods import getCountZeroIfNone, calculate_age_string
-from ndas.custom_codes.validators import sanitize_text_input, sanitize_filename
-from ndas.custom_codes.sanitization import sanitize_html, sanitize_plain_text
-from ndas.custom_codes.ndas_enums import PtStatus
-from ndas.custom_codes.delete_helpers import has_delete_permission, validate_can_delete
-from ndas.custom_codes.error_handlers import handle_view_errors
-```
-
-## Do Not
-
-- Add choices inline in models (use `choice.py`)
-- Use `.objects.get()` without try/except (use `get_object_or_404()`)
-- Change CSS framework (AdminLTE 3.2 + Bootstrap 4.6)
-- Skip `select_related()`/`prefetch_related()` for related objects
-- Forget CSRF tokens in forms
-- Skip file upload validation
+Type `/bmad-` in Copilot Chat to see all available BMAD workflows and agent activators. Agents are also available in the agents dropdown.
+<!-- BMAD:END -->
