@@ -1,10 +1,10 @@
 ---
 project_name: 'NDAS'
 user_name: 'Rasika'
-date: '2026-02-19'
+date: '2026-02-21'
 sections_completed: ['technology_stack', 'language_rules', 'framework_rules', 'testing_rules', 'quality_rules', 'workflow_rules', 'anti_patterns']
 status: 'complete'
-rule_count: 65
+rule_count: 67
 optimized_for_llm: true
 ---
 
@@ -45,6 +45,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - **User tracking** (`added_by`, `last_edit_by`) is auto-populated by `UserActivityMiddleware` — never set manually in views
 - **Age calculation:** use `calculate_age_string()` from `custom_methods.py`, not custom datetime logic
 - **Safe counts:** use `getCountZeroIfNone()` from `custom_methods.py` instead of `.count()` where None is possible
+- **Logger placement:** Always define `logger = logging.getLogger(__name__)` at module level — never inside a function or method. In-function logger assignments shadow the module logger and break log hierarchy.
 - **Patient field names are critical** — use exact names only:
   - `patient.bht` (not `bht_number`), `patient.nnc_no` (not `nnc_number`)
   - `patient.baby_name` (not `patient_name` or `name`), `patient.dob_tob` (not `dob` or `date_of_birth`)
@@ -83,7 +84,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 
 **URLs:**
 - URL names follow kebab-case: `patient-manager`, `assessment-add`, `video-delete`
-- Delete views accept only POST (`@require_http_methods(["POST"])`)
+- Delete views accept only POST — use `@require_POST` (shorthand). Use `@require_GET` for read-only views, `@require_http_methods(["GET", "POST"])` for standard form views.
 
 **Delete System:**
 - Always call `has_delete_permission(request.user, entity)` before deleting
@@ -138,6 +139,9 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Videos → `get_video_path_file_name()`, compressed → `get_compressed_video_path()`, thumbnails → `get_video_thumbnail_path()`
 - Attachments → `get_attachment_path_file_name()`
 - All paths follow `YYYY/MM/patient_name/filename_timestamp.ext` pattern
+
+**Caching:**
+- **Atomic cache check-and-set:** Use `cache.add(key, value, timeout)` for atomic "set if not exists" (e.g. throttling in middleware). Never use `cache.get()` + `cache.set()` together — it creates a race condition under concurrent requests.
 
 **Secrets & Configuration:**
 - All secrets in `.env` — never hardcoded; access via `django.conf.settings`, not `os.environ` in views
@@ -219,4 +223,4 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Update when technology stack or patterns change
 - Review quarterly for outdated rules
 
-_Last Updated: 2026-02-19_
+_Last Updated: 2026-02-21_
