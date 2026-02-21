@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 from django.db.models.functions import TruncMonth
 from django.db.models import Count, Q, Exists, OuterRef
 import os, math
@@ -7,6 +7,9 @@ from django.utils import timezone
 from django.utils.text import slugify
 from .ndas_enums import PtStatus
 from .validators import sanitize_filename
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def get_gma_diagnosis_data():
@@ -43,39 +46,37 @@ def get_userStats():
     from video.models import Video
     from users.models import CustomUser
 
-    user_list = CustomUser.objects.all()
-    pt_list = Patient.objects.all()
-    video_list = Video.objects.all()
-    gma_list = GMAssessment.objects.all()
-    hine_list = HINEAssessment.objects.all()
-    da_list = DevelopmentalAssessment.objects.all()
-    cdic_list = CDICRecord.objects.all()
-    attachments_list = Attachment.objects.all()
-    bookmark_list = Bookmark.objects.all()
-    
-    user_stats_val = {}
+    def _counts(qs, field='added_by_id'):
+        return {row[field]: row['count'] for row in qs.values(field).annotate(count=Count('id'))}
+
+    pt_counts         = _counts(Patient.objects.all())
+    video_counts      = _counts(Video.objects.all())
+    gma_counts        = _counts(GMAssessment.objects.all())
+    hine_counts       = _counts(HINEAssessment.objects.all())
+    da_counts         = _counts(DevelopmentalAssessment.objects.all())
+    cdic_counts       = _counts(CDICRecord.objects.all())
+    attachment_counts = _counts(Attachment.objects.all())
+    bookmark_counts   = _counts(Bookmark.objects.all(), field='owner_id')
+
     user_stats = {}
-    
-    for u_o in user_list:
-        user_stats_val = {'Patient': getCountZeroIfNone(pt_list.filter(added_by=u_o)),
-        'Video': getCountZeroIfNone(video_list.filter(added_by=u_o)),
-        'GMA': getCountZeroIfNone(gma_list.filter(added_by=u_o)),
-        'HINE': getCountZeroIfNone(hine_list.filter(added_by=u_o)),
-        'DA': getCountZeroIfNone(da_list.filter(added_by=u_o)),
-        'CDIC': getCountZeroIfNone(cdic_list.filter(added_by=u_o)),
-        'Attachment': getCountZeroIfNone(attachments_list.filter(added_by=u_o)),
-        'Bookmark': getCountZeroIfNone(bookmark_list.filter(owner=u_o)),
+    for user in CustomUser.objects.only('id', 'username'):
+        uid = user.id
+        user_stats[user.username] = {
+            'Patient':    pt_counts.get(uid, 0),
+            'Video':      video_counts.get(uid, 0),
+            'GMA':        gma_counts.get(uid, 0),
+            'HINE':       hine_counts.get(uid, 0),
+            'DA':         da_counts.get(uid, 0),
+            'CDIC':       cdic_counts.get(uid, 0),
+            'Attachment': attachment_counts.get(uid, 0),
+            'Bookmark':   bookmark_counts.get(uid, 0),
         }
-        
-        # add each users data to final list
-        user_stats[u_o.username] = user_stats_val
-        
     return user_stats
 
 def get_admissions_data_barchart():
     from patients.models import Patient
 
-    today = datetime.now().date()
+    today = timezone.now().date()
     five_months_ago = today - timedelta(days=30*5)
 
     admissions = (
@@ -298,10 +299,6 @@ def extract_video_metadata(video_file_path):
         dict: Video metadata containing duration_seconds, resolution, etc.
         Returns None if extraction fails
     """
-    import logging
-    import os
-    logger = logging.getLogger(__name__)
-
     if not os.path.exists(video_file_path):
         logger.error(f"Video file not found: {video_file_path}")
         return None
@@ -410,11 +407,6 @@ def simple_video_duration_estimate(video_file_path):
     Returns:
         dict: Basic metadata estimate or None
     """
-    import os
-    import logging
-
-    logger = logging.getLogger(__name__)
-
     try:
         if not os.path.exists(video_file_path):
             return None
@@ -553,7 +545,7 @@ def getPatientList(pts_type):
         >>> all_patients = getPatientList(PtStatus.ALL)
         >>> diagnosed = getPatientList(PtStatus.DIAGNOSED)
     """
-    from patients.models import Patient
+    from patients.models import Patient, CDICRecord, Bookmark, GMAssessment, HINEAssessment
 
     # Optimized queryset with select_related and prefetch_related to reduce N+1 queries
     var_ptl = Patient.objects.select_related(
@@ -563,26 +555,31 @@ def getPatientList(pts_type):
         'hine_assessments', 'developmental_assessments', 'cdic_records'
     )
 
-    # Exists subquery for video filtering (optimized to avoid LEFT JOIN)
     from video.models import Video
-    has_videos = Video.objects.filter(patient=OuterRef('pk'))
+
+    # Add N+1-eliminating annotations to base queryset — available on every returned Patient
+    var_ptl = var_ptl.annotate(
+        has_videos_ann=Exists(Video.objects.filter(patient=OuterRef('pk'))),
+        is_discharged_ann=Exists(CDICRecord.objects.filter(patient=OuterRef('pk'), is_discharged=True)),
+        is_bookmarked_ann=Exists(Bookmark.objects.filter(bookmark_type='Patient', object_id=OuterRef('pk'))),
+        is_gma_abnormal_ann=Exists(GMAssessment.objects.filter(patient=OuterRef('pk'), diagnosis_conclusion='ABNORMAL')),
+        is_hine_abnormal_ann=Exists(HINEAssessment.objects.filter(patient=OuterRef('pk'), score__lt=73)),
+    )
 
     if pts_type == PtStatus.ALL:
         return var_ptl
     elif pts_type == PtStatus.NEW:
-        # Optimized: Use Exists() subquery instead of videos__isnull=True (avoids LEFT JOIN)
-        return var_ptl.annotate(has_videos=Exists(has_videos)).filter(has_videos=False)
+        return var_ptl.filter(has_videos_ann=False)
     elif pts_type == PtStatus.DISCHARGED:
         return var_ptl.filter(cdic_records__is_discharged=True).distinct()
     elif pts_type == PtStatus.DIAGNOSED:
         return var_ptl.filter(Q(gmassessment__diagnosis_conclusion='ABNORMAL') | Q(hine_assessments__score__lt = 73) | Q(developmental_assessments__is_dx_normal=False)).distinct()
     elif pts_type == PtStatus.DX_NORMAL:
-        # Optimized: Use Exists() subquery instead of videos__isnull exclusion (avoids LEFT JOIN)
         return var_ptl.exclude(
             Q(gmassessment__diagnosis_conclusion='ABNORMAL') and
             Q(hine_assessments__score__lt = 73) and
             Q(developmental_assessments__is_dx_normal=False)
-        ).annotate(has_videos=Exists(has_videos)).filter(has_videos=True).distinct()
+        ).filter(has_videos_ann=True).distinct()
     elif pts_type == PtStatus.DX_GMA_ABNORMAL:
         return var_ptl.filter(gmassessment__diagnosis_conclusion='ABNORMAL').distinct()
     elif pts_type == PtStatus.DX_GMA_NORMAL:

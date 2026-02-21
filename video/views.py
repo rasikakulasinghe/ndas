@@ -10,7 +10,6 @@ from django.contrib import messages
 from django_ratelimit.decorators import ratelimit
 from django.http import JsonResponse, HttpResponseForbidden, Http404
 from django.core.paginator import Paginator
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 from django.db.models import Q
@@ -601,13 +600,5 @@ def video_delete(request, video_id):
         return JsonResponse({
             "success": False,
             "error": "Server error",
-            "message": f"An error occurred during deletion: {str(e)}"
+            "message": "An unexpected error occurred. Please try again."
         }, status=500)
-
-    except Video.DoesNotExist:
-        messages.error(request, "Video not found.")
-        return redirect("video:manager")
-    except Exception as e:
-        logger.error(f"Error in video_delete: {str(e)}")
-        messages.error(request, "An error occurred while deleting the video.")
-        return redirect("video:manager")

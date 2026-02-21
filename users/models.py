@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.conf import settings
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 import uuid
@@ -147,10 +148,12 @@ class CustomUser(AbstractUser, TimeStampedModel):
         return self.email_verification_token
 
     def is_email_verification_token_valid(self):
-        """Check if the email verification token is still valid (24 hours)."""
+        """Check if the email verification token is still valid."""
         if not self.email_verification_sent_at:
             return False
-        expiry_time = self.email_verification_sent_at + timedelta(hours=24)
+        expiry_time = self.email_verification_sent_at + timedelta(
+            hours=settings.EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS
+        )
         return timezone.now() < expiry_time
 
     def verify_email(self):

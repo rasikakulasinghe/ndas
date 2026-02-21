@@ -58,17 +58,13 @@ from ndas.custom_codes.custom_methods import (
 )
 from ndas.custom_codes.error_handlers import handle_view_errors
 from patients.timeline_utils import get_patient_timeline_events
-from datetime import datetime
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
-import pytz, os, logging, subprocess, tempfile
+import os, logging
 from django.http import JsonResponse
 from django.utils.timezone import localtime, now
 from django.utils import timezone
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db.models import Q, Count, Exists, OuterRef
-from django.core.files import File
-from django.core.files.storage import FileSystemStorage
 from ndas.custom_codes.ndas_enums import PtStatus
 
 # Configure logger for patient operations
@@ -125,7 +121,7 @@ def dashboard(request):
     ).count()
 
     # Efficient counting for misc items
-    bookmark = Bookmark.objects.all()
+    bookmark_count = Bookmark.objects.filter(owner=request.user).count()
     attachments_count = Attachment.objects.count()
     users_total_count = CustomUser.objects.count()
     videos_total_count = Video.objects.count()
@@ -182,12 +178,11 @@ def dashboard(request):
         "all_cdic_records_count": all_cdic_records_count,
         "new_videos": new_videos,
         "new_videos_count": new_videos_count,
-        "videos_total_count": videos_total_count,
         "patients_total_count": patients_total_count,
         "Patients_new_list_10": Patients_new_list_10,
         "patients_new_count": patients_new_count,
         "patients_discharged_count": patients_discharged_count,
-        "bookmark": bookmark,
+        "bookmark_count": bookmark_count,
         "bar_chart_monthly_admissions": bar_chart_monthly_admissions,
         "diagnosis_data_gma": diagnosis_data_gma,
         "diagnosis_data_all": diagnosis_data_all,
@@ -282,12 +277,6 @@ def patient_manager(request, filter_type='all'):
 @login_required(login_url="user-login")
 @require_http_methods(["GET", "POST"])
 def patient_add(request):
-    if not request.user.is_authenticated:
-        messages.error(
-            request, "You are not authorized to perform this action, please login"
-        )
-        return redirect("user-login")
-
     if request.method == "POST":
         data_form = PatientForm(request.POST)
 
@@ -317,9 +306,9 @@ def patient_add(request):
 
             # Validate birth weight
             birth_weight = cleaned_data.get("birth_weight")
-            if birth_weight and (birth_weight < 200 or birth_weight > 8000):
+            if birth_weight and (birth_weight < 300 or birth_weight > 8000):
                 data_form.add_error(
-                    "birth_weight", "Birth weight must be between 200g and 8000g"
+                    "birth_weight", "Birth weight must be between 300g and 8000g"
                 )
 
             # Validate measurements
@@ -383,39 +372,54 @@ def patient_view(request, pk):
     selected_patient = get_object_or_404(Patient, id=pk)
     indications = selected_patient.indecation_for_gma
 
-    var_file_video = Video.objects.select_related('added_by', 'last_edit_by').filter(patient=selected_patient).order_by("-id")
-    file_video_count = var_file_video.count()
+    var_file_video = list(
+        Video.objects.select_related('added_by', 'last_edit_by')
+        .filter(patient=selected_patient).order_by("-id")
+    )
+    file_video_count = len(var_file_video)
     file_videos = var_file_video[:5]
 
-    var_file_attachments = Attachment.objects.select_related('added_by', 'last_edit_by').filter(patient=selected_patient).order_by(
-        "-id"
+    var_file_attachments = list(
+        Attachment.objects.select_related('added_by', 'last_edit_by')
+        .filter(patient=selected_patient).order_by("-id")
     )
-    file_attachment_count = var_file_attachments.count()
+    file_attachment_count = len(var_file_attachments)
     file_attachment = var_file_attachments[:5]
 
-    var_gma = GMAssessment.objects.select_related('added_by', 'last_edit_by', 'video_file').filter(patient=selected_patient).order_by("-id")
-    gm_assessments_count = var_gma.count()
+    var_gma = list(
+        GMAssessment.objects.select_related('added_by', 'last_edit_by', 'video_file')
+        .filter(patient=selected_patient).order_by("-id")
+    )
+    gm_assessments_count = len(var_gma)
     gm_assessments = var_gma[:5]
-    gm_last_assessment = var_gma.last
+    gm_last_assessment = var_gma[0] if var_gma else None
 
-    var_hine = HINEAssessment.objects.select_related('added_by', 'last_edit_by').filter(patient=selected_patient).order_by("-id")
-    hine_assessments_count = var_hine.count()
+    var_hine = list(
+        HINEAssessment.objects.select_related('added_by', 'last_edit_by')
+        .filter(patient=selected_patient).order_by("-id")
+    )
+    hine_assessments_count = len(var_hine)
     hine_assessments = var_hine[:5]
 
-    var_da = DevelopmentalAssessment.objects.select_related('added_by', 'last_edit_by').filter(patient=selected_patient).order_by(
-        "-id"
+    var_da = list(
+        DevelopmentalAssessment.objects.select_related('added_by', 'last_edit_by')
+        .filter(patient=selected_patient).order_by("-id")
     )
-    da_assessments_count = var_da.count()
+    da_assessments_count = len(var_da)
     da_assessments = var_da[:5]
 
-    var_cdic = CDICRecord.objects.select_related('added_by', 'last_edit_by').filter(patient=selected_patient).order_by("-id")
-    cdic_record_count = var_cdic.count()
+    var_cdic = list(
+        CDICRecord.objects.select_related('added_by', 'last_edit_by')
+        .filter(patient=selected_patient).order_by("-id")
+    )
+    cdic_record_count = len(var_cdic)
     cdic_record = var_cdic[:5]
 
-    var_gpa = GeneralPaediatricAssessment.objects.filter(patient=selected_patient).select_related(
-        'discharged_authorized_by', 'added_by'
-    ).order_by("-assessment_date")
-    gpa_assessments_count = var_gpa.count()
+    var_gpa = list(
+        GeneralPaediatricAssessment.objects.select_related('discharged_authorized_by', 'added_by')
+        .filter(patient=selected_patient).order_by("-assessment_date")
+    )
+    gpa_assessments_count = len(var_gpa)
     gpa_assessments = var_gpa[:5]
 
     # Get timeline events
@@ -583,14 +587,14 @@ def patient_delete(request, pk):
         })
 
     except Exception as e:
-        logger.error(
+        logger.exception(
             f"Deletion error: user={request.user.username}, "
-            f"entity=Patient, id={pk}, error={str(e)}"
+            f"entity=Patient, id={pk}"
         )
         return JsonResponse({
             "success": False,
             "error": "Server error",
-            "message": f"An error occurred during deletion: {str(e)}"
+            "message": "An unexpected error occurred. Please try again."
         }, status=500)
 
 
@@ -607,7 +611,11 @@ def patient_delete_confirm(request, pk):
             "You dont have permission to delete this record. Please contact Administrator/ Developer",
         )
         return render(
-            request, "patients/delete-confirm.html", {"patient": patient, "hide": True}
+            request, "patients/delete-confirm.html", {
+                "patient_id": patient.id,
+                "patient_name": patient.baby_name,
+                "hide": True,
+            }
         )
 
 
@@ -666,16 +674,13 @@ def search_start(request):
 
 
 @login_required(login_url="user-login")
+@require_POST
+@ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True)
 def search_results(request):
     """
     Enhanced search results view with improved error handling and performance optimization.
     Supports patient and user searches with comprehensive validation.
     """
-    # Early validation for POST method
-    if request.method != "POST":
-        messages.warning(request, "Please use the search form to perform searches.")
-        return redirect("search-start")
-
     # Get search parameters
     combo_record_type = request.POST.get("combo_record_type", "").strip()
     combo_pt_param_type = request.POST.get("combo_pt_param_type", "").strip()
@@ -683,10 +688,12 @@ def search_results(request):
     search_text = request.POST.get("search_text", "").strip()
     pagn = ""
 
+    # Load user list once — reused across all validation error return paths
+    username_list = CustomUser.objects.all()
+
     # Validate required parameters
     if not combo_record_type:
         messages.error(request, "Please select a record type.")
-        username_list = CustomUser.objects.all()
         return render(request, "patients/search.html", {"username_list": username_list})
 
     # Search patients --------------------------------------------------------------
@@ -694,12 +701,10 @@ def search_results(request):
         # Validate patient search parameters
         if not combo_pt_param_type:
             messages.error(request, "Please select a patient search parameter.")
-            username_list = CustomUser.objects.all()
             return render(request, "patients/search.html", {"username_list": username_list})
 
         if not search_text:
             messages.error(request, "Please enter search text.")
-            username_list = CustomUser.objects.all()
             return render(request, "patients/search.html", {"username_list": username_list})
 
         # Search by BHT
@@ -833,7 +838,6 @@ def search_results(request):
         else:
             # Validation failed
             messages.error(request, "Invalid search parameters. Please check your input and try again.")
-            username_list = CustomUser.objects.all()
             return render(
                 request, "patients/search.html", {"username_list": username_list}
             )
@@ -842,7 +846,6 @@ def search_results(request):
     elif combo_record_type == "rtype_user":
         if not combo_user_username:
             messages.error(request, "Please select a user.")
-            username_list = CustomUser.objects.all()
             return render(request, "patients/search.html", {"username_list": username_list})
 
         pagn = f"Users > Username > {combo_user_username}"
@@ -852,20 +855,14 @@ def search_results(request):
     # Invalid record type
     else:
         messages.error(request, "Invalid record type selected. Please try again.")
-        username_list = CustomUser.objects.all()
         return render(request, "patients/search.html", {"username_list": username_list})
 
 
 # methods for assessment operations ------------------------------------------------------------------------------
 @login_required(login_url="user-login")
+@ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True)
 def assessment_add(request, ptid, fid):
     """Enhanced assessment creation with proper validation and error handling"""
-    from django.http import JsonResponse
-    from django.core.exceptions import ValidationError
-    import logging
-    
-    logger = logging.getLogger(__name__)
-    
     patient = get_object_or_404(Patient, pk=ptid)
     video_file = get_object_or_404(Video, pk=fid)
 
@@ -963,10 +960,6 @@ def assessment_add(request, ptid, fid):
 @login_required(login_url="user-login")
 def assessment_view(request, pk):
     """Enhanced assessment view with error handling and logging"""
-    import logging
-    
-    logger = logging.getLogger(__name__)
-    
     try:
         # Get assessment with related objects to reduce database queries
         assessment = GMAssessment.objects.select_related(
@@ -1003,10 +996,6 @@ def assessment_view(request, pk):
 @login_required(login_url="user-login")
 def assessment_view_by_fileid(request, file_id):
     """Enhanced assessment view by file ID with error handling"""
-    import logging
-    
-    logger = logging.getLogger(__name__)
-    
     try:
         # Get assessment by video file ID with related objects
         assessment = GMAssessment.objects.select_related(
@@ -1041,6 +1030,7 @@ def assessment_view_by_fileid(request, file_id):
 
 
 @login_required(login_url="user-login")
+@ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True)
 def assessment_edit(request, pk):
     try:
         assmnt = GMAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').get(id=pk)
@@ -1066,9 +1056,12 @@ def assessment_edit(request, pk):
     )
 
 
+@handle_view_errors(redirect_url='assessment-manager', error_message='Error editing assessment by file')
 @login_required(login_url="user-login")
+@require_http_methods(["GET", "POST"])
+@ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True)
 def assessment_edit_by_fileid(request, pk):
-    assmnt = GMAssessment.objects.get(video_file=pk)
+    assmnt = get_object_or_404(GMAssessment, video_file=pk)
     assessment_form = GMAssessmentForm(instance=assmnt)
     if request.method == "POST":
         assessment_form_data = GMAssessmentForm(request.POST, instance=assmnt)
@@ -1085,18 +1078,6 @@ def assessment_edit_by_fileid(request, pk):
             )
     return render(
         request, "assessment/edit.html", {"form": assessment_form, "assmnt": assmnt}
-    )
-
-
-@login_required(login_url="user-login")
-def assessment_delete_start(request, pk):
-    """DEPRECATED: Use unified delete modal instead"""
-    assemnt = get_object_or_404(GMAssessment, id=pk)
-    patient = get_object_or_404(Patient, id=assemnt.patient.id)
-    return render(
-        request,
-        "assessment/delete-confirm.html",
-        {"assemnt": assemnt, "patient": patient},
     )
 
 
@@ -1193,61 +1174,47 @@ def assessment_delete(request, pk):
         })
 
     except Exception as e:
-        logger.error(
+        logger.exception(
             f"Deletion error: user={request.user.username}, "
-            f"entity=GMAssessment, id={pk}, error={str(e)}"
+            f"entity=GMAssessment, id={pk}"
         )
         return JsonResponse({
             "success": False,
             "error": "Server error",
-            "message": f"An error occurred during deletion: {str(e)}"
+            "message": "An unexpected error occurred. Please try again."
         }, status=500)
 
 
 @login_required(login_url="user-login")
-def assessment_manager(request):
-    # Get search parameter
+@require_GET
+def assessment_manager(request, filter_type='all'):
     search_query = request.GET.get('search', '').strip()
 
-    # Filter assessments based on search query
-    if search_query:
-        assessment_list = GMAssessment.objects.select_related(
-            'patient', 'added_by', 'last_edit_by', 'video_file'
-        ).filter(
-            Q(patient__baby_name__icontains=search_query) |
-            Q(patient__mother_name__icontains=search_query) |
-            Q(patient__bht__icontains=search_query) |
-            Q(patient__nnc_no__icontains=search_query)
-        ).order_by("-id")
+    base_qs = GMAssessment.objects.select_related(
+        'patient', 'added_by', 'last_edit_by', 'video_file'
+    )
+
+    if filter_type == 'recent':
+        assessment_list = base_qs.filter(
+            created_at__gte=timezone.now() - timedelta(days=30)
+        )
+        view_type = 'RECENT'
+    elif filter_type == 'normal':
+        assessment_list = base_qs.filter(diagnosis_conclusion='NORMAL')
+        view_type = 'NORMAL'
+    elif filter_type == 'abnormal':
+        assessment_list = base_qs.filter(diagnosis_conclusion='ABNORMAL')
+        view_type = 'ABNORMAL'
+    elif filter_type == 'informed':
+        assessment_list = base_qs.filter(parent_informed=True)
+        view_type = 'INFORMED'
+    elif filter_type == 'not_informed':
+        assessment_list = base_qs.filter(parent_informed=False)
+        view_type = 'NOT_INFORMED'
     else:
-        assessment_list = GMAssessment.objects.select_related(
-            'patient', 'added_by', 'last_edit_by', 'video_file'
-        ).all().order_by("-id")
+        assessment_list = base_qs.all()
+        view_type = None
 
-    paginator = Paginator(assessment_list, 10)
-    page_number = request.GET.get("page")
-    paginated_assmnt_list = paginator.get_page(page_number)
-
-    context = {
-        "assessment_page_obj": paginated_assmnt_list,
-        "search_query": search_query,
-    }
-
-    return render(request, "assessment/manager.html", context)
-
-
-@login_required(login_url="user-login")
-def assessment_manager_recent(request):
-    # Get search parameter
-    search_query = request.GET.get('search', '').strip()
-
-    # Get assessments from last 30 days
-    thirty_days_ago = timezone.now() - timedelta(days=30)
-    assessment_list = GMAssessment.objects.select_related(
-        'patient', 'added_by', 'last_edit_by', 'video_file'
-    ).filter(created_at__gte=thirty_days_ago)
-
-    # Apply search filter if provided
     if search_query:
         assessment_list = assessment_list.filter(
             Q(patient__baby_name__icontains=search_query) |
@@ -1258,144 +1225,11 @@ def assessment_manager_recent(request):
 
     assessment_list = assessment_list.order_by("-id")
     paginator = Paginator(assessment_list, 10)
-    page_number = request.GET.get("page")
-    paginated_assmnt_list = paginator.get_page(page_number)
+    paginated_assmnt_list = paginator.get_page(request.GET.get("page"))
 
     context = {
         "assessment_page_obj": paginated_assmnt_list,
-        "type": "RECENT",
-        "search_query": search_query,
-    }
-
-    return render(request, "assessment/manager.html", context)
-
-
-@login_required(login_url="user-login")
-def assessment_manager_normal(request):
-    # Get search parameter
-    search_query = request.GET.get('search', '').strip()
-
-    # Get assessments with normal diagnosis
-    assessment_list = GMAssessment.objects.select_related(
-        'patient', 'added_by', 'last_edit_by', 'video_file'
-    ).filter(diagnosis_conclusion='NORMAL')
-
-    # Apply search filter if provided
-    if search_query:
-        assessment_list = assessment_list.filter(
-            Q(patient__baby_name__icontains=search_query) |
-            Q(patient__mother_name__icontains=search_query) |
-            Q(patient__bht__icontains=search_query) |
-            Q(patient__nnc_no__icontains=search_query)
-        )
-
-    assessment_list = assessment_list.order_by("-id")
-    paginator = Paginator(assessment_list, 10)
-    page_number = request.GET.get("page")
-    paginated_assmnt_list = paginator.get_page(page_number)
-
-    context = {
-        "assessment_page_obj": paginated_assmnt_list,
-        "type": "NORMAL",
-        "search_query": search_query,
-    }
-
-    return render(request, "assessment/manager.html", context)
-
-
-@login_required(login_url="user-login")
-def assessment_manager_abnormal(request):
-    # Get search parameter
-    search_query = request.GET.get('search', '').strip()
-
-    # Get assessments with abnormal diagnosis
-    assessment_list = GMAssessment.objects.select_related(
-        'patient', 'added_by', 'last_edit_by', 'video_file'
-    ).filter(diagnosis_conclusion='ABNORMAL')
-
-    # Apply search filter if provided
-    if search_query:
-        assessment_list = assessment_list.filter(
-            Q(patient__baby_name__icontains=search_query) |
-            Q(patient__mother_name__icontains=search_query) |
-            Q(patient__bht__icontains=search_query) |
-            Q(patient__nnc_no__icontains=search_query)
-        )
-
-    assessment_list = assessment_list.order_by("-id")
-    paginator = Paginator(assessment_list, 10)
-    page_number = request.GET.get("page")
-    paginated_assmnt_list = paginator.get_page(page_number)
-
-    context = {
-        "assessment_page_obj": paginated_assmnt_list,
-        "type": "ABNORMAL",
-        "search_query": search_query,
-    }
-
-    return render(request, "assessment/manager.html", context)
-
-
-@login_required(login_url="user-login")
-def assessment_manager_informed(request):
-    # Get search parameter
-    search_query = request.GET.get('search', '').strip()
-
-    # Get assessments where parent is informed
-    assessment_list = GMAssessment.objects.select_related(
-        'patient', 'added_by', 'last_edit_by', 'video_file'
-    ).filter(parent_informed=True)
-
-    # Apply search filter if provided
-    if search_query:
-        assessment_list = assessment_list.filter(
-            Q(patient__baby_name__icontains=search_query) |
-            Q(patient__mother_name__icontains=search_query) |
-            Q(patient__bht__icontains=search_query) |
-            Q(patient__nnc_no__icontains=search_query)
-        )
-
-    assessment_list = assessment_list.order_by("-id")
-    paginator = Paginator(assessment_list, 10)
-    page_number = request.GET.get("page")
-    paginated_assmnt_list = paginator.get_page(page_number)
-
-    context = {
-        "assessment_page_obj": paginated_assmnt_list,
-        "type": "INFORMED",
-        "search_query": search_query,
-    }
-
-    return render(request, "assessment/manager.html", context)
-
-
-@login_required(login_url="user-login")
-def assessment_manager_not_informed(request):
-    # Get search parameter
-    search_query = request.GET.get('search', '').strip()
-
-    # Get assessments where parent is not informed
-    assessment_list = GMAssessment.objects.select_related(
-        'patient', 'added_by', 'last_edit_by', 'video_file'
-    ).filter(parent_informed=False)
-
-    # Apply search filter if provided
-    if search_query:
-        assessment_list = assessment_list.filter(
-            Q(patient__baby_name__icontains=search_query) |
-            Q(patient__mother_name__icontains=search_query) |
-            Q(patient__bht__icontains=search_query) |
-            Q(patient__nnc_no__icontains=search_query)
-        )
-
-    assessment_list = assessment_list.order_by("-id")
-    paginator = Paginator(assessment_list, 10)
-    page_number = request.GET.get("page")
-    paginated_assmnt_list = paginator.get_page(page_number)
-
-    context = {
-        "assessment_page_obj": paginated_assmnt_list,
-        "type": "NOT_INFORMED",
+        "type": view_type,
         "search_query": search_query,
     }
 
@@ -1409,7 +1243,9 @@ def assessment_manager_by_patients(request, pk):
     search_query = request.GET.get('search', '').strip()
 
     # Filter assessments based on search query
-    assessment_list = GMAssessment.objects.filter(patient=patient)
+    assessment_list = GMAssessment.objects.select_related(
+        'patient', 'added_by', 'last_edit_by', 'video_file'
+    ).filter(patient=patient)
     if search_query:
         assessment_list = assessment_list.filter(
             Q(patient__baby_name__icontains=search_query) |
@@ -1440,12 +1276,7 @@ def help_home(request):
 
 @login_required(login_url="user-login")
 def help_article(request, pk):
-    try:
-        article = Help.objects.get(id=pk)
-    except Help.DoesNotExist:
-        messages.error(request, "Help article not found.")
-        return redirect("help-home")
-
+    article = get_object_or_404(Help, id=pk)
     articles = Help.objects.filter(is_active=True).order_by("display_order", "title")
     return render(
         request, "help/article.html", {"article": article, "articles": articles}
@@ -1453,6 +1284,7 @@ def help_article(request, pk):
 
 
 @login_required(login_url="user-login")
+@ratelimit(key='user_or_ip', rate='10/m', block=True)
 def bookmark_manager(request):
     try:
         # Get all bookmarks
@@ -1627,7 +1459,7 @@ def bookmark_add(request, item_id, bookmark_type):
 
 @login_required(login_url="user-login")
 def bookmark_view(request, pk):
-    bookmark = Bookmark.objects.get(id=pk)
+    bookmark = get_object_or_404(Bookmark, id=pk)
     return render(request, "bookmark/view.html", {"bookmark": bookmark})
 
 
@@ -1722,20 +1554,20 @@ def bookmark_delete(request, pk):
         })
 
     except Exception as e:
-        logger.error(
+        logger.exception(
             f"Deletion error: user={request.user.username}, "
-            f"entity=Bookmark, id={pk}, error={str(e)}"
+            f"entity=Bookmark, id={pk}"
         )
         return JsonResponse({
             "success": False,
             "error": "Server error",
-            "message": f"An error occurred during deletion: {str(e)}"
+            "message": "An unexpected error occurred. Please try again."
         }, status=500)
 
 
 @login_required(login_url="user-login")
 def bookmark_manager_user(request, username):
-    user = CustomUser.objects.get(username=username)
+    user = get_object_or_404(CustomUser, username=username)
     var_patients_list = Bookmark.objects.filter(owner=user).order_by("-id")
     paginator = Paginator(var_patients_list, 10)
     page_number = request.GET.get("page")
@@ -2089,8 +1921,6 @@ def attachment_add(request, pid):
             )
 
         except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
             logger.error(f"Error saving attachment: {str(e)}", exc_info=True)
 
             return JsonResponse(
@@ -2205,18 +2035,6 @@ def attachment_edit(request, pk):
         )
 
 
-@login_required(login_url="user-login")
-def attachment_delete_confirm(request, pk):
-    """DEPRECATED: Use unified delete modal instead"""
-    attachment = Attachment.objects.get(id=pk)
-    patient = attachment.patient
-    return render(
-        request,
-        "attachment/delete-confirm.html",
-        {"attachment": attachment, "patient": patient},
-    )
-
-
 @ratelimit(key='user', rate='5/m', method='DELETE')
 @ratelimit(key='ip', rate='10/m', method='DELETE')
 @login_required(login_url="user-login")
@@ -2319,14 +2137,14 @@ def attachment_delete(request, pk):
         })
 
     except Exception as e:
-        logger.error(
+        logger.exception(
             f"Deletion error: user={request.user.username}, "
-            f"entity=Attachment, id={pk}, error={str(e)}"
+            f"entity=Attachment, id={pk}"
         )
         return JsonResponse({
             "success": False,
             "error": "Server error",
-            "message": f"An error occurred during deletion: {str(e)}"
+            "message": "An unexpected error occurred. Please try again."
         }, status=500)
 
 
@@ -2624,21 +2442,6 @@ def cdic_assessment_manager_by_patients(request, pid):
         return redirect("view-patient", pk=pid)
 
 
-@login_required(login_url="user-login")
-def cdic_assessment_delete_start(request, aid):
-    """DEPRECATED: Use unified delete modal instead"""
-    try:
-        srecord = CDICRecord.objects.select_related('patient').get(id=aid)
-    except CDICRecord.DoesNotExist:
-        messages.error(request, "CDIC record not found.")
-        return redirect("cdic-assessment-manager")
-    return render(
-        request,
-        "cdic_record/delete-confirm.html",
-        {"patient": srecord.patient, "cdic_record": srecord},
-    )
-
-
 @ratelimit(key='user', rate='5/m', method='DELETE')
 @ratelimit(key='ip', rate='10/m', method='DELETE')
 @login_required(login_url="user-login")
@@ -2734,14 +2537,14 @@ def cdic_assessment_delete(request, aid):
         })
 
     except Exception as e:
-        logger.error(
+        logger.exception(
             f"Deletion error: user={request.user.username}, "
-            f"entity=CDICRecord, id={aid}, error={str(e)}"
+            f"entity=CDICRecord, id={aid}"
         )
         return JsonResponse({
             "success": False,
             "error": "Server error",
-            "message": f"An error occurred during deletion: {str(e)}"
+            "message": "An unexpected error occurred. Please try again."
         }, status=500)
 
 
@@ -2797,13 +2600,8 @@ def hine_assessment_add(request, pid):
 @ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def hine_assessment_edit(request, hine_id):
-    try:
-        shr = HINEAssessment.objects.get(pk=hine_id)
-        sp = shr.patient
-    except HINEAssessment.DoesNotExist:
-        messages.error(request, "HINE assessment not found.")
-        return redirect("hine-assessment-manager")
-    
+    shr = get_object_or_404(HINEAssessment, pk=hine_id)
+    sp = shr.patient
     if request.method == "POST":
         hine_form = HINEAssessmentForm(request.POST, instance=shr, patient=sp)
         if hine_form.is_valid():
@@ -3019,17 +2817,6 @@ def hine_assessment_manager_by_patients(request, pid):
         return redirect("view-patient", pk=pid)
 
 
-@login_required(login_url="user-login")
-def hine_assessment_delete_start(request, hine_id):
-    """DEPRECATED: Use unified delete modal instead"""
-    shr = HINEAssessment.objects.get(id=hine_id)
-    return render(
-        request,
-        "hine/delete-confirm.html",
-        {"patient": shr.patient, "hine_record": shr},
-    )
-
-
 @ratelimit(key='user', rate='5/m', method='DELETE')
 @ratelimit(key='ip', rate='10/m', method='DELETE')
 @login_required(login_url="user-login")
@@ -3125,14 +2912,14 @@ def hine_assessment_delete(request, hine_id):
         })
 
     except Exception as e:
-        logger.error(
+        logger.exception(
             f"Deletion error: user={request.user.username}, "
-            f"entity=HINEAssessment, id={hine_id}, error={str(e)}"
+            f"entity=HINEAssessment, id={hine_id}"
         )
         return JsonResponse({
             "success": False,
             "error": "Server error",
-            "message": f"An error occurred during deletion: {str(e)}"
+            "message": "An unexpected error occurred. Please try again."
         }, status=500)
 
 
@@ -3451,21 +3238,6 @@ def da_assessment_manager_by_patients(request, pid):
         return redirect("view-patient", pk=pid)
 
 
-@login_required(login_url="user-login")
-def da_assessment_delete_start(request, da_id):
-    """DEPRECATED: Use unified delete modal instead"""
-    try:
-        sdr = DevelopmentalAssessment.objects.select_related('patient').get(id=da_id)
-    except DevelopmentalAssessment.DoesNotExist:
-        messages.error(request, "Developmental assessment record not found.")
-        return redirect("da-assessment-manager")
-    return render(
-        request,
-        "develop_assemnt/delete-confirm.html",
-        {"patient": sdr.patient, "da_record": sdr},
-    )
-
-
 @ratelimit(key='user', rate='5/m', method='DELETE')
 @ratelimit(key='ip', rate='10/m', method='DELETE')
 @login_required(login_url="user-login")
@@ -3561,14 +3333,14 @@ def da_assessment_delete(request, da_id):
         })
 
     except Exception as e:
-        logger.error(
+        logger.exception(
             f"Deletion error: user={request.user.username}, "
-            f"entity=DevelopmentalAssessment, id={da_id}, error={str(e)}"
+            f"entity=DevelopmentalAssessment, id={da_id}"
         )
         return JsonResponse({
             "success": False,
             "error": "Server error",
-            "message": f"An error occurred during deletion: {str(e)}"
+            "message": "An unexpected error occurred. Please try again."
         }, status=500)
 
 
@@ -3775,24 +3547,6 @@ def gpa_manager_by_patient(request, pid):
     return render(request, "gpa_record/manager.html", context)
 
 
-@login_required(login_url="user-login")
-def gpa_delete_start(request, gpa_id):
-    """DEPRECATED: Use unified delete modal instead"""
-    try:
-        gpa_record = GeneralPaediatricAssessment.objects.select_related(
-            "patient"
-        ).get(pk=gpa_id)
-    except GeneralPaediatricAssessment.DoesNotExist:
-        messages.error(request, "GPA record not found")
-        return redirect("gpa-manager")
-
-    context = {
-        "gpa_record": gpa_record,
-        "patient": gpa_record.patient,
-    }
-    return render(request, "gpa_record/delete_confirm.html", context)
-
-
 @ratelimit(key='user', rate='5/m', method='DELETE')
 @ratelimit(key='ip', rate='10/m', method='DELETE')
 @login_required(login_url="user-login")
@@ -3888,14 +3642,14 @@ def gpa_delete(request, gpa_id):
         })
 
     except Exception as e:
-        logger.error(
+        logger.exception(
             f"Deletion error: user={request.user.username}, "
-            f"entity=GeneralPaediatricAssessment, id={gpa_id}, error={str(e)}"
+            f"entity=GeneralPaediatricAssessment, id={gpa_id}"
         )
         return JsonResponse({
             "success": False,
             "error": "Server error",
-            "message": f"An error occurred during deletion: {str(e)}"
+            "message": "An unexpected error occurred. Please try again."
         }, status=500)
 
 

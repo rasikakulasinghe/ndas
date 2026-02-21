@@ -16,6 +16,9 @@ from users.utils import (
 )
 from users.models import UserActivityLog, UserSession
 from django.utils import timezone
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class UserActivityMiddleware(MiddlewareMixin):
@@ -36,17 +39,13 @@ class UserActivityMiddleware(MiddlewareMixin):
                     # Throttle updates to once per minute per user session
                     from django.core.cache import cache
                     cache_key = f"user_session_update_{request.user.id}_{session_key}"
-                    last_update = cache.get(cache_key)
-
-                    if last_update is None:
+                    if cache.add(cache_key, True, 60):
                         # Update session activity
                         UserSession.objects.filter(
                             user=request.user,
                             session_key=session_key,
                             is_active=True
                         ).update(last_activity=timezone.now())
-                        # Cache for 60 seconds to prevent updates
-                        cache.set(cache_key, timezone.now(), 60)
             except Exception:
                 # Fail silently to avoid breaking the application
                 pass
@@ -104,20 +103,14 @@ class SubscriptionCheckMiddleware(MiddlewareMixin):
             # PERFORMANCE: Only update status once per minute (avoid updating on every request)
             from django.core.cache import cache
             update_cache_key = f'subscription_last_update_{subscription.pk}'
-            last_update = cache.get(update_cache_key)
-
-            if last_update is None:
+            if cache.add(update_cache_key, True, 60):
                 # Update subscription status (uses date calculations)
                 subscription.update_status()
-                # Cache that we updated (prevent updates for 60 seconds)
-                cache.set(update_cache_key, True, 60)
 
             # CRITICAL CHECK: Block access ONLY if fully expired (past grace period)
             # SECURITY: Allow access during grace period with warnings, block after grace period ends
             if subscription.is_expired:
                 # Log the blocked access attempt
-                import logging
-                logger = logging.getLogger(__name__)
                 logger.warning(
                     f"Blocked access for user {request.user.username} with fully expired subscription. "
                     f"Expiration: {subscription.expiration_date}, Grace period ended: {subscription.grace_period_end_date}, Status: {subscription.status}"
@@ -162,8 +155,6 @@ class SubscriptionCheckMiddleware(MiddlewareMixin):
         except Exception as e:
             # SECURITY: Log unexpected errors and deny access (fail closed)
             # This should rarely happen since get_global_subscription() always creates if missing
-            import logging
-            logger = logging.getLogger(__name__)
             logger.error(
                 f"Unexpected subscription check error for user {request.user.username}: {type(e).__name__}: {str(e)}",
                 exc_info=True
@@ -196,6 +187,4 @@ def log_user_logout(sender, request, user, **kwargs):
             log_logout_activity(request, user)
     except Exception as e:
         # Log the error but don't break the logout process
-        import logging
-        logger = logging.getLogger(__name__)
         logger.error(f"Error logging logout activity for {user.username if user else 'unknown'}: {e}")

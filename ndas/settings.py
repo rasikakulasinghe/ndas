@@ -264,9 +264,7 @@ LOGGING = {
 }
 
 # Security Headers Configuration
-SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = config('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=False, cast=bool)
 SECURE_HSTS_PRELOAD = config('SECURE_HSTS_PRELOAD', default=False, cast=bool)
 SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
@@ -282,6 +280,7 @@ CSP_INCLUDE_NONCE_IN = ['script-src']
 CSP_EXCLUDE_URL_PREFIXES = ('/admin/',)
 
 if DEBUG:
+    SECURE_HSTS_SECONDS = 0
     CSP_DEFAULT_SRC = ("'self'",)
     CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://unpkg.com", "https://vjs.zencdn.net")
     CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "https://vjs.zencdn.net")
@@ -293,6 +292,7 @@ if DEBUG:
     CSP_BASE_URI = ("'self'",)
     CSP_FORM_ACTION = ("'self'",)
 else:
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
     # Production CSP - Strict policy with nonce-based inline scripts
     # 'unsafe-inline' allowed for styles (templates and libraries use inline styles)
     # No 'unsafe-inline' or 'unsafe-eval' for scripts for XSS protection
@@ -394,7 +394,12 @@ else:
     }
 
 # Session Configuration
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+if DEBUG:
+    # Use cached_db in development: sessions persist across server restarts
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
+else:
+    # Use cache in production: sessions backed by Redis for performance
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
 
 # Rate Limiting and Brute Force Protection
@@ -412,39 +417,20 @@ FILE_UPLOAD_HANDLERS = [
     'django.core.files.uploadhandler.TemporaryFileUploadHandler',
 ]
 
-# Database Query Optimization
-DATABASE_ENGINE_OPTIONS = {
-    'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-    'charset': 'utf8mb4',
-    'autocommit': True,
-}
-
 # Static Files Compression
 # STATICFILES_STORAGE is deprecated in Django 4.2+, using STORAGES instead
 WHITENOISE_USE_FINDERS = True
 WHITENOISE_AUTOREFRESH = DEBUG
 
-# Media Files Security
-MEDIA_URL_EXPIRY = 3600  # 1 hour
-SECURE_FILE_UPLOADS = True
-
 # Additional Security Settings
 SILENCED_SYSTEM_CHECKS = [
-    'security.W019',  # Only if using HTTPS proxy
+    'security.W019',  # Silenced when nginx/load balancer terminates SSL and SECURE_PROXY_SSL_HEADER is set in .env
 ] if config('SECURE_PROXY_SSL_HEADER', default=False, cast=bool) else []
 
 # Production optimizations
 if not DEBUG:
-    # Enable compression
-    COMPRESS_ENABLED = config('COMPRESS_ENABLED', default=True, cast=bool)
-    COMPRESS_OFFLINE = config('COMPRESS_OFFLINE', default=True, cast=bool)
-
     # Security enhancements
     SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_BROWSER_XSS_FILTER = True
-
-    # Database optimizations
-    CONN_MAX_AGE = 300
 
     # Disable admin docs in production
     ADMINS = []

@@ -96,7 +96,7 @@
               <div class="col"><a href="{% url 'user-view' user.id %}" style="color:white;"><i data-toggle="tooltip" data-placement="top" title="Users" class="fas fa-users" style="color: #ffffff;"></i></a></div>
               <div class="w-100"></div>
               <div class="col"><a href="{% url 'video:manager' %}" style="color:white;">{{videos_total_count}}</a></div>
-              <div class="col"><a href="{% url 'bookmark-manager' %}" style="color:white;">{{bookmark.count}}</a></div>
+              <div class="col"><a href="{% url 'bookmark-manager' %}" style="color:white;">{{bookmark_count}}</a></div>
               <div class="col"><a href="{% url 'attachment-manager' %}" style="color:white;">{{attachments_count}}</a></div>
               <div class="col"><a href="{% url 'user-view' user.id %}" style="color:white;">{{users_total_count}}</a></div>
             </div>

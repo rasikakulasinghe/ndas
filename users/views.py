@@ -8,7 +8,6 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_POST, require_http_methods
-from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.core.paginator import Paginator
@@ -26,11 +25,15 @@ from .utils import (
     get_user_activity_summary,
     get_enhanced_device_details
 )
+import json
+import logging
 import os
+from django.urls import reverse
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
-@ratelimit(key='ip', rate='5/m', method='POST', block=True)
-@ratelimit(key='post:username', rate='3/m', method='POST', block=True)
+@ratelimit(key='ip', rate='3/m', method='POST', block=True)
 def loginPage(request):
     logged_user = request.user
 
@@ -113,8 +116,6 @@ def loginPage(request):
 
                 except Exception as e:
                     # If subscription check fails, deny login (fail closed for security)
-                    import logging
-                    logger = logging.getLogger(__name__)
                     logger.error(f"Global subscription check failed for user {username}: {e}")
                     messages.error(
                         request,
@@ -144,8 +145,6 @@ def loginPage(request):
                 user.save(update_fields=["last_login_device"])
             except Exception as e:
                 # Log error but don't break login process
-                import logging
-                logger = logging.getLogger(__name__)
                 logger.error(f"Error updating last_login_device for {user.username}: {e}")
 
             # Log activity with enhanced tracking
@@ -153,8 +152,6 @@ def loginPage(request):
                 log_user_activity(request, user, UserActivityLog.LOGIN_SUCCESS)
             except Exception as e:
                 # Log error but don't break login process
-                import logging
-                logger = logging.getLogger(__name__)
                 logger.error(f"Error logging user activity for {user.username}: {e}")
 
             # Create/update session tracking
@@ -162,8 +159,6 @@ def loginPage(request):
                 create_or_update_user_session(request, user)
             except Exception as e:
                 # Log error but don't break login process
-                import logging
-                logger = logging.getLogger(__name__)
                 logger.error(f"Error creating user session for {user.username}: {e}")
 
             messages.success(request, 'You have successfully logged in!')
@@ -181,8 +176,6 @@ def loginPage(request):
                 )
             except Exception as e:
                 # Log error but don't break the flow
-                import logging
-                logger = logging.getLogger(__name__)
                 logger.error(f"Error logging failed login attempt: {e}")
 
             # Generic error message - same for all authentication failures
@@ -203,12 +196,6 @@ def logoutPage(request):
     logout(request)
     messages.success(request, 'You have been logged out successfully!')
     return redirect('user-login')
-
-def test_logout_modal(request):
-    """Test view for debugging logout modal"""
-    from django.http import HttpResponse
-    with open('debug_logout_modal.html', 'r') as f:
-        return HttpResponse(f.read())
 
 @login_required(login_url='user-login')
 def userView(request, pk):
@@ -309,8 +296,6 @@ def developerContacts(request):
         var = getFullDeviceDetails(request)
     except Exception as e:
         var = "Device details unavailable"
-        import logging
-        logger = logging.getLogger(__name__)
         logger.error(f"Error getting device details: {e}")
     
     return render(request, 'users/contact-developer.html', {'logged_user': logged_user, 'developer': developer, 'var': var})
@@ -689,13 +674,6 @@ def admin_user_delete(request, pk):
     Accepts: DELETE method with JSON payload {password: str}
     Returns: JSON {success: bool, message: str, redirect_url: str}
     """
-    import json
-    from django.http import JsonResponse
-    from django.urls import reverse
-    import logging
-
-    logger = logging.getLogger(__name__)
-
     try:
         # 1. Retrieve user
         user = get_object_or_404(CustomUser, pk=pk)
@@ -772,7 +750,7 @@ def admin_user_delete(request, pk):
         return JsonResponse({
             "success": False,
             "error": "Server error",
-            "message": f"An error occurred during deletion: {str(e)}"
+            "message": "An unexpected error occurred. Please try again."
         }, status=500)
 
 
@@ -908,8 +886,6 @@ def subscription_info(request):
 
     except Exception as e:
         # Log error but still show page with minimal info
-        import logging
-        logger = logging.getLogger(__name__)
         logger.error(f"Error in subscription_info view: {e}", exc_info=True)
 
         # Fetch developer contact information

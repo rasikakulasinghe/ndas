@@ -9,7 +9,8 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from datetime import datetime
-from patients.models import Patient, GMAssessment, Video
+from patients.models import Patient, GMAssessment
+from video.models import Video
 from ndas.custom_codes.ndas_enums import PtStatus
 
 User = get_user_model()
@@ -38,38 +39,45 @@ class PatientManagerTestCase(TestCase):
             baby_name='New Baby',
             mother_name='Mother One',
             dob_tob=timezone.now(),
-            gender='M',
+            gender='Male',
             pog_wks=38,
             pog_days=2,
             birth_weight=3000,
+            ofc=33,
+            mo_delivery='Normal vaginal delivery (NVD)',
+            tp_mobile='0711234561',
             added_by=self.user
         )
 
-        # Patient 2: Diagnosed normal
+        # Patient 2: Has assessment (diagnosed normal via GMA)
         self.patient_dx_normal = Patient.objects.create(
             bht='BHT002',
             baby_name='Normal Baby',
             mother_name='Mother Two',
             dob_tob=timezone.now(),
-            gender='F',
+            gender='Female',
             pog_wks=39,
             pog_days=0,
             birth_weight=3200,
-            dx_conclution='dx_normal',
+            ofc=34,
+            mo_delivery='Normal vaginal delivery (NVD)',
+            tp_mobile='0711234562',
             added_by=self.user
         )
 
-        # Patient 3: Diagnosed abnormal
+        # Patient 3: Has assessment (diagnosed abnormal via GMA)
         self.patient_dx_abnormal = Patient.objects.create(
             bht='BHT003',
             baby_name='Abnormal Baby',
             mother_name='Mother Three',
             dob_tob=timezone.now(),
-            gender='M',
+            gender='Male',
             pog_wks=37,
             pog_days=5,
             birth_weight=2800,
-            dx_conclution='dx_abnormal',
+            ofc=32,
+            mo_delivery='Normal vaginal delivery (NVD)',
+            tp_mobile='0711234563',
             added_by=self.user
         )
 
@@ -79,10 +87,13 @@ class PatientManagerTestCase(TestCase):
             baby_name='Pending Baby',
             mother_name='Mother Four',
             dob_tob=timezone.now(),
-            gender='F',
+            gender='Female',
             pog_wks=40,
             pog_days=1,
             birth_weight=3400,
+            ofc=35,
+            mo_delivery='Normal vaginal delivery (NVD)',
+            tp_mobile='0711234564',
             added_by=self.user
         )
         # Add GM assessment without diagnosis
@@ -98,10 +109,13 @@ class PatientManagerTestCase(TestCase):
             baby_name='High Risk Baby',
             mother_name='Mother Five',
             dob_tob=timezone.now(),
-            gender='M',
+            gender='Male',
             pog_wks=36,
             pog_days=0,
             birth_weight=2500,
+            ofc=31,
+            mo_delivery='Normal vaginal delivery (NVD)',
+            tp_mobile='0711234565',
             apgar_5=5,  # Low APGAR score
             added_by=self.user
         )
@@ -113,10 +127,13 @@ class PatientManagerTestCase(TestCase):
                 baby_name=f'Test Baby {i}',
                 mother_name=f'Mother {i}',
                 dob_tob=timezone.now(),
-                gender='M' if i % 2 == 0 else 'F',
+                gender='Male' if i % 2 == 0 else 'Female',
                 pog_wks=38,
                 pog_days=0,
                 birth_weight=3000,
+                ofc=33,
+                mo_delivery='Normal vaginal delivery (NVD)',
+                tp_mobile=f'071123456{i}',
                 added_by=self.user
             )
 
@@ -329,10 +346,13 @@ class DashboardTestCase(TestCase):
                 baby_name=f'Test Baby {i}',
                 mother_name=f'Mother {i}',
                 dob_tob=timezone.now(),
-                gender='M' if i % 2 == 0 else 'F',
+                gender='Male' if i % 2 == 0 else 'Female',
                 pog_wks=38,
                 pog_days=0,
                 birth_weight=3000,
+                ofc=33,
+                mo_delivery='Normal vaginal delivery (NVD)',
+                tp_mobile=f'07112345{i:02d}',
                 added_by=self.user
             )
 
@@ -429,10 +449,13 @@ class CustomMethodsTestCase(TestCase):
                 baby_name=f'Test Baby {i}',
                 mother_name=f'Mother {i}',
                 dob_tob=timezone.now(),
-                gender='M',
+                gender='Male',
                 pog_wks=38,
                 pog_days=0,
                 birth_weight=3000,
+                ofc=33,
+                mo_delivery='Normal vaginal delivery (NVD)',
+                tp_mobile=f'07112345{i:02d}',
                 added_by=user
             )
 
@@ -453,6 +476,201 @@ class CustomMethodsTestCase(TestCase):
 
         # Should use minimal queries due to select_related
         self.assertLess(len(connection.queries), 5)
+
+
+from django.test import override_settings
+
+
+@override_settings(STORAGES={
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+})
+class PatientViewContextTest(TestCase):
+    """Test patient_view context — verifies BUG-01 fix: gm_last_assessment is not callable.
+
+    GMAssessment requires a Video (OneToOneField, not null), so tests with GMA records
+    require a full Video setup. The zero-assessments case directly validates BUG-01:
+    var_gma.last (bug) is callable; var_gma.last() (fix) returns None.
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(
+            username='viewtestuser',
+            password='testpass123',
+            email='viewtest@example.com',
+            is_staff=True
+        )
+        self.client.force_login(self.user)
+
+        self.patient = Patient.objects.create(
+            bht='BHTVT001',
+            baby_name='View Test Baby',
+            mother_name='View Test Mother',
+            dob_tob=timezone.now(),
+            gender='Male',
+            pog_wks=38,
+            pog_days=2,
+            birth_weight=3000,
+            ofc=33,
+            mo_delivery='Normal vaginal delivery (NVD)',
+            tp_mobile='0711234599',
+            added_by=self.user
+        )
+
+    def test_gm_last_assessment_is_not_callable_when_no_assessments(self):
+        """BUG-01: gm_last_assessment must be None, not a bound method, when patient has no GMA.
+
+        Before fix: var_gma.last stores the bound method → callable → template renders garbage.
+        After fix:  var_gma.last() returns None → not callable → template renders nothing safely.
+        """
+        response = self.client.get(reverse('view-patient', kwargs={'pk': self.patient.id}))
+        self.assertEqual(response.status_code, 200)
+        gm_last = response.context['gm_last_assessment']
+        self.assertFalse(
+            callable(gm_last),
+            f"gm_last_assessment must not be callable. Got: {type(gm_last)}"
+        )
+        self.assertIsNone(
+            gm_last,
+            "gm_last_assessment should be None when no assessments exist"
+        )
+
+
+class DeleteEndpointErrorSanitizationTest(TestCase):
+    """
+    Story 2.1: Verify delete endpoints return generic error messages
+    and do not leak exception details in JSON responses.
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.password = 'testpass123'
+        self.superuser = User.objects.create_superuser(
+            username='supertest',
+            password=self.password,
+            email='super@example.com',
+        )
+        self.client.force_login(self.superuser)
+        self.patient = Patient.objects.create(
+            bht='BHT-DEL-001',
+            baby_name='Delete Test Baby',
+            mother_name='Delete Test Mother',
+            dob_tob=timezone.now(),
+            gender='Male',
+            pog_wks=38,
+            pog_days=0,
+            birth_weight=3000,
+            ofc=33,
+            mo_delivery='Normal vaginal delivery (NVD)',
+            tp_mobile='0711234599',
+            added_by=self.superuser,
+        )
+
+    def _send_delete(self, url_name, url_kwargs):
+        import json
+        url = reverse(url_name, kwargs=url_kwargs)
+        return self.client.delete(
+            url,
+            data=json.dumps({'password': self.password}),
+            content_type='application/json',
+        )
+
+    def test_patient_delete_error_hides_exception_details(self):
+        """patient_delete must not leak str(e) when deletion fails."""
+        from unittest.mock import patch
+        secret = 'secret-db-constraint-detail'
+        with patch.object(Patient, 'delete', side_effect=Exception(secret)):
+            response = self._send_delete('delete-patient', {'pk': self.patient.pk})
+
+        self.assertEqual(response.status_code, 500)
+        data = response.json()
+        self.assertEqual(
+            data['message'],
+            'An unexpected error occurred. Please try again.',
+        )
+        self.assertNotIn(secret, response.content.decode())
+
+    def test_patient_delete_error_returns_generic_message(self):
+        """Generic message string matches exactly (no f-string interpolation)."""
+        from unittest.mock import patch
+        with patch.object(Patient, 'delete', side_effect=Exception('boom')):
+            response = self._send_delete('delete-patient', {'pk': self.patient.pk})
+
+        data = response.json()
+        self.assertFalse(data['success'])
+        self.assertNotIn('boom', response.content.decode())
+
+
+@override_settings(STORAGES={
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+})
+class BirthWeightViewValidationTest(TestCase):
+    """Story 1.2: Verify birth weight validation threshold is 300g in patient_add view.
+
+    AC #4: 250g produces form error (no 500).
+    AC #5: 300g is accepted.
+    AC #6: 200g is rejected with clear error message.
+    """
+
+    REQUIRED_FIELDS = {
+        'bht': 'BHT-BW-001',
+        'baby_name': 'BW Test Baby',
+        'mother_name': 'BW Test Mother',
+        'dob_tob': '2025-01-01 12:00:00',
+        'gender': 'Male',
+        'pog_wks': 38,
+        'pog_days': 0,
+        'apgar_1': 10,
+        'apgar_5': 10,
+        'apgar_10': 10,
+        'ofc': 33,
+        'mo_delivery': 'Normal vaginal delivery (NVD)',
+        'tp_mobile': '0711234500',
+    }
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(
+            username='bwtestuser',
+            password='testpass123',
+            email='bwtest@example.com',
+            is_staff=True,
+        )
+        self.client.force_login(self.user)
+        self.url = reverse('add-patient')
+
+    def _post_with_birth_weight(self, birth_weight):
+        data = dict(self.REQUIRED_FIELDS)
+        data['birth_weight'] = birth_weight
+        return self.client.post(self.url, data)
+
+    def test_birth_weight_250_rejected_with_form_error(self):
+        """AC #4: 250g must produce a form validation error, not a 500."""
+        response = self._post_with_birth_weight(250)
+        self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        self.assertIn(
+            'Birth weight must be between 300g and 8000g',
+            [str(e) for e in form.errors.get('birth_weight', [])],
+        )
+
+    def test_birth_weight_200_rejected_with_clear_error(self):
+        """AC #6: 200g must be rejected with a clear error message."""
+        response = self._post_with_birth_weight(200)
+        self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        self.assertIn(
+            'Birth weight must be between 300g and 8000g',
+            [str(e) for e in form.errors.get('birth_weight', [])],
+        )
+
+    def test_birth_weight_300_accepted(self):
+        """AC #5: 300g must be accepted (redirects to view-patient)."""
+        response = self._post_with_birth_weight(300)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('view', response.url)
 
 
 def suite():
@@ -480,4 +698,104 @@ def suite():
     suite.addTest(DashboardTestCase('test_dashboard_context_variables'))
     suite.addTest(DashboardTestCase('test_dashboard_recent_patients'))
 
+    # Delete error sanitization tests
+    suite.addTest(DeleteEndpointErrorSanitizationTest('test_patient_delete_error_hides_exception_details'))
+    suite.addTest(DeleteEndpointErrorSanitizationTest('test_patient_delete_error_returns_generic_message'))
+
     return suite
+
+
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
+from ndas.custom_codes.custom_methods import get_userStats
+from patients.models import GMAssessment
+from video.models import Video
+
+
+@override_settings(STORAGES={
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+})
+class UserStatsQueryCountTest(TestCase):
+    """Test get_userStats() uses O(models) queries instead of O(users*models)."""
+
+    PATIENT_DEFAULTS = {
+        'baby_name': 'Stats Baby',
+        'mother_name': 'Stats Mother',
+        'dob_tob': None,
+        'gender': 'Male',
+        'pog_wks': 38,
+        'pog_days': 2,
+        'birth_weight': 3000,
+        'ofc': 33,
+        'mo_delivery': 'Normal vaginal delivery (NVD)',
+        'tp_mobile': '0711234561',
+    }
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='statsuser', password='pass', email='stats@test.com'
+        )
+        self.user2 = User.objects.create_user(
+            username='statsuser2', password='pass', email='stats2@test.com'
+        )
+
+    def _make_patient(self, bht, user=None):
+        return Patient.objects.create(
+            bht=bht,
+            **{**self.PATIENT_DEFAULTS, 'dob_tob': timezone.now()},
+            added_by=user or self.user,
+        )
+
+    def test_userstats_query_count(self):
+        """get_userStats() must execute ≤ 10 DB queries regardless of user count."""
+        self._make_patient('STAT-001')
+        self._make_patient('STAT-002', user=self.user2)
+
+        with CaptureQueriesContext(connection) as ctx:
+            get_userStats()
+
+        self.assertLessEqual(
+            len(ctx), 10,
+            f"Expected ≤10 queries, got {len(ctx)}: {[q['sql'][:80] for q in ctx]}"
+        )
+
+    def test_userstats_return_structure(self):
+        """Return value must be dict[username → dict] with all required model keys."""
+        self._make_patient('STAT-STRUCT-001')
+
+        result = get_userStats()
+
+        self.assertIn(self.user.username, result)
+        expected_keys = ('Patient', 'Video', 'GMA', 'HINE', 'DA', 'CDIC', 'Attachment', 'Bookmark')
+        for key in expected_keys:
+            self.assertIn(key, result[self.user.username],
+                          f"Missing key '{key}' in user stats dict")
+            self.assertIsInstance(result[self.user.username][key], int)
+
+    def test_userstats_counts_correct(self):
+        """Counts returned must match records created per user."""
+        p1 = self._make_patient('STAT-CNT-001')
+        p2 = self._make_patient('STAT-CNT-002')
+
+        # Create a Video and GMA for p1
+        video = Video.objects.create(
+            patient=p1,
+            title='Stats Test Video',
+            recorded_on=timezone.now(),
+            added_by=self.user,
+        )
+        GMAssessment.objects.create(
+            patient=p1,
+            video_file=video,
+            date_of_assessment=timezone.now(),
+            added_by=self.user,
+        )
+
+        result = get_userStats()
+
+        self.assertEqual(result[self.user.username]['Patient'], 2)
+        self.assertEqual(result[self.user.username]['GMA'], 1)
+        self.assertEqual(result[self.user.username]['Video'], 1)
+        # user2 has no records — must be 0, not absent
+        self.assertEqual(result[self.user2.username]['Patient'], 0)

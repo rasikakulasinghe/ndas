@@ -383,8 +383,8 @@ def validateAttachmentType(var_uploaded_file):
 
 
 def validate_birth_weight(value):
-    if value < 200 or value > 8000:
-        return False, (f"Birth weight must be between 200g and 8000g")
+    if value < 300 or value > 8000:
+        raise ValidationError("Birth weight must be between 300g and 8000g")
 
 
 def validate_apgar_score(value):

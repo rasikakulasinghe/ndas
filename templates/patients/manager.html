@@ -257,15 +257,15 @@ Manager{% endblock title%}
                 </td>
 
                 <td class="align-middle py-3 px-3 d-none d-md-table-cell">
-                  {% if Patient.isBookmarked %}
+                  {% if Patient.is_bookmarked_ann %}
                   <span class="badge badge-warning px-2 py-1">
                     <i class="fas fa-star mr-1"></i>BOOKMARKED
                   </span>
-                  {% elif Patient.isNewPatient %}
+                  {% elif not Patient.has_videos_ann %}
                   <span class="badge badge-danger px-2 py-1">
                     <i class="fas fa-plus mr-1"></i>NEW
                   </span>
-                  {% elif Patient.isDischarged %}
+                  {% elif Patient.is_discharged_ann %}
                   <span class="badge badge-secondary px-2 py-1">
                     <i class="fas fa-sign-out-alt mr-1"></i>DISCHARGED
                   </span>
@@ -282,15 +282,15 @@ Manager{% endblock title%}
                   </div>
                   <!-- Mobile-only status badge -->
                   <div class="d-block d-md-none mt-1">
-                    {% if Patient.isBookmarked %}
+                    {% if Patient.is_bookmarked_ann %}
                     <span class="badge badge-warning badge-sm">
                       <i class="fas fa-star"></i> BOOKMARKED
                     </span>
-                    {% elif Patient.isNewPatient %}
+                    {% elif not Patient.has_videos_ann %}
                     <span class="badge badge-danger badge-sm">
                       <i class="fas fa-plus"></i> NEW
                     </span>
-                    {% elif Patient.isDischarged %}
+                    {% elif Patient.is_discharged_ann %}
                     <span class="badge badge-secondary badge-sm">
                       <i class="fas fa-sign-out-alt"></i> DISCHARGED
                     </span>
@@ -306,7 +306,7 @@ Manager{% endblock title%}
                     {% if Patient.gender or Patient.dob_tob %}
                     {{ Patient.gender|default:"-" }} • {{ Patient.dob_tob|date:"M d, Y"|default:"-" }}<br>
                     {% endif %}
-                    {% if Patient.isScreeningPositive %}
+                    {% if Patient.is_gma_abnormal_ann or Patient.is_hine_abnormal_ann %}
                     <span class="badge badge-warning badge-sm mt-1">
                       <i class="fas fa-exclamation-triangle"></i> ABNORMAL
                     </span>
@@ -345,7 +345,7 @@ Manager{% endblock title%}
                 </td>
 
                 <td class="align-middle py-3 px-3 d-none d-sm-table-cell">
-                  {% if Patient.isScreeningPositive %}
+                  {% if Patient.is_gma_abnormal_ann or Patient.is_hine_abnormal_ann %}
                   <span
                     class="badge badge-warning px-2 py-1"
                     data-toggle="tooltip"

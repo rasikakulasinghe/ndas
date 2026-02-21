@@ -59,7 +59,11 @@
       "Bash(then echo \"✓ $file exists\")",
       "Bash(else echo \"✗ $file MISSING\")",
       "Skill(bmad:bmm:workflows:create-prd)",
-      "Bash(if exist test_attachment_validators.py del test_attachment_validators.py)"
+      "Bash(if exist test_attachment_validators.py del test_attachment_validators.py)",
+      "Bash(venv/Scripts/python manage.py test:*)",
+      "Bash(grep:*)",
+      "Bash(venvScriptspython manage.py test:*)",
+      "Bash(venv/Scripts/python.exe:*)"
     ],
     "deny": [],
     "ask": []
