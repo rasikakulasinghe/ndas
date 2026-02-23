@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'django_permissions_policy',
     'django_user_agents',
     'ndas',  # Core NDAS app (for template tags)
+    'institution.apps.InstitutionConfig',
     'users.apps.UsersConfig',
     'patients.apps.PatientsConfig',
     'video.apps.VideoConfig',

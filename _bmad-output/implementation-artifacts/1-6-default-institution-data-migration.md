@@ -34,11 +34,14 @@ So that the existing single-institution deployment becomes the first institution
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `DEFAULT_INSTITUTION_NAME` and `DEFAULT_INSTITUTION_SLUG` to `ndas/settings.py` (AC: #1)
+- [ ] Task 1: Add `MULTI_INSTITUTION_ENABLED`, `DEFAULT_INSTITUTION_NAME`, and `DEFAULT_INSTITUTION_SLUG` to `ndas/settings.py` (AC: #1, #5)
+  - [ ] Add `MULTI_INSTITUTION_ENABLED = config('MULTI_INSTITUTION_ENABLED', default=False, cast=bool)` — **must default to False**
   - [ ] Add `DEFAULT_INSTITUTION_NAME = config('DEFAULT_INSTITUTION_NAME', default='Default Institution')`
   - [ ] Add `DEFAULT_INSTITUTION_SLUG = config('DEFAULT_INSTITUTION_SLUG', default='default')`
-  - [ ] Place after `MULTI_INSTITUTION_ENABLED` setting (end of settings.py)
-  - [ ] Operator should set these in `.env` to match their clinic name before running migration
+  - [ ] Place all three near the end of `ndas/settings.py` under a `# Phase 2: Multi-Institution` comment
+  - [ ] Operator must set `DEFAULT_INSTITUTION_NAME` and `DEFAULT_INSTITUTION_SLUG` in `.env` before running migration in production
+  - [ ] `MULTI_INSTITUTION_ENABLED` stays `False` until Story 1.7 isolation tests pass on staging
+  - [ ] See exact settings snippet in Dev Notes
 
 - [ ] Task 2: Create `institution/migrations/0002_default_institution_data.py` (AC: #1, #2, #3, #4)
   - [ ] Write `RunPython` data migration with the complete `migrate_to_default_institution` function
@@ -114,13 +117,17 @@ Field mapping from `Subscription` to `Institution`:
 
 **Not mapped:** `subscription_type`, `billing_amount`, `notes`, `duration_days`, `grace_period_days` — the new Institution model does not track these.
 
-### `DEFAULT_INSTITUTION_NAME` and `DEFAULT_INSTITUTION_SLUG` Settings
+### Settings Changes — Exact Snippet
 
-Add to `ndas/settings.py` (after `MULTI_INSTITUTION_ENABLED`, end of file):
+`ndas/settings.py` uses `decouple.config()` (confirmed from `from decouple import config, Csv` at line 4). All env var access must use this pattern.
+
+Add these three lines near the end of `ndas/settings.py`, under a new comment block:
 
 ```python
-# Default Institution Configuration for Story 1.6 data migration
-# Set these in .env before running 'python manage.py migrate' for the first time
+# ─── Phase 2: Multi-Institution ─────────────────────────────────────────────
+# MULTI_INSTITUTION_ENABLED: Keep False until Story 1.7 isolation tests pass on staging.
+MULTI_INSTITUTION_ENABLED = config('MULTI_INSTITUTION_ENABLED', default=False, cast=bool)
+# Set these in .env before running 'python manage.py migrate institution 0002' in production.
 DEFAULT_INSTITUTION_NAME = config('DEFAULT_INSTITUTION_NAME', default='Default Institution')
 DEFAULT_INSTITUTION_SLUG = config('DEFAULT_INSTITUTION_SLUG', default='default')
 ```
@@ -128,11 +135,14 @@ DEFAULT_INSTITUTION_SLUG = config('DEFAULT_INSTITUTION_SLUG', default='default')
 **Instructions for operator:** Before running the migration in production, set:
 ```ini
 # .env
+MULTI_INSTITUTION_ENABLED=False
 DEFAULT_INSTITUTION_NAME=Lady Ridgeway Hospital
 DEFAULT_INSTITUTION_SLUG=lady-ridgeway
 ```
 
-If not configured, slug will be `'default'` and name `'Default Institution'`. These can be changed later via admin (name only — slug is immutable after creation).
+If not configured, slug will be `'default'` and name `'Default Institution'`. Name can be changed later via admin — slug is immutable after institution creation.
+
+**Critical:** `MULTI_INSTITUTION_ENABLED=False` must remain until Story 1.7 (isolation test suite) passes on staging. Do NOT set to `True` yet.
 
 ### `institution/migrations/0002_default_institution_data.py` — Complete Spec
 

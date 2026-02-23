@@ -189,6 +189,13 @@ SUBSCRIPTION_STATUS_CHOICES = [
     ('grace_period', 'Grace Period'),
 ]
 
+# Subscription Status TextChoices (Phase 2 — Multi-Institution)
+class SubscriptionStatus(models.TextChoices):
+    ACTIVE = 'ACTIVE', 'Active'
+    GRACE = 'GRACE', 'Grace Period'
+    EXPIRED = 'EXPIRED', 'Expired'
+
+
 # Problem List Choices
 class PROBLEM_STATUS(models.TextChoices):
     ACTIVE = "active", "Active"
