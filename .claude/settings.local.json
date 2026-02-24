@@ -63,7 +63,8 @@
       "Bash(venv/Scripts/python manage.py test:*)",
       "Bash(grep:*)",
       "Bash(venvScriptspython manage.py test:*)",
-      "Bash(venv/Scripts/python.exe:*)"
+      "Bash(venv/Scripts/python.exe:*)",
+      "Bash(git:*)"
     ],
     "deny": [],
     "ask": []
