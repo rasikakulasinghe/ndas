@@ -1,0 +1,43 @@
+{% if notifications %}
+  <span class="dropdown-item dropdown-header">
+    Recent Notifications
+  </span>
+  <div class="dropdown-divider"></div>
+
+  {% for notif in notifications %}
+  <a href="{% url 'referral:notification-mark-read' notif.pk %}"
+     class="dropdown-item {% if not notif.is_read %}bg-light{% endif %}">
+    <div class="media">
+      <div class="media-body">
+        <p class="mb-0 {% if not notif.is_read %}font-weight-bold{% endif %}">
+          {{ notif.title }}
+        </p>
+        {% if notif.body %}
+        <p class="text-muted text-sm mb-0">{{ notif.body|truncatechars:80 }}</p>
+        {% endif %}
+        <p class="text-muted text-xs mb-0">{{ notif.created_at|date:"d M Y H:i" }}</p>
+      </div>
+    </div>
+  </a>
+  {% if not forloop.last %}
+  <div class="dropdown-divider"></div>
+  {% endif %}
+  {% endfor %}
+
+  <div class="dropdown-divider"></div>
+  <form method="post"
+        action="{% url 'referral:notification-mark-all-read' %}"
+        hx-post="{% url 'referral:notification-mark-all-read' %}"
+        hx-target="#notification-panel-container"
+        hx-swap="innerHTML">
+    {% csrf_token %}
+    <button type="submit" class="dropdown-item text-center text-sm">
+      <i class="fas fa-check-double mr-1"></i> Mark all as read
+    </button>
+  </form>
+
+{% else %}
+  <span class="dropdown-item text-muted text-sm py-2">
+    <i class="far fa-bell-slash mr-1"></i> No notifications
+  </span>
+{% endif %}

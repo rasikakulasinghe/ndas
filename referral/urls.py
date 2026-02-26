@@ -24,10 +24,10 @@ urlpatterns = [
     path('patient/<int:patient_id>/referrals/', views.patient_referrals_tab, name='patient-referrals-tab'),
 
     # Story 5.2: Notification count (HTMX polling)
-    # path('notifications/count/', views.notification_count, name='notification-count'),
+    path('notifications/count/', views.notification_count, name='notification-count'),
 
-    # Story 5.3: Notification panel
-    # path('notifications/panel/', views.notification_panel, name='notification-panel'),
-    # path('notifications/<int:notification_id>/read/', views.notification_mark_read, name='notification-mark-read'),
-    # path('notifications/mark-all-read/', views.notification_mark_all_read, name='notification-mark-all-read'),
+    # Story 5.3: Notification panel + mark as read
+    path('notifications/panel/', views.notification_panel, name='notification-panel'),
+    path('notifications/<int:pk>/read/', views.notification_mark_read, name='notification-mark-read'),
+    path('notifications/mark-all-read/', views.notification_mark_all_read, name='notification-mark-all-read'),
 ]

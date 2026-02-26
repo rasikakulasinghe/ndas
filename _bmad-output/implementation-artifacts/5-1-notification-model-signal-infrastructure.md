@@ -1,6 +1,6 @@
 # Story 5.1: Notification Model & Signal Infrastructure
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -37,41 +37,41 @@ So that I am always informed of consultation activity without having to poll the
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `NotificationType` to `ndas/custom_codes/choice.py` (AC: #1)
-  - [ ] `REFERRAL_RECEIVED = 'REFERRAL_RECEIVED', 'Referral Received'`
-  - [ ] `REFERRAL_REPLIED = 'REFERRAL_REPLIED', 'Referral Replied'`
-  - [ ] `REFERRAL_CLOSED = 'REFERRAL_CLOSED', 'Referral Closed'`
-  - [ ] See exact code in Dev Notes
+- [x] Task 1: Add `NotificationType` to `ndas/custom_codes/choice.py` (AC: #1)
+  - [x] `REFERRAL_RECEIVED = 'REFERRAL_RECEIVED', 'Referral Received'`
+  - [x] `REFERRAL_REPLIED = 'REFERRAL_REPLIED', 'Referral Replied'`
+  - [x] `REFERRAL_CLOSED = 'REFERRAL_CLOSED', 'Referral Closed'`
+  - [x] See exact code in Dev Notes
 
-- [ ] Task 2: Add `Notification` model to `referral/models.py` (AC: #1)
-  - [ ] Import `NotificationType` at the top of the file
-  - [ ] Fields: `recipient` (FK User), `notification_type`, `title`, `body`, `link`, `is_read` (BooleanField), `institution` (FK Institution)
-  - [ ] `objects = InstitutionScopedManager()`
-  - [ ] `class Meta: ordering = ['-created_at']`
-  - [ ] See exact model code in Dev Notes
+- [x] Task 2: Add `Notification` model to `referral/models.py` (AC: #1)
+  - [x] Import `NotificationType` at the top of the file
+  - [x] Fields: `recipient` (FK User), `notification_type`, `title`, `body`, `link`, `is_read` (BooleanField), `institution` (FK Institution)
+  - [x] `objects = InstitutionScopedManager()`
+  - [x] `class Meta: ordering = ['-created_at']`
+  - [x] See exact model code in Dev Notes
 
-- [ ] Task 3: Generate and apply migration (AC: #1)
-  - [ ] `python manage.py makemigrations referral`
-  - [ ] `python manage.py migrate`
+- [x] Task 3: Generate and apply migration (AC: #1)
+  - [x] `python manage.py makemigrations referral`
+  - [x] `python manage.py migrate`
 
-- [ ] Task 4: Create `referral/signals.py` with signal handlers and custom signal (AC: #2, #3, #4, #5)
-  - [ ] `referral_status_changed = Signal()` — custom signal for lifecycle events (dispatched from close view)
-  - [ ] `notify_referral_received()` — `post_save` on `ReferralSent` (created=True only)
-  - [ ] `notify_referral_replied()` — `post_save` on `ReferralMessage` (created=True only)
-  - [ ] `notify_referral_closed()` — receiver for `referral_status_changed` (new_status=CLOSED only)
-  - [ ] All handlers use try/except to suppress signal failures silently (logged)
-  - [ ] See exact signal code in Dev Notes
+- [x] Task 4: Create `referral/signals.py` with signal handlers and custom signal (AC: #2, #3, #4, #5)
+  - [x] `referral_status_changed = Signal()` — custom signal for lifecycle events (dispatched from close view)
+  - [x] `notify_referral_received()` — `post_save` on `ReferralSent` (created=True only)
+  - [x] `notify_referral_replied()` — `post_save` on `ReferralMessage` (created=True only)
+  - [x] `notify_referral_closed()` — receiver for `referral_status_changed` (new_status=CLOSED only)
+  - [x] All handlers use try/except to suppress signal failures silently (logged)
+  - [x] See exact signal code in Dev Notes
 
-- [ ] Task 5: Update `referral/apps.py` to import signals in `ready()` (AC: #2, #3, #4)
-  - [ ] `import referral.signals  # noqa: F401`
-  - [ ] See exact apps.py code in Dev Notes
+- [x] Task 5: Update `referral/apps.py` to import signals in `ready()` (AC: #2, #3, #4)
+  - [x] `import referral.signals  # noqa: F401`
+  - [x] See exact apps.py code in Dev Notes
 
-- [ ] Task 6: Update `referral/views.py` — dispatch `referral_status_changed` from `referral_close` (AC: #4)
-  - [ ] After the `db_transaction.atomic()` block in `referral_close`, import and dispatch the custom signal
-  - [ ] See exact code snippet in Dev Notes
+- [x] Task 6: Update `referral/views.py` — dispatch `referral_status_changed` from `referral_close` (AC: #4)
+  - [x] After the `db_transaction.atomic()` block in `referral_close`, import and dispatch the custom signal
+  - [x] See exact code snippet in Dev Notes
 
-- [ ] Task 7: Write tests in `referral/tests/test_notifications.py` (AC: #1–#5)
-  - [ ] See exact test code in Dev Notes
+- [x] Task 7: Write tests in `referral/tests/test_notifications.py` (AC: #1–#5)
+  - [x] See exact test code in Dev Notes
 
 ## Dev Notes
 
@@ -541,4 +541,20 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- NotificationType (choice.py) and Notification model (referral/models.py) were already implemented; created migration 0002 and applied it.
+- Created referral/signals.py with all 3 signal handlers (REFERRAL_RECEIVED, REFERRAL_REPLIED, REFERRAL_CLOSED) and custom `referral_status_changed` signal.
+- Activated signal registration in referral/apps.py ready().
+- Dispatched referral_status_changed signal from referral_close view after bulk update.
+- Created referral/tests/test_notifications.py with 4 tests (all pass).
+- Fixed patient creation in tests to use VALID_PATIENT_FIELDS (required fields: gender, dob_tob, mo_delivery, birth_weight, ofc, tp_mobile).
+- All 52 referral tests pass, no regressions.
+
 ### File List
+
+- ndas/custom_codes/choice.py (pre-existing, no change needed)
+- referral/models.py (pre-existing, no change needed)
+- referral/migrations/0002_notification_and_more.py (CREATED)
+- referral/signals.py (CREATED — full implementation)
+- referral/apps.py (MODIFIED — activated signal import)
+- referral/views.py (MODIFIED — signal dispatch in referral_close)
+- referral/tests/test_notifications.py (CREATED)

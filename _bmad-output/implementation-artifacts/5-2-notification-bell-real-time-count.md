@@ -1,6 +1,6 @@
 # Story 5.2: Notification Bell & Real-Time Count
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -37,27 +37,27 @@ So that I can see pending referral activity within 120 seconds of it occurring w
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `notification_count` view to `referral/views.py` (AC: #4, #5)
-  - [ ] `@login_required`, `@require_GET`
-  - [ ] Queries `Notification.objects.filter(recipient=request.user, institution=request.institution, is_read=False).count()`
-  - [ ] Returns `render(request, 'referral/notification_count_badge.html', {'count': count})`
-  - [ ] See exact view code in Dev Notes
+- [x] Task 1: Add `notification_count` view to `referral/views.py` (AC: #4, #5)
+  - [x] `@login_required`, `@require_GET`
+  - [x] Queries `Notification.objects.filter(recipient=request.user, institution=request.institution, is_read=False).count()`
+  - [x] Returns `render(request, 'referral/notification_count_badge.html', {'count': count})`
+  - [x] See exact view code in Dev Notes
 
-- [ ] Task 2: Add `notification-count` URL to `referral/urls.py` (AC: #4)
-  - [ ] `path('notifications/count/', views.notification_count, name='notification-count')`
+- [x] Task 2: Add `notification-count` URL to `referral/urls.py` (AC: #4)
+  - [x] `path('notifications/count/', views.notification_count, name='notification-count')`
 
-- [ ] Task 3: Create `templates/referral/notification_count_badge.html` partial (AC: #4, #5)
-  - [ ] Renders badge only when count > 0
-  - [ ] See exact template in Dev Notes
+- [x] Task 3: Create `templates/referral/notification_count_badge.html` partial (AC: #4, #5)
+  - [x] Renders badge only when count > 0
+  - [x] See exact template in Dev Notes
 
-- [ ] Task 4: Activate the navbar bell in `templates/src/navbar.html` (AC: #1, #2, #3)
-  - [ ] The bell icon block at lines 113–139 is currently commented out
-  - [ ] Uncomment and wire up with HTMX polling attributes
-  - [ ] Bell only shown for authenticated users with institution context
-  - [ ] See exact template fragment in Dev Notes
+- [x] Task 4: Activate the navbar bell in `templates/src/navbar.html` (AC: #1, #2, #3)
+  - [x] The bell icon block at lines 113–139 is currently commented out
+  - [x] Uncomment and wire up with HTMX polling attributes
+  - [x] Bell only shown for authenticated users with institution context
+  - [x] See exact template fragment in Dev Notes
 
-- [ ] Task 5: Write tests in `referral/tests/test_notification_bell.py` (AC: #1–#5)
-  - [ ] See exact test code in Dev Notes
+- [x] Task 5: Write tests in `referral/tests/test_notification_bell.py` (AC: #1–#5)
+  - [x] See exact test code in Dev Notes
 
 ## Dev Notes
 
@@ -300,4 +300,17 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Added notification_count view to referral/views.py (HTMX polling endpoint, returns badge fragment).
+- Added notification-count URL to referral/urls.py.
+- Created templates/referral/notification_count_badge.html (badge only when count > 0).
+- Replaced commented-out navbar notifications block with HTMX-wired bell (hx-trigger="load, every 60s") in templates/src/navbar.html. Combined with Story 5.3 panel container wiring in one step.
+- Created referral/tests/test_notification_bell.py with 5 tests (all pass).
+- All 52 referral tests pass.
+
 ### File List
+
+- referral/views.py (MODIFIED — added notification_count view)
+- referral/urls.py (MODIFIED — added notification-count URL)
+- templates/referral/notification_count_badge.html (CREATED)
+- templates/src/navbar.html (MODIFIED — HTMX bell activated)
+- referral/tests/test_notification_bell.py (CREATED)

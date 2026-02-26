@@ -7,6 +7,4 @@ class ReferralConfig(AppConfig):
     verbose_name = 'Referral System'
 
     def ready(self):
-        # Story 5.1: Signal registration
-        # import referral.signals  # Uncomment when Story 5.1 is implemented
-        pass
+        import referral.signals  # noqa: F401 — registers all signal handlers

@@ -1,6 +1,6 @@
 # Story 5.3: Notification Panel & Mark as Read
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -40,44 +40,44 @@ So that I can action notifications directly and keep my unread count accurate.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `notification_panel` view to `referral/views.py` (AC: #1, #2, #5)
-  - [ ] `@login_required`, `@require_GET`
-  - [ ] Queries `Notification.objects.filter(recipient=request.user, institution=request.institution).order_by('-created_at')[:20]`
-  - [ ] Returns `render(request, 'referral/notification_panel.html', {'notifications': notifications})`
-  - [ ] See exact view code in Dev Notes
+- [x] Task 1: Add `notification_panel` view to `referral/views.py` (AC: #1, #2, #5)
+  - [x] `@login_required`, `@require_GET`
+  - [x] Queries `Notification.objects.filter(recipient=request.user, institution=request.institution).order_by('-created_at')[:20]`
+  - [x] Returns `render(request, 'referral/notification_panel.html', {'notifications': notifications})`
+  - [x] See exact view code in Dev Notes
 
-- [ ] Task 2: Add `notification_mark_read` view to `referral/views.py` (AC: #3)
-  - [ ] `@login_required`, `@require_GET`
-  - [ ] `get_object_or_404(Notification, id=pk, recipient=request.user, institution=request.institution)`
-  - [ ] Sets `is_read=True`, saves, then redirects to `notification.link` (or inbox if link is empty)
-  - [ ] See exact view code in Dev Notes
+- [x] Task 2: Add `notification_mark_read` view to `referral/views.py` (AC: #3)
+  - [x] `@login_required`, `@require_GET`
+  - [x] `get_object_or_404(Notification, id=pk, recipient=request.user, institution=request.institution)`
+  - [x] Sets `is_read=True`, saves, then redirects to `notification.link` (or inbox if link is empty)
+  - [x] See exact view code in Dev Notes
 
-- [ ] Task 3: Add `notification_mark_all_read` view to `referral/views.py` (AC: #4)
-  - [ ] `@login_required`, `@require_http_methods(["POST"])`
-  - [ ] Bulk update: `Notification.objects.filter(recipient=request.user, institution=request.institution).update(is_read=True)`
-  - [ ] Returns re-rendered `notification_panel` response (HTMX target: `#notification-panel-container`)
-  - [ ] See exact view code in Dev Notes
+- [x] Task 3: Add `notification_mark_all_read` view to `referral/views.py` (AC: #4)
+  - [x] `@login_required`, `@require_http_methods(["POST"])`
+  - [x] Bulk update: `Notification.objects.filter(recipient=request.user, institution=request.institution).update(is_read=True)`
+  - [x] Returns re-rendered `notification_panel` response (HTMX target: `#notification-panel-container`)
+  - [x] See exact view code in Dev Notes
 
-- [ ] Task 4: Add 3 URLs to `referral/urls.py` (AC: #1, #3, #4)
-  - [ ] `path('notifications/panel/', views.notification_panel, name='notification-panel')`
-  - [ ] `path('notifications/<int:pk>/read/', views.notification_mark_read, name='notification-mark-read')`
-  - [ ] `path('notifications/mark-all-read/', views.notification_mark_all_read, name='notification-mark-all-read')`
+- [x] Task 4: Add 3 URLs to `referral/urls.py` (AC: #1, #3, #4)
+  - [x] `path('notifications/panel/', views.notification_panel, name='notification-panel')`
+  - [x] `path('notifications/<int:pk>/read/', views.notification_mark_read, name='notification-mark-read')`
+  - [x] `path('notifications/mark-all-read/', views.notification_mark_all_read, name='notification-mark-all-read')`
 
-- [ ] Task 5: Create `templates/referral/notification_panel.html` (AC: #1, #2, #4)
-  - [ ] AdminLTE dropdown list style: `<div class="dropdown-item">` per notification
-  - [ ] Unread items: `bg-light` or bold title class
-  - [ ] "Mark all read" button at footer — HTMX POST to `notification-mark-all-read`
-  - [ ] Empty state when no notifications
-  - [ ] See exact template in Dev Notes
+- [x] Task 5: Create `templates/referral/notification_panel.html` (AC: #1, #2, #4)
+  - [x] AdminLTE dropdown list style: `<div class="dropdown-item">` per notification
+  - [x] Unread items: `bg-light` or bold title class
+  - [x] "Mark all read" button at footer — HTMX POST to `notification-mark-all-read`
+  - [x] Empty state when no notifications
+  - [x] See exact template in Dev Notes
 
-- [ ] Task 6: Update `templates/src/navbar.html` panel container to load via HTMX on click (AC: #1)
-  - [ ] The `#notification-panel-container` div (added in Story 5.2) should load the panel on bell click
-  - [ ] `hx-get="{% url 'referral:notification-panel' %}"` on `#notification-panel-container`
-  - [ ] `hx-trigger="click from:.nav-item.dropdown .nav-link once"` — loads panel on first bell open
-  - [ ] See exact template diff in Dev Notes
+- [x] Task 6: Update `templates/src/navbar.html` panel container to load via HTMX on click (AC: #1)
+  - [x] The `#notification-panel-container` div (added in Story 5.2) should load the panel on bell click
+  - [x] `hx-get="{% url 'referral:notification-panel' %}"` on `#notification-panel-container`
+  - [x] `hx-trigger="show.bs.dropdown from:closest .nav-item once"` — loads panel on first bell open
+  - [x] See exact template diff in Dev Notes
 
-- [ ] Task 7: Write tests in `referral/tests/test_notification_panel.py` (AC: #1–#5)
-  - [ ] See exact test code in Dev Notes
+- [x] Task 7: Write tests in `referral/tests/test_notification_panel.py` (AC: #1–#5)
+  - [x] See exact test code in Dev Notes
 
 ## Dev Notes
 
@@ -474,4 +474,21 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Added 3 views to referral/views.py: notification_panel (GET, latest 20), notification_mark_read (GET → redirect), notification_mark_all_read (POST → re-rendered panel).
+- Added `from django.urls import reverse` import to views.py for the inbox fallback redirect.
+- Added 3 URLs to referral/urls.py (notification-panel, notification-mark-read, notification-mark-all-read).
+- Created templates/referral/notification_panel.html with per-notification links, unread highlighting (bg-light + font-weight-bold), "Mark all as read" HTMX form, and empty state.
+- Replaced `{% load humanize %}` with standard `|date:"d M Y H:i"` filter (django.contrib.humanize not installed in this project).
+- Updated templates/src/navbar.html panel container with hx-get + hx-trigger="show.bs.dropdown from:closest .nav-item once" HTMX attributes. Both 5.2 and 5.3 navbar changes combined in single edit.
+- Created referral/tests/test_notification_panel.py with 9 tests (all pass).
+- Fixed test assertNotContains calls: message must use msg_prefix= keyword arg (3rd positional arg is status_code, not message).
+- Added STATIC_OVERRIDE to panel tests to avoid ManifestStaticFilesStorage recursion on 404 pages.
+- All 52 referral tests pass.
+
 ### File List
+
+- referral/views.py (MODIFIED — added notification_panel, notification_mark_read, notification_mark_all_read views + `from django.urls import reverse`)
+- referral/urls.py (MODIFIED — added 3 notification URLs)
+- templates/referral/notification_panel.html (CREATED)
+- templates/src/navbar.html (MODIFIED — panel container HTMX wiring)
+- referral/tests/test_notification_panel.py (CREATED)

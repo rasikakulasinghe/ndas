@@ -7,6 +7,7 @@ import logging
 import uuid
 
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods, require_GET
 from django_ratelimit.decorators import ratelimit
@@ -402,6 +403,16 @@ def referral_close(request, referral_uuid):
         referral_uuid,
     )
 
+    # Dispatch custom signal so signals.py can create closure notifications (FR69).
+    # NOTE: bulk update() skips post_save, so we use a custom signal here.
+    from referral.signals import referral_status_changed
+    referral_status_changed.send(
+        sender=ReferralSent,
+        referral_uuid=referral_uuid,
+        new_status=ReferralStatus.CLOSED,
+        changed_by=request.user,
+    )
+
     return _thread_panel_response(request, referral_uuid)
 
 
@@ -474,4 +485,98 @@ def patient_referrals_tab(request, patient_id):
         'patient':        patient,
         'timeline':       timeline,
         'referral_count': len(timeline),
+    })
+
+
+# ── Story 5.2: Notification Bell ───────────────────────────────────────────
+
+
+@login_required(login_url="user-login")
+@require_GET
+def notification_count(request):
+    """
+    HTMX endpoint: returns unread notification count badge fragment (FR38, NFR23).
+
+    Polled every 60 seconds by the navbar bell (hx-trigger="every 60s").
+    Returns an empty fragment (no badge) when count is zero.
+    """
+    from referral.models import Notification
+    count = Notification.objects.filter(
+        recipient=request.user,
+        institution=request.institution,
+        is_read=False,
+    ).count()
+    return render(request, 'referral/notification_count_badge.html', {'count': count})
+
+
+# ── Story 5.3: Notification Panel & Mark as Read ───────────────────────────
+
+
+@login_required(login_url="user-login")
+@require_GET
+def notification_panel(request):
+    """
+    HTMX endpoint: returns rendered notification panel for dropdown (FR38, FR70).
+
+    Limited to 20 most recent notifications for the current user+institution.
+    Loaded into #notification-panel-container on bell click.
+    """
+    from referral.models import Notification
+    notifications = Notification.objects.filter(
+        recipient=request.user,
+        institution=request.institution,
+    ).order_by('-created_at')[:20]
+    return render(request, 'referral/notification_panel.html', {
+        'notifications': notifications,
+    })
+
+
+@login_required(login_url="user-login")
+@require_GET
+def notification_mark_read(request, pk):
+    """
+    Mark a single notification as read and redirect to its target link (FR70).
+
+    Scoped to recipient=request.user and institution=request.institution to
+    prevent cross-user reads.
+    """
+    from referral.models import Notification
+    notif = get_object_or_404(
+        Notification,
+        id=pk,
+        recipient=request.user,
+        institution=request.institution,
+    )
+    if not notif.is_read:
+        notif.is_read = True
+        notif.last_edit_by = request.user
+        notif.save(update_fields=['is_read', 'last_edit_by', 'updated_at'])
+
+    # Redirect to the notification's target link or inbox fallback
+    target = notif.link if notif.link else reverse('referral:referral-inbox')
+    return redirect(target)
+
+
+@login_required(login_url="user-login")
+@require_http_methods(["POST"])
+def notification_mark_all_read(request):
+    """
+    Mark all notifications for current user+institution as read (FR70).
+
+    Returns re-rendered panel for HTMX swap into #notification-panel-container.
+    """
+    from referral.models import Notification
+    Notification.objects.filter(
+        recipient=request.user,
+        institution=request.institution,
+        is_read=False,
+    ).update(is_read=True)
+
+    # Re-render panel showing all-read state
+    notifications = Notification.objects.filter(
+        recipient=request.user,
+        institution=request.institution,
+    ).order_by('-created_at')[:20]
+    return render(request, 'referral/notification_panel.html', {
+        'notifications': notifications,
     })

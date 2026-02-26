@@ -96,7 +96,7 @@ development_status:
   # FRs: FR38, FR67, FR68, FR69, FR70
   # ─────────────────────────────────────────────────────────────
   epic-5: in-progress
-  5-1-notification-model-signal-infrastructure: in-progress
-  5-2-notification-bell-real-time-count: ready-for-dev
-  5-3-notification-panel-mark-as-read: ready-for-dev
+  5-1-notification-model-signal-infrastructure: review
+  5-2-notification-bell-real-time-count: review
+  5-3-notification-panel-mark-as-read: review
   epic-5-retrospective: optional
