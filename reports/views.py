@@ -331,7 +331,7 @@ def download_gm_assessment_pdf(request, assessment_id):
     assessment = get_object_or_404(GMAssessment, id=assessment_id)
 
     # Generate PDF
-    generator = GMAssessmentPDFGenerator()
+    generator = GMAssessmentPDFGenerator(institution=getattr(request, 'institution', None))
     file_path = generator.generate(assessment_id)
 
     # Serve file - FileResponse handles closing the file
@@ -348,7 +348,7 @@ def download_hine_assessment_pdf(request, assessment_id):
     assessment = get_object_or_404(HINEAssessment, id=assessment_id)
 
     # Generate PDF
-    generator = HINEAssessmentPDFGenerator()
+    generator = HINEAssessmentPDFGenerator(institution=getattr(request, 'institution', None))
     file_path = generator.generate(assessment_id)
 
     # Serve file - FileResponse handles closing the file
@@ -365,7 +365,7 @@ def download_da_assessment_pdf(request, assessment_id):
     assessment = get_object_or_404(DevelopmentalAssessment, id=assessment_id)
 
     # Generate PDF
-    generator = DAAssessmentPDFGenerator()
+    generator = DAAssessmentPDFGenerator(institution=getattr(request, 'institution', None))
     file_path = generator.generate(assessment_id)
 
     # Serve file - FileResponse handles closing the file
@@ -382,7 +382,7 @@ def download_cdic_assessment_pdf(request, assessment_id):
     assessment = get_object_or_404(CDICRecord, id=assessment_id)
 
     # Generate PDF
-    generator = CDICAssessmentPDFGenerator()
+    generator = CDICAssessmentPDFGenerator(institution=getattr(request, 'institution', None))
     file_path = generator.generate(assessment_id)
 
     # Serve file - FileResponse handles closing the file
@@ -399,7 +399,7 @@ def download_gpa_assessment_pdf(request, assessment_id):
     assessment = get_object_or_404(GeneralPaediatricAssessment, id=assessment_id)
 
     # Generate PDF
-    generator = GPAAssessmentPDFGenerator()
+    generator = GPAAssessmentPDFGenerator(institution=getattr(request, 'institution', None))
     file_path = generator.generate(assessment_id)
 
     # Serve file - FileResponse handles closing the file

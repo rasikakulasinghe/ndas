@@ -32,14 +32,16 @@ from patients.models import (
 class BasePDFGenerator:
     """Base class for PDF generation with common utilities"""
 
-    def __init__(self, template=None):
+    def __init__(self, template=None, institution=None):
         """
-        Initialize PDF generator with optional template
+        Initialize PDF generator with optional template and institution branding.
 
         Args:
             template: ReportTemplate instance (uses default if None)
+            institution: Institution instance for branding injection (Story 3.4 — FR59)
         """
         self.template = template or self.get_template()
+        self.institution = institution  # Phase 2: institution-specific branding (Story 3.4)
         self.styles = self.get_styles()
         self.page_size = self.get_page_size()
 
@@ -102,33 +104,57 @@ class BasePDFGenerator:
         """Draw header and footer on each page"""
         canvas_obj.saveState()
 
-        # Draw header
-        if self.template and self.template.header_text:
-            # Simple text header (strip HTML tags for PDF)
-            from django.utils.html import strip_tags
-            header_text = strip_tags(self.template.header_text)
+        # Draw header — institution branding takes priority over template (FR59)
+        if self.institution:
+            # Institution name as centred header text
             canvas_obj.setFont('Helvetica-Bold', 10)
             canvas_obj.drawCentredString(
                 doc.width / 2 + doc.leftMargin,
                 doc.height + doc.topMargin + 0.5 * inch,
-                header_text[:100]  # Limit length
+                str(self.institution.name)[:100]
             )
+            # Institution logo if available (AC #2: omit gracefully when absent)
+            if self.institution.logo:
+                try:
+                    logo_path = self.institution.logo.path
+                    if os.path.exists(logo_path):
+                        canvas_obj.drawImage(
+                            logo_path,
+                            doc.leftMargin,
+                            doc.height + doc.topMargin + 0.3 * inch,
+                            width=1.5 * inch,
+                            height=0.5 * inch,
+                            preserveAspectRatio=True
+                        )
+                except Exception:
+                    pass  # AC #2: no broken placeholder — graceful skip
+        else:
+            # Fall back to template-based header when no institution context
+            if self.template and self.template.header_text:
+                from django.utils.html import strip_tags
+                header_text = strip_tags(self.template.header_text)
+                canvas_obj.setFont('Helvetica-Bold', 10)
+                canvas_obj.drawCentredString(
+                    doc.width / 2 + doc.leftMargin,
+                    doc.height + doc.topMargin + 0.5 * inch,
+                    header_text[:100]
+                )
 
-        # Draw logo if available
-        if self.template and self.template.logo:
-            try:
-                logo_path = self.template.logo.path
-                if os.path.exists(logo_path):
-                    canvas_obj.drawImage(
-                        logo_path,
-                        doc.leftMargin,
-                        doc.height + doc.topMargin + 0.3 * inch,
-                        width=1.5 * inch,
-                        height=0.5 * inch,
-                        preserveAspectRatio=True
-                    )
-            except Exception:
-                pass  # Skip logo if error
+            # Draw template logo if available
+            if self.template and self.template.logo:
+                try:
+                    logo_path = self.template.logo.path
+                    if os.path.exists(logo_path):
+                        canvas_obj.drawImage(
+                            logo_path,
+                            doc.leftMargin,
+                            doc.height + doc.topMargin + 0.3 * inch,
+                            width=1.5 * inch,
+                            height=0.5 * inch,
+                            preserveAspectRatio=True
+                        )
+                except Exception:
+                    pass  # Skip logo if error
 
         # Draw footer
         if self.template and self.template.footer_text:

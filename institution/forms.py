@@ -1,18 +1,19 @@
 """
 institution/forms.py
 
-Form for Story 2.3 — Atomic Institution Onboarding.
-Validates both institution fields and the first admin account fields
-before the view creates both records inside a single transaction.
+Forms for institution management views.
+Story 2.3 — Atomic Institution Onboarding.
+Story 3.2 — Clinician Account Management.
 """
 from django import forms
+from django.conf import settings as django_settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
 from institution.models import Institution
-from ndas.custom_codes.choice import Position
-from ndas.custom_codes.validators import sanitize_text_input
+from ndas.custom_codes.choice import Position, UserType
+from ndas.custom_codes.validators import sanitize_text_input, image_extension_validation
 
 User = get_user_model()
 
@@ -124,3 +125,83 @@ class InstitutionOnboardingForm(forms.Form):
             except ValidationError as e:
                 self.add_error('admin_password', e)
         return cleaned_data
+
+
+class InstitutionClinicianForm(forms.ModelForm):
+    """
+    Form for institution admins to create new USER-type clinician accounts (Story 3.2 — FR57).
+
+    Enforces user_type=USER — institution admins cannot create ADMIN or SUPERADMIN accounts.
+    """
+    password1 = forms.CharField(
+        label='Password',
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'autocomplete': 'new-password'}),
+        min_length=8,
+    )
+    password2 = forms.CharField(
+        label='Confirm Password',
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'autocomplete': 'new-password'}),
+    )
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'username', 'email', 'position', 'mobile_primary']
+        widgets = {
+            'first_name':     forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name':      forms.TextInput(attrs={'class': 'form-control'}),
+            'username':       forms.TextInput(attrs={'class': 'form-control'}),
+            'email':          forms.EmailInput(attrs={'class': 'form-control'}),
+            'position':       forms.Select(attrs={'class': 'form-control'}),
+            'mobile_primary': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+    def clean_password2(self):
+        p1 = self.cleaned_data.get('password1', '')
+        p2 = self.cleaned_data.get('password2', '')
+        if p1 and p2 and p1 != p2:
+            raise forms.ValidationError("Passwords do not match.")
+        return p2
+
+    def save(self, institution, commit=True):
+        """
+        Create and return a new USER-type clinician bound to the given institution.
+        user_type is always forced to USER — never settable by form data (AC #3).
+        """
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data['password1'])
+        user.user_type = UserType.USER  # AC #3: ALWAYS forced — never from form input
+        user.institution = institution
+        user.is_active = True
+        if commit:
+            user.save()
+        return user
+
+
+class InstitutionSettingsForm(forms.ModelForm):
+    """
+    Form for institution admin to update logo and display name (Story 3.3 — FR58).
+    Slug is NOT editable (immutable after creation).
+    """
+    class Meta:
+        model = Institution
+        fields = ['name', 'logo']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'logo': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
+        }
+
+    def clean_logo(self):
+        logo = self.cleaned_data.get('logo')
+        if logo and hasattr(logo, 'size'):
+            max_size = getattr(django_settings, 'FILE_UPLOAD_LIMITS', {}).get(
+                'IMAGE_MAX_SIZE', 10 * 1024 * 1024
+            )
+            if logo.size > max_size:
+                raise forms.ValidationError(
+                    f"Logo file size must not exceed {max_size // (1024 * 1024)}MB."
+                )
+            try:
+                image_extension_validation(logo)
+            except Exception as e:
+                raise forms.ValidationError(str(e))
+        return logo

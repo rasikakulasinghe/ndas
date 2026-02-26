@@ -1,6 +1,6 @@
 # Story 3.1: Institution Admin Dashboard
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -34,32 +34,32 @@ So that I can monitor the health and productivity of my clinical team without re
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `institution_admin_dashboard` view to `institution/views.py` (AC: #1, #2, #3, #4)
-  - [ ] ADMIN-only access: redirect USER → `home`, redirect SUPERADMIN → `institution:superadmin-dashboard`
-  - [ ] Patient stats: counts by pt_status using `Patient.objects.for_institution(request.institution)`
-  - [ ] Assessment counts (current month): lazy-import assessment models inside function body (circular import safety)
-  - [ ] Referral activity: stub as zeros until Story 4.1 is done (try/except ImportError)
-  - [ ] Team activity: user count + annotation for most active clinicians this month
-  - [ ] See exact view code in Dev Notes
+- [x] Task 1: Add `institution_admin_dashboard` view to `institution/views.py` (AC: #1, #2, #3, #4)
+  - [x] ADMIN-only access: redirect USER → `home`, redirect SUPERADMIN → `institution:superadmin-dashboard`
+  - [x] Patient stats: counts by pt_status using `Patient.objects.for_institution(request.institution)`
+  - [x] Assessment counts (current month): lazy-import assessment models inside function body (circular import safety)
+  - [x] Referral activity: stub as zeros until Story 4.1 is done (try/except ImportError)
+  - [x] Team activity: user count + annotation for most active clinicians this month
+  - [x] See exact view code in Dev Notes
 
-- [ ] Task 2: Uncomment `institution-admin-dashboard` URL in `institution/urls.py` (AC: #1)
-  - [ ] Uncomment: `path('admin/', views.institution_admin_dashboard, name='institution-admin-dashboard')`
-  - [ ] See exact URL config in Dev Notes
+- [x] Task 2: Uncomment `institution-admin-dashboard` URL in `institution/urls.py` (AC: #1)
+  - [x] Uncomment: `path('admin/', views.institution_admin_dashboard, name='institution-admin-dashboard')`
+  - [x] See exact URL config in Dev Notes
 
-- [ ] Task 3: Create `templates/institution/admin_dashboard.html` (AC: #1, #3)
-  - [ ] Extend `src/base.html`; title "Admin Dashboard — [institution name]"
-  - [ ] 2×2 AdminLTE card grid (patient stats, assessment activity, referral activity, team activity)
-  - [ ] Empty state: zero values displayed gracefully (no "None" or template errors)
-  - [ ] "Manage Clinicians" link → `institution:institution-clinician-list`; "Settings" link → `institution:institution-settings`
-  - [ ] See exact template in Dev Notes
+- [x] Task 3: Create `templates/institution/admin_dashboard.html` (AC: #1, #3)
+  - [x] Extend `src/base.html`; title "Admin Dashboard — [institution name]"
+  - [x] 2×2 AdminLTE card grid (patient stats, assessment activity, referral activity, team activity)
+  - [x] Empty state: zero values displayed gracefully (no "None" or template errors)
+  - [x] "Manage Clinicians" link → `institution:institution-clinician-list`; "Settings" link → `institution:institution-settings`
+  - [x] See exact template in Dev Notes
 
-- [ ] Task 4: Add "Admin Dashboard" entry to `templates/src/main_sidebar_menu.html` (AC: #1)
-  - [ ] Under Administration section, add link conditional on `user_type == 'ADMIN'`
-  - [ ] URL: `{% url 'institution:institution-admin-dashboard' %}`
-  - [ ] See exact placement in Dev Notes
+- [x] Task 4: Add "Admin Dashboard" entry to `templates/src/main_sidebar_menu.html` (AC: #1)
+  - [x] Under Administration section, add link conditional on `user_type == 'ADMIN'`
+  - [x] URL: `{% url 'institution:institution-admin-dashboard' %}`
+  - [x] See exact placement in Dev Notes
 
-- [ ] Task 5: Write tests in `institution/tests/test_admin_dashboard.py` (AC: #1–#4)
-  - [ ] See exact test code in Dev Notes
+- [x] Task 5: Write tests in `institution/tests/test_admin_dashboard.py` (AC: #1–#4)
+  - [x] See exact test code in Dev Notes
 
 ## Dev Notes
 
@@ -594,6 +594,25 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+- Fixed `request.institution` AttributeError: `/institution/` URLs are middleware-exempt; resolved by `getattr(request, 'institution', None) or request.user.institution` fallback.
+- Fixed staticfiles manifest error in tests: added `STATIC_OVERRIDE` with `StaticFilesStorage` backend.
+- Fixed NoReverseMatch for `institution-clinician-list`/`institution-settings`: used silent `{% url ... as var %}` pattern in template (URLs pending Story 3.2/3.3).
+
 ### Completion Notes List
 
+- Implemented 4-quadrant institution admin dashboard (FR56): patient stats, assessment activity (current month), referral activity (stub), team activity.
+- ADMIN-only access guard with role-specific redirects (USER→home, SUPERADMIN→superadmin-dashboard).
+- Referral stats stubbed with try/except ImportError — will auto-populate once Story 4.1 adds referral models.
+- 10/10 tests pass covering AC #1–#4.
+
 ### File List
+
+- institution/views.py (modified — added institution_admin_dashboard view)
+- institution/urls.py (modified — uncommented institution-admin-dashboard path)
+- templates/institution/admin_dashboard.html (created)
+- templates/src/main_sidebar_menu.html (modified — added Admin Dashboard nav item for ADMIN role)
+- institution/tests/test_admin_dashboard.py (created — 10 tests)
+
+### Change Log
+
+- 2026-02-26: Story 3.1 implemented — Institution Admin Dashboard (FR42, FR56). Added view, URL, template, sidebar entry, and tests.

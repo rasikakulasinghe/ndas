@@ -1,0 +1,137 @@
+{% extends 'src/base.html' %}
+{% load static %}
+{% block title %}Admin Dashboard — {{ institution.name }}{% endblock %}
+
+{% block content_header %}
+<div class="row mb-0">
+  <div class="col-sm-6">
+    <h1 class="m-0">Admin Dashboard</h1>
+    <small class="text-muted">{{ institution.name }}</small>
+  </div>
+  <div class="col-sm-6">
+    <ol class="breadcrumb float-sm-right">
+      <li class="breadcrumb-item active">Admin Dashboard</li>
+    </ol>
+  </div>
+</div>
+{% endblock content_header %}
+
+{% url 'institution:institution-clinician-list' as clinician_url %}
+{% url 'institution:institution-settings' as settings_url %}
+
+{% block main_content %}
+<div class="container-fluid">
+
+  {# Action bar #}
+  <div class="row mb-3">
+    <div class="col-12">
+      {% if clinician_url %}
+      <a href="{{ clinician_url }}" class="btn btn-primary btn-sm mr-2">
+        <i class="fas fa-users mr-1"></i>Manage Clinicians
+      </a>
+      {% endif %}
+      {% if settings_url %}
+      <a href="{{ settings_url }}" class="btn btn-secondary btn-sm">
+        <i class="fas fa-cog mr-1"></i>Institution Settings
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── Row 1: Quadrant 1 + 2 ─────────────────────────────────────────── #}
+  <div class="row">
+
+    {# Quadrant 1: Patient Stats #}
+    <div class="col-lg-6">
+      <div class="card card-primary card-outline">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-procedures mr-2"></i>Patient Statistics</h3>
+        </div>
+        <div class="card-body">
+          <div class="row text-center">
+            <div class="col-12">
+              <h2 class="font-weight-bold">{{ total_patients }}</h2>
+              <p class="text-muted mb-0">Total Patients</p>
+            </div>
+          </div>
+          {% if total_patients == 0 %}
+          <p class="text-center text-muted mt-3"><i class="fas fa-info-circle mr-1"></i>No patients registered yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {# Quadrant 2: Assessment Activity #}
+    <div class="col-lg-6">
+      <div class="card card-info card-outline">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-chart-bar mr-2"></i>Assessments This Month</h3>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-sm mb-0">
+            <tbody>
+              <tr><th>GMA</th><td class="text-right">{{ assessment_counts.gma }}</td></tr>
+              <tr><th>HINE</th><td class="text-right">{{ assessment_counts.hine }}</td></tr>
+              <tr><th>Developmental</th><td class="text-right">{{ assessment_counts.da }}</td></tr>
+              <tr><th>CDIC</th><td class="text-right">{{ assessment_counts.cdic }}</td></tr>
+              <tr><th>GPA</th><td class="text-right">{{ assessment_counts.gpa }}</td></tr>
+              <tr class="font-weight-bold table-light"><th>Total</th><td class="text-right">{{ assessment_counts.total }}</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  {# ── Row 2: Quadrant 3 + 4 ─────────────────────────────────────────── #}
+  <div class="row">
+
+    {# Quadrant 3: Referral Activity #}
+    <div class="col-lg-6">
+      <div class="card card-warning card-outline">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-share-square mr-2"></i>Referral Activity</h3>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-sm mb-0">
+            <tbody>
+              <tr><th>Sent</th><td class="text-right">{{ referral_stats.sent }}</td></tr>
+              <tr><th>Received</th><td class="text-right">{{ referral_stats.received }}</td></tr>
+              <tr><th>Pending</th><td class="text-right"><span class="badge badge-warning">{{ referral_stats.pending }}</span></td></tr>
+              <tr><th>Closed</th><td class="text-right"><span class="badge badge-secondary">{{ referral_stats.closed }}</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    {# Quadrant 4: Team Activity #}
+    <div class="col-lg-6">
+      <div class="card card-success card-outline">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-user-md mr-2"></i>Team Activity</h3>
+        </div>
+        <div class="card-body">
+          <p class="mb-2"><strong>Active Clinicians:</strong> {{ total_users }}</p>
+          {% if recent_registrations %}
+          <p class="text-muted mb-1"><small>Recent Registrations:</small></p>
+          <ul class="list-unstyled mb-0">
+            {% for p in recent_registrations %}
+            <li><i class="fas fa-user-circle mr-1 text-muted"></i>
+              <a href="{% url 'view-patient' p.id %}">{{ p.baby_name }}</a>
+              <small class="text-muted">— {{ p.created_at|date:"d M Y" }}</small>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="text-muted"><i class="fas fa-info-circle mr-1"></i>No patients registered yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

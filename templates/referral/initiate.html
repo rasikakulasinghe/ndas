@@ -1,0 +1,96 @@
+{% extends 'src/base.html' %}
+{% load static %}
+{% block title %}New Referral — {{ patient.baby_name }}{% endblock %}
+
+{% block content_header %}
+<div class="row mb-0">
+  <div class="col-sm-6">
+    <h1 class="m-0">New Referral</h1>
+    <small class="text-muted">{{ patient.baby_name }} (BHT: {{ patient.bht }})</small>
+  </div>
+  <div class="col-sm-6">
+    <ol class="breadcrumb float-sm-right">
+      <li class="breadcrumb-item"><a href="{% url 'view-patient' patient.id %}">Patient</a></li>
+      <li class="breadcrumb-item active">New Referral</li>
+    </ol>
+  </div>
+</div>
+{% endblock content_header %}
+
+{% block main_content %}
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card card-primary card-outline">
+        <div class="card-header"><h3 class="card-title"><i class="fas fa-paper-plane mr-2"></i>Referral Details</h3></div>
+        <div class="card-body">
+          <form method="post" id="referral-form">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="form-group">
+              <label class="font-weight-bold">Receiving Institution <span class="text-danger">*</span></label>
+              <select name="to_institution" id="id_to_institution" class="form-control"
+                hx-get="{% url 'referral:get-institution-clinicians' 0 %}"
+                hx-target="#clinician-select-wrapper"
+                hx-swap="innerHTML"
+                hx-trigger="change"
+                hx-include="[name='to_institution']">
+                <option value="">— Select institution —</option>
+                {% for inst in form.to_institution.field.queryset %}
+                <option value="{{ inst.pk }}"
+                  {% if form.to_institution.value == inst.pk|stringformat:'s' %}selected{% endif %}>
+                  {{ inst.name }}
+                </option>
+                {% endfor %}
+              </select>
+              {% if form.to_institution.errors %}
+              <div class="text-danger small">{{ form.to_institution.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="form-group">
+              <label class="font-weight-bold">Receiving Clinician <span class="text-danger">*</span></label>
+              <div id="clinician-select-wrapper">
+                <select name="to_clinician" id="clinician-select" class="form-control">
+                  <option value="">— Select institution first —</option>
+                  {% for clinician in form.to_clinician.field.queryset %}
+                  <option value="{{ clinician.pk }}">{{ clinician.get_full_name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              {% if form.to_clinician.errors %}
+              <div class="text-danger small">{{ form.to_clinician.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="form-group">
+              <label class="font-weight-bold">Referral Message <span class="text-danger">*</span></label>
+              {{ form.initial_message }}
+              {% if form.initial_message.errors %}
+              <div class="text-danger small">{{ form.initial_message.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="alert alert-info mt-2">
+              <i class="fas fa-info-circle mr-1"></i>
+              A complete frozen snapshot of this patient's current record will be attached automatically.
+            </div>
+
+            <div class="d-flex justify-content-between mt-3">
+              <a href="{% url 'view-patient' patient.id %}" class="btn btn-secondary btn-sm">Cancel</a>
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fas fa-paper-plane mr-1"></i>Send Referral
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

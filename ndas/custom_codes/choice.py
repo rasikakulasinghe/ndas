@@ -203,6 +203,25 @@ class SubscriptionStatus(models.TextChoices):
     EXPIRED = 'EXPIRED', 'Expired'
 
 
+# Referral lifecycle status (Phase 2 — Referral System, Story 4.1 — FR64)
+class ReferralStatus(models.TextChoices):
+    """
+    Referral lifecycle status — FR64.
+    PENDING → REPLIED → CLOSED (one-way progression).
+    """
+    PENDING = 'PENDING', 'Pending'
+    REPLIED = 'REPLIED', 'Replied'
+    CLOSED  = 'CLOSED',  'Closed'
+
+
+# Notification types for referral lifecycle events (Phase 2 — Story 5.1 — FR67-FR69)
+class NotificationType(models.TextChoices):
+    """In-app notification types triggered by referral lifecycle events."""
+    REFERRAL_RECEIVED = 'REFERRAL_RECEIVED', 'Referral Received'
+    REFERRAL_REPLIED  = 'REFERRAL_REPLIED',  'Referral Replied'
+    REFERRAL_CLOSED   = 'REFERRAL_CLOSED',   'Referral Closed'
+
+
 # Problem List Choices
 class PROBLEM_STATUS(models.TextChoices):
     ACTIVE = "active", "Active"

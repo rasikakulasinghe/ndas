@@ -2,15 +2,15 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from ndas.custom_codes.Custom_abstract_class import TimeStampedModel, UserTrackingMixin
 from ndas.custom_codes.choice import SubscriptionStatus
-
+from ndas.custom_codes.validators import get_institution_logo_path
 
 
 class Institution(TimeStampedModel, UserTrackingMixin):
     name = models.CharField(max_length=255, unique=True, db_index=True)
     slug = models.SlugField(max_length=100, unique=True, db_index=True)
     logo = models.ImageField(
-        upload_to='institution_logos/',  # temporary path; Story 1.5 adds institution-aware paths
-        null=True, blank=True
+        upload_to=get_institution_logo_path,  # Story 3.3: institution-aware logo path (FR58)
+        null=True, blank=True,
     )
     subscription_status = models.CharField(
         max_length=20,

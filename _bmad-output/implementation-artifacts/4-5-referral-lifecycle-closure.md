@@ -1,6 +1,6 @@
 # Story 4.5: Referral Lifecycle & Closure
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 

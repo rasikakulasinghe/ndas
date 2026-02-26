@@ -1,0 +1,89 @@
+{% extends 'src/base.html' %}
+{% load static %}
+{% block title %}Clinicians — {{ institution.name }}{% endblock %}
+
+{% block content_header %}
+<div class="row mb-0">
+  <div class="col-sm-6">
+    <h1 class="m-0">Clinicians</h1>
+    <small class="text-muted">{{ institution.name }}</small>
+  </div>
+  <div class="col-sm-6">
+    <ol class="breadcrumb float-sm-right">
+      <li class="breadcrumb-item"><a href="{% url 'institution:institution-admin-dashboard' %}">Admin</a></li>
+      <li class="breadcrumb-item active">Clinicians</li>
+    </ol>
+  </div>
+</div>
+{% endblock content_header %}
+
+{% block main_content %}
+<div class="container-fluid">
+  <div class="row mb-3">
+    <div class="col-12">
+      <a href="{% url 'institution:institution-clinician-add' %}" class="btn btn-primary btn-sm">
+        <i class="fas fa-user-plus mr-1"></i>Add Clinician
+      </a>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-12">
+      <div class="card card-primary card-outline">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-user-md mr-2"></i>Clinical Team</h3>
+        </div>
+        <div class="card-body table-responsive p-0">
+          <table class="table table-hover table-sm">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Position</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for clinician in clinicians %}
+              <tr class="{% if not clinician.is_active %}table-secondary text-muted{% endif %}">
+                <td>{{ clinician.get_full_name }}</td>
+                <td><code>{{ clinician.username }}</code></td>
+                <td>{{ clinician.email }}</td>
+                <td>{{ clinician.position }}</td>
+                <td>
+                  {% if clinician.is_active %}
+                    <span class="badge badge-success">Active</span>
+                  {% else %}
+                    <span class="badge badge-secondary">Inactive</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if clinician != request.user and clinician.user_type != 'ADMIN' %}
+                  <form method="post" action="{% url 'institution:institution-clinician-toggle-status' clinician.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    {% if clinician.is_active %}
+                      <button type="submit" class="btn btn-warning btn-xs">Deactivate</button>
+                    {% else %}
+                      <button type="submit" class="btn btn-success btn-xs">Reactivate</button>
+                    {% endif %}
+                  </form>
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="6" class="text-center text-muted py-3">
+                  No clinicians found.
+                  <a href="{% url 'institution:institution-clinician-add' %}">Add one</a>.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

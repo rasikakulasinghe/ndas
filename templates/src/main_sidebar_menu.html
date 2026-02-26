@@ -2,6 +2,24 @@
 
 <!-- Main Sidebar Container -->
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
+
+  {# Story 3.3 — Institution brand-logo slot (FR58) #}
+  <a href="{% url 'home' %}" class="brand-link">
+    {% if active_institution and active_institution.logo %}
+      <img src="{{ active_institution.logo.url }}"
+           class="brand-image elevation-3"
+           alt="{{ active_institution.name }}"
+           style="max-height:33px; max-width:33px; object-fit:contain;">
+    {% else %}
+      <img src="{% static 'img/AdminLTELogo.png' %}"
+           class="brand-image img-circle elevation-3"
+           alt="NDAS">
+    {% endif %}
+    <span class="brand-text font-weight-light">
+      {% if active_institution %}{{ active_institution.name|truncatechars:20 }}{% else %}NDAS{% endif %}
+    </span>
+  </a>
+
   <!-- Sidebar -->
   <div class="sidebar">
     <!-- User Panel -->
@@ -193,6 +211,18 @@
           </ul>
         </li>
 
+        {# Referrals — shown to all authenticated users (Story 4.3) #}
+        <li class="nav-header">REFERRALS</li>
+        <li class="nav-item">
+          <a href="{% url 'referral:referral-inbox' %}" class="nav-link {% if request.resolver_match.url_name == 'referral-inbox' %}active{% endif %}">
+            <i class="nav-icon fas fa-share-square"></i>
+            <p>
+              Referral Inbox
+              {# Story 5.2 will add: unread count badge here via HTMX #}
+            </p>
+          </a>
+        </li>
+
         <!-- Reports -->
         <li
           class="nav-item {% if 'reports' in request.resolver_match.namespace %}menu-open{% endif %}"
@@ -295,6 +325,22 @@
             </li>
             {% endif %}
           </ul>
+        </li>
+        {% endif %}
+
+        {# Institution Admin Dashboard & Clinicians — only for ADMIN role (Story 3.1, 3.2) #}
+        {% if user_type == 'ADMIN' %}
+        <li class="nav-item">
+          <a href="{% url 'institution:institution-admin-dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'institution-admin-dashboard' %}active{% endif %}">
+            <i class="nav-icon fas fa-tachometer-alt"></i>
+            <p>Admin Dashboard</p>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{% url 'institution:institution-clinician-list' %}" class="nav-link {% if request.resolver_match.url_name == 'institution-clinician-list' or request.resolver_match.url_name == 'institution-clinician-add' %}active{% endif %}">
+            <i class="nav-icon fas fa-user-md"></i>
+            <p>Clinicians</p>
+          </a>
         </li>
         {% endif %}
 

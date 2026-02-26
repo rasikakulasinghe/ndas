@@ -573,3 +573,18 @@ def get_institution_attachment_path(instance, filename):
     except AttributeError:
         slug = 'pending'
     return f"{slug}/attachments/{sanitize_filename(filename)}"
+
+
+def get_institution_logo_path(instance, filename):
+    """
+    Upload path for institution logo files (Story 3.3 — FR58).
+
+    Stores at: MEDIA_ROOT/{institution_slug}/logo/{sanitized_filename}
+
+    `instance` is an Institution model instance.
+    """
+    try:
+        slug = instance.slug if instance.slug else 'pending'
+    except AttributeError:
+        slug = 'pending'
+    return f"{slug}/logo/{sanitize_filename(filename)}"

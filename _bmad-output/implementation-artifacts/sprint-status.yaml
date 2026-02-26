@@ -72,10 +72,10 @@ development_status:
   # FRs: FR42 (admin), FR56, FR57, FR58, FR59
   # ─────────────────────────────────────────────────────────────
   epic-3: in-progress
-  3-1-institution-admin-dashboard: ready-for-dev
-  3-2-clinician-account-management: ready-for-dev
-  3-3-institution-branding-setup: ready-for-dev
-  3-4-pdf-report-branding: ready-for-dev
+  3-1-institution-admin-dashboard: review
+  3-2-clinician-account-management: review
+  3-3-institution-branding-setup: review
+  3-4-pdf-report-branding: review
   epic-3-retrospective: optional
 
   # ─────────────────────────────────────────────────────────────
@@ -83,12 +83,12 @@ development_status:
   # FRs: FR40, FR41, FR60, FR61, FR62, FR63, FR64, FR65, FR66
   # ─────────────────────────────────────────────────────────────
   epic-4: in-progress
-  4-1-referral-app-data-models: ready-for-dev
-  4-2-referral-initiation-frozen-patient-snapshot: ready-for-dev
-  4-3-referral-inbox: ready-for-dev
-  4-4-referral-thread-view-reply: ready-for-dev
-  4-5-referral-lifecycle-closure: ready-for-dev
-  4-6-patient-referrals-tab: ready-for-dev
+  4-1-referral-app-data-models: review
+  4-2-referral-initiation-frozen-patient-snapshot: review
+  4-3-referral-inbox: review
+  4-4-referral-thread-view-reply: review
+  4-5-referral-lifecycle-closure: review
+  4-6-patient-referrals-tab: review
   epic-4-retrospective: optional
 
   # ─────────────────────────────────────────────────────────────
@@ -96,7 +96,7 @@ development_status:
   # FRs: FR38, FR67, FR68, FR69, FR70
   # ─────────────────────────────────────────────────────────────
   epic-5: in-progress
-  5-1-notification-model-signal-infrastructure: ready-for-dev
+  5-1-notification-model-signal-infrastructure: in-progress
   5-2-notification-bell-real-time-count: ready-for-dev
   5-3-notification-panel-mark-as-read: ready-for-dev
   epic-5-retrospective: optional

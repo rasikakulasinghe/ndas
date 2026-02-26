@@ -1,0 +1,79 @@
+{# referral/patient_referrals_tab.html — Partial for patient detail view Referrals tab (Story 4.6) #}
+<div class="card card-outline mt-2" id="patient-referrals-tab-content">
+  <div class="card-header">
+    <h3 class="card-title">
+      <i class="fas fa-share-square mr-2"></i>Referrals
+      <span class="badge badge-secondary ml-1">{{ referral_count }}</span>
+    </h3>
+    <div class="card-tools">
+      <a href="{% url 'referral:referral-initiate' patient.id %}" class="btn btn-primary btn-xs">
+        <i class="fas fa-plus mr-1"></i>New Referral
+      </a>
+    </div>
+  </div>
+  <div class="card-body p-0">
+    {% if timeline %}
+    <div class="timeline timeline-inverse p-3">
+      {% for entry in timeline %}
+      <div>
+        <i class="fas
+          {% if entry.direction == 'sent' %}fa-arrow-right bg-info
+          {% else %}fa-arrow-left bg-success
+          {% endif %}"></i>
+
+        <div class="timeline-item">
+          <span class="time">
+            <i class="fas fa-clock mr-1"></i>{{ entry.created_at|date:"d M Y" }}
+          </span>
+          <h3 class="timeline-header">
+            {% if entry.direction == 'sent' %}
+              <span class="badge badge-info">Sent</span>
+              Referred to {{ entry.to_institution.name|default:"Unknown" }}
+            {% else %}
+              <span class="badge badge-success">Received</span>
+              From {{ entry.from_institution.name|default:"Unknown" }}
+            {% endif %}
+
+            {% if entry.status == 'PENDING' %}
+              <span class="badge badge-warning ml-1">Pending</span>
+            {% elif entry.status == 'REPLIED' %}
+              <span class="badge badge-primary ml-1">Replied</span>
+            {% elif entry.status == 'CLOSED' %}
+              <span class="badge badge-secondary ml-1">Closed</span>
+            {% endif %}
+          </h3>
+          <div class="timeline-body">
+            <small>
+              {% if entry.direction == 'sent' %}
+                To: {% if entry.to_clinician %}{{ entry.to_clinician.get_full_name|default:entry.to_clinician.username }}{% else %}—{% endif %}
+              {% else %}
+                From: {{ entry.from_clinician }}
+              {% endif %}
+            </small>
+            {% if entry.outcome %}
+            <div class="mt-1"><em class="text-muted">Outcome: {{ entry.outcome }}</em></div>
+            {% endif %}
+          </div>
+          <div class="timeline-footer">
+            <a href="{% url 'referral:referral-inbox' %}"
+               class="btn btn-xs btn-outline-secondary">
+              <i class="fas fa-comments mr-1"></i>View in Inbox
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+      <div><i class="fas fa-clock bg-gray"></i></div>
+    </div>
+    {% else %}
+    {# AC #4: Empty state #}
+    <div class="text-center text-muted p-4">
+      <i class="fas fa-share-square fa-3x mb-2 d-block"></i>
+      <p>No referrals for this patient.</p>
+      <a href="{% url 'referral:referral-initiate' patient.id %}" class="btn btn-primary btn-sm">
+        Send First Referral
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>

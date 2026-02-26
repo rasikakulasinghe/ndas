@@ -1,6 +1,6 @@
 # Story 3.4: PDF Report Branding
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -30,23 +30,22 @@ So that exported patient reports are professionally branded and clearly attribut
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Confirm `BasePDFGenerator` is already extended (Story 2.5 prerequisite) (AC: #1, #2, #3)
-  - [ ] Verify `reports/utils/pdf_generator.py` has `__init__(self, template=None, institution=None)`
-  - [ ] Verify `self.institution` is stored and used in `create_header_footer()`
-  - [ ] If Story 2.5 has NOT been implemented yet, implement the BasePDFGenerator change first (see Story 2.5 Dev Notes Task 1 for exact code)
+- [x] Task 1: Confirm `BasePDFGenerator` is already extended (Story 2.5 prerequisite) (AC: #1, #2, #3)
+  - [x] Verify `reports/utils/pdf_generator.py` has `__init__(self, template=None, institution=None)`
+  - [x] Verify `self.institution` is stored and used in `create_header_footer()`
+  - [x] Story 2.5 was NOT yet implemented — implemented BasePDFGenerator change in this story
 
-- [ ] Task 2: Update all PDF-generating views in `reports/views.py` to pass `institution=request.institution` (AC: #1, #3)
-  - [ ] Find all instantiations of `PatientPDFGenerator`, `GMAssessmentPDFGenerator`, and other PDF generator subclasses
-  - [ ] Add `institution=request.institution` keyword argument to each instantiation
-  - [ ] `request.institution` is set by `InstitutionContextMiddleware` (Story 1.3) — safe to use in any authenticated view
-  - [ ] See exact changes in Dev Notes
+- [x] Task 2: Update all PDF-generating views in `reports/views.py` to pass `institution=request.institution` (AC: #1, #3)
+  - [x] Found all instantiations: GMAssessmentPDFGenerator, HINEAssessmentPDFGenerator, DAAssessmentPDFGenerator, CDICAssessmentPDFGenerator, GPAAssessmentPDFGenerator
+  - [x] Added `institution=getattr(request, 'institution', None)` to each instantiation
+  - [x] Used `getattr` for safety (views are accessible without institution context middleware in edge cases)
 
-- [ ] Task 3: Verify no cached PDF serving exists (AC: #4)
-  - [ ] Confirm that PDF views generate fresh files on each request (no caching of generated PDFs)
-  - [ ] If any PDF caching was added, ensure cache keys include `institution.slug` so institution B cannot receive institution A's cached PDF
+- [x] Task 3: Verify no cached PDF serving exists (AC: #4)
+  - [x] Confirmed: all PDF views use `FileResponse(open(path, 'rb'), ...)` — no caching headers added
+  - [x] Each request generates a fresh PDF with current institution branding
 
-- [ ] Task 4: Write tests in `institution/tests/test_pdf_branding.py` (AC: #1–#4)
-  - [ ] See exact test code in Dev Notes
+- [x] Task 4: Write tests in `institution/tests/test_pdf_branding.py` (AC: #1–#4)
+  - [x] 5 tests written and passing (5/5 green)
 
 ## Dev Notes
 
@@ -304,6 +303,16 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+N/A — all 5 tests passed on first run.
+
 ### Completion Notes List
 
+- Story 2.5 had NOT implemented `BasePDFGenerator(institution=None)` — implemented here per Story 3.4 Dev Notes
+- Used `getattr(request, 'institution', None)` in views (defensive — identical to `request.institution` when middleware runs)
+- All 5 PDF generator subclasses updated in `reports/views.py`
+
 ### File List
+
+- `reports/utils/pdf_generator.py` — `BasePDFGenerator.__init__` + `create_header_footer()` extended
+- `reports/views.py` — 5 PDF generator instantiations updated
+- `institution/tests/test_pdf_branding.py` — created (5 tests)

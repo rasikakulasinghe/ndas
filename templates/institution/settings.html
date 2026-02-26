@@ -1,0 +1,76 @@
+{% extends 'src/base.html' %}
+{% load static %}
+{% block title %}Institution Settings — {{ institution.name }}{% endblock %}
+
+{% block content_header %}
+<div class="row mb-0">
+  <div class="col-sm-6">
+    <h1 class="m-0">Institution Settings</h1>
+    <small class="text-muted">{{ institution.name }}</small>
+  </div>
+  <div class="col-sm-6">
+    <ol class="breadcrumb float-sm-right">
+      <li class="breadcrumb-item"><a href="{% url 'institution:institution-admin-dashboard' %}">Admin</a></li>
+      <li class="breadcrumb-item active">Settings</li>
+    </ol>
+  </div>
+</div>
+{% endblock content_header %}
+
+{% block main_content %}
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <div class="card card-primary card-outline">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-cog mr-2"></i>Branding &amp; Display</h3>
+        </div>
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="form-group">
+              <label class="font-weight-bold">Institution Name</label>
+              {{ form.name }}
+              {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors.0 }}</div>{% endif %}
+              <small class="form-text text-muted">Display name only. The slug (<code>{{ institution.slug }}</code>) is permanent and cannot be changed.</small>
+            </div>
+
+            <div class="form-group">
+              <label class="font-weight-bold">Institution Logo</label>
+              {% if institution.logo %}
+              <div class="mb-2">
+                <img src="{{ institution.logo.url }}" alt="{{ institution.name }} logo"
+                     style="max-height: 80px; max-width: 200px; object-fit: contain; border: 1px solid #dee2e6; padding: 4px;">
+                <small class="d-block text-muted mt-1">Current logo. Upload a new file to replace it.</small>
+              </div>
+              {% endif %}
+              {{ form.logo }}
+              {% if form.logo.errors %}<div class="text-danger small">{{ form.logo.errors.0 }}</div>{% endif %}
+              <small class="form-text text-muted">JPG, PNG, or GIF. Maximum 10 MB. Recommended: transparent PNG, 200×80px.</small>
+            </div>
+
+            <div class="form-group">
+              <label class="font-weight-bold text-muted">Slug (immutable)</label>
+              <input type="text" class="form-control" value="{{ institution.slug }}" disabled>
+              <small class="form-text text-muted">The institution slug cannot be changed after creation.</small>
+            </div>
+
+            <div class="d-flex justify-content-between mt-3">
+              <a href="{% url 'institution:institution-admin-dashboard' %}" class="btn btn-secondary btn-sm">Cancel</a>
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fas fa-save mr-1"></i>Save Settings
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'django_user_agents',
     'ndas',  # Core NDAS app (for template tags)
     'institution.apps.InstitutionConfig',
+    'referral.apps.ReferralConfig',
     'users.apps.UsersConfig',
     'patients.apps.PatientsConfig',
     'video.apps.VideoConfig',

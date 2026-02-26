@@ -1,6 +1,6 @@
 # Story 4.1: Referral App & Data Models
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -32,44 +32,28 @@ So that each institution's consultation record is self-contained and survives th
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `ReferralStatus` choices to `ndas/custom_codes/choice.py` (AC: #1)
-  - [ ] `class ReferralStatus(models.TextChoices): PENDING = 'PENDING', REPLIED = 'REPLIED', CLOSED = 'CLOSED'`
-  - [ ] See exact code in Dev Notes
+- [x] Task 1: Add `ReferralStatus` choices to `ndas/custom_codes/choice.py` (AC: #1)
+  - [x] `class ReferralStatus(models.TextChoices): PENDING / REPLIED / CLOSED` added after SubscriptionStatus
 
-- [ ] Task 2: Create the `referral/` Django app (AC: #1)
-  - [ ] Run `python manage.py startapp referral` from project root
-  - [ ] Create `referral/models.py`, `referral/views.py`, `referral/urls.py`, `referral/apps.py`, `referral/forms.py`, `referral/signals.py`, `referral/utils.py`
-  - [ ] Create `referral/migrations/__init__.py` (migrations directory)
-  - [ ] Create `referral/tests/__init__.py` (tests directory)
-  - [ ] See full directory structure in Dev Notes
+- [x] Task 2: Create the `referral/` Django app (AC: #1)
+  - [x] Created all files manually (startapp blocked by interactive makemigrations prompt)
 
-- [ ] Task 3: Add `ReferralConfig` to `referral/apps.py` (AC: #1, #4)
-  - [ ] `name = 'referral'`, `verbose_name = 'Referral System'`
-  - [ ] `ready()` method stub: `# Signals registered in Story 5.1: import referral.signals`
-  - [ ] See exact code in Dev Notes
+- [x] Task 3: Add `ReferralConfig` to `referral/apps.py` (AC: #1, #4)
+  - [x] `name = 'referral'`, `verbose_name = 'Referral System'`, `ready()` stub for Story 5.1 signals
 
-- [ ] Task 4: Define `ReferralSent`, `ReferralReceived`, `ReferralMessage` models in `referral/models.py` (AC: #1, #2, #3, #4)
-  - [ ] All three inherit `TimeStampedModel, UserTrackingMixin`
-  - [ ] `ReferralSent` + `ReferralReceived` use `InstitutionScopedManager` as `objects`
-  - [ ] `referral_uuid = models.UUIDField(default=uuid.uuid4, db_index=True)` on `ReferralSent`; copied (not regenerated) on `ReferralReceived`
-  - [ ] `snapshot_data = models.JSONField(default=dict)` on both `ReferralSent` and `ReferralReceived`
-  - [ ] See exact model code in Dev Notes
+- [x] Task 4: Define `ReferralSent`, `ReferralReceived`, `ReferralMessage` models (AC: #1, #2, #3, #4)
+  - [x] All inherit `TimeStampedModel, UserTrackingMixin`; `InstitutionScopedManager` at module level
+  - [x] `referral_uuid` unique + default=uuid4 on `ReferralSent`; editable=False on both
+  - [x] `snapshot_data = JSONField(default=dict)` on both ReferralSent and ReferralReceived
 
-- [ ] Task 5: Register `referral.apps.ReferralConfig` in `ndas/settings.py` `INSTALLED_APPS` (AC: #1)
-  - [ ] Add `'referral.apps.ReferralConfig',` after `'institution.apps.InstitutionConfig'`
-  - [ ] See exact settings change in Dev Notes
+- [x] Task 5: Registered `referral.apps.ReferralConfig` in `ndas/settings.py` INSTALLED_APPS
 
-- [ ] Task 6: Create `referral/urls.py` with stub URL patterns (AC: #1)
-  - [ ] Empty urlpatterns list with `app_name = 'referral'`
-  - [ ] Include in `ndas/urls.py` with prefix `referral/`
-  - [ ] See exact URL config in Dev Notes
+- [x] Task 6: Created `referral/urls.py` (all stubs commented-out); included in `ndas/urls.py`
 
-- [ ] Task 7: Run initial migration (AC: #1)
-  - [ ] `python manage.py makemigrations referral`
-  - [ ] `python manage.py migrate`
+- [x] Task 7: Migration written manually (0001_initial.py) and applied successfully
 
-- [ ] Task 8: Write tests in `referral/tests/test_models.py` (AC: #1–#4)
-  - [ ] See exact test code in Dev Notes
+- [x] Task 8: Tests in `referral/tests/test_models.py` — 6/6 passing
+  - Note: patient FK uses `patient=None` (FK is nullable) — avoids complex Patient required fields
 
 ## Dev Notes
 

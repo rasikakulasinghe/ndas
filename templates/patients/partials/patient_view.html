@@ -47,6 +47,12 @@
               <i class="fas fa-notes-medical"></i> Problems
             </a>
           </li>
+          {# Story 4.6 — Patient Referrals tab (FR65) #}
+          <li class="nav-item">
+            <a class="nav-link" id="referrals-tab" data-toggle="pill" href="#referrals-section" role="tab">
+              <i class="fas fa-share-square"></i> Referrals
+            </a>
+          </li>
         </ul>
       </div>
       <div class="card-body">
@@ -269,6 +275,18 @@
           <!-- Patient Problems -->
           <div class="tab-pane fade" id="problems-section" role="tabpanel">
             {% include 'problemlist/_problem_list_section.html' with patient=patient %}
+          </div>
+
+          {# Story 4.6 — Patient Referrals Tab (FR65) #}
+          <div class="tab-pane fade" id="referrals-section" role="tabpanel">
+            <div id="referrals-tab-container"
+                 hx-get="{% url 'referral:patient-referrals-tab' patient.id %}"
+                 hx-trigger="intersect once"
+                 hx-swap="innerHTML">
+              <div class="text-center text-muted p-3">
+                <i class="fas fa-spinner fa-spin mr-1"></i>Loading referrals...
+              </div>
+            </div>
           </div>
 
         </div>
@@ -826,6 +844,17 @@
               <i class="fas fa-edit"></i> Update Patient
             </a>
           </div>
+          {# Story 4.2 — New Referral button (FR60): visible when multi-institution enabled and user is not superadmin #}
+          {% if MULTI_INSTITUTION_ENABLED and not is_superadmin %}
+          {% url 'referral:referral-initiate' patient.id as referral_url %}
+          {% if referral_url %}
+          <div class="col-md-4 col-sm-6 mb-2">
+            <a class="btn btn-info btn-block" href="{{ referral_url }}">
+              <i class="fas fa-paper-plane"></i> New Referral
+            </a>
+          </div>
+          {% endif %}
+          {% endif %}
           {% if bookmark %}
           <div class="col-md-4 col-sm-6 mb-2">
             <a class="btn btn-outline-success btn-block" href="{% url 'bookmark-view' bookmark.id %}">

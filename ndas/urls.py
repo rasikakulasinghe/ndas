@@ -11,6 +11,7 @@ admin.site.index_title = settings.ADMIN_INDEX_TITLE
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("institution/", include("institution.urls")),  # must precede the root patients catch-all
+    path("referral/", include("referral.urls")),
     path("users/", include("users.urls")),
     path("reports/", include("reports.urls")),
     path("problems/", include("problemlist.urls")),

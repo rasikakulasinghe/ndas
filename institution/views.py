@@ -583,6 +583,264 @@ def superadmin_patient_move(request, patient_id):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Story 3.1 — Institution Admin Dashboard
+# ─────────────────────────────────────────────────────────────────────────────
+
+@login_required(login_url="user-login")
+@require_GET
+@handle_view_errors(
+    redirect_url='home',
+    error_message='Dashboard failed to load. Please try again.'
+)
+def institution_admin_dashboard(request):
+    """
+    Institution admin role dashboard — 4 quadrants (FR56).
+
+    ADMIN only. Redirects:
+      USER       → 'home'
+      SUPERADMIN → 'institution:superadmin-dashboard'
+    """
+    from django.db.models import Q
+
+    user_type = getattr(request.user, 'user_type', None)
+    if user_type == UserType.SUPERADMIN:
+        return redirect('institution:superadmin-dashboard')
+    if user_type != UserType.ADMIN:
+        return redirect('home')
+
+    # /institution/ URLs are middleware-exempt, so fall back to user's institution
+    institution = _get_admin_institution(request)
+    if institution is None:
+        return redirect('home')
+    month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    # ── Quadrant 1: Patient stats ─────────────────────────────────────────
+    from patients.models import Patient
+    patient_qs = Patient.objects.for_institution(institution)
+    total_patients = patient_qs.count()
+
+    # ── Quadrant 2: Assessment activity (current month) ───────────────────
+    from patients.models import (
+        GMAssessment, HINEAssessment, CDICRecord,
+        GeneralPaediatricAssessment, DevelopmentalAssessment,
+    )
+
+    def _count_this_month(model):
+        return model.objects.filter(
+            patient__institution=institution,
+            created_at__gte=month_start,
+        ).count()
+
+    assessment_counts = {
+        'gma':  _count_this_month(GMAssessment),
+        'hine': _count_this_month(HINEAssessment),
+        'cdic': _count_this_month(CDICRecord),
+        'gpa':  _count_this_month(GeneralPaediatricAssessment),
+        'da':   _count_this_month(DevelopmentalAssessment),
+    }
+    assessment_counts['total'] = sum(assessment_counts.values())
+
+    # ── Quadrant 3: Referral activity (stub until Story 4.1) ──────────────
+    referral_stats = {'sent': 0, 'received': 0, 'pending': 0, 'closed': 0}
+    try:
+        from referral.models import ReferralSent, ReferralReceived
+        from ndas.custom_codes.choice import ReferralStatus
+        referral_stats['sent']     = ReferralSent.objects.filter(from_institution=institution).count()
+        referral_stats['received'] = ReferralReceived.objects.filter(to_institution=institution).count()
+        referral_stats['pending']  = ReferralSent.objects.filter(from_institution=institution, status=ReferralStatus.PENDING).count()
+        referral_stats['closed']   = ReferralSent.objects.filter(from_institution=institution, status=ReferralStatus.CLOSED).count()
+    except ImportError:
+        pass
+
+    # ── Quadrant 4: Team activity ─────────────────────────────────────────
+    total_users = User.objects.filter(institution=institution, is_active=True).count()
+    recent_registrations = Patient.objects.for_institution(institution).order_by('-created_at')[:5]
+
+    context = {
+        'institution': institution,
+        'total_patients': total_patients,
+        'assessment_counts': assessment_counts,
+        'referral_stats': referral_stats,
+        'total_users': total_users,
+        'recent_registrations': recent_registrations,
+        'month_start': month_start,
+    }
+    return render(request, 'institution/admin_dashboard.html', context)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Story 3.2 — Clinician Account Management
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _get_admin_institution(request):
+    """
+    Resolve institution for ADMIN views.
+    /institution/ URLs are middleware-exempt, so fall back to user.institution.
+    """
+    return getattr(request, 'institution', None) or getattr(request.user, 'institution', None)
+
+
+@login_required(login_url="user-login")
+@require_GET
+@handle_view_errors(redirect_url='home', error_message='Failed to load clinician list.')
+def institution_clinician_list(request):
+    """
+    Institution admin: view all clinicians in own institution (FR57).
+    ADMIN only.
+    """
+    user_type = getattr(request.user, 'user_type', None)
+    if user_type != UserType.ADMIN:
+        return redirect('home')
+
+    institution = _get_admin_institution(request)
+    if institution is None:
+        return redirect('home')
+
+    clinicians = (
+        User.objects
+        .filter(institution=institution)
+        .exclude(user_type=UserType.SUPERADMIN)
+        .order_by('last_name', 'first_name')
+        .select_related('institution')
+    )
+    return render(request, 'institution/clinician_list.html', {
+        'clinicians': clinicians,
+        'institution': institution,
+    })
+
+
+@login_required(login_url="user-login")
+@require_http_methods(["GET", "POST"])
+@ratelimit(key='user_or_ip', rate='10/m')
+@handle_view_errors(
+    redirect_url='institution:institution-clinician-list',
+    error_message='Failed to create clinician.'
+)
+def institution_clinician_add(request):
+    """
+    Institution admin: create a new USER-type clinician (FR57).
+    ADMIN only.
+    """
+    from institution.forms import InstitutionClinicianForm
+
+    user_type = getattr(request.user, 'user_type', None)
+    if user_type != UserType.ADMIN:
+        return redirect('home')
+
+    institution = _get_admin_institution(request)
+    if institution is None:
+        return redirect('home')
+
+    if request.method == 'POST':
+        form = InstitutionClinicianForm(request.POST)
+        if form.is_valid():
+            new_user = form.save(institution=institution)
+            logger.info(
+                "ADMIN '%s' created clinician '%s' in institution '%s'",
+                request.user.username, new_user.username, institution.name,
+            )
+            messages.success(
+                request,
+                f"Clinician account for '{new_user.get_full_name()}' created successfully."
+            )
+            return redirect('institution:institution-clinician-list')
+    else:
+        form = InstitutionClinicianForm()
+
+    return render(request, 'institution/clinician_add.html', {
+        'form': form,
+        'institution': institution,
+    })
+
+
+@login_required(login_url="user-login")
+@require_POST
+@ratelimit(key='user_or_ip', rate='5/m')
+@handle_view_errors(
+    redirect_url='institution:institution-clinician-list',
+    error_message='Failed to update clinician status.'
+)
+def institution_clinician_toggle_status(request, user_id):
+    """
+    Institution admin: activate or deactivate a clinician account (FR57).
+    ADMIN only. Operates only on USER-type accounts within own institution.
+    AC #2: deactivated clinician cannot authenticate; records remain intact.
+    """
+    user_type = getattr(request.user, 'user_type', None)
+    if user_type != UserType.ADMIN:
+        return redirect('home')
+
+    institution = _get_admin_institution(request)
+    if institution is None:
+        return redirect('home')
+
+    target_user = get_object_or_404(
+        User,
+        id=user_id,
+        institution=institution,
+        user_type=UserType.USER,  # AC #3: admins can only manage USER accounts
+    )
+
+    # Prevent self-deactivation
+    if target_user == request.user:
+        messages.error(request, "You cannot deactivate your own account.")
+        return redirect('institution:institution-clinician-list')
+
+    target_user.is_active = not target_user.is_active
+    target_user.save(update_fields=['is_active', 'updated_at'])
+
+    action = "activated" if target_user.is_active else "deactivated"
+    logger.info(
+        "ADMIN '%s' %s clinician '%s' in institution '%s'",
+        request.user.username, action, target_user.username, institution.name,
+    )
+    messages.success(request, f"Account '{target_user.get_full_name()}' has been {action}.")
+    return redirect('institution:institution-clinician-list')
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Story 3.3 — Institution Branding Setup
+# ─────────────────────────────────────────────────────────────────────────────
+
+@login_required(login_url="user-login")
+@require_http_methods(["GET", "POST"])
+@ratelimit(key='user_or_ip', rate='10/m')
+@handle_view_errors(redirect_url='home', error_message='Failed to save institution settings.')
+def institution_settings(request):
+    """
+    Institution admin: upload logo + manage display settings (FR58).
+    ADMIN only (or SUPERADMIN viewing institution context).
+    """
+    from institution.forms import InstitutionSettingsForm
+
+    user_type = getattr(request.user, 'user_type', None)
+    if user_type not in (UserType.ADMIN, UserType.SUPERADMIN):
+        return redirect('home')
+
+    institution = _get_admin_institution(request)
+    if institution is None:
+        return redirect('home')
+
+    if request.method == 'POST':
+        form = InstitutionSettingsForm(request.POST, request.FILES, instance=institution)
+        if form.is_valid():
+            form.save()
+            logger.info(
+                "User '%s' updated settings for institution '%s'",
+                request.user.username, institution.name,
+            )
+            messages.success(request, "Institution settings saved successfully.")
+            return redirect('institution:institution-settings')
+    else:
+        form = InstitutionSettingsForm(instance=institution)
+
+    return render(request, 'institution/settings.html', {
+        'form': form,
+        'institution': institution,
+    })
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Protected Media View (existing — Story 1.5)
 # ─────────────────────────────────────────────────────────────────────────────
 

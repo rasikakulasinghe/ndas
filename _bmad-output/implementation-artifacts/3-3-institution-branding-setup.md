@@ -1,6 +1,6 @@
 # Story 3.3: Institution Branding Setup
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -26,44 +26,44 @@ So that my institution is correctly identified throughout the system and in all 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `get_institution_logo_path` callable to `ndas/custom_codes/validators.py` (AC: #1)
-  - [ ] Path formula: `{institution_slug}/logo/{sanitized_filename}` — stored under `MEDIA_ROOT/`
-  - [ ] Use `sanitize_filename()` from the same module
-  - [ ] See exact callable code in Dev Notes
+- [x] Task 1: Add `get_institution_logo_path` callable to `ndas/custom_codes/validators.py` (AC: #1)
+  - [x] Path formula: `{institution_slug}/logo/{sanitized_filename}` — stored under `MEDIA_ROOT/`
+  - [x] Use `sanitize_filename()` from the same module
+  - [x] See exact callable code in Dev Notes
 
-- [ ] Task 2: Update `Institution.logo` field `upload_to` in `institution/models.py` (AC: #1)
-  - [ ] Change `upload_to='institution_logos/'` to `upload_to=get_institution_logo_path`
-  - [ ] Run `python manage.py makemigrations institution` (no schema change, upload_to is not in DB, but makemigrations still detects the change to the callable)
-  - [ ] See exact field change in Dev Notes
+- [x] Task 2: Update `Institution.logo` field `upload_to` in `institution/models.py` (AC: #1)
+  - [x] Change `upload_to='institution_logos/'` to `upload_to=get_institution_logo_path`
+  - [x] Run `python manage.py makemigrations institution` (no schema change, upload_to is not in DB, but makemigrations still detects the change to the callable)
+  - [x] See exact field change in Dev Notes
 
-- [ ] Task 3: Create `InstitutionSettingsForm` in `institution/forms.py` (AC: #3)
-  - [ ] Fields: `logo` (ImageField, not required, max 10MB), `name` (CharField, display name only — slug is immutable)
-  - [ ] MIME type validation: use `image_extension_validation` from `validators.py`
-  - [ ] Max size: 10MB via `settings.FILE_UPLOAD_LIMITS['IMAGE_MAX_SIZE']`
-  - [ ] See exact form code in Dev Notes
+- [x] Task 3: Create `InstitutionSettingsForm` in `institution/forms.py` (AC: #3)
+  - [x] Fields: `logo` (ImageField, not required, max 10MB), `name` (CharField, display name only — slug is immutable)
+  - [x] MIME type validation: use `image_extension_validation` from `validators.py`
+  - [x] Max size: 10MB via `settings.FILE_UPLOAD_LIMITS['IMAGE_MAX_SIZE']`
+  - [x] See exact form code in Dev Notes
 
-- [ ] Task 4: Add `institution_settings` view to `institution/views.py` (AC: #1, #2, #3)
-  - [ ] ADMIN only (or SUPERADMIN viewing institution context)
-  - [ ] GET: render form with current institution data
-  - [ ] POST: validate + save logo + name; redirect back to settings page with success message
-  - [ ] See exact view code in Dev Notes
+- [x] Task 4: Add `institution_settings` view to `institution/views.py` (AC: #1, #2, #3)
+  - [x] ADMIN only (or SUPERADMIN viewing institution context)
+  - [x] GET: render form with current institution data
+  - [x] POST: validate + save logo + name; redirect back to settings page with success message
+  - [x] See exact view code in Dev Notes
 
-- [ ] Task 5: Add `institution-settings` URL to `institution/urls.py` (AC: #1)
-  - [ ] `path('settings/', views.institution_settings, name='institution-settings')`
+- [x] Task 5: Add `institution-settings` URL to `institution/urls.py` (AC: #1)
+  - [x] `path('settings/', views.institution_settings, name='institution-settings')`
 
-- [ ] Task 6: Create `templates/institution/settings.html` (AC: #1, #3)
-  - [ ] Extend `src/base.html`; title "Institution Settings"
-  - [ ] AdminLTE card with logo upload input + current logo preview
-  - [ ] Institution name field with note that slug is immutable
-  - [ ] `enctype="multipart/form-data"` on form
-  - [ ] See exact template in Dev Notes
+- [x] Task 6: Create `templates/institution/settings.html` (AC: #1, #3)
+  - [x] Extend `src/base.html`; title "Institution Settings"
+  - [x] AdminLTE card with logo upload input + current logo preview
+  - [x] Institution name field with note that slug is immutable
+  - [x] `enctype="multipart/form-data"` on form
+  - [x] See exact template in Dev Notes
 
-- [ ] Task 7: Update `templates/src/base.html` sidebar brand-logo slot (AC: #2)
-  - [ ] Conditionally show `active_institution.logo.url` in the sidebar brand area if logo exists
-  - [ ] See exact template change in Dev Notes
+- [x] Task 7: Update `templates/src/base.html` sidebar brand-logo slot (AC: #2)
+  - [x] Conditionally show `active_institution.logo.url` in the sidebar brand area if logo exists
+  - [x] See exact template change in Dev Notes
 
-- [ ] Task 8: Write tests in `institution/tests/test_branding.py` (AC: #1–#3)
-  - [ ] See exact test code in Dev Notes
+- [x] Task 8: Write tests in `institution/tests/test_branding.py` (AC: #1–#3)
+  - [x] See exact test code in Dev Notes
 
 ## Dev Notes
 
@@ -500,6 +500,32 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+- `makemigrations institution` failed interactively due to unrelated problemlist pending migration. Wrote migration 0004 manually (upload_to change is a no-op DB change).
+- Logo upload test failed: `STORAGES` override for `staticfiles` replaced the entire dict, losing `default` storage. Fixed by including both `default` and `staticfiles` in the override.
+
 ### Completion Notes List
 
+- Added `get_institution_logo_path()` callable to validators.py (pattern matches existing video/attachment path callables from Story 1.5).
+- Updated `Institution.logo.upload_to` from string to callable; created manual migration 0004.
+- Added `InstitutionSettingsForm` to forms.py with size validation and image extension check.
+- Added `institution_settings` view (ADMIN/SUPERADMIN only, uses `_get_admin_institution` helper).
+- Added `institution-settings` URL.
+- Created `settings.html` template with logo preview and form.
+- Added brand-link with institution logo to `main_sidebar_menu.html` (renders via `active_institution` context processor).
+- 6/6 tests pass covering AC #1–#3.
+
 ### File List
+
+- ndas/custom_codes/validators.py (modified — added get_institution_logo_path callable)
+- institution/models.py (modified — updated logo upload_to, added import)
+- institution/migrations/0004_institution_logo_path_callable.py (created)
+- institution/forms.py (modified — added InstitutionSettingsForm)
+- institution/views.py (modified — added institution_settings view)
+- institution/urls.py (modified — added institution-settings path)
+- templates/institution/settings.html (created)
+- templates/src/main_sidebar_menu.html (modified — added brand-link with institution logo)
+- institution/tests/test_branding.py (created — 6 tests)
+
+### Change Log
+
+- 2026-02-26: Story 3.3 implemented — Institution Branding Setup (FR58). Logo path callable, settings form/view/URL/template, sidebar brand-logo slot.
