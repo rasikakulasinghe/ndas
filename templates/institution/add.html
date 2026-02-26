@@ -1,0 +1,200 @@
+{% extends 'src/base.html' %}
+{% load static %}
+
+{% block title %}Onboard New Institution{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid">
+
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h4 class="mb-0"><i class="fas fa-hospital mr-2"></i>Onboard New Institution</h4>
+        <a href="{% url 'institution:institution-selector' %}" class="btn btn-secondary btn-sm">
+          <i class="fas fa-arrow-left mr-1"></i>Back to Network
+        </a>
+      </div>
+    </div>
+  </div>
+
+  {% if messages %}
+  <div class="row">
+    <div class="col-12">
+      {% for message in messages %}
+      <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if form.non_field_errors %}
+  <div class="alert alert-danger">
+    {% for error in form.non_field_errors %}
+    <div>{{ error }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="row">
+
+      <!-- Card 1: Institution Details -->
+      <div class="col-lg-6 col-12 mb-4">
+        <div class="card card-primary">
+          <div class="card-header">
+            <h5 class="card-title mb-0"><i class="fas fa-hospital mr-2"></i>Institution Details</h5>
+          </div>
+          <div class="card-body">
+
+            <div class="form-group">
+              <label for="{{ form.institution_name.id_for_label }}">
+                Institution Name <span class="text-danger">*</span>
+              </label>
+              {{ form.institution_name }}
+              {% if form.institution_name.errors %}
+              <div class="text-danger small mt-1">{{ form.institution_name.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="form-group">
+              <label for="{{ form.institution_slug.id_for_label }}">
+                Slug <span class="text-danger">*</span>
+                <i class="fas fa-info-circle text-muted ml-1"
+                   title="Lowercase letters and hyphens only. Auto-populated from name. Cannot be changed after creation."
+                   data-toggle="tooltip"></i>
+              </label>
+              {{ form.institution_slug }}
+              <small class="form-text text-muted">{{ form.institution_slug.help_text }}</small>
+              {% if form.institution_slug.errors %}
+              <div class="text-danger small mt-1">{{ form.institution_slug.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: First Admin Account -->
+      <div class="col-lg-6 col-12 mb-4">
+        <div class="card card-success">
+          <div class="card-header">
+            <h5 class="card-title mb-0"><i class="fas fa-user-shield mr-2"></i>First Admin Account</h5>
+          </div>
+          <div class="card-body">
+
+            <div class="row">
+              <div class="col-6">
+                <div class="form-group">
+                  <label for="{{ form.admin_first_name.id_for_label }}">First Name <span class="text-danger">*</span></label>
+                  {{ form.admin_first_name }}
+                  {% if form.admin_first_name.errors %}<div class="text-danger small mt-1">{{ form.admin_first_name.errors.0 }}</div>{% endif %}
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="form-group">
+                  <label for="{{ form.admin_last_name.id_for_label }}">Last Name</label>
+                  {{ form.admin_last_name }}
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="{{ form.admin_username.id_for_label }}">Username <span class="text-danger">*</span></label>
+              {{ form.admin_username }}
+              {% if form.admin_username.errors %}<div class="text-danger small mt-1">{{ form.admin_username.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+              <label for="{{ form.admin_email.id_for_label }}">Email <span class="text-danger">*</span></label>
+              {{ form.admin_email }}
+              {% if form.admin_email.errors %}<div class="text-danger small mt-1">{{ form.admin_email.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+              <label for="{{ form.admin_mobile.id_for_label }}">Mobile <span class="text-danger">*</span></label>
+              {{ form.admin_mobile }}
+              {% if form.admin_mobile.errors %}<div class="text-danger small mt-1">{{ form.admin_mobile.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="form-group">
+              <label for="{{ form.admin_position.id_for_label }}">Position <span class="text-danger">*</span></label>
+              {{ form.admin_position }}
+              {% if form.admin_position.errors %}<div class="text-danger small mt-1">{{ form.admin_position.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="row">
+              <div class="col-6">
+                <div class="form-group">
+                  <label for="{{ form.admin_password.id_for_label }}">Password <span class="text-danger">*</span></label>
+                  {{ form.admin_password }}
+                  {% if form.admin_password.errors %}<div class="text-danger small mt-1">{{ form.admin_password.errors.0 }}</div>{% endif %}
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="form-group">
+                  <label for="{{ form.admin_password_confirm.id_for_label }}">Confirm Password <span class="text-danger">*</span></label>
+                  {{ form.admin_password_confirm }}
+                  {% if form.admin_password_confirm.errors %}<div class="text-danger small mt-1">{{ form.admin_password_confirm.errors.0 }}</div>{% endif %}
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <p class="mb-0 text-muted small">
+                <i class="fas fa-info-circle mr-1"></i>
+                Both records are created atomically. If either step fails, neither is saved.
+              </p>
+              <div>
+                <a href="{% url 'institution:institution-selector' %}" class="btn btn-secondary mr-2">Cancel</a>
+                <button type="submit" class="btn btn-success">
+                  <i class="fas fa-hospital mr-1"></i>Onboard Institution
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </form>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script nonce="{{ request.csp_nonce }}">
+// Auto-populate slug from institution name
+(function(){
+  var nameInput = document.getElementById('id_institution_name');
+  var slugInput = document.getElementById('id_institution_slug');
+  if (!nameInput || !slugInput) return;
+  nameInput.addEventListener('input', function(){
+    if (slugInput.dataset.userModified) return;
+    var slug = this.value
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+    slugInput.value = slug;
+  });
+  slugInput.addEventListener('input', function(){
+    this.dataset.userModified = 'true';
+  });
+})();
+</script>
+{% endblock %}

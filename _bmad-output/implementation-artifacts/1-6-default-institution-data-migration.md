@@ -1,6 +1,6 @@
 # Story 1.6: Default Institution Data Migration
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -611,10 +611,20 @@ Before running `python manage.py migrate` in a production environment:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-sonnet-4-6
 
 ### Debug Log References
 
+None
+
 ### Completion Notes List
 
+- `MULTI_INSTITUTION_ENABLED`, `DEFAULT_INSTITUTION_NAME`, `DEFAULT_INSTITUTION_SLUG` added to `ndas/settings.py` under `# Phase 2: Multi-Institution` comment block. All default to safe values (flag defaults to `False`).
+- `institution/migrations/0002_default_institution_data.py` created: `RunPython` data migration that creates the default Institution from existing Subscription singleton and assigns it to all existing Patients and non-SUPERADMIN Users. Physical media file moves included (resilient — warnings on failure).
+- Reverse migration provided (deletes default institution record, notes physical moves cannot be auto-reversed).
+- Migration dependency chain verified: `0001_initial` → `patients/0008` → `patients/0009` → `video/0007` → `users/0009`.
+
 ### File List
+
+- ndas/settings.py
+- institution/migrations/0002_default_institution_data.py

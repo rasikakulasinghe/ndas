@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils.html import format_html
 from ndas.custom_codes.Custom_abstract_class import TimeStampedModel, UserTrackingMixin
-from ndas.custom_codes.validators import validate_video_file, validate_recording_date
+from ndas.custom_codes.validators import validate_video_file, validate_recording_date, get_institution_video_path
 from ndas.custom_codes.custom_methods import calculate_age_string, extract_video_metadata, simple_video_duration_estimate
 
 from ndas.custom_codes.choice import PROCESSING_STATUS
@@ -79,7 +79,7 @@ class Video(TimeStampedModel, UserTrackingMixin):
     objects = VideoManager()
 
     video_file = models.FileField(
-        upload_to="videos/%Y/%m/",  # Better organization by month
+        upload_to=get_institution_video_path,
         verbose_name=_("Video File"),
         help_text=_("Upload the video file here"),
         validators=[validate_video_file],

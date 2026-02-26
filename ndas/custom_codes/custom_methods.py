@@ -518,7 +518,7 @@ def calculate_age_string(start_date, end_date, format_type="detailed"):
         return f"{years} year{'s' if years != 1 else ''} and {months} month{'s' if months != 1 else ''}"
 
 
-def getPatientList(pts_type):
+def getPatientList(pts_type, institution=None):
     """
     Get filtered patient queryset based on patient status type.
 
@@ -537,18 +537,20 @@ def getPatientList(pts_type):
             - PtStatus.DX_HINE: Patients with HINE score < 73
             - PtStatus.DX_DA_NORMAL: Patients with normal DA
             - PtStatus.DX_DA_ABNORMAL: Patients with abnormal DA
+        institution: Institution to scope the queryset to (None = all institutions,
+            Phase 1 backward-compatible). Uses InstitutionScopedManager.for_institution().
 
     Returns:
         QuerySet: Optimized Patient queryset with related objects prefetched
 
     Example:
-        >>> all_patients = getPatientList(PtStatus.ALL)
+        >>> all_patients = getPatientList(PtStatus.ALL, institution=request.institution)
         >>> diagnosed = getPatientList(PtStatus.DIAGNOSED)
     """
     from patients.models import Patient, CDICRecord, Bookmark, GMAssessment, HINEAssessment
 
     # Optimized queryset with select_related and prefetch_related to reduce N+1 queries
-    var_ptl = Patient.objects.select_related(
+    var_ptl = Patient.objects.for_institution(institution).select_related(
         'added_by', 'last_edit_by'
     ).prefetch_related(
         'indecation_for_gma', 'videos', 'gm_assessments',

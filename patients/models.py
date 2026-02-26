@@ -24,7 +24,6 @@ from ndas.custom_codes.choice import (
 )
 from ndas.custom_codes.custom_methods import (
     getCountZeroIfNone,
-    get_attachment_path_file_name,
     checkRCState,
 )
 from ndas.custom_codes.validators import (
@@ -34,6 +33,7 @@ from ndas.custom_codes.validators import (
     validate_pog_weeks,
     validate_pog_days,
     validate_attachment_file,
+    get_institution_attachment_path,
 )
 from ndas.custom_codes.Custom_abstract_class import (
     TimeStampedModel,
@@ -42,6 +42,9 @@ from ndas.custom_codes.Custom_abstract_class import (
 
 # Import Video model to avoid circular import issues
 from django.apps import apps
+
+# ─── Institution-scoped manager (Story 1.4) ──────────────────────────────────
+from institution.managers import InstitutionScopedManager as _InstitutionScopedManager
 
 
 class Patient(TimeStampedModel, UserTrackingMixin):
@@ -307,6 +310,21 @@ class Patient(TimeStampedModel, UserTrackingMixin):
         verbose_name=_("Other Relevant Details"),
         help_text=_("Any additional medical or social information"),
     )
+
+    # ─── Phase 2: Multi-Institution ─────────────────────────────────────────
+    institution = models.ForeignKey(
+        'institution.Institution',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='patients',
+        help_text="Institution this patient belongs to.",
+        verbose_name="Institution",
+        db_index=True,
+    )
+
+    # Institution-scoped manager (Story 1.4)
+    objects = _InstitutionScopedManager()
 
     class Meta:
         verbose_name = _("Patient")
@@ -1490,7 +1508,7 @@ class Attachment(TimeStampedModel, UserTrackingMixin):
     )
 
     attachment = models.FileField(
-        upload_to=get_attachment_path_file_name,
+        upload_to=get_institution_attachment_path,
         verbose_name=_("Attachment File"),
         help_text=_(
             "Upload file (Images: 10MB max, Videos: 2GB max, Others: 100MB max)"

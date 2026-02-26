@@ -1,0 +1,196 @@
+{% extends 'src/base.html' %}
+{% load static %}
+
+{% block title %}Superadmin Analytics Dashboard{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid">
+
+  <!-- Page header -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h4 class="mb-0"><i class="fas fa-chart-bar mr-2"></i>Network Analytics Dashboard</h4>
+          <small class="text-muted">{{ month_name }} &mdash; Platform-wide view (READ ONLY)</small>
+        </div>
+        <div>
+          <a href="{% url 'institution:superadmin-reports' %}" class="btn btn-secondary mr-2">
+            <i class="fas fa-file-export mr-1"></i>Export Reports
+          </a>
+          <a href="{% url 'institution:institution-selector' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left mr-1"></i>Institution Selector
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Platform-wide summary small-boxes -->
+  <div class="row">
+    <div class="col-lg-3 col-6">
+      <div class="small-box bg-info">
+        <div class="inner">
+          <h3>{{ total_institutions }}</h3>
+          <p>Institutions</p>
+        </div>
+        <div class="icon"><i class="fas fa-hospital"></i></div>
+        <a href="{% url 'institution:institution-selector' %}" class="small-box-footer">
+          View All <i class="fas fa-arrow-circle-right"></i>
+        </a>
+      </div>
+    </div>
+    <div class="col-lg-3 col-6">
+      <div class="small-box bg-success">
+        <div class="inner">
+          <h3>{{ total_patients }}</h3>
+          <p>Total Patients</p>
+        </div>
+        <div class="icon"><i class="fas fa-procedures"></i></div>
+        <span class="small-box-footer">&nbsp;</span>
+      </div>
+    </div>
+    <div class="col-lg-3 col-6">
+      <div class="small-box bg-warning">
+        <div class="inner">
+          <h3>{{ total_users }}</h3>
+          <p>Total Users</p>
+        </div>
+        <div class="icon"><i class="fas fa-users"></i></div>
+        <span class="small-box-footer">&nbsp;</span>
+      </div>
+    </div>
+    <div class="col-lg-3 col-6">
+      <div class="small-box bg-danger">
+        <div class="inner">
+          <h3>{{ total_assessments_this_month }}</h3>
+          <p>Assessments This Month</p>
+        </div>
+        <div class="icon"><i class="fas fa-clipboard-check"></i></div>
+        <span class="small-box-footer">&nbsp;</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Per-institution breakdown table -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0"><i class="fas fa-table mr-2"></i>Per-Institution Breakdown &mdash; {{ month_name }}</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover table-sm mb-0">
+              <thead class="thead-dark">
+                <tr>
+                  <th>Institution</th>
+                  <th>Status</th>
+                  <th class="text-center">Patients</th>
+                  <th class="text-center">Users</th>
+                  <th class="text-center">GMA</th>
+                  <th class="text-center">HINE</th>
+                  <th class="text-center">CDIC</th>
+                  <th class="text-center">GPA</th>
+                  <th class="text-center">DA</th>
+                  <th class="text-center">Total Assessments</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in institution_data %}
+                <tr>
+                  <td>
+                    <strong>{{ row.institution.name }}</strong>
+                    <br><small class="text-muted">{{ row.institution.slug }}</small>
+                  </td>
+                  <td>
+                    {% if row.institution.subscription_status == 'active' %}
+                      <span class="badge badge-success">ACTIVE</span>
+                    {% elif row.institution.subscription_status == 'grace' %}
+                      <span class="badge badge-warning">GRACE</span>
+                    {% elif row.institution.subscription_status == 'expired' %}
+                      <span class="badge badge-danger">EXPIRED</span>
+                    {% else %}
+                      <span class="badge badge-secondary">{{ row.institution.subscription_status|upper }}</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-center">{{ row.patient_count }}</td>
+                  <td class="text-center">{{ row.user_count }}</td>
+                  <td class="text-center">{{ row.assessment_counts.gma }}</td>
+                  <td class="text-center">{{ row.assessment_counts.hine }}</td>
+                  <td class="text-center">{{ row.assessment_counts.cdic }}</td>
+                  <td class="text-center">{{ row.assessment_counts.gpa }}</td>
+                  <td class="text-center">{{ row.assessment_counts.da }}</td>
+                  <td class="text-center font-weight-bold">{{ row.assessment_counts.total }}</td>
+                  <td>
+                    <form method="post" action="{% url 'institution:institution-switch' row.institution.pk %}">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-xs btn-primary" title="Enter institution">
+                        <i class="fas fa-sign-in-alt"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="11" class="text-center text-muted py-3">No institutions found.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent onboardings -->
+  <div class="row">
+    <div class="col-lg-6 col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0"><i class="fas fa-clock mr-2"></i>Recent Institutions</h5>
+        </div>
+        <div class="card-body p-0">
+          <ul class="list-group list-group-flush">
+            {% for inst in recent_institutions %}
+            <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+              <div>
+                <strong>{{ inst.name }}</strong>
+                {% if inst.created_by %}
+                <br><small class="text-muted">by {{ inst.created_by.get_full_name|default:inst.created_by.username }}</small>
+                {% endif %}
+              </div>
+              <small class="text-muted">{{ inst.created_at|date:"d M Y" }}</small>
+            </li>
+            {% empty %}
+            <li class="list-group-item text-muted text-center py-3">No institutions yet.</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6 col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0"><i class="fas fa-tasks mr-2"></i>Quick Actions</h5>
+        </div>
+        <div class="card-body">
+          <a href="{% url 'institution:institution-add' %}" class="btn btn-success btn-block mb-2">
+            <i class="fas fa-plus mr-1"></i>Onboard New Institution
+          </a>
+          <a href="{% url 'institution:superadmin-reports' %}" class="btn btn-info btn-block mb-2">
+            <i class="fas fa-file-export mr-1"></i>Export Aggregate Report
+          </a>
+          <a href="{% url 'institution:institution-selector' %}" class="btn btn-secondary btn-block">
+            <i class="fas fa-th-large mr-1"></i>Institution Selector
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% load static %}
+{% if active_institution %}
+{# SUPERADMIN has an active institution context — show persistent overlay banner #}
+<div id="superadmin-context-banner"
+     style="background:#343a40;color:#fff;padding:6px 16px;font-size:0.85rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+
+  <div class="d-flex align-items-center">
+    <i class="fas fa-user-shield mr-2" style="color:#ffc107;"></i>
+    <span class="mr-2">SUPERADMIN &mdash; viewing as:</span>
+    <strong style="color:#ffc107;">{{ active_institution.name }}</strong>
+    {% if active_institution.subscription_status == 'ACTIVE' %}
+      <span class="badge badge-success ml-2" style="font-size:0.7rem;">ACTIVE</span>
+    {% elif active_institution.subscription_status == 'GRACE' %}
+      <span class="badge badge-warning ml-2" style="font-size:0.7rem;">GRACE</span>
+    {% elif active_institution.subscription_status == 'EXPIRED' %}
+      <span class="badge badge-danger ml-2" style="font-size:0.7rem;">EXPIRED</span>
+    {% endif %}
+  </div>
+
+  <div class="d-flex align-items-center" style="gap:8px;">
+    {# Quick-switch dropdown #}
+    <form method="post" id="superadmin-switch-form" style="display:inline;">
+      <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+      <div class="input-group input-group-sm">
+        <select name="_target_institution_id"
+                id="superadmin-switch-select"
+                class="form-control form-control-sm"
+                style="max-width:180px;background:#495057;color:#fff;border-color:#6c757d;">
+          <option value="">— switch institution —</option>
+          {% for inst in institutions %}
+          <option value="{{ inst.pk }}"
+            {% if inst.pk == active_institution.pk %}selected{% endif %}>
+            {{ inst.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+    </form>
+
+    <a href="{% url 'institution:institution-selector' %}"
+       class="btn btn-warning btn-sm">
+      <i class="fas fa-th-large mr-1"></i>All Institutions
+    </a>
+  </div>
+
+</div>
+
+<script nonce="{{ request.csp_nonce }}">
+(function(){
+  var select = document.getElementById('superadmin-switch-select');
+  if (select) {
+    select.addEventListener('change', function(){
+      var val = this.value;
+      if (!val) return;
+      var form = document.getElementById('superadmin-switch-form');
+      form.action = '/institution/switch/' + val + '/';
+      form.method = 'post';
+      form.submit();
+    });
+  }
+})();
+</script>
+{% else %}
+{# SUPERADMIN is NOT in an institution context — no overlay shown (they see the selector page) #}
+{% endif %}

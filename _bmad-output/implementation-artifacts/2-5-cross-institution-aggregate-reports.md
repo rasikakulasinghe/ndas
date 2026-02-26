@@ -1,6 +1,6 @@
 # Story 2.5: Cross-Institution Aggregate Reports
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -1300,6 +1300,20 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+None
+
 ### Completion Notes List
 
+- `superadmin_reports` view implemented in `institution/views.py`: SUPERADMIN-only, handles GET (scope selector) and POST (generate + stream Excel download).
+- `per_institution_aggregate()` and `cross_institution_aggregate()` methods added to `ExcelReportGenerator` in `reports/utils/excel_generator.py`.
+- Report scopes: `per_institution` (one institution's data) and `cross_institution` (network summary + per-institution sheets).
+- PDF scope stubbed: `BasePDFGenerator` institution parameter wired but PDF branding extension deferred to Story 3.4.
+- Template created with AdminLTE scope selector, institution dropdown (JS visibility toggle), and format selector.
+
 ### File List
+
+- institution/views.py
+- institution/urls.py
+- reports/utils/excel_generator.py
+- templates/institution/superadmin_reports.html
+- institution/tests/test_superadmin_reports.py

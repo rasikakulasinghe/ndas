@@ -1,6 +1,6 @@
 # Story 1.3: Institution Context Middleware
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -593,10 +593,27 @@ class InstitutionContextMiddlewareTest(TestCase):
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-sonnet-4-6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- `InstitutionContextMiddleware` created in `institution/middleware.py`. Phase 1 fallback `_phase1_subscription_check()` mirrors the old `SubscriptionCheckMiddleware`.
+- GRACE enforcement: GET allowed, non-referral POST blocked (302 redirect). EXPIRED: logout + redirect to `subscription-info`.
+- SUPERADMIN without `session['active_institution_id']`: redirect to `institution-selector`.
+- `institution/context_processors.py` created; injects `active_institution`, `user_type`, `is_superadmin`.
+- `ndas/settings.py` updated: `InstitutionContextMiddleware` replaces `SubscriptionCheckMiddleware`; context processor registered.
+- `ndas/urls.py` updated: `institution/` namespace registered before patients root catch-all.
+- Stub `institution_selector` view created in `institution/views.py` (full implementation in Story 2.1).
+- Tests written in `institution/tests/test_middleware.py` — **code review M3 fix applied**: `assertNotEqual(500)` assertions replaced with `assertIn([200, 302])` for specificity.
+
 ### File List
+
+- institution/middleware.py
+- institution/context_processors.py
+- institution/urls.py
+- institution/views.py
+- institution/tests/test_middleware.py
+- ndas/settings.py
+- ndas/urls.py

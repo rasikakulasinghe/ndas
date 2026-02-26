@@ -1,0 +1,126 @@
+{% extends 'src/base.html' %}
+{% load static %}
+
+{% block title %}Institution Network{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid">
+
+  <!-- Page header -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h4 class="mb-0"><i class="fas fa-hospital mr-2"></i>Institution Network</h4>
+          <small class="text-muted">{{ institutions|length }} institution{{ institutions|length|pluralize }} registered</small>
+        </div>
+        <div>
+          <a href="{% url 'institution:superadmin-dashboard' %}" class="btn btn-info mr-2">
+            <i class="fas fa-chart-bar mr-1"></i>Analytics
+          </a>
+          <a href="{% url 'institution:superadmin-reports' %}" class="btn btn-secondary mr-2">
+            <i class="fas fa-file-export mr-1"></i>Reports
+          </a>
+          <a href="{% url 'institution:institution-add' %}" class="btn btn-success">
+            <i class="fas fa-plus mr-1"></i>Add Institution
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if messages %}
+  <div class="row">
+    <div class="col-12">
+      {% for message in messages %}
+      <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Institution Cards Grid -->
+  <div class="row">
+    {% for inst in institutions %}
+    <div class="col-lg-4 col-md-6 col-12 mb-4">
+      <div class="card h-100 shadow-sm">
+        <!-- Logo / placeholder -->
+        <div class="card-header text-center py-3" style="background:#f8f9fa; min-height:70px; display:flex; align-items:center; justify-content:center;">
+          {% if inst.logo %}
+            <img src="{{ inst.logo.url }}" alt="{{ inst.name }} logo"
+                 class="img-fluid" style="max-height:55px; max-width:160px; object-fit:contain;">
+          {% else %}
+            <i class="fas fa-hospital fa-2x text-secondary"></i>
+          {% endif %}
+        </div>
+        <div class="card-header d-flex justify-content-between align-items-center py-2">
+          <strong class="text-truncate" title="{{ inst.name }}">{{ inst.name }}</strong>
+          {% if inst.subscription_status == 'ACTIVE' %}
+            <span class="badge badge-success">ACTIVE</span>
+          {% elif inst.subscription_status == 'GRACE' %}
+            <span class="badge badge-warning text-dark">GRACE</span>
+          {% elif inst.subscription_status == 'EXPIRED' %}
+            <span class="badge badge-danger">EXPIRED</span>
+          {% else %}
+            <span class="badge badge-secondary">{{ inst.subscription_status }}</span>
+          {% endif %}
+        </div>
+        <div class="card-body py-2">
+          <p class="text-muted mb-2"><small><i class="fas fa-tag mr-1"></i>{{ inst.slug }}</small></p>
+          <div class="row text-center mb-2">
+            <div class="col-4">
+              <div class="text-primary font-weight-bold">{{ inst.patient_count }}</div>
+              <small class="text-muted">Patients</small>
+            </div>
+            <div class="col-4">
+              <div class="text-info font-weight-bold">{{ inst.user_count }}</div>
+              <small class="text-muted">Users</small>
+            </div>
+            <div class="col-4">
+              {% if inst.last_activity %}
+                <div class="text-success font-weight-bold" title="{{ inst.last_activity }}">
+                  <i class="fas fa-circle" style="font-size:0.6rem;"></i>
+                </div>
+                <small class="text-muted">Active</small>
+              {% else %}
+                <div class="text-secondary font-weight-bold">—</div>
+                <small class="text-muted">No data</small>
+              {% endif %}
+            </div>
+          </div>
+          {% if inst.created_by %}
+          <small class="text-muted"><i class="fas fa-user-shield mr-1"></i>Onboarded by {{ inst.created_by.get_full_name|default:inst.created_by.username }}</small>
+          {% endif %}
+        </div>
+        <div class="card-footer py-2">
+          <form method="post" action="{% url 'institution:institution-switch' inst.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary btn-sm btn-block"
+              {% if not inst.is_active %}disabled{% endif %}>
+              <i class="fas fa-sign-in-alt mr-1"></i>
+              Enter Institution
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body text-center py-5">
+          <i class="fas fa-hospital fa-3x text-muted mb-3"></i>
+          <p class="text-muted mb-3">No institutions have been onboarded yet.</p>
+          <a href="{% url 'institution:institution-add' %}" class="btn btn-success">
+            <i class="fas fa-plus mr-1"></i>Onboard First Institution
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

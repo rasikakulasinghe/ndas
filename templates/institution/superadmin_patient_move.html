@@ -1,0 +1,218 @@
+{% extends 'src/base.html' %}
+{% load static %}
+
+{% block title %}Move Patient — {{ patient.baby_name }}{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid">
+
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h4 class="mb-0"><i class="fas fa-exchange-alt mr-2"></i>Move Patient Between Institutions</h4>
+        <a href="{% url 'view-patient' patient.pk %}" class="btn btn-secondary btn-sm">
+          <i class="fas fa-arrow-left mr-1"></i>Back to Patient
+        </a>
+      </div>
+    </div>
+  </div>
+
+  {% if messages %}
+  <div class="row">
+    <div class="col-12">
+      {% for message in messages %}
+      <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── STEP 1: PREVIEW ──────────────────────────────────────────────────── -->
+  {% if step == 'preview' %}
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-12">
+
+      <!-- Patient identity -->
+      <div class="card card-outline card-info mb-3">
+        <div class="card-header">
+          <h5 class="card-title mb-0"><i class="fas fa-procedures mr-2"></i>Patient</h5>
+        </div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-sm-4">Name</dt><dd class="col-sm-8">{{ patient.baby_name }}</dd>
+            <dt class="col-sm-4">BHT</dt><dd class="col-sm-8">{{ patient.bht|default:"—" }}</dd>
+            <dt class="col-sm-4">Current Institution</dt>
+            <dd class="col-sm-8">
+              {% if source_institution %}
+                <strong>{{ source_institution.name }}</strong>
+              {% else %}
+                <span class="text-muted">Not assigned</span>
+              {% endif %}
+            </dd>
+          </dl>
+        </div>
+      </div>
+
+      <!-- Impact summary -->
+      <div class="card card-outline card-warning mb-3">
+        <div class="card-header">
+          <h5 class="card-title mb-0"><i class="fas fa-exclamation-triangle mr-2"></i>Records That Will Move</h5>
+        </div>
+        <div class="card-body">
+          <div class="row text-center">
+            <div class="col-3 col-md-2">
+              <div class="h4 text-primary">{{ impact.total_assessments }}</div>
+              <small>Assessments</small>
+            </div>
+            <div class="col-3 col-md-2">
+              <div class="h4 text-info">{{ impact.video_count }}</div>
+              <small>Videos</small>
+            </div>
+            <div class="col-3 col-md-2">
+              <div class="h4 text-secondary">{{ impact.attachment_count }}</div>
+              <small>Attachments</small>
+            </div>
+            {% if impact.open_referral_count %}
+            <div class="col-3 col-md-2">
+              <div class="h4 text-danger">{{ impact.open_referral_count }}</div>
+              <small>Open Referrals</small>
+            </div>
+            {% endif %}
+          </div>
+          <div class="row mt-2 text-center text-muted small">
+            <div class="col">GMA: {{ impact.gma_count }}</div>
+            <div class="col">HINE: {{ impact.hine_count }}</div>
+            <div class="col">CDIC: {{ impact.cdic_count }}</div>
+            <div class="col">GPA: {{ impact.gpa_count }}</div>
+            <div class="col">DA: {{ impact.da_count }}</div>
+          </div>
+          {% if impact.open_referral_count %}
+          <div class="alert alert-warning mt-3 mb-0 small">
+            <i class="fas fa-exclamation-triangle mr-1"></i>
+            This patient has <strong>{{ impact.open_referral_count }} open referral(s)</strong>.
+            Active referrals will continue to their conclusion before the move takes full effect.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Destination selector form -->
+      <div class="card mb-3">
+        <div class="card-header">
+          <h5 class="card-title mb-0"><i class="fas fa-hospital mr-2"></i>Select Destination Institution</h5>
+        </div>
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="step" value="confirm">
+
+            <div class="form-group">
+              <label for="destination_institution_id" class="font-weight-bold">Move patient to:</label>
+              <select name="destination_institution_id" id="destination_institution_id" class="form-control" required>
+                <option value="">— select destination —</option>
+                {% for inst in all_institutions %}
+                <option value="{{ inst.pk }}">{{ inst.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="d-flex justify-content-end">
+              <a href="{% url 'view-patient' patient.pk %}" class="btn btn-secondary mr-2">Cancel</a>
+              <button type="submit" class="btn btn-warning">
+                <i class="fas fa-arrow-right mr-1"></i>Review Move
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── STEP 2: CONFIRM ─────────────────────────────────────────────────── -->
+  {% if step == 'confirm' %}
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-12">
+
+      <div class="card card-danger mb-3">
+        <div class="card-header">
+          <h5 class="card-title mb-0"><i class="fas fa-exclamation-circle mr-2"></i>Confirm Move — This action cannot be undone</h5>
+        </div>
+        <div class="card-body">
+          <dl class="row">
+            <dt class="col-sm-4">Patient</dt>
+            <dd class="col-sm-8"><strong>{{ patient.baby_name }}</strong> (BHT: {{ patient.bht|default:"—" }})</dd>
+            <dt class="col-sm-4">From</dt>
+            <dd class="col-sm-8">{{ source_institution.name|default:"(unassigned)" }}</dd>
+            <dt class="col-sm-4">To</dt>
+            <dd class="col-sm-8"><strong class="text-danger">{{ destination_institution.name }}</strong></dd>
+            <dt class="col-sm-4">Records Moving</dt>
+            <dd class="col-sm-8">
+              {{ impact.total_assessments }} assessments, {{ impact.video_count }} videos, {{ impact.attachment_count }} attachments
+            </dd>
+          </dl>
+
+          <div class="alert alert-danger">
+            <i class="fas fa-lock mr-1"></i>
+            <strong>Type the destination institution name to confirm:</strong>
+          </div>
+
+          {% if name_mismatch_error %}
+          <div class="alert alert-warning">
+            <i class="fas fa-times-circle mr-1"></i>
+            Name did not match. Please try again.
+          </div>
+          {% endif %}
+
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="step" value="execute">
+            <input type="hidden" name="destination_institution_id" value="{{ destination_institution.pk }}">
+
+            <div class="form-group">
+              <label for="institution_name_confirm">
+                Type <strong>{{ destination_institution.name }}</strong> to confirm:
+              </label>
+              <input type="text" name="institution_name_confirm" id="institution_name_confirm"
+                     class="form-control" required autocomplete="off"
+                     placeholder="{{ destination_institution.name }}">
+            </div>
+
+            <div class="d-flex justify-content-between">
+              <a href="{% url 'institution:superadmin-patient-move' patient.pk %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left mr-1"></i>Back
+              </a>
+              <button type="submit" class="btn btn-danger" id="execute-btn" disabled>
+                <i class="fas fa-exchange-alt mr-1"></i>Execute Move
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if step == 'confirm' %}
+<script>
+(function(){
+  var input = document.getElementById('institution_name_confirm');
+  var btn = document.getElementById('execute-btn');
+  var expected = "{{ destination_institution.name|escapejs }}";
+  if (!input || !btn) return;
+  input.addEventListener('input', function(){
+    btn.disabled = (this.value !== expected);
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

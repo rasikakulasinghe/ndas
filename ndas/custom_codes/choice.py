@@ -189,6 +189,13 @@ SUBSCRIPTION_STATUS_CHOICES = [
     ('grace_period', 'Grace Period'),
 ]
 
+# User Type TextChoices (Phase 2 — Multi-Institution)
+class UserType(models.TextChoices):
+    USER = 'USER', 'Clinician / User'
+    ADMIN = 'ADMIN', 'Institution Admin'
+    SUPERADMIN = 'SUPERADMIN', 'Super Admin'
+
+
 # Subscription Status TextChoices (Phase 2 — Multi-Institution)
 class SubscriptionStatus(models.TextChoices):
     ACTIVE = 'ACTIVE', 'Active'

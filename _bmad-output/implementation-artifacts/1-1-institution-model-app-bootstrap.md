@@ -1,6 +1,6 @@
 # Story 1.1: Institution Model & App Bootstrap
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -314,10 +314,27 @@ class InstitutionModelTest(TestCase):
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-sonnet-4-6
 
 ### Debug Log References
 
+None
+
 ### Completion Notes List
 
+- All tasks implemented in bulk across Stories 1.1–1.7 implementation sprint.
+- `institution/` app created, registered in INSTALLED_APPS as `InstitutionConfig`.
+- `SubscriptionStatus` and `UserType` TextChoices added to `ndas/custom_codes/choice.py`.
+- `Institution` model created with immutable-slug enforcement in `save()` and `clean()`.
+- `MULTI_INSTITUTION_ENABLED`, `DEFAULT_INSTITUTION_NAME`, `DEFAULT_INSTITUTION_SLUG` settings added.
+- Migration `0001_initial` creates the institution table.
+- Migration `0002_default_institution_data` is a `RunPython` data migration (see Story 1.6).
+
 ### File List
+
+- institution/__init__.py
+- institution/apps.py
+- institution/models.py
+- institution/migrations/0001_initial.py
+- ndas/custom_codes/choice.py
+- ndas/settings.py

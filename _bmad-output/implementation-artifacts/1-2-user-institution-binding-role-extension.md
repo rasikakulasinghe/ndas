@@ -1,6 +1,6 @@
 # Story 1.2: User Institution Binding & Role Extension
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -349,10 +349,23 @@ class CustomUserInstitutionBindingTest(TestCase):
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-sonnet-4-6
 
 ### Debug Log References
 
+None
+
 ### Completion Notes List
+
+- `UserType` TextChoices (SUPERADMIN/ADMIN/USER) added to `ndas/custom_codes/choice.py`.
+- `institution` FK and `user_type` field added to `CustomUser` in `users/models.py`.
+- **Code fix applied (code review H2):** `UserType` was missing from `users/models.py` import and `user_type` used hardcoded choices. Fixed: import updated to include `UserType`; field now uses `UserType.choices` and `default=UserType.USER`.
+- Migration `0009_customuser_institution_customuser_user_type.py` created with `RunPython` to set `user_type='SUPERADMIN'` for existing `is_superuser=True` users; institution FK left null (Story 1.6 populates it).
+
+### File List
+
+- users/models.py
+- users/migrations/0009_customuser_institution_customuser_user_type.py
+- ndas/custom_codes/choice.py
 
 ### File List

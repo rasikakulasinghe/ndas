@@ -551,3 +551,25 @@ def validate_attachment_file(value):
             raise ValidationError(
                 "Executable files are not allowed for security reasons."
             )
+
+
+# ─── Story 1.5: Institution-aware upload paths ───────────────────────────────
+
+def get_institution_video_path(instance, filename):
+    """Return institution-partitioned upload path for Video files."""
+    try:
+        institution = instance.patient.institution if instance.patient_id else None
+        slug = institution.slug if institution else 'pending'
+    except AttributeError:
+        slug = 'pending'
+    return f"{slug}/videos/{sanitize_filename(filename)}"
+
+
+def get_institution_attachment_path(instance, filename):
+    """Return institution-partitioned upload path for Attachment files."""
+    try:
+        institution = instance.patient.institution if instance.patient_id else None
+        slug = institution.slug if institution else 'pending'
+    except AttributeError:
+        slug = 'pending'
+    return f"{slug}/attachments/{sanitize_filename(filename)}"

@@ -856,3 +856,152 @@ class ExcelReportGenerator:
         self.workbook.save(output_path)
 
         return output_path, metadata
+
+    # ─── Story 2.5 — Institution-scoped aggregate exports ─────────────────────
+
+    def per_institution_aggregate(self, institution):
+        """
+        Generate a multi-sheet Excel workbook for one institution's full data.
+        Sheet 1: Summary | Sheet 2: Patients | Sheet 3+: Assessment types.
+
+        Args:
+            institution: Institution model instance (the target institution)
+
+        Returns:
+            (output_path, metadata) tuple
+        """
+        from institution.models import Institution as InstitutionModel
+
+        self.workbook = Workbook()
+        # Remove default empty sheet
+        if 'Sheet' in self.workbook.sheetnames:
+            del self.workbook['Sheet']
+
+        # ── Patients sheet ─────────────────────────────────────────────────
+        patients_qs = Patient.objects.filter(
+            institution=institution
+        ).select_related('added_by')
+
+        ws_patients = self.workbook.create_sheet("Patients")
+        patient_headers = ['ID', 'Name', 'BHT', 'NNC', 'Gender', 'DOB', 'Gestational Age (wks)', 'Created At']
+        for col_num, header in enumerate(patient_headers, 1):
+            cell = ws_patients.cell(row=1, column=col_num, value=header)
+            cell.font = Font(bold=True)
+        for row_num, patient in enumerate(patients_qs, 2):
+            ws_patients.cell(row=row_num, column=1, value=patient.id)
+            ws_patients.cell(row=row_num, column=2, value=patient.baby_name)
+            ws_patients.cell(row=row_num, column=3, value=patient.bht)
+            ws_patients.cell(row=row_num, column=4, value=patient.nnc_no)
+            ws_patients.cell(row=row_num, column=5, value=patient.sex)
+            ws_patients.cell(row=row_num, column=6, value=str(patient.dob_tob) if patient.dob_tob else None)
+            ws_patients.cell(row=row_num, column=7, value=patient.pog_wks)
+            ws_patients.cell(row=row_num, column=8, value=self.make_naive(patient.created_at))
+
+        # ── Assessment sheets (scoped to this institution's patients) ───────
+        patient_ids = patients_qs.values_list('id', flat=True)
+
+        for model_cls, sheet_name in [
+            (GMAssessment, 'GMA'),
+            (HINEAssessment, 'HINE'),
+            (CDICRecord, 'CDIC'),
+            (GeneralPaediatricAssessment, 'GPA'),
+            (DevelopmentalAssessment, 'DA'),
+        ]:
+            ws = self.workbook.create_sheet(sheet_name)
+            qs = model_cls.objects.filter(patient_id__in=patient_ids).select_related('patient')
+            ws.cell(row=1, column=1, value='Patient ID').font = Font(bold=True)
+            ws.cell(row=1, column=2, value='Patient Name').font = Font(bold=True)
+            ws.cell(row=1, column=3, value='Created At').font = Font(bold=True)
+            for row_num, rec in enumerate(qs, 2):
+                ws.cell(row=row_num, column=1, value=rec.patient_id)
+                ws.cell(row=row_num, column=2, value=rec.patient.baby_name)
+                ws.cell(row=row_num, column=3, value=self.make_naive(rec.created_at))
+
+        # ── Summary sheet (first) ─────────────────────────────────────────
+        ws_summary = self.workbook.create_sheet("Summary", 0)
+        ws_summary.cell(row=1, column=1, value="Per-Institution Report").font = Font(bold=True, size=14)
+        ws_summary.cell(row=2, column=1, value=f"Institution: {institution.name}")
+        ws_summary.cell(row=3, column=1, value=f"Slug: {institution.slug}")
+        ws_summary.cell(row=4, column=1, value=f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        ws_summary.cell(row=6, column=1, value="Total Patients").font = Font(bold=True)
+        ws_summary.cell(row=6, column=2, value=patients_qs.count())
+
+        # ── Save ─────────────────────────────────────────────────────────
+        output_dir = os.path.join(settings.MEDIA_ROOT, 'exports', 'institution')
+        os.makedirs(output_dir, exist_ok=True)
+        output_path = os.path.join(output_dir, f"{institution.slug}_{uuid.uuid4().hex}.xlsx")
+        self.workbook.save(output_path)
+
+        metadata = {
+            'institution': institution.name,
+            'total_records': patients_qs.count(),
+        }
+        return output_path, metadata
+
+    def cross_institution_aggregate(self):
+        """
+        Generate an aggregate summary workbook across ALL institutions.
+        One row per institution with patient count, assessment volumes, subscription status.
+
+        Returns:
+            (output_path, metadata) tuple
+        """
+        from institution.models import Institution as InstitutionModel
+        from django.db.models import Count
+
+        self.workbook = Workbook()
+        if 'Sheet' in self.workbook.sheetnames:
+            del self.workbook['Sheet']
+
+        ws = self.workbook.create_sheet("Network Summary")
+        headers = [
+            'Institution', 'Slug', 'Subscription Status', 'Is Active',
+            'Total Patients', 'Total Users',
+            'GMA Assessments', 'HINE Assessments', 'CDIC Records',
+            'GPA Assessments', 'DA Assessments',
+        ]
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_num, value=header)
+            cell.font = Font(bold=True)
+
+        # Institution-level counts (related_name='users' and 'patients')
+        institutions = InstitutionModel.objects.annotate(
+            patient_count=Count('patients', distinct=True),
+            user_count=Count('users', distinct=True),
+        ).order_by('name')
+
+        for row_num, inst in enumerate(institutions, 2):
+            patient_ids = Patient.objects.filter(institution=inst).values_list('id', flat=True)
+            gma  = GMAssessment.objects.filter(patient_id__in=patient_ids).count()
+            hine = HINEAssessment.objects.filter(patient_id__in=patient_ids).count()
+            cdic = CDICRecord.objects.filter(patient_id__in=patient_ids).count()
+            gpa  = GeneralPaediatricAssessment.objects.filter(patient_id__in=patient_ids).count()
+            da   = DevelopmentalAssessment.objects.filter(patient_id__in=patient_ids).count()
+
+            ws.cell(row=row_num, column=1, value=inst.name)
+            ws.cell(row=row_num, column=2, value=inst.slug)
+            ws.cell(row=row_num, column=3, value=inst.subscription_status)
+            ws.cell(row=row_num, column=4, value=inst.is_active)
+            ws.cell(row=row_num, column=5, value=inst.patient_count)
+            ws.cell(row=row_num, column=6, value=inst.user_count)
+            ws.cell(row=row_num, column=7, value=gma)
+            ws.cell(row=row_num, column=8, value=hine)
+            ws.cell(row=row_num, column=9, value=cdic)
+            ws.cell(row=row_num, column=10, value=gpa)
+            ws.cell(row=row_num, column=11, value=da)
+
+        # Summary row
+        last_data_row = ws.max_row
+        ws.cell(row=last_data_row + 2, column=1, value="Report Generated").font = Font(bold=True)
+        ws.cell(row=last_data_row + 2, column=2, value=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+
+        output_dir = os.path.join(settings.MEDIA_ROOT, 'exports', 'network')
+        os.makedirs(output_dir, exist_ok=True)
+        output_path = os.path.join(output_dir, f"network_{uuid.uuid4().hex}.xlsx")
+        self.workbook.save(output_path)
+
+        metadata = {
+            'scope': 'cross_institution',
+            'total_institutions': institutions.count(),
+        }
+        return output_path, metadata

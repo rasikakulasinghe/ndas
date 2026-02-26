@@ -100,40 +100,43 @@ def dashboard(request):
         - Load time: <1s with 1000+ patients
     """
     # Efficient counting - use .count() instead of loading all records
-    patients_total_count = Patient.objects.count()
-    patients_discharged_count = Patient.objects.filter(
+    _inst = getattr(request, 'institution', None)
+    _patients_qs = Patient.objects.for_institution(_inst)
+
+    patients_total_count = _patients_qs.count()
+    patients_discharged_count = _patients_qs.filter(
         cdic_records__is_discharged=True
     ).distinct().count()
 
-    # Count all assessments efficiently
-    all_gm_assessments_count = GMAssessment.objects.count()
-    all_hine_assessments_count = HINEAssessment.objects.count()
-    all_da_assessments_count = DevelopmentalAssessment.objects.count()
-    all_cdic_records_count = CDICRecord.objects.count()
+    # Count all assessments efficiently (scoped via patient__in)
+    all_gm_assessments_count = GMAssessment.objects.filter(patient__in=_patients_qs).count()
+    all_hine_assessments_count = HINEAssessment.objects.filter(patient__in=_patients_qs).count()
+    all_da_assessments_count = DevelopmentalAssessment.objects.filter(patient__in=_patients_qs).count()
+    all_cdic_records_count = CDICRecord.objects.filter(patient__in=_patients_qs).count()
 
     # Count diagnosed assessments
-    dx_gm_assessments_count = GMAssessment.objects.exclude(
+    dx_gm_assessments_count = GMAssessment.objects.filter(patient__in=_patients_qs).exclude(
         diagnosis_conclusion="NORMAL"
     ).count()
-    dx_hine_assessments_count = HINEAssessment.objects.filter(score__lt=73).count()
+    dx_hine_assessments_count = HINEAssessment.objects.filter(patient__in=_patients_qs, score__lt=73).count()
     dx_da_assessments_count = DevelopmentalAssessment.objects.filter(
-        is_dx_normal=False
+        patient__in=_patients_qs, is_dx_normal=False
     ).count()
 
     # Efficient counting for misc items
     bookmark_count = Bookmark.objects.filter(owner=request.user).count()
-    attachments_count = Attachment.objects.count()
-    users_total_count = CustomUser.objects.count()
-    videos_total_count = Video.objects.count()
+    attachments_count = Attachment.objects.filter(patient__in=_patients_qs).count()
+    users_total_count = CustomUser.objects.filter(institution=_inst).count()
+    videos_total_count = Video.objects.filter(patient__in=_patients_qs).count()
 
     # Get new patients (no videos) - optimized with annotation and select_related
     # Use Exists subquery for efficiency
     has_videos = Video.objects.filter(patient=OuterRef('pk'))
-    patients_new_count = Patient.objects.annotate(
+    patients_new_count = _patients_qs.annotate(
         has_videos=Exists(has_videos)
     ).filter(has_videos=False).count()
 
-    Patients_new_list_10 = Patient.objects.annotate(
+    Patients_new_list_10 = _patients_qs.annotate(
         has_videos=Exists(has_videos)
     ).filter(
         has_videos=False
@@ -146,11 +149,11 @@ def dashboard(request):
 
     # Get new videos (no GM assessments) - optimized
     has_gm_assessment = GMAssessment.objects.filter(video_file=OuterRef('pk'))
-    new_videos_count = Video.objects.annotate(
+    new_videos_count = Video.objects.filter(patient__in=_patients_qs).annotate(
         has_assessment=Exists(has_gm_assessment)
     ).filter(has_assessment=False).count()
 
-    new_videos = Video.objects.annotate(
+    new_videos = Video.objects.filter(patient__in=_patients_qs).annotate(
         has_assessment=Exists(has_gm_assessment)
     ).filter(
         has_assessment=False
@@ -240,9 +243,10 @@ def patient_manager(request, filter_type='all'):
         'new': 'New Patients',
     }
 
-    # Get base filtered list using optimized getPatientList
+    # Get base filtered list using optimized getPatientList, scoped to institution
+    _inst = getattr(request, 'institution', None)
     pts_type = FILTER_MAP.get(filter_type, PtStatus.ALL)
-    patients_list = getPatientList(pts_type)
+    patients_list = getPatientList(pts_type, institution=_inst)
 
     # Apply search filter if provided
     if search_query:
@@ -322,7 +326,7 @@ def patient_add(request):
 
             # Check for duplicate BHT
             bht = cleaned_data.get("bht")
-            if bht and Patient.objects.filter(bht=bht).exists():
+            if bht and Patient.objects.for_institution(getattr(request, 'institution', None)).filter(bht=bht).exists():
                 data_form.add_error("bht", "A patient with this BHT already exists")
 
             # Validate date of birth (not in future)
@@ -369,7 +373,7 @@ def patient_add(request):
 @login_required(login_url="user-login")
 @require_GET
 def patient_view(request, pk):
-    selected_patient = get_object_or_404(Patient, id=pk)
+    selected_patient = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), id=pk)
     indications = selected_patient.indecation_for_gma
 
     var_file_video = list(
@@ -506,7 +510,7 @@ def patient_delete(request, pk):
 
     try:
         # 1. Retrieve patient
-        patient = get_object_or_404(Patient, id=pk)
+        patient = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), id=pk)
 
         # 2. Check permissions
         if not has_delete_permission(request.user, patient):
@@ -601,7 +605,7 @@ def patient_delete(request, pk):
 @handle_view_errors(redirect_url='manage-patients', error_message='Error loading delete confirmation')
 @login_required(login_url="user-login")
 def patient_delete_confirm(request, pk):
-    patient = get_object_or_404(Patient, id=pk)
+    patient = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), id=pk)
     user = request.user
     if user.is_superuser:
         return render(request, "patients/delete-confirm.html", {"patient": patient})
@@ -625,7 +629,7 @@ def patient_delete_confirm(request, pk):
 @login_required(login_url="user-login")
 @require_http_methods(["GET", "POST"])
 def patient_edit(request, pk):
-    selected_patient = get_object_or_404(Patient, id=pk)
+    selected_patient = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), id=pk)
 
     if request.method == "POST":
         data_form_modified = PatientForm(request.POST, instance=selected_patient)
@@ -711,7 +715,7 @@ def search_results(request):
         if combo_pt_param_type == "pts_bht" and BHT_validation(request, search_text):
             pagn = f"Patients > BHT > {search_text}"
             try:
-                patient = Patient.objects.get(bht=search_text)
+                patient = Patient.objects.for_institution(getattr(request, 'institution', None)).get(bht=search_text)
                 messages.success(request, f"Found patient with BHT: {search_text}")
                 return render(
                     request, "patients/view.html", {"patient": patient, "pgn": pagn}
@@ -728,7 +732,7 @@ def search_results(request):
         elif combo_pt_param_type == "pts_phn" and PHN_validation(request, search_text):
             pagn = f"Patients > PHN > {search_text}"
             try:
-                patient = Patient.objects.get(pin=search_text)
+                patient = Patient.objects.for_institution(getattr(request, 'institution', None)).get(pin=search_text)
                 messages.success(request, f"Found patient with PHN: {search_text}")
                 return render(
                     request, "patients/view.html", {"patient": patient, "pgn": pagn}
@@ -745,7 +749,7 @@ def search_results(request):
         elif combo_pt_param_type == "pts_nnc_no" and NNC_validation(request, search_text):
             pagn = f"Patients > Clinic Number > {search_text}"
             try:
-                patient = Patient.objects.get(nnc_no=search_text)
+                patient = Patient.objects.for_institution(getattr(request, 'institution', None)).get(nnc_no=search_text)
                 messages.success(request, f"Found patient with clinic number: {search_text}")
                 return render(
                     request, "patients/view.html", {"patient": patient, "pgn": pagn}
@@ -762,7 +766,7 @@ def search_results(request):
         elif combo_pt_param_type == "pts_name_baby" and Name_baby_validation(request, search_text):
             pagn = f"Patients > Baby Name > {search_text}"
             # Use indexed fields for better performance
-            patients = Patient.objects.filter(
+            patients = Patient.objects.for_institution(getattr(request, 'institution', None)).filter(
                 Q(baby_name__istartswith=search_text) | Q(baby_name__icontains=search_text)
             ).order_by("baby_name")
 
@@ -801,7 +805,7 @@ def search_results(request):
         elif combo_pt_param_type == "pts_name_mother" and Name_mother_validation(request, search_text):
             pagn = f"Patients > Mother Name > {search_text}"
             # Use indexed fields for better performance
-            patients = Patient.objects.filter(
+            patients = Patient.objects.for_institution(getattr(request, 'institution', None)).filter(
                 Q(mother_name__istartswith=search_text) | Q(mother_name__icontains=search_text)
             ).order_by("mother_name")
 
@@ -863,7 +867,7 @@ def search_results(request):
 @ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True)
 def assessment_add(request, ptid, fid):
     """Enhanced assessment creation with proper validation and error handling"""
-    patient = get_object_or_404(Patient, pk=ptid)
+    patient = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), pk=ptid)
     video_file = get_object_or_404(Video, pk=fid)
 
     # Check if assessment already exists for this video
@@ -1238,7 +1242,7 @@ def assessment_manager(request, filter_type='all'):
 
 @login_required(login_url="user-login")
 def assessment_manager_by_patients(request, pk):
-    patient = get_object_or_404(Patient, id=pk)
+    patient = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), id=pk)
     # Get search parameter
     search_query = request.GET.get('search', '').strip()
 
@@ -1729,7 +1733,7 @@ def attachment_manager(request):
 @login_required(login_url="user-login")
 def attachment_manager_patient(request, pid):
     """Enhanced patient-specific attachment manager with filtering and search"""
-    patient = get_object_or_404(Patient, pk=pid)
+    patient = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), pk=pid)
 
     # Get search and filter parameters with proper defaults
     search_query = request.GET.get("search", "").strip()
@@ -1855,7 +1859,7 @@ def attachment_add(request, pid):
     Handle attachment upload for a patient.
     Updated to support new Attachment model fields and proper error handling.
     """
-    selected_patient = get_object_or_404(Patient, pk=pid)
+    selected_patient = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), pk=pid)
 
     attachment_form = AttachmentkForm()
 
@@ -2154,7 +2158,7 @@ def attachment_delete(request, pk):
 @ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def cdic_assessment_add(request, pid):
-    selected_patient = get_object_or_404(Patient, pk=pid)
+    selected_patient = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), pk=pid)
     cdic_assemnt_form = CDICRecordForm()
 
     if request.method == "POST":
@@ -2352,7 +2356,7 @@ def cdic_assessment_manager(request):
 def cdic_assessment_manager_by_patients(request, pid):
     try:
         # Get patient with error handling
-        sp = get_object_or_404(Patient, pk=pid)
+        sp = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), pk=pid)
         
         # Get CDIC records for this patient
         var_cdic_list = CDICRecord.objects.select_related('patient', 'added_by', 'last_edit_by').filter(patient=sp.id).order_by("-id")
@@ -2553,7 +2557,7 @@ def cdic_assessment_delete(request, aid):
 @ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def hine_assessment_add(request, pid):
-    sp = get_object_or_404(Patient, pk=pid)
+    sp = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), pk=pid)
     
     if request.method == "POST":
         hine_form = HINEAssessmentForm(request.POST, patient=sp)
@@ -2743,7 +2747,7 @@ def hine_assessment_manager(request):
 def hine_assessment_manager_by_patients(request, pid):
     try:
         # Get patient with error handling
-        sp = get_object_or_404(Patient, pk=pid)
+        sp = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), pk=pid)
         
         # Get HINE assessments for this patient
         var_hine_list = HINEAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').filter(patient=sp.id).order_by("-id")
@@ -2928,7 +2932,7 @@ def hine_assessment_delete(request, hine_id):
 @ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def da_assessment_add(request, pid):
-    sp = get_object_or_404(Patient, pk=pid)
+    sp = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), pk=pid)
 
     if request.method == "POST":
         da_form_data = DevelopmentalAssessmentForm(request.POST, patient=sp)
@@ -3136,7 +3140,7 @@ def da_assessment_manager(request):
 def da_assessment_manager_by_patients(request, pid):
     try:
         # Get patient with error handling
-        sp = get_object_or_404(Patient, pk=pid)
+        sp = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), pk=pid)
         
         # Get developmental assessments for this patient
         var_da_list = DevelopmentalAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').filter(patient=sp.id).order_by("-id")
@@ -3358,7 +3362,7 @@ def print(request):
 @login_required(login_url="user-login")
 def gpa_add(request, pid):
     """Create a new General Paediatric Assessment record for a patient"""
-    patient = get_object_or_404(Patient, pk=pid)
+    patient = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), pk=pid)
 
     if request.method == "POST":
         form = GeneralPaediatricAssessmentForm(request.POST)
@@ -3501,7 +3505,7 @@ def gpa_manager(request):
 @login_required(login_url="user-login")
 def gpa_manager_by_patient(request, pid):
     """List all GPA records for a specific patient with search and pagination"""
-    patient = get_object_or_404(Patient, pk=pid)
+    patient = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), pk=pid)
 
     # Get search parameter
     search_query = request.GET.get("search", "").strip()

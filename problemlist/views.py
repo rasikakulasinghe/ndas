@@ -73,7 +73,7 @@ def problem_add(request, pid):
     Returns:
         Rendered add form or redirect to manager on success
     """
-    patient = get_object_or_404(Patient, pk=pid)
+    patient = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), pk=pid)
 
     if request.method == "POST":
         form = ProblemForm(request.POST)
@@ -467,8 +467,10 @@ def problem_analysis(request):
     date_from = request.GET.get('date_from')
     date_to = request.GET.get('date_to')
 
-    # Start with all problems
-    problems = Problem.objects.select_related('patient', 'added_by').all()
+    # Start with all problems (institution-scoped)
+    _inst = getattr(request, 'institution', None)
+    _patients_qs = Patient.objects.for_institution(_inst)
+    problems = Problem.objects.select_related('patient', 'added_by').filter(patient__in=_patients_qs)
 
     # Apply filters
     if patient_id:
@@ -490,7 +492,7 @@ def problem_analysis(request):
     problems = problems.order_by('-date_identified')
 
     # Get all patients for Select2 dropdown
-    patients = Patient.objects.all().values('pk', 'baby_name', 'bht', 'mother_name')
+    patients = Patient.objects.for_institution(getattr(request, 'institution', None)).values('pk', 'baby_name', 'bht', 'mother_name')
 
     count = getCountZeroIfNone(problems)
 
@@ -538,8 +540,10 @@ def problem_analysis_export(request):
     date_from = request.GET.get('date_from')
     date_to = request.GET.get('date_to')
 
-    # Start with all problems
-    problems = Problem.objects.select_related('patient', 'added_by').all()
+    # Start with all problems (institution-scoped)
+    _inst = getattr(request, 'institution', None)
+    _patients_qs = Patient.objects.for_institution(_inst)
+    problems = Problem.objects.select_related('patient', 'added_by').filter(patient__in=_patients_qs)
 
     # Apply filters
     if patient_id:

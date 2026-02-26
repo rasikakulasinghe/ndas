@@ -1,6 +1,6 @@
 # Story 2.3: Atomic Institution Onboarding
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -1022,4 +1022,19 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- All tasks implemented. Code review (2026-02-25) found and fixed: missing `validate_password()` in form (H1), CSP nonce on add.html script (H2), weak test assertion (M1), missing AC#3 rollback test (M2), missing AC#5 slug immutability test (M3), unused `slugify` import (L1), missing `sanitize_text_input` on admin_first_name (L2).
+- All URLs were already uncommented in `institution/urls.py` — Task 3 was complete.
+- "Onboard New Institution" button already present in `selector.html` as "Add Institution" — Task 5 was complete.
+
 ### File List
+
+- `institution/forms.py` — created: `InstitutionOnboardingForm`
+- `templates/institution/add.html` — created: two-card AdminLTE onboarding form
+- `institution/tests/test_institution_add.py` — created: access, atomicity, rollback, slug immutability tests
+- `institution/views.py` — modified: `institution_add` view (already present from Story 2.3 implementation)
+- `institution/urls.py` — `institution-add` URL was already active (no change required)
+- `templates/institution/selector.html` — "Add Institution" button already present (no change required)
+
+### Change Log
+
+- 2026-02-25: Implemented by claude-sonnet-4-6. Code review pass by claude-sonnet-4-6. Fixed 2 HIGH + 3 MEDIUM + 2 LOW issues post-review. Story marked done.

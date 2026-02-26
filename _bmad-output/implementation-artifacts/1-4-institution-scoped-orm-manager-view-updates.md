@@ -1,6 +1,6 @@
 # Story 1.4: Institution-Scoped ORM Manager & View Updates
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -481,10 +481,23 @@ class InstitutionPatientIsolationTest(TestCase):
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-sonnet-4-6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- `InstitutionScopedManager` created in `institution/managers.py` with `for_institution()` and `all_institutions()` methods. `for_institution(None)` returns full queryset for Phase 1 backward compatibility.
+- `Patient.objects` replaced with `InstitutionScopedManager` in `patients/models.py`.
+- `patients/views.py` updated: all Patient querysets use `for_institution(_inst)`; child model counts use `patient__in=_patients_qs`. **Code review H6 fix applied:** `users_total_count` now scoped to institution via `CustomUser.objects.filter(institution=_inst).count()`.
+- `video/views.py` updated with `for_institution()` scoping on all patient fetches and video lists.
+- **Undocumented migration created (H3):** `patients/migrations/0010_alter_patient_institution.py` was generated during Story 2.6 work to change Patient.institution FK `related_name` to `'patients'`. This migration depends on `institution/0003_patientmovelog`. It is functionally correct and already applied — documented here for traceability.
+
 ### File List
+
+- institution/managers.py
+- patients/models.py
+- patients/views.py
+- video/views.py
+- patients/migrations/0008_alter_diagnosislist_options_and_more.py
+- patients/migrations/0010_alter_patient_institution.py (created during Story 2.6; documented here)

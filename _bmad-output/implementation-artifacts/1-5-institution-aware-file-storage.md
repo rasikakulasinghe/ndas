@@ -1,6 +1,6 @@
 # Story 1.5: Institution-Aware File Storage
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -553,10 +553,24 @@ class ProtectedMediaViewTest(TestCase):
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-sonnet-4-6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- `get_institution_video_path` and `get_institution_attachment_path` callables added to `ndas/custom_codes/validators.py`. Both use `institution.slug` with `'pending'` fallback when institution is None.
+- `video/models.py` updated: `video_file` now uses `upload_to=get_institution_video_path`.
+- `patients/models.py` (Attachment) updated: uses `upload_to=get_institution_attachment_path`.
+- `protected_media_view` added to `institution/views.py` to serve media with institution boundary enforcement.
+- Migrations generated for both FileField changes.
+
 ### File List
+
+- ndas/custom_codes/validators.py
+- video/models.py
+- video/migrations/0007_alter_video_video_file.py
+- patients/models.py
+- patients/migrations/0009_alter_attachment_attachment.py
+- institution/views.py
+- institution/tests/test_file_storage.py

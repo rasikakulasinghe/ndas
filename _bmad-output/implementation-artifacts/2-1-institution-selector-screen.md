@@ -1,6 +1,6 @@
 # Story 2.1: Institution Selector Screen
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -782,4 +782,18 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- All tasks implemented. Code review (2026-02-25) found and fixed: badge case-mismatch (H1), missing logo per card (H2), dead ADMIN redirect branch (M1), URL ordering (M2), weak test assertion (M3), missing AC#2 test (M4), extra DB query in template (L1).
+- `institution_switch` stub included in `views.py` for Story 2.1 rendering. Full switch logic (overlay banner) belongs to Story 2.2.
+- ADMIN redirect currently falls through to `manage-patients`; update to `institution:institution-admin-dashboard` when Story 3.1 ships.
+
 ### File List
+
+- `institution/views.py` — created: `institution_selector` view + `institution_switch` stub (full impl from Story 2.2 also present)
+- `institution/urls.py` — created: `app_name='institution'`, all Epic 2 URL patterns registered
+- `templates/institution/selector.html` — created: SUPERADMIN card grid template
+- `institution/tests/test_selector.py` — created: access control, content, session, subscription badge tests
+- `ndas/urls.py` — modified: `institution/` prefix registered before patients catch-all
+
+### Change Log
+
+- 2026-02-25: Implemented by claude-sonnet-4-6. Code review pass by claude-sonnet-4-6. Fixed 3 HIGH + 4 MEDIUM + 1 LOW issues post-review. Story marked done.

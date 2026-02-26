@@ -839,6 +839,13 @@
             </a>
           </div>
           {% endif %}
+          {% if is_superadmin %}
+          <div class="col-md-4 col-sm-6 mb-2">
+            <a class="btn btn-warning btn-block" href="{% url 'institution:superadmin-patient-move' patient.pk %}">
+              <i class="fas fa-exchange-alt"></i> Move Patient
+            </a>
+          </div>
+          {% endif %}
           {% if user.is_superuser or user.is_staff %}
           <div class="col-md-4 col-sm-6 mb-2">
             <button class="btn btn-danger btn-block delete-trigger-btn" type="button"

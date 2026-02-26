@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 @login_required(login_url="user-login")
 def video_add(request, patient_id):
     """Enhanced video upload with proper form handling and progress tracking"""
-    patient = get_object_or_404(Patient, id=patient_id)
+    patient = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), id=patient_id)
 
     if request.method == "POST":
         form = VideoForm(request.POST, request.FILES)
@@ -244,9 +244,12 @@ def video_manager(request):
     bookmarked_filter = request.GET.get("bookmarked_only", "")
     page_number = request.GET.get("page", 1)
 
-    # Base queryset with optimized related data loading
+    # Base queryset with optimized related data loading, scoped to institution
+    _inst = getattr(request, 'institution', None)
+    _patients_qs = Patient.objects.for_institution(_inst)
     queryset = (
-        Video.objects.select_related("patient", "added_by", "last_edit_by")
+        Video.objects.filter(patient__in=_patients_qs)
+        .select_related("patient", "added_by", "last_edit_by")
         .order_by("-recorded_on", "-created_at")
     )
 
@@ -362,8 +365,11 @@ def video_manager_new_only(request):
     from patients.models import GMAssessment
 
     used_video_ids = GMAssessment.objects.values_list('video_file_id', flat=True)
+    _inst = getattr(request, 'institution', None)
+    _patients_qs = Patient.objects.for_institution(_inst)
     queryset = (
-        Video.objects.select_related("patient", "added_by", "last_edit_by")
+        Video.objects.filter(patient__in=_patients_qs)
+        .select_related("patient", "added_by", "last_edit_by")
         .exclude(id__in=used_video_ids)
         .order_by("-recorded_on", "-created_at")
     )
@@ -400,12 +406,14 @@ def video_manager_new_only(request):
 def video_manager_by_patient(request, patient_id):
     """Video manager filtered by specific patient"""
     # Get patient object or 404
-    patient = get_object_or_404(Patient, id=patient_id)
+    patient = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), id=patient_id)
 
     # Base queryset for specific patient
+    _inst = getattr(request, 'institution', None)
+    _patients_qs = Patient.objects.for_institution(_inst)
     queryset = (
         Video.objects.select_related("patient", "added_by", "last_edit_by")
-        .filter(patient_id=patient_id)
+        .filter(patient__in=_patients_qs, patient_id=patient_id)
         .order_by("-recorded_on", "-created_at")
     )
 

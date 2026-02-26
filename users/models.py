@@ -6,7 +6,7 @@ from django.utils.crypto import get_random_string
 import uuid
 from datetime import timedelta, date
 from decimal import Decimal
-from ndas.custom_codes.choice import POSSITION, LOGIN_STATUS_CHOICES, SUBSCRIPTION_TYPE_CHOICES, SUBSCRIPTION_STATUS_CHOICES
+from ndas.custom_codes.choice import POSSITION, LOGIN_STATUS_CHOICES, SUBSCRIPTION_TYPE_CHOICES, SUBSCRIPTION_STATUS_CHOICES, UserType
 from ndas.custom_codes.validators import image_extension_validation, validate_phone_number
 from ndas.custom_codes.Custom_abstract_class import (
     TimeStampedModel,
@@ -112,6 +112,25 @@ class CustomUser(AbstractUser, TimeStampedModel):
         blank=True,
         help_text="Additional notes or information",
         verbose_name="Additional Notes",
+    )
+
+    # ─── Phase 2: Multi-Institution ─────────────────────────────────────────
+    institution = models.ForeignKey(
+        'institution.Institution',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='users',
+        help_text="Institution this user belongs to. Null for SUPERADMIN.",
+        verbose_name="Institution",
+    )
+    user_type = models.CharField(
+        max_length=20,
+        choices=UserType.choices,
+        default=UserType.USER,
+        help_text="Role within the multi-institution system.",
+        verbose_name="User Type",
+        db_index=True,
     )
 
     USERNAME_FIELD = "username"

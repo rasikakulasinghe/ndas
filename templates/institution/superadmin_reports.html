@@ -1,0 +1,115 @@
+{% extends 'src/base.html' %}
+{% load static %}
+
+{% block title %}Network Report Export{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid">
+
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <h4 class="mb-0"><i class="fas fa-file-export mr-2"></i>Network Report Export</h4>
+        <a href="{% url 'institution:superadmin-dashboard' %}" class="btn btn-secondary btn-sm">
+          <i class="fas fa-arrow-left mr-1"></i>Back to Dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+
+  {% if messages %}
+  <div class="row">
+    <div class="col-12">
+      {% for message in messages %}
+      <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show">
+        {{ message }}
+        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Select Report Scope</h5>
+        </div>
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+
+            <!-- Scope selection -->
+            <div class="form-group">
+              <label class="font-weight-bold">Report Scope</label>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="scope" id="scope_per"
+                       value="per_institution" checked>
+                <label class="form-check-label" for="scope_per">
+                  <strong>Per-Institution Export</strong>
+                  <small class="text-muted d-block">Full patient and assessment data for one selected institution.</small>
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="scope" id="scope_cross"
+                       value="cross_institution">
+                <label class="form-check-label" for="scope_cross">
+                  <strong>Cross-Institution Aggregate</strong>
+                  <small class="text-muted d-block">Aggregate summary across all institutions (anonymised patient counts).</small>
+                </label>
+              </div>
+            </div>
+
+            <!-- Institution selector (shown only for per_institution scope) -->
+            <div class="form-group" id="institution-selector-group">
+              <label for="institution_id" class="font-weight-bold">Target Institution</label>
+              <select name="institution_id" id="institution_id" class="form-control">
+                <option value="">— select institution —</option>
+                {% for inst in institutions %}
+                <option value="{{ inst.pk }}">{{ inst.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="d-flex justify-content-end">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-download mr-1"></i>Generate &amp; Download Excel
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-body">
+          <h6><i class="fas fa-info-circle mr-1"></i>Report Contents</h6>
+          <ul class="mb-0 small text-muted">
+            <li><strong>Per-Institution:</strong> Patient roster, assessments (GMA, HINE, CDIC, GPA, DA), user list — multi-sheet Excel workbook.</li>
+            <li><strong>Cross-Institution Aggregate:</strong> One row per institution with patient counts, assessment volumes, subscription status.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  var radios = document.querySelectorAll('input[name="scope"]');
+  var instGroup = document.getElementById('institution-selector-group');
+
+  function updateVisibility(){
+    var val = document.querySelector('input[name="scope"]:checked').value;
+    instGroup.style.display = (val === 'per_institution') ? '' : 'none';
+  }
+
+  radios.forEach(function(r){ r.addEventListener('change', updateVisibility); });
+  updateVisibility();
+})();
+</script>
+{% endblock %}

@@ -50,6 +50,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_user_agents.middleware.UserAgentMiddleware',
     'users.middleware.SubscriptionCheckMiddleware',
+    'institution.middleware.InstitutionContextMiddleware',
 ]
 
 if not DEBUG:
@@ -69,6 +70,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'institution.context_processors.institution_context',
             ],
         },
     },
@@ -165,6 +167,11 @@ STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
+
+# ─── Phase 2: Multi-Institution ─────────────────────────────────────────────
+MULTI_INSTITUTION_ENABLED = config('MULTI_INSTITUTION_ENABLED', default=False, cast=bool)
+DEFAULT_INSTITUTION_NAME = config('DEFAULT_INSTITUTION_NAME', default='Default Institution')
+DEFAULT_INSTITUTION_SLUG = config('DEFAULT_INSTITUTION_SLUG', default='default')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

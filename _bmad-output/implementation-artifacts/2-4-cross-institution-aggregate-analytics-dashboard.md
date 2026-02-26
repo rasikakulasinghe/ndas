@@ -1,6 +1,6 @@
 # Story 2.4: Cross-Institution Aggregate Analytics Dashboard
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -1027,6 +1027,20 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+None
+
 ### Completion Notes List
 
+- `superadmin_dashboard` view implemented in `institution/views.py`: SUPERADMIN-only, queries all institutions with user/patient counts, builds per-institution assessment volume dict (5 queries regardless of institution count), stubs referral activity at 0 (Story 4.1 prerequisite).
+- Platform-wide totals computed from per-institution data (no extra queries).
+- Recent events section shows last 10 onboarded institutions.
+- Template created with AdminLTE stat cards, per-institution cards, and assessment breakdown table.
+- **Code review M2 fix applied:** Dead ADMIN branch in `institution_selector` removed — single redirect with TODO comment for Story 3.1.
+
 ### File List
+
+- institution/views.py
+- institution/urls.py
+- templates/institution/superadmin_dashboard.html
+- templates/institution/selector.html
+- institution/tests/test_superadmin_dashboard.py

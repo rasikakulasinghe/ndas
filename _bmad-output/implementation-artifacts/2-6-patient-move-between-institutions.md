@@ -1,6 +1,6 @@
 # Story 2.6: Patient Move Between Institutions
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -684,6 +684,23 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
+None
+
 ### Completion Notes List
 
+- `PatientMoveLog` model added to `institution/models.py` with `from_institution`, `to_institution`, `patient`, `moved_by` FKs and `notes` TextField. Inherits `TimeStampedModel` + `UserTrackingMixin`. Migration `0003_patientmovelog` created.
+- `superadmin_patient_move` view implemented: 3-step multi-step confirmation (preview → confirm → execute). Atomic move updates `patient.institution` and creates two `PatientMoveLog` audit records (source + destination scoped).
+- **Cross-story migration note:** `patients/migrations/0010_alter_patient_institution.py` was generated as part of this story's work (alters Patient.institution FK `related_name` to `'patients'`). This migration depends on `institution/0003_patientmovelog`. Documented in Story 1.4 completion notes for traceability.
+- **Code review L2 fix applied:** `superadmin_patient_move` `get_object_or_404` call now has a comment explaining the intentional `for_institution()` bypass (SUPERADMIN crosses boundaries by design).
+- "Move Patient" button added to patient detail template (`templates/patients/partials/patient_view.html`), gated by `{% if is_superadmin %}`.
+
 ### File List
+
+- institution/models.py
+- institution/views.py
+- institution/migrations/0003_patientmovelog.py
+- institution/urls.py
+- patients/migrations/0010_alter_patient_institution.py
+- templates/institution/superadmin_patient_move.html
+- templates/patients/partials/patient_view.html
+- institution/tests/test_patient_move.py

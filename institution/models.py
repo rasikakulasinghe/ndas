@@ -4,6 +4,7 @@ from ndas.custom_codes.Custom_abstract_class import TimeStampedModel, UserTracki
 from ndas.custom_codes.choice import SubscriptionStatus
 
 
+
 class Institution(TimeStampedModel, UserTrackingMixin):
     name = models.CharField(max_length=255, unique=True, db_index=True)
     slug = models.SlugField(max_length=100, unique=True, db_index=True)
@@ -48,3 +49,43 @@ class Institution(TimeStampedModel, UserTrackingMixin):
 
     class Meta:
         ordering = ['name']
+
+
+class PatientMoveLog(TimeStampedModel, UserTrackingMixin):
+    """Audit trail for SUPERADMIN patient-move operations (Story 2.6 / FR55)."""
+
+    patient = models.ForeignKey(
+        'patients.Patient',
+        on_delete=models.CASCADE,
+        related_name='move_logs',
+        db_index=True,
+    )
+    from_institution = models.ForeignKey(
+        Institution,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='moves_out',
+        db_index=True,
+    )
+    to_institution = models.ForeignKey(
+        Institution,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='moves_in',
+        db_index=True,
+    )
+    moved_by = models.ForeignKey(
+        'users.CustomUser',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='patient_moves_executed',
+    )
+    notes = models.TextField(blank=True)
+
+    def __str__(self):
+        from_name = self.from_institution.name if self.from_institution else '?'
+        to_name = self.to_institution.name if self.to_institution else '?'
+        return f"Patient {self.patient_id} moved: {from_name} → {to_name}"
+
+    class Meta:
+        ordering = ['-created_at']

@@ -1,6 +1,6 @@
 # Story 2.2: Superadmin Institution Context Switching
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -846,4 +846,19 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- All tasks implemented. Code review (2026-02-25) found and fixed: CSP nonce missing on inline script (H1), subscription badge case mismatch in overlay (H2), AC#2/AC#4 not tested (H3), banner id wrong (M1), unnecessary DB query when no context (M2), weak test assertions (M3).
+- `superadmin_overlay.html` uses JS select+submit pattern; CSP nonce applied via `nonce="{{ request.csp_nonce }}"`.
+- AC#3 (data scoping) is enforced end-to-end by Story 1.3 middleware + Story 1.4 ORM manager, verified by existing tests.
+
 ### File List
+
+- `institution/templatetags/__init__.py` — created: empty Python package marker
+- `institution/templatetags/institution_tags.py` — created: `superadmin_overlay` inclusion tag
+- `templates/institution/partials/superadmin_overlay.html` — created: overlay banner HTML
+- `institution/tests/test_context_switching.py` — created: switch endpoint + overlay render tests
+- `institution/views.py` — modified: `institution_switch` already fully implemented (no stub to replace)
+- `templates/src/base.html` — modified: `{% load institution_tags %}` + `{% superadmin_overlay %}` injected
+
+### Change Log
+
+- 2026-02-25: Implemented by claude-sonnet-4-6. Code review pass by claude-sonnet-4-6. Fixed 3 HIGH + 3 MEDIUM issues post-review. Story marked done.

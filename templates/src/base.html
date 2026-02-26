@@ -1,5 +1,5 @@
 {% extends './basic_plane.html' %}
-{% load static %}
+{% load static institution_tags %}
 {% block mainbody %}
 
 {% if user.is_authenticated  %} <!-- to show Sidebar if loged users only -->
@@ -15,6 +15,7 @@
 
   <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
+    {% superadmin_overlay %}
     <!-- Content Header (Page header) -->
     <div class="content-header">
       <div class="container-fluid">
