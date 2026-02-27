@@ -1,10 +1,10 @@
 ---
 project_name: 'NDAS'
 user_name: 'Rasika'
-date: '2026-02-21'
-sections_completed: ['technology_stack', 'language_rules', 'framework_rules', 'testing_rules', 'quality_rules', 'workflow_rules', 'anti_patterns']
+date: '2026-02-27'
+sections_completed: ['technology_stack', 'language_rules', 'framework_rules', 'testing_rules', 'quality_rules', 'workflow_rules', 'anti_patterns', 'phase2_multi_institution']
 status: 'complete'
-rule_count: 67
+rule_count: 82
 optimized_for_llm: true
 ---
 
@@ -31,6 +31,9 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - **WSGI Server (prod):** Gunicorn (3 workers, 300s timeout) behind Nginx
 - **Cache:** LocMemCache (dev) / Redis (prod)
 
+**Apps (Phase 1):** `patients` · `users` · `video` · `reports` · `problemlist`
+**Apps (Phase 2 additions):** `institution` · `referral`
+
 ---
 
 ## Critical Implementation Rules
@@ -41,11 +44,11 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - **All models** must inherit `TimeStampedModel, UserTrackingMixin` — never `models.Model` directly
 - **Choices** must be defined in `ndas/custom_codes/choice.py`, never inline in model field definitions
 - **Validators** must be added to `ndas/custom_codes/validators.py`, never defined inline or in app files
-- **Enumerations** (e.g. `PtStatus`) live in `ndas/custom_codes/ndas_enums.py`
+- **Enumerations** (e.g. `PtStatus`, `UserType`, `ReferralStatus`) live in `ndas/custom_codes/ndas_enums.py` or `choice.py`
 - **User tracking** (`added_by`, `last_edit_by`) is auto-populated by `UserActivityMiddleware` — never set manually in views
 - **Age calculation:** use `calculate_age_string()` from `custom_methods.py`, not custom datetime logic
 - **Safe counts:** use `getCountZeroIfNone()` from `custom_methods.py` instead of `.count()` where None is possible
-- **Logger placement:** Always define `logger = logging.getLogger(__name__)` at module level — never inside a function or method. In-function logger assignments shadow the module logger and break log hierarchy.
+- **Logger placement:** Always define `logger = logging.getLogger(__name__)` at module level — never inside a function or method
 - **Patient field names are critical** — use exact names only:
   - `patient.bht` (not `bht_number`), `patient.nnc_no` (not `nnc_number`)
   - `patient.baby_name` (not `patient_name` or `name`), `patient.dob_tob` (not `dob` or `date_of_birth`)
@@ -84,7 +87,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 
 **URLs:**
 - URL names follow kebab-case: `patient-manager`, `assessment-add`, `video-delete`
-- Delete views accept only POST — use `@require_POST` (shorthand). Use `@require_GET` for read-only views, `@require_http_methods(["GET", "POST"])` for standard form views.
+- Delete views accept only POST — use `@require_POST`. Read-only views use `@require_GET`. Standard form views use `@require_http_methods(["GET", "POST"])`.
 
 **Delete System:**
 - Always call `has_delete_permission(request.user, entity)` before deleting
@@ -100,7 +103,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 
 - **Test runner:** `python manage.py test [app_name]` — standard Django test runner, no pytest
 - **Test file location:** `tests/` directory within each app or `test_*.py` files at app root
-- **Test per app:** run isolated — `patients`, `users`, `video`, `reports`, `problemlist`
+- **Test per app:** run isolated — `patients`, `users`, `video`, `reports`, `problemlist`, `institution`, `referral`
 - **Specific test targeting:** `python manage.py test patients.tests.PatientModelTest.test_method_name`
 - **Test database:** Django creates a temporary SQLite test DB automatically — no manual setup needed
 - **Model tests:** use `TestCase` (not `SimpleTestCase`) — requires DB access
@@ -138,10 +141,11 @@ _This file contains critical rules and patterns that AI agents must follow when 
 **File Path Generators (never hardcode upload paths):**
 - Videos → `get_video_path_file_name()`, compressed → `get_compressed_video_path()`, thumbnails → `get_video_thumbnail_path()`
 - Attachments → `get_attachment_path_file_name()`
+- Institution logos → `get_institution_logo_path()` (from `validators.py`)
 - All paths follow `YYYY/MM/patient_name/filename_timestamp.ext` pattern
 
 **Caching:**
-- **Atomic cache check-and-set:** Use `cache.add(key, value, timeout)` for atomic "set if not exists" (e.g. throttling in middleware). Never use `cache.get()` + `cache.set()` together — it creates a race condition under concurrent requests.
+- **Atomic cache check-and-set:** Use `cache.add(key, value, timeout)` for atomic "set if not exists" (e.g. throttling in middleware). Never use `cache.get()` + `cache.set()` together — it creates a race condition.
 
 **Secrets & Configuration:**
 - All secrets in `.env` — never hardcoded; access via `django.conf.settings`, not `os.environ` in views
@@ -156,10 +160,23 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - After model change: `python manage.py makemigrations [app_name]` then `python manage.py migrate`
 - Always specify app name in `makemigrations` — never run bare `makemigrations` across multiple apps
 
-**Middleware Stack — Never Reorder:**
-- The 13-layer stack in `ndas/settings.py` is order-critical — see `docs/architecture.md`
-- New middleware: insert after position 12 (`UserAgentMiddleware`), before `SubscriptionCheckMiddleware`
+**Middleware Stack — Never Reorder (14 layers):**
+1. SecurityMiddleware
+2. WhiteNoiseMiddleware
+3. CSPMiddleware
+4. AdditionalSecurityHeadersMiddleware (custom)
+5. SessionMiddleware
+6. CommonMiddleware
+7. CsrfViewMiddleware
+8. AuthenticationMiddleware
+9. UserActivityMiddleware (custom)
+10. MessageMiddleware
+11. XFrameOptionsMiddleware
+12. UserAgentMiddleware
+13. SubscriptionCheckMiddleware (Phase 1) / `InstitutionContextMiddleware` (Phase 2 — position 14)
+14. `InstitutionContextMiddleware` (always present; acts as Phase1 passthrough when `MULTI_INSTITUTION_ENABLED=False`)
 - `SecurityHeadersValidationMiddleware` is production-only — conditionally loaded
+- New middleware: insert after position 12 (`UserAgentMiddleware`), before `InstitutionContextMiddleware`
 
 **Security — Never Skip:**
 - `{% csrf_token %}` in every form; rate limit all create/edit at `10/m`, delete at `5/m`
@@ -172,6 +189,64 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - PDF: extend `BasePDFGenerator` / assessment subclasses in `reports/utils/pdf_generator.py`
 - Excel: use `ExcelReportGenerator` in `reports/utils/excel_generator.py`
 - Both use `ReportTemplate` for branding — never hardcode clinic details
+
+---
+
+## Phase 2: Multi-Institution Rules
+
+### Feature Flag
+
+- `MULTI_INSTITUTION_ENABLED` (env var, default `False`) controls Phase 2 behaviour
+- All Phase 2 code paths must check `settings.MULTI_INSTITUTION_ENABLED` or be gated by `InstitutionContextMiddleware`'s mode
+- When `False`, system behaves identically to Phase 1 (backward compatible)
+
+### Data Isolation — InstitutionScopedManager
+
+- **All institution-scoped models** use `InstitutionScopedManager` as their default manager
+- **ALWAYS** query scoped models via `.for_institution(request.institution)` in regular views — never raw `.all()` or `.filter(institution=...)`
+- **SUPERADMIN aggregate views only** may use `.all_institutions()` — never call this in regular views
+- Pattern: `Patient.objects.for_institution(request.institution).select_related(...)`
+- If `request.institution` is `None` (transitional Phase 1 → Phase 2 migration state), `for_institution(None)` returns all records (safe fallback)
+
+### User Roles (UserType choices)
+
+- `UserType.USER` — Clinician; scoped to own institution
+- `UserType.ADMIN` — Institution Admin; manages own institution's users and settings
+- `UserType.SUPERADMIN` — Platform-level; `is_superuser=True`; context-switches across institutions via session
+- Check role in views/templates via: `request.user.user_type` or template vars `is_superadmin`, `user_type`
+- **NEVER** use `request.user.is_superuser` in templates — use `is_superadmin` context variable instead (breaks SUPERADMIN context switching)
+- **NEVER** use `request.user.institution` in templates — use `active_institution` context variable instead
+
+### Institution Context (request.institution)
+
+- `request.institution` is set by `InstitutionContextMiddleware` on every request
+- For SUPERADMIN: resolved from `request.session['active_institution_id']`; redirects to `institution:institution-selector` if not set
+- For ADMIN/USER: resolved from `request.user.institution`
+- Context processors (`institution.context_processors.institution_context`) inject into every template: `active_institution`, `user_type`, `is_superadmin`
+
+### Institution Model Rules
+
+- `Institution.slug` is **immutable** — cannot be changed after creation (enforced in `save()` and `clean()`)
+- Institution logo path uses `get_institution_logo_path()` — never set `upload_to` inline
+- `InstitutionContextMiddleware` (position 14) replaces `SubscriptionCheckMiddleware` in Phase 2; both coexist in `settings.py` for migration safety
+
+### Referral System Rules
+
+- `ReferralSent` (owned by sending institution) and `ReferralReceived` (owned by receiving institution) are **independent records with NO FK between them**
+- They are linked only by `referral_uuid` (UUID field, same value on both, generated once from `ReferralSent`, copied to `ReferralReceived`)
+- Both records must be created **atomically** using `transaction.atomic()` — either both succeed or neither is created
+- `snapshot_data` JSONField is **immutable** after creation — never update it after the referral is submitted
+- `ReferralMessage.referral_uuid` links to both records without a direct FK — this is intentional
+- Referral lifecycle: `PENDING → REPLIED → CLOSED` (ReferralStatus choices)
+- Grace period exemption: `/referral/` URLs are exempt from write-blocking during `GRACE` subscription status — active referrals continue to completion
+
+### Notification System Rules
+
+- **All `Notification.objects.create()` calls must live in `referral/signals.py`** — never in views or elsewhere
+- Signals use try/except with logging so a signal failure never breaks the triggering action
+- `referral_status_changed` is a **custom signal** (not `post_save`) — dispatched manually from the close view because bulk updates skip `post_save`
+- `Notification` uses `InstitutionScopedManager` — always query via `.for_institution(request.institution)`
+- Notification bell / panel uses **HTMX polling** — no WebSockets
 
 ### Critical Don't-Miss Rules
 
@@ -186,10 +261,15 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - ❌ Raw SQL → use Django ORM (aggregations are the only exception)
 - ❌ Secrets in source code → always use `.env`
 - ❌ New utilities in app files → always extend `ndas/custom_codes/`
+- ❌ Using `Model.objects.all()` or `.filter(institution=...)` on institution-scoped models → use `.for_institution(request.institution)`
+- ❌ `request.user.institution` in templates → use `active_institution` context variable
+- ❌ `{% if request.user.is_superuser %}` in templates → use `{% if is_superadmin %}`
+- ❌ `Notification.objects.create()` in views → all notifications must go through `referral/signals.py`
+- ❌ Modifying `snapshot_data` after referral creation → it is immutable
 
 **Security Gotchas:**
 - Inline scripts need `nonce="{{ request.csp_nonce }}"` — CSP nonce injected by `CSPMiddleware`
-- `SubscriptionCheckMiddleware` blocks ALL views if `Subscription.status != 'active'`
+- `InstitutionContextMiddleware` (Phase 2) or `SubscriptionCheckMiddleware` (Phase 1) blocks ALL views on expired/grace subscriptions
 - File upload: MIME type AND extension must both pass — not just extension
 - `sanitize_text_input()` is NOT interchangeable with `sanitize_html()` — wrong choice causes XSS or strips valid HTML
 
@@ -200,13 +280,15 @@ _This file contains critical rules and patterns that AI agents must follow when 
 
 **Performance Gotchas:**
 - `patients/models.py` is 2800+ lines — always `select_related('added_by', 'last_edit_by')` in list views to avoid N+1
-- After changing `Subscription.status` — invalidate cache explicitly
+- After changing `Subscription.status` or `Institution.subscription_status` — invalidate cache explicitly
 - Video metadata extraction needs FFmpeg in PATH; falls back to moviepy; returns blank gracefully if neither available
 
 **App Dependency Rules:**
 - `patients` is the root app (`/`) — all others depend on it, not vice versa
+- `institution` is a foundation app — `referral`, `patients`, `users` all depend on it
 - `video.Video` ↔ `patients.GMAssessment` is a critical OneToOne — never break this coupling
 - `problemlist.ProblemAction` → use `settings.AUTH_USER_MODEL`, not a direct `User` import
+- `referral` depends on `institution` and `patients` — never create circular imports
 
 ---
 
@@ -217,10 +299,11 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Follow ALL rules exactly as documented — when in doubt, prefer the more restrictive option
 - Check `ndas/custom_codes/` before writing any new utility or helper
 - Update this file if new patterns emerge during implementation
+- Phase 2 rules apply to ALL new institution/referral code regardless of `MULTI_INSTITUTION_ENABLED`
 
 **For Humans:**
 - Keep this file lean and focused on agent needs — remove rules that become obvious over time
 - Update when technology stack or patterns change
 - Review quarterly for outdated rules
 
-_Last Updated: 2026-02-21_
+_Last Updated: 2026-02-27_
