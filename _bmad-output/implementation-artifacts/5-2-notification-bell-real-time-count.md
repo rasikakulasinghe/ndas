@@ -1,6 +1,6 @@
 # Story 5.2: Notification Bell & Real-Time Count
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -307,9 +307,13 @@ claude-sonnet-4-6
 - Created referral/tests/test_notification_bell.py with 5 tests (all pass).
 - All 52 referral tests pass.
 
+**Code Review Fixes (2026-02-27):**
+- [M3] Added `@ratelimit(key='user_or_ip', rate='60/m')` to `notification_count` view — protects polling endpoint from abuse per project rate-limit standards.
+- [M5] Added `if not request.institution: return HttpResponse('')` guard to `notification_count` — prevents silent incorrect behavior for SUPERADMIN or users without institution context.
+
 ### File List
 
-- referral/views.py (MODIFIED — added notification_count view)
+- referral/views.py (MODIFIED — added notification_count view; MODIFIED in review: rate limit + None guard)
 - referral/urls.py (MODIFIED — added notification-count URL)
 - templates/referral/notification_count_badge.html (CREATED)
 - templates/src/navbar.html (MODIFIED — HTMX bell activated)

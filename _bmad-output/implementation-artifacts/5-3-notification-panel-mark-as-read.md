@@ -1,6 +1,6 @@
 # Story 5.3: Notification Panel & Mark as Read
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -485,9 +485,12 @@ claude-sonnet-4-6
 - Added STATIC_OVERRIDE to panel tests to avoid ManifestStaticFilesStorage recursion on 404 pages.
 - All 52 referral tests pass.
 
+**Code Review Fixes (2026-02-27):**
+- [M4] Added `@ratelimit(key='user_or_ip', rate='10/m')` to `notification_mark_read` and `notification_mark_all_read` — both modify database state and require rate limiting per project standards.
+
 ### File List
 
-- referral/views.py (MODIFIED — added notification_panel, notification_mark_read, notification_mark_all_read views + `from django.urls import reverse`)
+- referral/views.py (MODIFIED — added notification_panel, notification_mark_read, notification_mark_all_read views + `from django.urls import reverse`; MODIFIED in review: rate limits on write endpoints)
 - referral/urls.py (MODIFIED — added 3 notification URLs)
 - templates/referral/notification_panel.html (CREATED)
 - templates/src/navbar.html (MODIFIED — panel container HTMX wiring)

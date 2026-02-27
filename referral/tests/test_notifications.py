@@ -132,6 +132,24 @@ class ReferralRepliedNotificationTest(NotificationSignalBase):
         self.assertIsNotNone(notif, 'FR68: REFERRAL_REPLIED notification must be created for the sender')
         self.assertEqual(notif.institution, self.inst_a)
 
+    def test_creates_notification_when_sender_replies(self):
+        """FR68: Sender reply creates REFERRAL_REPLIED notification for receiver (symmetric path)."""
+        self._make_referral_pair()
+        ReferralMessage.objects.create(
+            referral_uuid=self.shared_uuid,
+            sender=self.clin_a, sender_institution=self.inst_a,
+            body='Follow-up from referring clinician.',
+            message_type='OPINION',
+            added_by=self.clin_a, last_edit_by=self.clin_a,
+        )
+        notif = Notification.objects.filter(
+            recipient=self.clin_b,
+            notification_type=NotificationType.REFERRAL_REPLIED,
+        ).first()
+        self.assertIsNotNone(notif,
+            'FR68: REFERRAL_REPLIED notification must be created for receiver when sender replies')
+        self.assertEqual(notif.institution, self.inst_b)
+
 
 @override_settings(MULTI_INSTITUTION_ENABLED=True)
 class ReferralClosedNotificationTest(NotificationSignalBase):

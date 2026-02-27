@@ -503,13 +503,17 @@ def patient_referrals_tab(request, patient_id):
 
 @login_required(login_url="user-login")
 @require_GET
+@ratelimit(key='user_or_ip', rate='60/m')
 def notification_count(request):
     """
     HTMX endpoint: returns unread notification count badge fragment (FR38, NFR23).
 
     Polled every 60 seconds by the navbar bell (hx-trigger="every 60s").
-    Returns an empty fragment (no badge) when count is zero.
+    Returns an empty fragment (no badge) when count is zero or institution context is absent.
     """
+    from django.http import HttpResponse
+    if not request.institution:
+        return HttpResponse('')
     from referral.models import Notification
     count = Notification.objects.filter(
         recipient=request.user,
@@ -543,6 +547,7 @@ def notification_panel(request):
 
 @login_required(login_url="user-login")
 @require_GET
+@ratelimit(key='user_or_ip', rate='10/m')
 def notification_mark_read(request, pk):
     """
     Mark a single notification as read and redirect to its target link (FR70).
@@ -569,6 +574,7 @@ def notification_mark_read(request, pk):
 
 @login_required(login_url="user-login")
 @require_http_methods(["POST"])
+@ratelimit(key='user_or_ip', rate='10/m')
 def notification_mark_all_read(request):
     """
     Mark all notifications for current user+institution as read (FR70).

@@ -9,6 +9,7 @@ Handlers use try/except with logging so a signal failure never breaks a referral
 import logging
 from django.db.models.signals import post_save
 from django.dispatch import receiver, Signal
+from django.urls import reverse
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ def notify_referral_received(sender, instance, created, **kwargs):
             notification_type=NotificationType.REFERRAL_RECEIVED,
             title=f'New referral from {instance.from_institution.name}',
             body=instance.initial_message[:200],
-            link=f'/referral/thread/{instance.referral_uuid}/',
+            link=reverse('referral:referral-thread-panel', kwargs={'referral_uuid': instance.referral_uuid}),
             institution=instance.to_institution,
             added_by=instance.from_clinician,
             last_edit_by=instance.from_clinician,
@@ -81,7 +82,7 @@ def notify_referral_replied(sender, instance, created, **kwargs):
             notification_type=NotificationType.REFERRAL_REPLIED,
             title=f'Reply from {instance.sender_institution.name}',
             body=instance.body[:200],
-            link=f'/referral/thread/{instance.referral_uuid}/',
+            link=reverse('referral:referral-thread-panel', kwargs={'referral_uuid': instance.referral_uuid}),
             institution=recipient_institution,
             added_by=instance.sender,
             last_edit_by=instance.sender,
@@ -115,13 +116,15 @@ def notify_referral_closed(sender, referral_uuid, new_status, changed_by, **kwar
         if not sent:
             return
 
+        thread_link = reverse('referral:referral-thread-panel', kwargs={'referral_uuid': referral_uuid})
+
         # Notify receiving clinician
         Notification.objects.create(
             recipient=sent.to_clinician,
             notification_type=NotificationType.REFERRAL_CLOSED,
             title=f'Referral from {sent.from_institution.name} has been closed',
             body='The referring clinician has closed this referral thread.',
-            link=f'/referral/thread/{referral_uuid}/',
+            link=thread_link,
             institution=sent.to_institution,
             added_by=changed_by,
             last_edit_by=changed_by,
@@ -133,7 +136,7 @@ def notify_referral_closed(sender, referral_uuid, new_status, changed_by, **kwar
             notification_type=NotificationType.REFERRAL_CLOSED,
             title=f'You closed a referral to {sent.to_institution.name}',
             body='This referral thread is now sealed.',
-            link=f'/referral/thread/{referral_uuid}/',
+            link=thread_link,
             institution=sent.from_institution,
             added_by=changed_by,
             last_edit_by=changed_by,

@@ -1,6 +1,6 @@
 # Story 5.1: Notification Model & Signal Infrastructure
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -549,12 +549,17 @@ claude-sonnet-4-6
 - Fixed patient creation in tests to use VALID_PATIENT_FIELDS (required fields: gender, dob_tob, mo_delivery, birth_weight, ofc, tp_mobile).
 - All 52 referral tests pass, no regressions.
 
+**Code Review Fixes (2026-02-27):**
+- [M1] Replaced hard-coded `/referral/thread/{uuid}/` URL strings in signals.py with `reverse('referral:referral-thread-panel', ...)` — prevents silent link breakage if URL pattern changes.
+- [M2] Added `test_creates_notification_when_sender_replies` to `ReferralRepliedNotificationTest` — covers the symmetric sender→receiver notification path (FR68).
+- All 19 notification tests pass after review fixes.
+
 ### File List
 
 - ndas/custom_codes/choice.py (pre-existing, no change needed)
 - referral/models.py (pre-existing, no change needed)
 - referral/migrations/0002_notification_and_more.py (CREATED)
-- referral/signals.py (CREATED — full implementation)
+- referral/signals.py (CREATED — full implementation; MODIFIED in review: reverse() URL fix)
 - referral/apps.py (MODIFIED — activated signal import)
 - referral/views.py (MODIFIED — signal dispatch in referral_close)
-- referral/tests/test_notifications.py (CREATED)
+- referral/tests/test_notifications.py (CREATED; MODIFIED in review: added symmetric reply test)
