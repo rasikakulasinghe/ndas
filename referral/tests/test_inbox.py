@@ -83,6 +83,13 @@ class InboxAccessTest(InboxTestBase):
         response = client.get(self.inbox_url)
         self.assertEqual(response.status_code, 200)
 
+    def test_unauthenticated_redirected_to_login(self):
+        """M1: Unauthenticated access must redirect to login."""
+        client = Client()
+        response = client.get(self.inbox_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response['Location'])
+
 
 @STATIC_OVERRIDE
 class InboxEmptyStateTest(InboxTestBase):

@@ -66,6 +66,14 @@ class ClinicianListAccessTest(ClinicianMgmtTestBase):
         response = client.get(self.list_url)
         self.assertRedirects(response, reverse('home'), fetch_redirect_response=False)
 
+    def test_superadmin_redirected_from_list(self):
+        """L2: SUPERADMIN must be redirected from ADMIN-only clinician list."""
+        client = Client()
+        client.force_login(self.superadmin)
+        response = client.get(self.list_url)
+        self.assertRedirects(response, reverse('home'), fetch_redirect_response=False,
+            msg_prefix="SUPERADMIN must not access the institution clinician list")
+
     def test_list_only_shows_own_institution_users(self):
         """AC #4: Users from other institutions must not appear in the list."""
         other_user = User.objects.create_user(
@@ -81,6 +89,22 @@ class ClinicianListAccessTest(ClinicianMgmtTestBase):
         usernames = [u.username for u in clinicians]
         self.assertNotIn('other_clinic', usernames, "AC #4: Other institution user must not appear")
         self.assertIn('clinician_01', usernames)
+
+    def test_list_excludes_admin_type_users(self):
+        """H1: ADMIN-type users must not appear in the clinician list (toggle_status enforces USER type)."""
+        second_admin = User.objects.create_user(
+            username='second_admin', password='Testpass1!',
+            first_name='Second', last_name='Admin',
+            position='Administrator', mobile_primary='0771771077',
+            user_type=UserType.ADMIN, institution=self.inst,
+        )
+        client = Client()
+        client.force_login(self.admin)
+        response = client.get(self.list_url)
+        clinicians = response.context['clinicians']
+        usernames = [u.username for u in clinicians]
+        self.assertNotIn('second_admin', usernames,
+            "H1: ADMIN-type users must not appear in the clinician list")
 
 
 @STATIC_OVERRIDE
@@ -105,17 +129,20 @@ class ClinicianCreateTest(ClinicianMgmtTestBase):
         """AC #3: Attempt to set user_type=ADMIN in form data must be silently rejected."""
         client = Client()
         client.force_login(self.admin)
-        client.post(self.add_url, {
+        response = client.post(self.add_url, {
             'first_name': 'Rogue', 'last_name': 'Admin',
             'username': 'rogue_admin', 'email': 'rogue@test.com',
             'position': 'Administrator', 'mobile_primary': '0771552001',
             'password1': 'StrongPass1!', 'password2': 'StrongPass1!',
             'user_type': 'ADMIN',  # Injected by attacker — must be ignored
         })
-        if User.objects.filter(username='rogue_admin').exists():
-            rogue = User.objects.get(username='rogue_admin')
-            self.assertEqual(rogue.user_type, UserType.USER,
-                "AC #3: user_type must be forced to USER regardless of POST data")
+        self.assertEqual(response.status_code, 302,
+            "AC #3: Form must succeed (redirect) even when user_type=ADMIN is injected")
+        self.assertTrue(User.objects.filter(username='rogue_admin').exists(),
+            "AC #3: Account must be created regardless of injected user_type")
+        rogue = User.objects.get(username='rogue_admin')
+        self.assertEqual(rogue.user_type, UserType.USER,
+            "AC #3: user_type must be forced to USER regardless of POST data")
 
     def test_password_mismatch_rejected(self):
         client = Client()

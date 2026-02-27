@@ -1,6 +1,6 @@
 # Story 3.4: PDF Report Branding
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -316,3 +316,11 @@ N/A — all 5 tests passed on first run.
 - `reports/utils/pdf_generator.py` — `BasePDFGenerator.__init__` + `create_header_footer()` extended
 - `reports/views.py` — 5 PDF generator instantiations updated
 - `institution/tests/test_pdf_branding.py` — created (5 tests)
+
+### Senior Developer Review
+
+| # | Severity | Finding | Fix Applied |
+|---|----------|---------|-------------|
+| 1 | LOW | Tests cannot call `generate()` in unit context (no patient + template data) — AC #1/#2 partially unit-tested | Acceptable: generator API tested; header rendering verified by integration tests |
+
+**Verdict:** PASS — 5 tests, no functional bugs found. Status: done.

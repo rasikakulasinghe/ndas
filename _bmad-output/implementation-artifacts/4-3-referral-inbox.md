@@ -1,6 +1,6 @@
 # Story 4.3: Referral Inbox
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -580,5 +580,15 @@ claude-sonnet-4-6
 ### Debug Log References
 
 ### Completion Notes List
+
+Story 4.3 implemented the unified referral inbox with sent/received thread list, HTMX thread panel, and unread indicators.
+
+### Senior Developer Review
+
+| # | Severity | Finding | Fix Applied |
+|---|----------|---------|-------------|
+| 1 | MEDIUM | No unauthenticated access test for inbox | Added `test_unauthenticated_redirected_to_login` |
+
+**Verdict:** PASS — 7 tests (was 6), no functional bugs. Status: done.
 
 ### File List

@@ -1,6 +1,6 @@
 # Story 4.4: Referral Thread View & Reply
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -567,5 +567,17 @@ claude-sonnet-4-6
 ### Debug Log References
 
 ### Completion Notes List
+
+Story 4.4 implemented the full thread panel with frozen snapshot, reply form, and closed-thread enforcement.
+
+### Senior Developer Review
+
+| # | Severity | Finding | Fix Applied |
+|---|----------|---------|-------------|
+| 1 | HIGH | `ReferralSent.objects.filter(...).update(status=REPLIED)` bypasses `auto_now=True` on `updated_at` — status transitions not timestamp-stamped | Added `updated_at=timezone.now()` to both queryset `.update()` calls in `referral_reply` |
+| 2 | MEDIUM | No test for empty body reply rejection | Added `test_empty_body_reply_does_not_create_message` |
+| 3 | MEDIUM | No test verifying `updated_at` is stamped on status change | Added `test_reply_updates_timestamp` |
+
+**Verdict:** PASS after fixes — 7 tests (was 4), H1 was a real audit trail bug. Status: done.
 
 ### File List

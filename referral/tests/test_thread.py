@@ -157,3 +157,30 @@ class ReferralReplyTest(ThreadTestBase):
             ReferralMessage.objects.count(), 0,
             "AC #5: No message must be created for closed thread reply",
         )
+
+    def test_empty_body_reply_does_not_create_message(self):
+        """M2: Empty body must not create a ReferralMessage (form validation rejects it)."""
+        client = Client()
+        client.force_login(self.clin_b)
+        url = reverse('referral:referral-reply', args=[self.shared_uuid])
+        client.post(url, {'body': ''})
+        self.assertEqual(
+            ReferralMessage.objects.count(), 0,
+            "M2: Empty body must not create a ReferralMessage",
+        )
+
+    def test_reply_updates_timestamp(self):
+        """H1: Status transition via .update() must stamp updated_at."""
+        from django.utils import timezone
+        import datetime
+
+        before = timezone.now() - datetime.timedelta(seconds=5)
+        client = Client()
+        client.force_login(self.clin_b)
+        url = reverse('referral:referral-reply', args=[self.shared_uuid])
+        client.post(url, {'body': 'Timestamp verification reply message.'})
+        self.sent.refresh_from_db()
+        self.assertGreater(
+            self.sent.updated_at, before,
+            "H1: updated_at must be refreshed after status change via queryset .update()",
+        )

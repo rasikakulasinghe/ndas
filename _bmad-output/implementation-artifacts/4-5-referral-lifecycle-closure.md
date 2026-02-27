@@ -1,6 +1,6 @@
 # Story 4.5: Referral Lifecycle & Closure
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -329,5 +329,16 @@ claude-sonnet-4-6
 ### Debug Log References
 
 ### Completion Notes List
+
+Story 4.5 implemented referral closure with dual-record status update, GRACE subscription exemption, and sender-only close enforcement.
+
+### Senior Developer Review
+
+| # | Severity | Finding | Fix Applied |
+|---|----------|---------|-------------|
+| 1 | HIGH | `queryset.update(status=CLOSED)` bypasses `auto_now=True` on `updated_at` | Added `updated_at=timezone.now()` to both `.update()` calls in `referral_close` |
+| 2 | MEDIUM | No test verifying closure timestamps on both records | Added `test_close_updates_timestamp` |
+
+**Verdict:** PASS after fixes — 5 tests (was 4), H1 was a real audit trail bug. Status: done.
 
 ### File List

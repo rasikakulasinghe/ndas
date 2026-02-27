@@ -698,8 +698,7 @@ def institution_clinician_list(request):
 
     clinicians = (
         User.objects
-        .filter(institution=institution)
-        .exclude(user_type=UserType.SUPERADMIN)
+        .filter(institution=institution, user_type=UserType.USER)  # H1: only USER-type; toggle_status enforces this too
         .order_by('last_name', 'first_name')
         .select_related('institution')
     )

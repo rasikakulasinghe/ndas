@@ -160,6 +160,12 @@ class InstitutionClinicianForm(forms.ModelForm):
         p2 = self.cleaned_data.get('password2', '')
         if p1 and p2 and p1 != p2:
             raise forms.ValidationError("Passwords do not match.")
+        if p1:
+            from django.contrib.auth.password_validation import validate_password
+            try:
+                validate_password(p1)
+            except ValidationError as e:
+                raise forms.ValidationError(e.messages)
         return p2
 
     def save(self, institution, commit=True):

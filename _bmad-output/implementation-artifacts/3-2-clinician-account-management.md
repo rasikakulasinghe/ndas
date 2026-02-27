@@ -1,6 +1,6 @@
 # Story 3.2: Clinician Account Management
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -650,3 +650,15 @@ claude-sonnet-4-6
 ### Change Log
 
 - 2026-02-26: Story 3.2 implemented — Clinician Account Management (FR57). Form, views, URLs, templates, sidebar, tests.
+
+### Senior Developer Review
+
+| # | Severity | Finding | Fix Applied |
+|---|----------|---------|-------------|
+| 1 | HIGH | `clinician_list` view used `.exclude(user_type=SUPERADMIN)` — ADMIN-type users appeared in the clinician list but `toggle_status` enforces `user_type=USER`, causing silent redirects on toggle attempts | Changed to `.filter(user_type=UserType.USER)` |
+| 2 | MEDIUM | `test_admin_cannot_create_admin_type_user` had conditional `if User.objects.filter(...).exists():` — test could silently pass if account creation failed for any reason | Made unconditional: asserts account IS created and has USER type |
+| 3 | MEDIUM | `InstitutionClinicianForm.clean_password2` did not call Django's `validate_password` — weak passwords (e.g. all-numeric 8-char) accepted | Added `validate_password(p1)` call with `ValidationError` re-raise |
+| 4 | LOW | No test verifying SUPERADMIN is blocked from clinician management views | Added `test_superadmin_redirected_from_list` |
+| 5 | LOW | No test verifying ADMIN users don't appear in the clinician list | Added `test_list_excludes_admin_type_users` |
+
+**Verdict:** PASS after fixes — 10 tests → 13 tests. H1 was a real UX/correctness bug. Status: done.

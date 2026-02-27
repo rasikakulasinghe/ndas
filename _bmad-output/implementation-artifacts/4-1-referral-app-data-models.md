@@ -1,6 +1,6 @@
 # Story 4.1: Referral App & Data Models
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -738,5 +738,15 @@ claude-sonnet-4-6
 ### Debug Log References
 
 ### Completion Notes List
+
+Story 4.1 implemented referral app with ReferralSent, ReferralReceived, ReferralMessage models, UUID coupling, institution-scoped manager, and ReferralStatus choices.
+
+### Senior Developer Review
+
+| # | Severity | Finding | Fix Applied |
+|---|----------|---------|-------------|
+| 1 | LOW | No functional bugs found; model tests cover all 4 ACs | N/A |
+
+**Verdict:** PASS — 8 tests, clean implementation. Status: done.
 
 ### File List

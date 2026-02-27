@@ -332,8 +332,13 @@ def referral_reply(request, referral_uuid):
         )
 
         # Update status to REPLIED at BOTH institutions (intentional cross-institution write — NFR22)
-        ReferralSent.objects.filter(referral_uuid=referral_uuid).update(status=ReferralStatus.REPLIED)
-        ReferralReceived.objects.filter(referral_uuid=referral_uuid).update(status=ReferralStatus.REPLIED)
+        # H1: include updated_at explicitly — queryset .update() bypasses auto_now=True
+        from django.utils import timezone as tz
+        now = tz.now()
+        ReferralSent.objects.filter(referral_uuid=referral_uuid).update(
+            status=ReferralStatus.REPLIED, updated_at=now)
+        ReferralReceived.objects.filter(referral_uuid=referral_uuid).update(
+            status=ReferralStatus.REPLIED, updated_at=now)
 
         logger.info(
             "Clinician '%s' replied to referral %s",
@@ -392,9 +397,14 @@ def referral_close(request, referral_uuid):
         return _thread_panel_response(request, referral_uuid)
 
     # Atomically close both records (intentional cross-institution write)
+    # H1: include updated_at explicitly — queryset .update() bypasses auto_now=True
+    from django.utils import timezone as tz
+    now = tz.now()
     with db_transaction.atomic():
-        ReferralSent.objects.filter(referral_uuid=referral_uuid).update(status=ReferralStatus.CLOSED)
-        ReferralReceived.objects.filter(referral_uuid=referral_uuid).update(status=ReferralStatus.CLOSED)
+        ReferralSent.objects.filter(referral_uuid=referral_uuid).update(
+            status=ReferralStatus.CLOSED, updated_at=now)
+        ReferralReceived.objects.filter(referral_uuid=referral_uuid).update(
+            status=ReferralStatus.CLOSED, updated_at=now)
 
     logger.info(
         "Clinician '%s' (inst: %s) closed referral %s",

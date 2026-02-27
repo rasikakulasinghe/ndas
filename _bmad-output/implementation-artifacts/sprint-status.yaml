@@ -72,10 +72,10 @@ development_status:
   # FRs: FR42 (admin), FR56, FR57, FR58, FR59
   # ─────────────────────────────────────────────────────────────
   epic-3: in-progress
-  3-1-institution-admin-dashboard: review
-  3-2-clinician-account-management: review
-  3-3-institution-branding-setup: review
-  3-4-pdf-report-branding: review
+  3-1-institution-admin-dashboard: done
+  3-2-clinician-account-management: done
+  3-3-institution-branding-setup: done
+  3-4-pdf-report-branding: done
   epic-3-retrospective: optional
 
   # ─────────────────────────────────────────────────────────────
@@ -83,12 +83,12 @@ development_status:
   # FRs: FR40, FR41, FR60, FR61, FR62, FR63, FR64, FR65, FR66
   # ─────────────────────────────────────────────────────────────
   epic-4: in-progress
-  4-1-referral-app-data-models: review
-  4-2-referral-initiation-frozen-patient-snapshot: review
-  4-3-referral-inbox: review
-  4-4-referral-thread-view-reply: review
-  4-5-referral-lifecycle-closure: review
-  4-6-patient-referrals-tab: review
+  4-1-referral-app-data-models: done
+  4-2-referral-initiation-frozen-patient-snapshot: done
+  4-3-referral-inbox: done
+  4-4-referral-thread-view-reply: done
+  4-5-referral-lifecycle-closure: done
+  4-6-patient-referrals-tab: done
   epic-4-retrospective: optional
 
   # ─────────────────────────────────────────────────────────────

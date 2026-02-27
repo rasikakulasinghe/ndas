@@ -122,6 +122,23 @@ class ClosureTest(LifecycleTestBase):
 
 @STATIC_OVERRIDE
 class GraceSubscriptionExemptionTest(LifecycleTestBase):
+    def test_close_updates_timestamp(self):
+        """H1: Closure via queryset .update() must stamp updated_at on both records."""
+        from django.utils import timezone
+        import datetime
+
+        before = timezone.now() - datetime.timedelta(seconds=5)
+        client = Client()
+        client.force_login(self.clin_a)
+        url = reverse('referral:referral-close', args=[self.shared_uuid])
+        client.post(url)
+        self.sent.refresh_from_db()
+        self.received.refresh_from_db()
+        self.assertGreater(self.sent.updated_at, before,
+            "H1: ReferralSent.updated_at must be stamped on closure")
+        self.assertGreater(self.received.updated_at, before,
+            "H1: ReferralReceived.updated_at must be stamped on closure")
+
     def test_grace_institution_can_close_active_referral(self):
         """AC #4: GRACE subscription does not block referral closure (FR48 exemption)."""
         self.inst_a.subscription_status = SubscriptionStatus.GRACE

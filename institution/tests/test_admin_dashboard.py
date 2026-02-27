@@ -64,7 +64,12 @@ class AdminDashboardAccessTest(AdminDashboardTestBase):
         client = Client()
         client.force_login(self.superadmin)
         response = client.get(self.url)
-        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(
+            response,
+            reverse('institution:superadmin-dashboard'),
+            fetch_redirect_response=False,
+            msg_prefix="AC #4: SUPERADMIN must be redirected to the superadmin dashboard",
+        )
 
     def test_unauthenticated_redirected_to_login(self):
         client = Client()
