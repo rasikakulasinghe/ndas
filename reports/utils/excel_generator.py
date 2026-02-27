@@ -990,10 +990,58 @@ class ExcelReportGenerator:
             ws.cell(row=row_num, column=10, value=gpa)
             ws.cell(row=row_num, column=11, value=da)
 
-        # Summary row
+        # Grand totals row (bold)
         last_data_row = ws.max_row
-        ws.cell(row=last_data_row + 2, column=1, value="Report Generated").font = Font(bold=True)
-        ws.cell(row=last_data_row + 2, column=2, value=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        totals_row = last_data_row + 1
+        ws.cell(row=totals_row, column=1, value='NETWORK TOTAL').font = Font(bold=True)
+        ws.cell(row=totals_row, column=2, value='').font = Font(bold=True)
+        ws.cell(row=totals_row, column=3, value='').font = Font(bold=True)
+        # Sum columns 4-11 from data rows (row 2 to last_data_row)
+        for col_idx in range(4, 12):
+            col_letter = ws.cell(row=2, column=col_idx).column_letter
+            ws.cell(row=totals_row, column=col_idx,
+                    value=f'=SUM({col_letter}2:{col_letter}{last_data_row})').font = Font(bold=True)
+
+        ws.cell(row=totals_row + 2, column=1, value="Report Generated").font = Font(bold=True)
+        ws.cell(row=totals_row + 2, column=2, value=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+
+        # ── AC #2: Per-institution breakdown sheets (Sheets 2..N) ────────────
+        for inst in institutions:
+            # Excel sheet names max 31 chars
+            sheet_name = inst.name[:31]
+            ws_inst = self.workbook.create_sheet(sheet_name)
+
+            ws_inst.cell(row=1, column=1, value=f'{inst.name} — Summary').font = Font(bold=True, size=12)
+            ws_inst.cell(row=2, column=1, value=f'Subscription: {inst.get_subscription_status_display()}')
+            ws_inst.cell(row=3, column=1, value=f'Slug: {inst.slug}')
+
+            # Assessment summary table
+            summary_headers = ['Category', 'Count']
+            ws_inst.cell(row=5, column=1, value=summary_headers[0]).font = Font(bold=True)
+            ws_inst.cell(row=5, column=2, value=summary_headers[1]).font = Font(bold=True)
+
+            patient_count = Patient.objects.filter(institution=inst).count()
+            gma_c  = GMAssessment.objects.filter(patient__institution=inst).count()
+            hine_c = HINEAssessment.objects.filter(patient__institution=inst).count()
+            cdic_c = CDICRecord.objects.filter(patient__institution=inst).count()
+            gpa_c  = GeneralPaediatricAssessment.objects.filter(patient__institution=inst).count()
+            da_c   = DevelopmentalAssessment.objects.filter(patient__institution=inst).count()
+
+            rows = [
+                ('Patients', patient_count),
+                ('GMA Assessments', gma_c),
+                ('HINE Assessments', hine_c),
+                ('CDIC Records', cdic_c),
+                ('GPA Assessments', gpa_c),
+                ('Developmental Assessments', da_c),
+                ('Total Assessments', gma_c + hine_c + cdic_c + gpa_c + da_c),
+            ]
+            for r_idx, (label, count) in enumerate(rows, 6):
+                ws_inst.cell(row=r_idx, column=1, value=label)
+                ws_inst.cell(row=r_idx, column=2, value=count)
+
+            ws_inst.column_dimensions['A'].width = 30
+            ws_inst.column_dimensions['B'].width = 12
 
         output_dir = os.path.join(settings.MEDIA_ROOT, 'exports', 'network')
         os.makedirs(output_dir, exist_ok=True)

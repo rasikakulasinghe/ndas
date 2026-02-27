@@ -62,9 +62,9 @@ development_status:
   2-1-institution-selector-screen: done
   2-2-superadmin-institution-context-switching: done
   2-3-atomic-institution-onboarding: done
-  2-4-cross-institution-aggregate-analytics-dashboard: review
-  2-5-cross-institution-aggregate-reports: review
-  2-6-patient-move-between-institutions: review
+  2-4-cross-institution-aggregate-analytics-dashboard: done
+  2-5-cross-institution-aggregate-reports: done
+  2-6-patient-move-between-institutions: done
   epic-2-retrospective: optional
 
   # ─────────────────────────────────────────────────────────────

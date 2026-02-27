@@ -1,6 +1,6 @@
 # Story 2.6: Patient Move Between Institutions
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -35,38 +35,38 @@ So that patients who transfer clinical centres have their complete records moved
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `PatientMoveLog` model to `institution/models.py` (AC: #2, #4)
-  - [ ] Fields: `patient` FK (to patients.Patient), `from_institution` FK (Institution, related_name='moves_out'), `to_institution` FK (Institution, related_name='moves_in'), `moved_by` FK (users.CustomUser), `notes` TextField (blank=True), and inherits TimeStampedModel + UserTrackingMixin
-  - [ ] `Meta.ordering = ['-created_at']`
-  - [ ] Run `python manage.py makemigrations institution` after adding model
+- [x] Task 1: Add `PatientMoveLog` model to `institution/models.py` (AC: #2, #4)
+  - [x] Fields: `patient` FK (to patients.Patient), `from_institution` FK (Institution, related_name='moves_out'), `to_institution` FK (Institution, related_name='moves_in'), `moved_by` FK (users.CustomUser), `notes` TextField (blank=True), and inherits TimeStampedModel + UserTrackingMixin
+  - [x] `Meta.ordering = ['-created_at']`
+  - [x] Run `python manage.py makemigrations institution` after adding model
 
-- [ ] Task 2: Add `superadmin_patient_move` view to `institution/views.py` (AC: #1, #2, #3, #4)
-  - [ ] SUPERADMIN only; redirect others to `manage-patients`
-  - [ ] GET: compute impact preview (count assessments by type, videos, attachments, open referrals); render `institution/superadmin_patient_move.html` with step='preview'
-  - [ ] POST with `step=confirm`: validate destination_institution_id; render confirmation form with step='confirm'
-  - [ ] POST with `step=execute`: verify typed `institution_name_confirm` matches `destination_institution.name`; run `transaction.atomic()` block
-  - [ ] Atomic block: `patient.institution = destination_institution`, `patient.save()`, create two `PatientMoveLog` records, stub notification (see Dev Notes)
-  - [ ] On success: redirect to `view-patient` for the moved patient
-  - [ ] See exact view code in Dev Notes
+- [x] Task 2: Add `superadmin_patient_move` view to `institution/views.py` (AC: #1, #2, #3, #4)
+  - [x] SUPERADMIN only; redirect others to `manage-patients`
+  - [x] GET: compute impact preview (count assessments by type, videos, attachments, open referrals); render `institution/superadmin_patient_move.html` with step='preview'
+  - [x] POST with `step=confirm`: validate destination_institution_id; render confirmation form with step='confirm'
+  - [x] POST with `step=execute`: verify typed `institution_name_confirm` matches `destination_institution.name`; run `transaction.atomic()` block
+  - [x] Atomic block: `patient.institution = destination_institution`, `patient.save()`, create two `PatientMoveLog` records, stub notification (see Dev Notes)
+  - [x] On success: redirect to `view-patient` for the moved patient
+  - [x] See exact view code in Dev Notes
 
-- [ ] Task 3: Add `superadmin-patient-move` URL to `institution/urls.py` (AC: #1)
-  - [ ] Uncomment the stubbed path: `path('patient-move/<int:patient_id>/', views.superadmin_patient_move, name='superadmin-patient-move')`
-  - [ ] See exact URL config change in Dev Notes
+- [x] Task 3: Add `superadmin-patient-move` URL to `institution/urls.py` (AC: #1)
+  - [x] Uncomment the stubbed path: `path('patient-move/<int:patient_id>/', views.superadmin_patient_move, name='superadmin-patient-move')`
+  - [x] See exact URL config change in Dev Notes
 
-- [ ] Task 4: Create `templates/institution/superadmin_patient_move.html` (AC: #1, #2)
-  - [ ] Extend `src/base.html`; title "Move Patient — NDAS"
-  - [ ] **Step preview** (`step == 'preview'`): AdminLTE card showing patient name + identifiers, impact table (assessment types + counts, video count, attachment count, open referrals), destination institution dropdown, hidden `step=confirm` field, "Next: Review Confirmation" button
-  - [ ] **Step confirm** (`step == 'confirm'`): AdminLTE warning card, review summary, destination institution name shown, text input for `institution_name_confirm`, hidden `destination_institution_id`, hidden `step=execute`, "Confirm Move" button (danger), "Cancel" back link
-  - [ ] CSP nonce on any inline scripts
-  - [ ] See exact template in Dev Notes
+- [x] Task 4: Create `templates/institution/superadmin_patient_move.html` (AC: #1, #2)
+  - [x] Extend `src/base.html`; title "Move Patient — NDAS"
+  - [x] **Step preview** (`step == 'preview'`): AdminLTE card showing patient name + identifiers, impact table (assessment types + counts, video count, attachment count, open referrals), destination institution dropdown, hidden `step=confirm` field, "Next: Review Confirmation" button
+  - [x] **Step confirm** (`step == 'confirm'`): AdminLTE warning card, review summary, destination institution name shown, text input for `institution_name_confirm`, hidden `destination_institution_id`, hidden `step=execute`, "Confirm Move" button (danger), "Cancel" back link
+  - [x] CSP nonce on any inline scripts
+  - [x] See exact template in Dev Notes
 
-- [ ] Task 5: Add "Move Patient" button to `templates/patients/view.html` (AC: #1)
-  - [ ] Add a superadmin-only "Move Patient" button in the patient actions section, conditional on `{% if is_superadmin %}`
-  - [ ] Links to `{% url 'institution:superadmin-patient-move' patient.id %}`
-  - [ ] See exact placement in Dev Notes
+- [x] Task 5: Add "Move Patient" button to `templates/patients/view.html` (AC: #1)
+  - [x] Add a superadmin-only "Move Patient" button in the patient actions section, conditional on `{% if is_superadmin %}`
+  - [x] Links to `{% url 'institution:superadmin-patient-move' patient.id %}`
+  - [x] See exact placement in Dev Notes
 
-- [ ] Task 6: Write tests in `institution/tests/test_patient_move.py` (AC: #1–#5)
-  - [ ] See exact test code in Dev Notes
+- [x] Task 6: Write tests in `institution/tests/test_patient_move.py` (AC: #1–#5)
+  - [x] See exact test code in Dev Notes
 
 ## Dev Notes
 
@@ -693,6 +693,17 @@ None
 - **Cross-story migration note:** `patients/migrations/0010_alter_patient_institution.py` was generated as part of this story's work (alters Patient.institution FK `related_name` to `'patients'`). This migration depends on `institution/0003_patientmovelog`. Documented in Story 1.4 completion notes for traceability.
 - **Code review L2 fix applied:** `superadmin_patient_move` `get_object_or_404` call now has a comment explaining the intentional `for_institution()` bypass (SUPERADMIN crosses boundaries by design).
 - "Move Patient" button added to patient detail template (`templates/patients/partials/patient_view.html`), gated by `{% if is_superadmin %}`.
+
+### Senior Developer Review (AI) — 2026-02-27
+
+**Reviewer:** Rasika (AI-assisted) | **Outcome:** Changes applied → done
+
+| # | Severity | Finding | Fix Applied |
+|---|----------|---------|-------------|
+| M1 | MEDIUM | `test_execute_correct_name_moves_patient` used `assertIn([302, 200])` — accepted failed move as passing | Fixed: changed to `assertEqual(302)` |
+| L1 | LOW | No test for non-superadmin ADMIN redirect | Fixed: added `test_non_superadmin_redirected` to `PatientMoveAccessTest` |
+| L2 | LOW | No AC #3 scope verification test (patient queryable in destination institution) | Fixed: added `test_execute_patient_appears_in_destination_scope` |
+| L3 | LOW | All 6 tasks marked `[ ]` | Fixed: all tasks ticked `[x]` |
 
 ### File List
 

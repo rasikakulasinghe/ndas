@@ -69,7 +69,8 @@
       "Bash(cd \"D:/Projects/Current Projects/NDAS - Project/NDAS\" && printf \"2\\\\n2\\\\n\" | python manage.py makemigrations institution 2>&1)",
       "Bash(cd \"D:/Projects/Current Projects/NDAS - Project/NDAS\" && printf \"2\\\\n2\\\\n\" | python manage.py migrate 2>&1)",
       "Bash(venvScriptspython.exe:*)",
-      "Bash(source:*)"
+      "Bash(source:*)",
+      "Bash(sed:*)"
     ],
     "deny": [],
     "ask": []

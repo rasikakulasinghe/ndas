@@ -79,6 +79,19 @@ class PatientMoveAccessTest(TestCase):
         # handle_view_errors catches Http404 and redirects
         self.assertIn(response.status_code, [302, 404])
 
+    def test_non_superadmin_redirected(self):
+        """L1: ADMIN must be redirected — 200 would mean a security bypass."""
+        admin = User.objects.create_user(
+            username='admin_mv', password='testpass123',
+            email='admin_mv@test.com', first_name='Admin',
+            position='Medical Officer', mobile_primary='0771234569',
+            user_type=UserType.ADMIN, institution=self.source,
+        )
+        self.client.login(username='admin_mv', password='testpass123')
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 302,
+            "ADMIN must be redirected from the patient move view (not 200)")
+
 
 @STATIC_OVERRIDE
 class PatientMoveFlowTest(TestCase):
@@ -114,16 +127,30 @@ class PatientMoveFlowTest(TestCase):
         self.assertEqual(self.patient.institution, self.source)
 
     def test_execute_correct_name_moves_patient(self):
-        """Correct institution name commits the atomic move."""
+        """Correct institution name commits the atomic move and redirects."""
         response = self.client.post(self.url, {
             'step': 'execute',
             'destination_institution_id': self.dest.pk,
             'institution_name_confirm': self.dest.name,
         })
-        self.assertIn(response.status_code, [302, 200])
-
+        self.assertEqual(response.status_code, 302,
+            "Successful move must redirect (302), not re-render form (200)")
         self.patient.refresh_from_db()
         self.assertEqual(self.patient.institution, self.dest)
+
+    def test_execute_patient_appears_in_destination_scope(self):
+        """AC #3: Patient is queryable under destination institution after move."""
+        self.client.post(self.url, {
+            'step': 'execute',
+            'destination_institution_id': self.dest.pk,
+            'institution_name_confirm': self.dest.name,
+        })
+        in_dest = Patient.objects.filter(institution=self.dest, pk=self.patient.pk).exists()
+        in_src  = Patient.objects.filter(institution=self.source, pk=self.patient.pk).exists()
+        self.assertTrue(in_dest,
+            "AC #3: Moved patient must appear in destination institution scope")
+        self.assertFalse(in_src,
+            "AC #3: Moved patient must not appear in source institution scope")
 
     def test_execute_creates_move_log_records(self):
         """Two PatientMoveLog records are created: one for each institution."""

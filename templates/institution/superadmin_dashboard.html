@@ -15,6 +15,9 @@
           <small class="text-muted">{{ month_name }} &mdash; Platform-wide view (READ ONLY)</small>
         </div>
         <div>
+          <a href="{% url 'institution:institution-add' %}" class="btn btn-primary mr-2">
+            <i class="fas fa-plus-circle mr-1"></i>Onboard New Institution
+          </a>
           <a href="{% url 'institution:superadmin-reports' %}" class="btn btn-secondary mr-2">
             <i class="fas fa-file-export mr-1"></i>Export Reports
           </a>
@@ -105,14 +108,14 @@
                     <br><small class="text-muted">{{ row.institution.slug }}</small>
                   </td>
                   <td>
-                    {% if row.institution.subscription_status == 'active' %}
+                    {% if row.institution.subscription_status == 'ACTIVE' %}
                       <span class="badge badge-success">ACTIVE</span>
-                    {% elif row.institution.subscription_status == 'grace' %}
+                    {% elif row.institution.subscription_status == 'GRACE' %}
                       <span class="badge badge-warning">GRACE</span>
-                    {% elif row.institution.subscription_status == 'expired' %}
+                    {% elif row.institution.subscription_status == 'EXPIRED' %}
                       <span class="badge badge-danger">EXPIRED</span>
                     {% else %}
-                      <span class="badge badge-secondary">{{ row.institution.subscription_status|upper }}</span>
+                      <span class="badge badge-secondary">{{ row.institution.subscription_status }}</span>
                     {% endif %}
                   </td>
                   <td class="text-center">{{ row.patient_count }}</td>

@@ -98,7 +98,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
+<script nonce="{{ request.csp_nonce }}">
 (function(){
   var radios = document.querySelectorAll('input[name="scope"]');
   var instGroup = document.getElementById('institution-selector-group');
