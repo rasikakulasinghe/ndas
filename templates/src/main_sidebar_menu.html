@@ -4,12 +4,40 @@
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
 
   {# Story 3.3 — Institution brand-logo slot (FR58) #}
-  <a href="{% url 'home' %}" class="brand-link">
+  {# Brand-link: role-conditioned href + institution name tooltip #}
+  {% if is_superadmin and active_institution %}
+  <a href="{% url 'institution:superadmin-dashboard' %}" class="brand-link"
+     title="{{ active_institution.name }}"
+     aria-label="{{ active_institution.name }} — Superadmin Dashboard">
+  {% elif is_superadmin %}
+  <a href="{% url 'institution:institution-selector' %}" class="brand-link"
+     title="NDAS"
+     aria-label="NDAS — Institution Selector">
+  {% elif user_type == 'ADMIN' %}{# UserType.ADMIN — see ndas/custom_codes/choice.py #}
+  <a href="{% url 'institution:institution-admin-dashboard' %}" class="brand-link"
+     title="{{ active_institution.name }}"
+     aria-label="{{ active_institution.name }} — Admin Dashboard">
+  {% else %}
+  <a href="{% url 'home' %}" class="brand-link"
+     title="{% if active_institution %}{{ active_institution.name }}{% else %}NDAS{% endif %}"
+     aria-label="{% if active_institution %}{{ active_institution.name }}{% else %}NDAS{% endif %} — Dashboard">
+  {% endif %}
     {% if active_institution and active_institution.logo %}
       <img src="{{ active_institution.logo.url }}"
            class="brand-image elevation-3"
            alt="{{ active_institution.name }}"
-           style="max-height:33px; max-width:33px; object-fit:contain;">
+           style="width:33px; height:33px; object-fit:contain;">
+    {% elif active_institution %}
+      {# Institution active but no logo — show initial-letter badge #}
+      {# Do NOT use class="brand-image" here: AdminLTE sets opacity:.8 on that class, which fades the badge #}
+      {# Replicate brand-image layout manually via float+margin in inline style #}
+      {# NOTE: margin values (-.8rem .8rem -.8rem 0) mirror AdminLTE 3.2 .brand-image layout — pinned to AdminLTE 3.2 #}
+      <span class="elevation-3 d-flex align-items-center justify-content-center"
+            style="width:33px; height:33px; background:#495057; color:#fff;
+                   font-weight:700; font-size:1rem; border-radius:4px;
+                   float:left; margin:-.8rem .8rem -.8rem 0;">
+        {{ active_institution.name|slice:":1"|upper }}
+      </span>
     {% else %}
       <img src="{% static 'img/AdminLTELogo.png' %}"
            class="brand-image img-circle elevation-3"
@@ -218,7 +246,7 @@
             <i class="nav-icon fas fa-share-square"></i>
             <p>
               Referral Inbox
-              {# Story 5.2 will add: unread count badge here via HTMX #}
+              <span id="sidebar-referral-badge" class="right badge badge-warning" style="display:none"></span>
             </p>
           </a>
         </li>
@@ -262,11 +290,11 @@
         {% if user.is_staff or user.is_superuser %}
 
         <li
-          class="nav-item {% if 'admin' in request.resolver_match.url_name %}menu-open{% endif %}"
+          class="nav-item {% if 'admin' in request.resolver_match.url_name or is_superadmin and request.resolver_match.namespace == 'institution' %}menu-open{% endif %}"
         >
           <a
             href="#"
-            class="nav-link {% if 'admin' in request.resolver_match.url_name %}active{% endif %}"
+            class="nav-link {% if 'admin' in request.resolver_match.url_name or is_superadmin and request.resolver_match.namespace == 'institution' %}active{% endif %}"
           >
             <i class="nav-icon fas fa-shield-alt"></i>
             <p>
@@ -312,6 +340,37 @@
               </a>
             </li>
 
+            {% if is_superadmin %}
+            <li class="nav-item">
+              <a href="{% url 'institution:institution-selector' %}"
+                 class="nav-link {% if request.resolver_match.url_name == 'institution-selector' %}active{% endif %}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>All Institutions</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'institution:institution-add' %}"
+                 class="nav-link {% if request.resolver_match.url_name == 'institution-add' %}active{% endif %}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Add Institution</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'institution:superadmin-dashboard' %}"
+                 class="nav-link {% if request.resolver_match.url_name == 'superadmin-dashboard' %}active{% endif %}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Superadmin Dashboard</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'institution:superadmin-reports' %}"
+                 class="nav-link {% if request.resolver_match.url_name == 'superadmin-reports' %}active{% endif %}">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Aggregate Reports</p>
+              </a>
+            </li>
+            {% endif %}
+
             {% if user.is_superuser %}
             <!-- Subscription Management (Superuser Only) -->
             <li class="nav-item">
@@ -328,18 +387,28 @@
         </li>
         {% endif %}
 
-        {# Institution Admin Dashboard & Clinicians — only for ADMIN role (Story 3.1, 3.2) #}
+        {# Institution Admin section — only for ADMIN role (Story 3.1, 3.2) #}
         {% if user_type == 'ADMIN' %}
+        <li class="nav-header">MY INSTITUTION</li>
         <li class="nav-item">
-          <a href="{% url 'institution:institution-admin-dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'institution-admin-dashboard' %}active{% endif %}">
+          <a href="{% url 'institution:institution-admin-dashboard' %}"
+             class="nav-link {% if request.resolver_match.url_name == 'institution-admin-dashboard' %}active{% endif %}">
             <i class="nav-icon fas fa-tachometer-alt"></i>
             <p>Admin Dashboard</p>
           </a>
         </li>
         <li class="nav-item">
-          <a href="{% url 'institution:institution-clinician-list' %}" class="nav-link {% if request.resolver_match.url_name == 'institution-clinician-list' or request.resolver_match.url_name == 'institution-clinician-add' %}active{% endif %}">
+          <a href="{% url 'institution:institution-clinician-list' %}"
+             class="nav-link {% if request.resolver_match.url_name == 'institution-clinician-list' or request.resolver_match.url_name == 'institution-clinician-add' %}active{% endif %}">
             <i class="nav-icon fas fa-user-md"></i>
             <p>Clinicians</p>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{% url 'institution:institution-settings' %}"
+             class="nav-link {% if request.resolver_match.url_name == 'institution-settings' %}active{% endif %}">
+            <i class="nav-icon fas fa-cog"></i>
+            <p>Institution Settings</p>
           </a>
         </li>
         {% endif %}

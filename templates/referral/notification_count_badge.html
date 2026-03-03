@@ -1,3 +1,10 @@
 {% if count > 0 %}
 <span class="badge badge-warning navbar-badge">{{ count }}</span>
 {% endif %}
+{# OOB: sync sidebar Referral Inbox badge. Explicit display style on both branches — no implicit browser defaults. #}
+<span id="sidebar-referral-badge"
+      hx-swap-oob="true"
+      class="right badge badge-warning"
+      style="{% if count %}display:inline{% else %}display:none{% endif %}">
+  {% if count %}{{ count }}{% endif %}
+</span>

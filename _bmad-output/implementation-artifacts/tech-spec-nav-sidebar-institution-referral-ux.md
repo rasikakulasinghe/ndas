@@ -2,8 +2,8 @@
 title: 'Nav & Sidebar Institution + Referral UX Improvements'
 slug: 'nav-sidebar-institution-referral-ux'
 created: '2026-02-27'
-status: 'ready-for-dev'
-stepsCompleted: [1, 2, 3, 4]
+status: 'implementation-complete'
+stepsCompleted: [1, 2, 3, 4, 5, 6, 7]
 tech_stack: ['Django 4.2', 'AdminLTE 3.2', 'Bootstrap 4.6', 'HTMX']
 files_to_modify:
   - 'templates/src/navbar.html'

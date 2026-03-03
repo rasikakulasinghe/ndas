@@ -131,6 +131,10 @@
                hx-swap="innerHTML">
             <span class="dropdown-item text-muted text-sm">Loading notifications…</span>
           </div>
+          <div class="dropdown-divider"></div>
+          <a href="{% url 'referral:referral-inbox' %}" class="dropdown-item dropdown-footer text-center">
+            <i class="fas fa-arrow-right mr-1"></i> View All Referrals
+          </a>
         </div>
       </li>
       {% endif %}
