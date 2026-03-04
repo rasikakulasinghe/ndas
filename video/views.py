@@ -126,7 +126,8 @@ def video_view(request, video_id):
     # Check if video is new (not used in assessments)
     try:
         is_new_file = video.is_new_file()
-    except:
+    except Exception as e:
+        logger.warning(f"Could not determine new-file status for video {video.id}: {e}")
         is_new_file = True
 
     context = {

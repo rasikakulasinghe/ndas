@@ -5,6 +5,7 @@ This module contains Excel generator classes for creating data export reports
 using openpyxl for research and statistical analysis.
 """
 
+import logging
 import os
 import uuid
 from datetime import datetime
@@ -19,6 +20,8 @@ from patients.models import (
     Patient, GMAssessment, HINEAssessment,
     DevelopmentalAssessment, CDICRecord, GeneralPaediatricAssessment
 )
+
+logger = logging.getLogger(__name__)
 
 
 class ExcelReportGenerator:
@@ -203,7 +206,7 @@ class ExcelReportGenerator:
         if 'Sheet' in self.workbook.sheetnames:
             del self.workbook['Sheet']
 
-    def calculate_quality_metrics(self, start_date=None, end_date=None):
+    def calculate_quality_metrics(self, start_date=None, end_date=None, institution=None):
         """
         Calculate data quality metrics for the export
 
@@ -214,6 +217,9 @@ class ExcelReportGenerator:
         from datetime import datetime, time
 
         metrics = {}
+
+        # Scope all queries to institution (None = all institutions, Phase 1 safe)
+        _pts = Patient.objects.for_institution(institution)
 
         # Convert date objects to timezone-aware datetime for filtering
         start_datetime = None
@@ -232,10 +238,10 @@ class ExcelReportGenerator:
         if end_datetime:
             patient_filter &= Q(created_at__lte=end_datetime)
 
-        total_patients = Patient.objects.filter(patient_filter).count()
+        total_patients = _pts.filter(patient_filter).count()
         if total_patients > 0:
             # Check for patients with complete birth data (using actual fields)
-            complete_birth_data = Patient.objects.filter(
+            complete_birth_data = _pts.filter(
                 patient_filter,
                 pog_wks__isnull=False,
                 apgar_1__isnull=False,
@@ -251,7 +257,7 @@ class ExcelReportGenerator:
             }
 
             # Check for patients with assessments
-            patients_with_assessments = Patient.objects.filter(
+            patients_with_assessments = _pts.filter(
                 patient_filter
             ).filter(
                 Q(gm_assessments__isnull=False) |
@@ -269,9 +275,10 @@ class ExcelReportGenerator:
             }
 
         # Assessment data quality
-        gm_total = GMAssessment.objects.all().count()
+        gm_total = GMAssessment.objects.filter(patient__in=_pts).count()
         if gm_total > 0:
             gm_complete = GMAssessment.objects.filter(
+                patient__in=_pts,
                 diagnosis_conclusion__isnull=False,
                 date_of_assessment__isnull=False
             ).count()
@@ -318,7 +325,7 @@ class ExcelReportGenerator:
                 try:
                     if cell.value:
                         max_length = max(max_length, len(str(cell.value)))
-                except:
+                except (TypeError, ValueError):
                     pass
 
             adjusted_width = min(max_length + 2, 50)  # Max width 50
@@ -698,7 +705,7 @@ class ExcelReportGenerator:
         ws.column_dimensions['C'].width = 15
         ws.column_dimensions['D'].width = 40
 
-    def generate(self, output_path=None, start_date=None, end_date=None, parameters=None):
+    def generate(self, output_path=None, start_date=None, end_date=None, parameters=None, institution=None):
         """
         Generate Excel report with selected data
 
@@ -741,7 +748,7 @@ class ExcelReportGenerator:
             end_datetime = timezone.make_aware(datetime.combine(end_date, time.max))
 
         # Calculate data quality metrics
-        quality_metrics = self.calculate_quality_metrics(start_date, end_date)
+        quality_metrics = self.calculate_quality_metrics(start_date, end_date, institution=institution)
 
         metadata = {
             'sheets': {},

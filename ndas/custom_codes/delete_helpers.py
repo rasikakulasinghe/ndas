@@ -129,7 +129,7 @@ def get_entity_display_name(entity: Any) -> str:
         str_repr = str(entity)
         if str_repr and str_repr != f"{entity.__class__.__name__} object":
             return str_repr
-    except:
+    except Exception:
         pass
 
     # Last resort: primary key

@@ -77,14 +77,15 @@ def handle_view_errors(redirect_url=None, error_message=None, render_template=No
                 else:
                     messages.error(request, str(e))
 
-                logger.info(
+                logger.warning(
                     f"ValidationError in {view_func.__name__}: {e} "
                     f"[User: {request.user.username if request.user.is_authenticated else 'Anonymous'}]"
                 )
                 if redirect_url:
                     return redirect(redirect_url)
-                # Let the view handle re-rendering the form with errors
-                return view_func(request, *args, **kwargs)
+                if render_template:
+                    return render(request, render_template, {'error': error_msg})
+                return redirect('home')
 
             except IntegrityError as e:
                 # Database constraint violation
@@ -155,7 +156,7 @@ def log_and_suppress(logger_name=None, default_return=None):
                 return func(*args, **kwargs)
             except Exception as e:
                 log = logging.getLogger(logger_name or __name__)
-                log.error(f"Suppressed error in {func.__name__}: {e}")
+                log.exception(f"Suppressed error in {func.__name__}: {e}")
                 return default_return
         return wrapped
     return decorator

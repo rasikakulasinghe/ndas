@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from dateutil.relativedelta import relativedelta
 from datetime import timedelta
+import logging
 from djrichtextfield.models import RichTextField
 
 from ndas.custom_codes.choice import (
@@ -45,6 +46,8 @@ from django.apps import apps
 
 # ─── Institution-scoped manager (Story 1.4) ──────────────────────────────────
 from institution.managers import InstitutionScopedManager as _InstitutionScopedManager
+
+logger = logging.getLogger(__name__)
 
 
 class Patient(TimeStampedModel, UserTrackingMixin):
@@ -447,17 +450,12 @@ class Patient(TimeStampedModel, UserTrackingMixin):
         """Check if last GMA assessment is normal"""
         if not hasattr(self, "pk") or not self.pk:
             return True
-
-        if GMAssessment.objects.filter(patient=self).exists():
-            try:
-                latest = (
-                    GMAssessment.objects.filter(patient=self).order_by("-id").first()
-                )
-                return latest.is_diagnosis_normal if latest else False
-            except:
-                return False
-        else:
-            return True
+        try:
+            latest = GMAssessment.objects.filter(patient=self).order_by("-id").first()
+            return latest.is_diagnosis_normal if latest else True
+        except Exception as e:
+            logger.warning(f"Error checking last GMA status for patient {self.pk}: {e}")
+            return False
 
     @property
     def isLastHINENormal(self):
@@ -523,7 +521,8 @@ class Patient(TimeStampedModel, UserTrackingMixin):
                 if latest_gma
                 else "No GM assessments"
             )
-        except:
+        except Exception as e:
+            logger.warning(f"Error getting GMA diagnosis list for patient {self.pk}: {e}")
             var_gma_dx_list = "No GM assessments"
 
         var_dx_hine = (
@@ -2229,7 +2228,7 @@ class Bookmark(TimeStampedModel, UserTrackingMixin):
 
     def get_bookmarked_object_url(self):
         """Get the URL to view the bookmarked object"""
-        from django.urls import reverse
+        from django.urls import reverse, NoReverseMatch
 
         url_mapping = {
             "Patient": "view-patient",
@@ -2247,8 +2246,11 @@ class Bookmark(TimeStampedModel, UserTrackingMixin):
                 return reverse(
                     url_mapping[self.bookmark_type], kwargs={"pk": self.object_id}
                 )
-            except:
-                pass
+            except NoReverseMatch as e:
+                logger.warning(
+                    f"URL reverse failed for bookmark {self.pk} "
+                    f"(type={self.bookmark_type}): {e}"
+                )
         return None
 
     # Class methods for efficient queries

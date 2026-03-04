@@ -4,6 +4,7 @@ Report Views
 This module contains views for report generation, download, and management.
 """
 
+import logging
 import os
 import re
 from datetime import datetime, timedelta
@@ -25,6 +26,8 @@ from patients.models import (
     Patient, GMAssessment, HINEAssessment,
     DevelopmentalAssessment, CDICRecord, GeneralPaediatricAssessment
 )
+
+logger = logging.getLogger(__name__)
 
 
 @login_required(login_url='user-login')
@@ -154,7 +157,8 @@ def report_builder(request):
             file_path, metadata = generator.generate(
                 start_date=start_date,
                 end_date=end_date,
-                parameters=parameters
+                parameters=parameters,
+                institution=getattr(request, 'institution', None),
             )
             # Extract just the filename (with .xlsx extension already included)
             file_id = os.path.basename(file_path)
@@ -171,8 +175,6 @@ def report_builder(request):
             return redirect('reports:download', file_id=file_id)
 
         except Exception as e:
-            import logging
-            logger = logging.getLogger('django')
             logger.error(f'Report generation error: {str(e)}', exc_info=True)
 
             context = {
@@ -231,15 +233,13 @@ def report_history(request):
                         # Delete expired files
                         try:
                             os.remove(file_path)
-                        except:
-                            pass
+                        except OSError as e:
+                            logger.warning(f"Failed to delete expired report {file_path}: {e}")
 
         # Sort by creation time (newest first)
         reports.sort(key=lambda x: x['created'], reverse=True)
 
     except Exception as e:
-        import logging
-        logger = logging.getLogger('django')
         logger.error(f'Error reading report history: {str(e)}')
 
     context = {

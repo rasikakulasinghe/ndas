@@ -12,11 +12,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def get_gma_diagnosis_data():
-    from patients.models import GMAssessment
-
+def get_gma_diagnosis_data(institution=None):
+    from patients.models import GMAssessment, Patient
+    _pts = Patient.objects.for_institution(institution)
     # Use annotate to get a count of patients for each diagnosis title
-    data = GMAssessment.objects.values('diagnosis__abr').annotate(patient_count=Count('patient'))
+    data = GMAssessment.objects.filter(patient__in=_pts).values('diagnosis__abr').annotate(patient_count=Count('patient'))
 
     # Create a dictionary mapping diagnosis titles to patient counts
     diagnosis_data = {}
@@ -27,12 +27,12 @@ def get_gma_diagnosis_data():
     
     return diagnosis_data
 
-def get_all_diagnosis_data():
-    from patients.models import GMAssessment, HINEAssessment, DevelopmentalAssessment
-
-    dx_gma_data = getCountZeroIfNone(GMAssessment.objects.filter(diagnosis_conclusion='ABNORMAL'))
-    dx_hine_data = getCountZeroIfNone(HINEAssessment.objects.filter(score__lt = 73))
-    dx_da_data = getCountZeroIfNone(DevelopmentalAssessment.objects.filter(is_dx_normal=False))
+def get_all_diagnosis_data(institution=None):
+    from patients.models import GMAssessment, HINEAssessment, DevelopmentalAssessment, Patient
+    _pts = Patient.objects.for_institution(institution)
+    dx_gma_data = getCountZeroIfNone(GMAssessment.objects.filter(patient__in=_pts, diagnosis_conclusion='ABNORMAL'))
+    dx_hine_data = getCountZeroIfNone(HINEAssessment.objects.filter(patient__in=_pts, score__lt=73))
+    dx_da_data = getCountZeroIfNone(DevelopmentalAssessment.objects.filter(patient__in=_pts, is_dx_normal=False))
 
     # Create a dictionary mapping diagnosis titles to patient counts
     diagnosis_data = {'GMA': dx_gma_data,
@@ -41,7 +41,7 @@ def get_all_diagnosis_data():
 
     return diagnosis_data
 
-def get_userStats():
+def get_userStats(institution=None):
     from patients.models import GMAssessment, HINEAssessment, DevelopmentalAssessment, Patient, CDICRecord, Attachment, Bookmark
     from video.models import Video
     from users.models import CustomUser
@@ -49,17 +49,24 @@ def get_userStats():
     def _counts(qs, field='added_by_id'):
         return {row[field]: row['count'] for row in qs.values(field).annotate(count=Count('id'))}
 
-    pt_counts         = _counts(Patient.objects.all())
-    video_counts      = _counts(Video.objects.all())
-    gma_counts        = _counts(GMAssessment.objects.all())
-    hine_counts       = _counts(HINEAssessment.objects.all())
-    da_counts         = _counts(DevelopmentalAssessment.objects.all())
-    cdic_counts       = _counts(CDICRecord.objects.all())
-    attachment_counts = _counts(Attachment.objects.all())
-    bookmark_counts   = _counts(Bookmark.objects.all(), field='owner_id')
+    _pts = Patient.objects.for_institution(institution)
+    pt_counts         = _counts(_pts)
+    video_counts      = _counts(Video.objects.filter(patient__in=_pts))
+    gma_counts        = _counts(GMAssessment.objects.filter(patient__in=_pts))
+    hine_counts       = _counts(HINEAssessment.objects.filter(patient__in=_pts))
+    da_counts         = _counts(DevelopmentalAssessment.objects.filter(patient__in=_pts))
+    cdic_counts       = _counts(CDICRecord.objects.filter(patient__in=_pts))
+    attachment_counts = _counts(Attachment.objects.filter(patient__in=_pts))
+    bookmark_counts   = _counts(
+        Bookmark.objects.filter(owner__institution=institution) if institution else Bookmark.objects.all(),
+        field='owner_id'
+    )
 
+    # Note: superuser contributions (institution=None) are excluded from this breakdown.
+    # Dashboard total counts above remain correct; only the per-user breakdown is affected.
+    _users_qs = CustomUser.objects.filter(institution=institution).only('id', 'username') if institution else CustomUser.objects.only('id', 'username')
     user_stats = {}
-    for user in CustomUser.objects.only('id', 'username'):
+    for user in _users_qs:
         uid = user.id
         user_stats[user.username] = {
             'Patient':    pt_counts.get(uid, 0),
@@ -73,14 +80,14 @@ def get_userStats():
         }
     return user_stats
 
-def get_admissions_data_barchart():
+def get_admissions_data_barchart(institution=None):
     from patients.models import Patient
 
     today = timezone.now().date()
     five_months_ago = today - timedelta(days=30*5)
 
     admissions = (
-        Patient.objects
+        Patient.objects.for_institution(institution)
         .filter(dob_tob__gte=five_months_ago)
         .annotate(month=TruncMonth('dob_tob'))
         .values('month')

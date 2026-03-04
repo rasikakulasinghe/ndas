@@ -2,7 +2,7 @@
 title: 'Bug Fixation — Data Isolation, Atomicity and Error Handling'
 slug: 'bug-fix-isolation-atomicity-error-handling'
 created: '2026-03-03'
-status: 'ready-for-dev'
+status: 'completed'
 stepsCompleted: [1, 2, 3, 4]
 tech_stack: ['Django 4.2', 'Python 3.x', 'SQLite/PostgreSQL', 'openpyxl 3.1.5']
 files_to_modify:
@@ -101,7 +101,7 @@ Tasks are ordered by dependency (lowest-risk / no-dependency changes first).
 
 ---
 
-#### - [ ] T-01 — Add module-level loggers to four files
+#### - [x] T-01 — Add module-level loggers to four files
 
 **Files:** `patients/models.py`, `patients/views.py`, `reports/views.py`, `reports/utils/excel_generator.py`
 
@@ -132,7 +132,7 @@ logger = logging.getLogger(__name__)
 
 ---
 
-#### - [ ] T-02 — Fix `log_and_suppress` to preserve stack traces
+#### - [x] T-02 — Fix `log_and_suppress` to preserve stack traces
 
 **File:** `ndas/custom_codes/error_handlers.py:158`
 
@@ -148,7 +148,7 @@ log.exception(f"Suppressed error in {func.__name__}: {e}")
 
 ---
 
-#### - [ ] T-03 — Fix `handle_view_errors` ValidationError branch
+#### - [x] T-03 — Fix `handle_view_errors` ValidationError branch
 
 **File:** `ndas/custom_codes/error_handlers.py:66–87`
 
@@ -174,7 +174,7 @@ Two changes in the `ValidationError` handler:
 
 ---
 
-#### - [ ] T-04 — Fix 7 bare `except:` clauses
+#### - [x] T-04 — Fix 7 bare `except:` clauses
 
 **4a — `patients/models.py:451–460` — `isLastGMANormal` (also fixes T-11 double query)**
 
@@ -320,7 +320,7 @@ Then replace the bare except:
 
 ---
 
-#### - [ ] T-05 — Fix duplicate Exists subquery evaluation in dashboard
+#### - [x] T-05 — Fix duplicate Exists subquery evaluation in dashboard
 
 **File:** `patients/views.py:134–165`
 
@@ -356,7 +356,7 @@ Replace lines 134–165 with:
 
 ---
 
-#### - [ ] T-06 — Add `institution` parameter to four chart functions
+#### - [x] T-06 — Add `institution` parameter to four chart functions
 
 **File:** `ndas/custom_codes/custom_methods.py`
 
@@ -469,7 +469,7 @@ Rest of the function is unchanged.
 
 ---
 
-#### - [ ] T-07 — Update dashboard call-sites for chart functions
+#### - [x] T-07 — Update dashboard call-sites for chart functions
 
 **File:** `patients/views.py:168–171`
 
@@ -491,7 +491,7 @@ Note: `_inst = getattr(request, 'institution', None)` is already defined at line
 
 ---
 
-#### - [ ] T-08 — Scope search view user lists to institution
+#### - [x] T-08 — Scope search view user lists to institution
 
 **File:** `patients/views.py`
 
@@ -529,7 +529,7 @@ def search_start(request):
 
 ---
 
-#### - [ ] T-09 — Scope `admin_user_list` to institution for non-superusers
+#### - [x] T-09 — Scope `admin_user_list` to institution for non-superusers
 
 **File:** `users/views.py:541`
 
@@ -550,7 +550,7 @@ def search_start(request):
 
 ---
 
-#### - [ ] T-10 — Add video-patient ownership guard in `assessment_add`
+#### - [x] T-10 — Add video-patient ownership guard in `assessment_add`
 
 **File:** `patients/views.py:870–871`
 
@@ -567,7 +567,7 @@ After the two `get_object_or_404` calls, add the guard immediately:
 
 ---
 
-#### - [ ] T-11 — Wrap assessment M2M save in `transaction.atomic()`
+#### - [x] T-11 — Wrap assessment M2M save in `transaction.atomic()`
 
 **File:** `patients/views.py`
 
@@ -596,7 +596,7 @@ The outer `try: ... except ValidationError ... except Exception` block remains a
 
 ---
 
-#### - [ ] T-12 — Add `institution` param to `ExcelReportGenerator.calculate_quality_metrics()`
+#### - [x] T-12 — Add `institution` param to `ExcelReportGenerator.calculate_quality_metrics()`
 
 **File:** `reports/utils/excel_generator.py`
 
@@ -642,7 +642,7 @@ The outer `try: ... except ValidationError ... except Exception` block remains a
 
 ---
 
-#### - [ ] T-13 — Thread `institution` through `generate()` and its call-site
+#### - [x] T-13 — Thread `institution` through `generate()` and its call-site
 
 **File:** `reports/utils/excel_generator.py`
 
@@ -688,60 +688,60 @@ The outer `try: ... except ValidationError ... except Exception` block remains a
 
 ### Acceptance Criteria
 
-- [ ] **AC-01 — Chart functions are institution-scoped**
+- [x] **AC-01 — Chart functions are institution-scoped**
   - Given Institution A has 3 patients with GMA assessments and Institution B has 5
   - When the dashboard view renders for an Institution A user
   - Then `get_gma_diagnosis_data(_inst)`, `get_all_diagnosis_data(_inst)`, `get_admissions_data_barchart(_inst)`, and `get_userStats(_inst)` each return data scoped only to Institution A's patients
 
-- [ ] **AC-02 — Chart functions with `institution=None` return all records**
+- [x] **AC-02 — Chart functions with `institution=None` return all records**
   - Given `institution=None` is passed to any chart function
   - When the function executes
   - Then it returns unfiltered data (Phase 1 backward compatibility)
 
-- [ ] **AC-03 — Search dropdown shows only institution-scoped users**
+- [x] **AC-03 — Search dropdown shows only institution-scoped users**
   - Given Institution A has 2 users and Institution B has 3 users
   - When `search_start` or `search_results` is called by an Institution A user with `request.institution` set
   - Then `username_list` contains only Institution A's 2 users
 
-- [ ] **AC-04 — `admin_user_list` scopes correctly by role**
+- [x] **AC-04 — `admin_user_list` scopes correctly by role**
   - Given an `is_staff` non-superuser admin of Institution A calls `admin_user_list`
   - When the view builds its queryset
   - Then only users with `institution=_inst` are included
   - And given a superuser calls the same view
   - Then all users across all institutions are included
 
-- [ ] **AC-05 — Assessment creation is atomic**
+- [x] **AC-05 — Assessment creation is atomic**
   - Given `assessment.save()` succeeds but `assessment.diagnosis.set()` raises an `IntegrityError`
   - When the exception propagates out of the `transaction.atomic()` block
   - Then the database rolls back and no `GMAssessment` record exists — no orphan
 
-- [ ] **AC-06 — Video-patient ownership is enforced**
+- [x] **AC-06 — Video-patient ownership is enforced**
   - Given `ptid` resolves to Patient A and `fid` resolves to a video belonging to Patient B
   - When `assessment_add` is called with these mismatched IDs
   - Then the view redirects to Patient A's detail page with an error message and no assessment is created
 
-- [ ] **AC-07 — `handle_view_errors` ValidationError does not recurse**
+- [x] **AC-07 — `handle_view_errors` ValidationError does not recurse**
   - Given a view decorated with `@handle_view_errors()` (no `redirect_url`, no `render_template`) raises `ValidationError`
   - When the decorator catches it
   - Then a redirect to `'home'` is returned and the wrapped view function is NOT invoked a second time
   - **Note:** AC-07 is source-verified — the recursive `view_func(request, *args, **kwargs)` call is removed entirely from the ValidationError branch. The absence of that call in the source is sufficient verification; no runtime mock test is required. Runtime smoke test: call the decorated view with a POST that triggers ValidationError and assert `response.status_code == 302` and `response['Location']` resolves to `'home'`.
 
-- [ ] **AC-08 — ValidationError is logged at WARNING level**
+- [x] **AC-08 — ValidationError is logged at WARNING level**
   - Given a view raises `ValidationError` that `handle_view_errors` catches
   - When the log output is inspected
   - Then a WARNING entry is present (not INFO)
 
-- [ ] **AC-09 — `log_and_suppress` preserves full stack traces**
+- [x] **AC-09 — `log_and_suppress` preserves full stack traces**
   - Given a function decorated with `@log_and_suppress()` raises an exception
   - When the exception is caught
   - Then `log.exception()` is called and the full traceback appears in the log (not just the exception message string)
 
-- [ ] **AC-10 — No bare `except:` clauses remain in the 5 affected files**
+- [x] **AC-10 — No bare `except:` clauses remain in the 5 affected files**
   - Given a `grep -n "except:"` search of `patients/models.py`, `video/views.py`, `ndas/custom_codes/delete_helpers.py`, `reports/views.py`, `reports/utils/excel_generator.py`
   - When results are reviewed
   - Then zero matches appear in any of these files
 
-- [ ] **AC-11 — `isLastGMANormal` issues exactly one query**
+- [x] **AC-11 — `isLastGMANormal` issues exactly one query**
   - Given a Patient with no GMA assessments
   - When `patient.isLastGMANormal` is accessed
   - Then exactly 1 DB query is issued and `True` is returned
@@ -749,17 +749,17 @@ The outer `try: ... except ValidationError ... except Exception` block remains a
   - When `patient.isLastGMANormal` is accessed
   - Then exactly 1 DB query is issued and `False` is returned
 
-- [ ] **AC-12 — Dashboard Exists subqueries are not duplicated**
+- [x] **AC-12 — Dashboard Exists subqueries are not duplicated**
   - Given the dashboard view executes with query logging enabled
   - When the SQL log is inspected
   - Then the `has_videos` correlated subquery appears in exactly 1 SQL statement and the `has_gm_assessment` correlated subquery appears in exactly 1 SQL statement
 
-- [ ] **AC-13 — `calculate_quality_metrics` scopes GM count to institution**
+- [x] **AC-13 — `calculate_quality_metrics` scopes GM count to institution**
   - Given Institution A has 2 GM assessments and Institution B has 8
   - When `calculate_quality_metrics(institution=institution_a)` is called
   - Then `gm_total` equals 2 and the `gm_quality` percentage is computed using only Institution A's assessments
 
-- [ ] **AC-14 — Module-level loggers present in all four files and use `__name__`**
+- [x] **AC-14 — Module-level loggers present in all four files and use `__name__`**
   - Given `patients/models.py`, `patients/views.py`, `reports/views.py`, `reports/utils/excel_generator.py` are opened
   - When the import block is inspected
   - Then each file has `import logging` in the stdlib section and `logger = logging.getLogger(__name__)` at module level before the first class or function definition
@@ -834,3 +834,11 @@ When `get_userStats(institution=inst_a)` is called, `_users_qs` is filtered to I
 - Cache `get_userStats()` per institution with a 5-minute TTL once Phase 2 is live (deferred, Q2 decision).
 - Remove `'unsafe-inline'` / `'unsafe-eval'` from dev `CSP_SCRIPT_SRC` (deferred, Q4 decision).
 - Add `db_index=True` to `CDICRecord.is_discharged` — the dashboard filters on it but the model has no explicit index (flagged in the audit but out of scope for this spec).
+
+## Review Notes
+
+- Adversarial review completed (2026-03-04)
+- Findings: 13 total, 5 fixed, 8 skipped
+- Resolution approach: auto-fix
+- Fixed: F1 (critical — Video cross-institution fetch), F3 (GMA count inconsistency), F4 (users_total_count for superusers), F6 (isLastGMANormal exception guard), F7 (user search institution validation)
+- Skipped: F2 (spec-mandated), F5 (correct by analysis), F8/F13 (undecided/pre-existing), F9 (spec-mandated), F10/F11/F12 (pre-existing/out-of-scope)

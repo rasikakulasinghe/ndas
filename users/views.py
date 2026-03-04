@@ -538,7 +538,14 @@ def admin_dashboard(request):
 def admin_user_list(request):
     """Admin view to list all users with search and filtering."""
     form = UserSearchForm(request.GET)
-    users = CustomUser.objects.all().order_by('-date_joined')
+    _inst = getattr(request, 'institution', None)
+    if request.user.is_superuser:
+        users = CustomUser.objects.all().order_by('-date_joined')
+    elif _inst is not None:
+        users = CustomUser.objects.filter(institution=_inst).order_by('-date_joined')
+    else:
+        # Non-superuser with no institution assigned — return nothing rather than leak data
+        users = CustomUser.objects.none()
     
     # Apply filters
     if form.is_valid():

@@ -2,6 +2,7 @@ from django.shortcuts import redirect, render, get_object_or_404
 from datetime import timedelta, date
 from django.utils import timezone
 from django.urls import reverse
+from django.db import transaction
 import json
 from patients.models import (
     Patient,
@@ -59,7 +60,8 @@ from ndas.custom_codes.custom_methods import (
 from ndas.custom_codes.error_handlers import handle_view_errors
 from patients.timeline_utils import get_patient_timeline_events
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
-import os, logging
+import os
+import logging
 from django.http import JsonResponse
 from django.utils.timezone import localtime, now
 from django.utils import timezone
@@ -68,7 +70,7 @@ from django.db.models import Q, Count, Exists, OuterRef
 from ndas.custom_codes.ndas_enums import PtStatus
 
 # Configure logger for patient operations
-logger = logging.getLogger("django")
+logger = logging.getLogger(__name__)
 
 
 # Create your views here
@@ -115,8 +117,8 @@ def dashboard(request):
     all_cdic_records_count = CDICRecord.objects.filter(patient__in=_patients_qs).count()
 
     # Count diagnosed assessments
-    dx_gm_assessments_count = GMAssessment.objects.filter(patient__in=_patients_qs).exclude(
-        diagnosis_conclusion="NORMAL"
+    dx_gm_assessments_count = GMAssessment.objects.filter(
+        patient__in=_patients_qs, diagnosis_conclusion='ABNORMAL'
     ).count()
     dx_hine_assessments_count = HINEAssessment.objects.filter(patient__in=_patients_qs, score__lt=73).count()
     dx_da_assessments_count = DevelopmentalAssessment.objects.filter(
@@ -126,49 +128,44 @@ def dashboard(request):
     # Efficient counting for misc items
     bookmark_count = Bookmark.objects.filter(owner=request.user).count()
     attachments_count = Attachment.objects.filter(patient__in=_patients_qs).count()
-    users_total_count = CustomUser.objects.filter(institution=_inst).count()
+    users_total_count = (
+        CustomUser.objects.all().count()
+        if _inst is None
+        else CustomUser.objects.filter(institution=_inst).count()
+    )
     videos_total_count = Video.objects.filter(patient__in=_patients_qs).count()
 
-    # Get new patients (no videos) - optimized with annotation and select_related
-    # Use Exists subquery for efficiency
+    # Get new patients (no videos) — build annotated queryset once, derive count + list
     has_videos = Video.objects.filter(patient=OuterRef('pk'))
-    patients_new_count = _patients_qs.annotate(
+    _patients_no_videos = _patients_qs.annotate(
         has_videos=Exists(has_videos)
-    ).filter(has_videos=False).count()
-
-    Patients_new_list_10 = _patients_qs.annotate(
-        has_videos=Exists(has_videos)
-    ).filter(
-        has_videos=False
-    ).select_related(
+    ).filter(has_videos=False)
+    patients_new_count = _patients_no_videos.count()
+    Patients_new_list_10 = _patients_no_videos.select_related(
         'added_by', 'last_edit_by'
     ).only(
         'id', 'baby_name', 'bht', 'created_at',
         'added_by__username', 'last_edit_by__username'
     )[:5]
 
-    # Get new videos (no GM assessments) - optimized
+    # Get new videos (no GM assessments) — same pattern
     has_gm_assessment = GMAssessment.objects.filter(video_file=OuterRef('pk'))
-    new_videos_count = Video.objects.filter(patient__in=_patients_qs).annotate(
+    _new_videos_qs = Video.objects.filter(patient__in=_patients_qs).annotate(
         has_assessment=Exists(has_gm_assessment)
-    ).filter(has_assessment=False).count()
-
-    new_videos = Video.objects.filter(patient__in=_patients_qs).annotate(
-        has_assessment=Exists(has_gm_assessment)
-    ).filter(
-        has_assessment=False
-    ).select_related(
+    ).filter(has_assessment=False)
+    new_videos_count = _new_videos_qs.count()
+    new_videos = _new_videos_qs.select_related(
         'patient', 'added_by'
     ).only(
         'id', 'title', 'created_at',
         'patient__baby_name', 'added_by__username'
     )[:5]
 
-    # get data for bar chart
-    bar_chart_monthly_admissions = get_admissions_data_barchart()
-    diagnosis_data_gma = get_gma_diagnosis_data()
-    diagnosis_data_all = get_all_diagnosis_data()
-    user_stat = get_userStats()
+    # get data for bar chart (institution-scoped)
+    bar_chart_monthly_admissions = get_admissions_data_barchart(_inst)
+    diagnosis_data_gma = get_gma_diagnosis_data(_inst)
+    diagnosis_data_all = get_all_diagnosis_data(_inst)
+    user_stat = get_userStats(_inst)
 
     context = {
         "videos_total_count": videos_total_count,
@@ -673,7 +670,11 @@ def patient_edit(request, pk):
 
 @login_required(login_url="user-login")
 def search_start(request):
-    username_list = CustomUser.objects.all()
+    _inst = getattr(request, 'institution', None)
+    username_list = (
+        CustomUser.objects.filter(institution=_inst).only('username')
+        if _inst else CustomUser.objects.only('username')
+    )
     return render(request, "patients/search.html", {"username_list": username_list})
 
 
@@ -693,7 +694,11 @@ def search_results(request):
     pagn = ""
 
     # Load user list once — reused across all validation error return paths
-    username_list = CustomUser.objects.all()
+    _inst = getattr(request, 'institution', None)
+    username_list = (
+        CustomUser.objects.filter(institution=_inst).only('username')
+        if _inst else CustomUser.objects.only('username')
+    )
 
     # Validate required parameters
     if not combo_record_type:
@@ -852,6 +857,11 @@ def search_results(request):
             messages.error(request, "Please select a user.")
             return render(request, "patients/search.html", {"username_list": username_list})
 
+        # Guard: validate the submitted username is in the institution-scoped list
+        if not username_list.filter(username=combo_user_username).exists():
+            messages.error(request, "User not found.")
+            return render(request, "patients/search.html", {"username_list": username_list})
+
         pagn = f"Users > Username > {combo_user_username}"
         messages.success(request, f"Viewing user profile: {combo_user_username}")
         return userViewByUsername(request, combo_user_username)
@@ -867,8 +877,15 @@ def search_results(request):
 @ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True)
 def assessment_add(request, ptid, fid):
     """Enhanced assessment creation with proper validation and error handling"""
-    patient = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), pk=ptid)
-    video_file = get_object_or_404(Video, pk=fid)
+    _inst = getattr(request, 'institution', None)
+    patient = get_object_or_404(Patient.objects.for_institution(_inst), pk=ptid)
+    _pts_qs = Patient.objects.for_institution(_inst)
+    video_file = get_object_or_404(Video.objects.filter(patient__in=_pts_qs), pk=fid)
+
+    # Guard: video must belong to this patient (defence-in-depth after institution scope)
+    if video_file.patient_id != patient.pk:
+        messages.error(request, "This video does not belong to the selected patient.")
+        return redirect("view-patient", pk=patient.pk)
 
     # Check if assessment already exists for this video
     existing_assessment = GMAssessment.objects.filter(video_file=video_file).first()
@@ -893,12 +910,11 @@ def assessment_add(request, ptid, fid):
                             'Next assessment date must be after the current assessment date.')
                         raise ValidationError('Invalid next assessment date.')
                 
-                assessment.save()
-                
-                # Handle many-to-many relationship for diagnosis
-                diagnosis_list = assessment_form.cleaned_data.get('diagnosis', [])
-                if diagnosis_list:
-                    assessment.diagnosis.set(diagnosis_list)
+                with transaction.atomic():
+                    assessment.save()
+                    diagnosis_list = assessment_form.cleaned_data.get('diagnosis', [])
+                    if diagnosis_list:
+                        assessment.diagnosis.set(diagnosis_list)
                 
                 logger.info(f"Assessment created successfully: {assessment.id} by user {request.user.id}")
                 messages.success(request, "Assessment added successfully!")
