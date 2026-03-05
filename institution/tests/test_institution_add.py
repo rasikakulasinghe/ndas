@@ -35,6 +35,7 @@ def make_superadmin(username='superadmin'):
 VALID_PAYLOAD = {
     'institution_name': 'New Hospital',
     'institution_slug': 'new-hospital',
+    'institution_short_name': 'NEWHOSP',
     'admin_first_name': 'Jane',
     'admin_last_name': 'Doe',
     'admin_username': 'janedoe',

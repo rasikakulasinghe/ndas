@@ -13,6 +13,9 @@ urlpatterns = [
     # Story 2.3 — Atomic Institution Onboarding
     path('add/', views.institution_add, name='institution-add'),
 
+    # Superadmin: edit any institution by pk
+    path('edit/<int:institution_id>/', views.superadmin_institution_edit, name='superadmin-institution-edit'),
+
     # Story 2.4 — Superadmin Aggregate Analytics Dashboard
     path('superadmin/', views.superadmin_dashboard, name='superadmin-dashboard'),
 

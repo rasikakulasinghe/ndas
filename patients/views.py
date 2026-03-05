@@ -56,6 +56,7 @@ from ndas.custom_codes.custom_methods import (
     getFileSizeInMb,
     getPatientList,
     getCountZeroIfNone,
+    institution_scope,
 )
 from ndas.custom_codes.error_handlers import handle_view_errors
 from patients.timeline_utils import get_patient_timeline_events
@@ -984,8 +985,10 @@ def assessment_view(request, pk):
         # Get assessment with related objects to reduce database queries
         assessment = GMAssessment.objects.select_related(
             'patient', 'video_file', 'added_by', 'last_edit_by'
-        ).prefetch_related('diagnosis').get(id=pk)
-        
+        ).prefetch_related('diagnosis').filter(
+            **institution_scope(request)
+        ).get(id=pk)
+
         # Check for existing bookmark
         bookmark = Bookmark.objects.filter(
             bookmark_type="GMA",
@@ -1020,7 +1023,9 @@ def assessment_view_by_fileid(request, file_id):
         # Get assessment by video file ID with related objects
         assessment = GMAssessment.objects.select_related(
             'patient', 'video_file', 'added_by', 'last_edit_by'
-        ).prefetch_related('diagnosis').get(video_file=file_id)
+        ).prefetch_related('diagnosis').filter(
+            **institution_scope(request)
+        ).get(video_file=file_id)
         
         # Check for existing bookmark
         bookmark = Bookmark.objects.filter(
@@ -1053,7 +1058,9 @@ def assessment_view_by_fileid(request, file_id):
 @ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True)
 def assessment_edit(request, pk):
     try:
-        assmnt = GMAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').get(id=pk)
+        assmnt = GMAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').filter(
+            **institution_scope(request)
+        ).get(id=pk)
     except GMAssessment.DoesNotExist:
         messages.error(request, "Assessment not found.")
         return redirect("assessment-manager")
@@ -1081,7 +1088,7 @@ def assessment_edit(request, pk):
 @require_http_methods(["GET", "POST"])
 @ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True)
 def assessment_edit_by_fileid(request, pk):
-    assmnt = get_object_or_404(GMAssessment, video_file=pk)
+    assmnt = get_object_or_404(GMAssessment, video_file=pk, **institution_scope(request))
     assessment_form = GMAssessmentForm(instance=assmnt)
     if request.method == "POST":
         assessment_form_data = GMAssessmentForm(request.POST, instance=assmnt)
@@ -1120,7 +1127,7 @@ def assessment_delete(request, pk):
 
     try:
         # 1. Retrieve assessment
-        assessment = get_object_or_404(GMAssessment, id=pk)
+        assessment = get_object_or_404(GMAssessment, id=pk, **institution_scope(request))
         patient = assessment.patient
 
         # 2. Check permissions
@@ -1212,7 +1219,7 @@ def assessment_manager(request, filter_type='all'):
 
     base_qs = GMAssessment.objects.select_related(
         'patient', 'added_by', 'last_edit_by', 'video_file'
-    )
+    ).filter(**institution_scope(request))
 
     if filter_type == 'recent':
         assessment_list = base_qs.filter(
@@ -1308,7 +1315,9 @@ def help_article(request, pk):
 def bookmark_manager(request):
     try:
         # Get all bookmarks
-        var_bookmarks_list = Bookmark.objects.select_related('owner', 'last_edit_by').all().order_by("-id")
+        var_bookmarks_list = Bookmark.objects.select_related('owner', 'last_edit_by').filter(
+            **institution_scope(request, 'owner__institution')
+        ).order_by("-id")
         
         # Search and filter functionality
         search_query = request.GET.get('search', '').strip()
@@ -1396,7 +1405,26 @@ def bookmark_add(request, item_id, bookmark_type):
     if bookmark_type not in valid_types:
         messages.error(request, "Invalid bookmark type.")
         return redirect("manage-patients")
-    
+
+    # Validate item belongs to the active institution (F4: prevent cross-institution bookmarking)
+    _inst = getattr(request, 'institution', None)
+    if _inst is not None:
+        _type_model_map = {
+            'Patient':    (Patient, {'institution': _inst}),
+            'Video':      (Video, {'patient__institution': _inst}),
+            'GMA':        (GMAssessment, {'patient__institution': _inst}),
+            'HINE':       (HINEAssessment, {'patient__institution': _inst}),
+            'Attachment': (Attachment, {'patient__institution': _inst}),
+            'DA':         (DevelopmentalAssessment, {'patient__institution': _inst}),
+            'CDICR':      (CDICRecord, {'patient__institution': _inst}),
+            'GPA':        (GeneralPaediatricAssessment, {'patient__institution': _inst}),
+        }
+        if bookmark_type in _type_model_map:
+            _model, _filters = _type_model_map[bookmark_type]
+            if not _model.objects.filter(pk=item_id, **_filters).exists():
+                messages.error(request, "Invalid bookmark target.")
+                return redirect("manage-patients")
+
     bookmark_form = BookmarkForm()
 
     if request.method == "POST":
@@ -1479,7 +1507,7 @@ def bookmark_add(request, item_id, bookmark_type):
 
 @login_required(login_url="user-login")
 def bookmark_view(request, pk):
-    bookmark = get_object_or_404(Bookmark, id=pk)
+    bookmark = get_object_or_404(Bookmark, id=pk, **institution_scope(request, 'owner__institution'))
     return render(request, "bookmark/view.html", {"bookmark": bookmark})
 
 
@@ -1502,7 +1530,7 @@ def bookmark_delete(request, pk):
 
     try:
         # 1. Retrieve bookmark
-        bookmark = get_object_or_404(Bookmark, id=pk)
+        bookmark = get_object_or_404(Bookmark, id=pk, **institution_scope(request, 'owner__institution'))
 
         # 2. Check permissions
         if not has_delete_permission(request.user, bookmark):
@@ -1639,9 +1667,10 @@ def attachment_manager(request):
     bookmarked_filter = request.GET.get("bookmarked_only", "")
     page_number = request.GET.get("page", 1)
 
-    # Base queryset with optimized related data loading
+    # Base queryset scoped to the active institution
     queryset = (
         Attachment.objects.select_related("patient", "added_by", "last_edit_by")
+        .filter(**institution_scope(request))
         .order_by("-created_at")
     )
 
@@ -1716,9 +1745,9 @@ def attachment_manager(request):
         logger.error(f"Pagination error: {str(e)}")
         page_obj = paginator.get_page(1)
 
-    # Get unique uploaders for filter dropdown (users who have uploaded attachments)
+    # Get unique uploaders for filter dropdown scoped to the active institution
     uploaders = (
-        CustomUser.objects.filter(attachment_added__isnull=False)
+        CustomUser.objects.filter(attachment_added__isnull=False, **institution_scope(request, 'institution'))
         .distinct()
         .only("id", "username", "first_name", "last_name")
         .order_by("first_name", "last_name")
@@ -1961,7 +1990,9 @@ def attachment_add(request, pid):
 @login_required(login_url="user-login")
 def attachment_view(request, pk):
     try:
-        sa = Attachment.objects.select_related('patient', 'added_by', 'last_edit_by').get(pk=pk)
+        sa = Attachment.objects.select_related('patient', 'added_by', 'last_edit_by').filter(
+            **institution_scope(request)
+        ).get(pk=pk)
     except Attachment.DoesNotExist:
         messages.error(request, "Attachment not found.")
         return redirect("manage-patients")
@@ -1975,7 +2006,9 @@ def attachment_view(request, pk):
 @login_required(login_url="user-login")
 def attachment_edit(request, pk):
     try:
-        sa = Attachment.objects.select_related('patient', 'added_by', 'last_edit_by').get(pk=pk)
+        sa = Attachment.objects.select_related('patient', 'added_by', 'last_edit_by').filter(
+            **institution_scope(request)
+        ).get(pk=pk)
     except Attachment.DoesNotExist:
         messages.error(request, "Attachment not found.")
         return redirect("manage-patients")
@@ -2076,7 +2109,7 @@ def attachment_delete(request, pk):
 
     try:
         # 1. Retrieve attachment
-        attachment = get_object_or_404(Attachment, id=pk)
+        attachment = get_object_or_404(Attachment, id=pk, **institution_scope(request))
         patient = attachment.patient
 
         # 2. Check permissions
@@ -2222,7 +2255,9 @@ def cdic_assessment_add(request, pid):
 @login_required(login_url="user-login")
 def cdic_assessment_edit(request, aid):
     try:
-        srecord = CDICRecord.objects.select_related('patient', 'added_by', 'last_edit_by').get(id=aid)
+        srecord = CDICRecord.objects.select_related('patient', 'added_by', 'last_edit_by').filter(
+            **institution_scope(request)
+        ).get(id=aid)
         spt = srecord.patient
     except CDICRecord.DoesNotExist:
         messages.error(request, "CDIC record not found.")
@@ -2256,7 +2291,9 @@ def cdic_assessment_edit(request, aid):
 @login_required(login_url="user-login")
 def cdic_assessment_view(request, cdic_id):
     try:
-        selected_cdic_record = CDICRecord.objects.select_related('patient', 'added_by', 'last_edit_by').get(pk=cdic_id)
+        selected_cdic_record = CDICRecord.objects.select_related('patient', 'added_by', 'last_edit_by').filter(
+            **institution_scope(request)
+        ).get(pk=cdic_id)
     except CDICRecord.DoesNotExist:
         messages.error(request, "CDIC record not found.")
         return redirect("cdic-assessment-manager")
@@ -2269,7 +2306,9 @@ def cdic_assessment_view(request, cdic_id):
 def cdic_assessment_manager(request):
     try:
         # Get all CDIC records
-        var_cdic_list = CDICRecord.objects.select_related('patient', 'added_by', 'last_edit_by').all().order_by("-id")
+        var_cdic_list = CDICRecord.objects.select_related('patient', 'added_by', 'last_edit_by').filter(
+            **institution_scope(request)
+        ).order_by("-id")
         
         # Search and filter functionality
         search_patient = request.GET.get('search_patient', '').strip()
@@ -2483,7 +2522,7 @@ def cdic_assessment_delete(request, aid):
 
     try:
         # 1. Retrieve CDIC record
-        cdic_record = get_object_or_404(CDICRecord, id=aid)
+        cdic_record = get_object_or_404(CDICRecord, id=aid, **institution_scope(request))
         patient = cdic_record.patient
 
         # 2. Check permissions
@@ -2620,7 +2659,7 @@ def hine_assessment_add(request, pid):
 @ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
 def hine_assessment_edit(request, hine_id):
-    shr = get_object_or_404(HINEAssessment, pk=hine_id)
+    shr = get_object_or_404(HINEAssessment, pk=hine_id, **institution_scope(request))
     sp = shr.patient
     if request.method == "POST":
         hine_form = HINEAssessmentForm(request.POST, instance=shr, patient=sp)
@@ -2666,7 +2705,9 @@ def hine_assessment_edit(request, hine_id):
 @login_required(login_url="user-login")
 def hine_assessment_view(request, hine_id):
     try:
-        sh = HINEAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').get(pk=hine_id)
+        sh = HINEAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').filter(
+            **institution_scope(request)
+        ).get(pk=hine_id)
     except HINEAssessment.DoesNotExist:
         messages.error(request, "HINE assessment record not found.")
         return redirect("hine-assessment-manager")
@@ -2677,7 +2718,9 @@ def hine_assessment_view(request, hine_id):
 def hine_assessment_manager(request):
     try:
         # Get all HINE assessments
-        var_hine_list = HINEAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').all().order_by("-id")
+        var_hine_list = HINEAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').filter(
+            **institution_scope(request)
+        ).order_by("-id")
         
         # Search and filter functionality
         search_patient = request.GET.get('search_patient', '').strip()
@@ -2858,7 +2901,7 @@ def hine_assessment_delete(request, hine_id):
 
     try:
         # 1. Retrieve HINE assessment
-        hine_assessment = get_object_or_404(HINEAssessment, id=hine_id)
+        hine_assessment = get_object_or_404(HINEAssessment, id=hine_id, **institution_scope(request))
         patient = hine_assessment.patient
 
         # 2. Check permissions
@@ -2998,7 +3041,9 @@ def da_assessment_add(request, pid):
 @login_required(login_url="user-login")
 def da_assessment_edit(request, da_id):
     try:
-        dar = DevelopmentalAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').get(id=da_id)
+        dar = DevelopmentalAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').filter(
+            **institution_scope(request)
+        ).get(id=da_id)
     except DevelopmentalAssessment.DoesNotExist:
         messages.error(request, "Developmental assessment record not found.")
         return redirect("da-assessment-manager")
@@ -3029,7 +3074,9 @@ def da_assessment_edit(request, da_id):
 @login_required(login_url="user-login")
 def da_assessment_view(request, da_id):
     try:
-        sdar = DevelopmentalAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').get(pk=da_id)
+        sdar = DevelopmentalAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').filter(
+            **institution_scope(request)
+        ).get(pk=da_id)
     except DevelopmentalAssessment.DoesNotExist:
         messages.error(request, "Developmental assessment record not found.")
         return redirect("da-assessment-manager")
@@ -3040,7 +3087,9 @@ def da_assessment_view(request, da_id):
 def da_assessment_manager(request):
     try:
         # Get all developmental assessments
-        var_da_list = DevelopmentalAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').all().order_by("-id")
+        var_da_list = DevelopmentalAssessment.objects.select_related('patient', 'added_by', 'last_edit_by').filter(
+            **institution_scope(request)
+        ).order_by("-id")
         
         # Search and filter functionality
         search_patient = request.GET.get('search_patient', '').strip()
@@ -3279,7 +3328,7 @@ def da_assessment_delete(request, da_id):
 
     try:
         # 1. Retrieve Developmental assessment
-        da_assessment = get_object_or_404(DevelopmentalAssessment, id=da_id)
+        da_assessment = get_object_or_404(DevelopmentalAssessment, id=da_id, **institution_scope(request))
         patient = da_assessment.patient
 
         # 2. Check permissions
@@ -3411,7 +3460,7 @@ def gpa_edit(request, gpa_id):
     try:
         gpa_record = GeneralPaediatricAssessment.objects.select_related(
             "patient", "discharged_authorized_by"
-        ).get(pk=gpa_id)
+        ).filter(**institution_scope(request)).get(pk=gpa_id)
     except GeneralPaediatricAssessment.DoesNotExist:
         messages.error(request, "GPA record not found")
         return redirect("gpa-manager")
@@ -3447,7 +3496,7 @@ def gpa_view(request, gpa_id):
             "discharged_authorized_by",
             "added_by",
             "last_edit_by"
-        ).get(pk=gpa_id)
+        ).filter(**institution_scope(request)).get(pk=gpa_id)
     except GeneralPaediatricAssessment.DoesNotExist:
         messages.error(request, "GPA record not found")
         return redirect("gpa-manager")
@@ -3472,7 +3521,7 @@ def gpa_manager(request):
         "patient",
         "discharged_authorized_by",
         "added_by"
-    ).order_by("-assessment_date")
+    ).filter(**institution_scope(request)).order_by("-assessment_date")
 
     # Apply search filter
     if search_query:
@@ -3588,7 +3637,7 @@ def gpa_delete(request, gpa_id):
 
     try:
         # 1. Retrieve GPA record
-        gpa_record = get_object_or_404(GeneralPaediatricAssessment, id=gpa_id)
+        gpa_record = get_object_or_404(GeneralPaediatricAssessment, id=gpa_id, **institution_scope(request))
         patient = gpa_record.patient
 
         # 2. Check permissions

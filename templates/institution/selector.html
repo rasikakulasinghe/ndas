@@ -95,15 +95,19 @@
           <small class="text-muted"><i class="fas fa-user-shield mr-1"></i>Onboarded by {{ inst.created_by.get_full_name|default:inst.created_by.username }}</small>
           {% endif %}
         </div>
-        <div class="card-footer py-2">
-          <form method="post" action="{% url 'institution:institution-switch' inst.pk %}">
+        <div class="card-footer py-2 d-flex">
+          <form method="post" action="{% url 'institution:institution-switch' inst.pk %}" class="flex-grow-1">
             {% csrf_token %}
             <button type="submit" class="btn btn-primary btn-sm btn-block"
               {% if not inst.is_active %}disabled{% endif %}>
-              <i class="fas fa-sign-in-alt mr-1"></i>
-              Enter Institution
+              <i class="fas fa-sign-in-alt mr-1"></i>Enter
             </button>
           </form>
+          <a href="{% url 'institution:superadmin-institution-edit' inst.pk %}"
+             class="btn btn-outline-secondary btn-sm ml-2"
+             data-toggle="tooltip" data-placement="top" title="Edit institution profile">
+            <i class="fas fa-edit"></i>
+          </a>
         </div>
       </div>
     </div>

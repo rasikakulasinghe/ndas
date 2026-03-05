@@ -42,6 +42,15 @@
             </div>
 
             <div class="form-group">
+              <label class="font-weight-bold">Short Name</label>
+              {{ form.short_name }}
+              {% if form.short_name.errors %}
+              <div class="text-danger small">{{ form.short_name.errors.0 }}</div>
+              {% endif %}
+              <small class="form-text text-muted">Compact identifier shown in the sidebar (max 10 chars, e.g. LRH).</small>
+            </div>
+
+            <div class="form-group">
               <label class="font-weight-bold">Institution Logo</label>
               {% if institution.logo %}
               <div class="mb-2">

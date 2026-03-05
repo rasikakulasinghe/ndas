@@ -6,7 +6,6 @@ class Position(models.TextChoices):
     REGISTRAR = "Registrar", "Registrar"
     PHYSIOTHERAPIST = "Physiotherapist", "Physiotherapist"
     OCCUPATIONAL_THERAPIST = "Occupational Therapist", "Occupational Therapist"
-    ADMINISTRATOR = "Administrator", "Administrator"
     NURSING_OFFICER = "Nursing officer", "Nursing officer"
     SENIOR_REGISTRAR = "Senior Registrar", "Senior Registrar"
 

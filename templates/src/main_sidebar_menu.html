@@ -8,19 +8,23 @@
   {% if is_superadmin and active_institution %}
   <a href="{% url 'institution:superadmin-dashboard' %}" class="brand-link"
      title="{{ active_institution.name }}"
-     aria-label="{{ active_institution.name }} — Superadmin Dashboard">
+     aria-label="{{ active_institution.name }} — Superadmin Dashboard"
+     data-toggle="tooltip" data-placement="right" data-container="body">
   {% elif is_superadmin %}
   <a href="{% url 'institution:institution-selector' %}" class="brand-link"
      title="NDAS"
-     aria-label="NDAS — Institution Selector">
+     aria-label="NDAS — Institution Selector"
+     data-toggle="tooltip" data-placement="right" data-container="body">
   {% elif user_type == 'ADMIN' %}{# UserType.ADMIN — see ndas/custom_codes/choice.py #}
   <a href="{% url 'institution:institution-admin-dashboard' %}" class="brand-link"
      title="{{ active_institution.name }}"
-     aria-label="{{ active_institution.name }} — Admin Dashboard">
+     aria-label="{{ active_institution.name }} — Admin Dashboard"
+     data-toggle="tooltip" data-placement="right" data-container="body">
   {% else %}
   <a href="{% url 'home' %}" class="brand-link"
      title="{% if active_institution %}{{ active_institution.name }}{% else %}NDAS{% endif %}"
-     aria-label="{% if active_institution %}{{ active_institution.name }}{% else %}NDAS{% endif %} — Dashboard">
+     aria-label="{% if active_institution %}{{ active_institution.name }}{% else %}NDAS{% endif %} — Dashboard"
+     data-toggle="tooltip" data-placement="right" data-container="body">
   {% endif %}
     {% if active_institution and active_institution.logo %}
       <img src="{{ active_institution.logo.url }}"
@@ -44,7 +48,9 @@
            alt="NDAS">
     {% endif %}
     <span class="brand-text font-weight-light">
-      {% if active_institution %}{{ active_institution.name|truncatechars:20 }}{% else %}NDAS{% endif %}
+      {% if active_institution %}
+        {{ active_institution.short_name|default:active_institution.name|slice:":10" }}
+      {% else %}NDAS{% endif %}
     </span>
   </a>
 
@@ -251,7 +257,8 @@
           </a>
         </li>
 
-        <!-- Reports -->
+        <!-- Reports — ADMIN and SUPERADMIN only -->
+        {% if user_type == 'ADMIN' or is_superadmin %}
         <li
           class="nav-item {% if 'reports' in request.resolver_match.namespace %}menu-open{% endif %}"
         >
@@ -286,16 +293,12 @@
             </li>
           </ul>
         </li>
+        {% endif %}
 
-        {% if user.is_staff or user.is_superuser %}
-
-        <li
-          class="nav-item {% if 'admin' in request.resolver_match.url_name or is_superadmin and request.resolver_match.namespace == 'institution' %}menu-open{% endif %}"
-        >
-          <a
-            href="#"
-            class="nav-link {% if 'admin' in request.resolver_match.url_name or is_superadmin and request.resolver_match.namespace == 'institution' %}active{% endif %}"
-          >
+        {% if user_type == 'ADMIN' or is_superadmin %}
+        <li class="nav-item {% if 'admin' in request.resolver_match.url_name or request.resolver_match.namespace == 'institution' %}menu-open{% endif %}">
+          <a href="#"
+             class="nav-link {% if 'admin' in request.resolver_match.url_name or request.resolver_match.namespace == 'institution' %}active{% endif %}">
             <i class="nav-icon fas fa-shield-alt"></i>
             <p>
               Administration
@@ -303,113 +306,96 @@
             </p>
           </a>
           <ul class="nav nav-treeview">
+
+            {# ── Shared: ADMIN and SUPERADMIN ── #}
             <li class="nav-item">
-              <a
-                href="{% url 'admin-dashboard' %}"
-                class="nav-link {% if request.resolver_match.url_name == 'admin-dashboard' %}active{% endif %}"
-              >
-                <i class="far fa-circle nav-icon"></i>
-                <p>Dashboard</p>
+              <a href="{% url 'admin-dashboard' %}"
+                 class="nav-link {% if request.resolver_match.url_name == 'admin-dashboard' %}active{% endif %}">
+                <i class="far fa-circle nav-icon"></i><p>Staff Dashboard</p>
               </a>
             </li>
             <li class="nav-item">
-              <a
-                href="{% url 'admin-user-list' %}"
-                class="nav-link {% if request.resolver_match.url_name == 'admin-user-list' %}active{% endif %}"
-              >
-                <i class="far fa-circle nav-icon"></i>
-                <p>Users</p>
+              <a href="{% url 'admin-user-list' %}"
+                 class="nav-link {% if request.resolver_match.url_name == 'admin-user-list' %}active{% endif %}">
+                <i class="far fa-circle nav-icon"></i><p>Users</p>
               </a>
             </li>
             <li class="nav-item">
-              <a
-                href="{% url 'admin-user-add' %}"
-                class="nav-link {% if request.resolver_match.url_name == 'admin-user-add' %}active{% endif %}"
-              >
-                <i class="far fa-circle nav-icon"></i>
-                <p>Add User</p>
+              <a href="{% url 'admin-user-add' %}"
+                 class="nav-link {% if request.resolver_match.url_name == 'admin-user-add' %}active{% endif %}">
+                <i class="far fa-circle nav-icon"></i><p>Add User</p>
               </a>
             </li>
             <li class="nav-item">
-              <a
-                href="{% url 'admin-activity-logs' %}"
-                class="nav-link {% if request.resolver_match.url_name == 'admin-activity-logs' %}active{% endif %}"
-              >
-                <i class="far fa-circle nav-icon"></i>
-                <p>Activity Logs</p>
+              <a href="{% url 'admin-activity-logs' %}"
+                 class="nav-link {% if request.resolver_match.url_name == 'admin-activity-logs' %}active{% endif %}">
+                <i class="far fa-circle nav-icon"></i><p>Activity Logs</p>
               </a>
             </li>
 
+            {# ── ADMIN-only: My Institution ── #}
+            {% if user_type == 'ADMIN' %}
+            <li class="nav-header">MY INSTITUTION</li>
+            <li class="nav-item">
+              <a href="{% url 'institution:institution-admin-dashboard' %}"
+                 class="nav-link {% if request.resolver_match.url_name == 'institution-admin-dashboard' %}active{% endif %}">
+                <i class="far fa-circle nav-icon"></i><p>Admin Dashboard</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'institution:institution-settings' %}"
+                 class="nav-link {% if request.resolver_match.url_name == 'institution-settings' %}active{% endif %}">
+                <i class="far fa-circle nav-icon"></i><p>Institution Settings</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'institution:institution-clinician-list' %}"
+                 class="nav-link {% if request.resolver_match.url_name in 'institution-clinician-list institution-clinician-add' %}active{% endif %}">
+                <i class="far fa-circle nav-icon"></i><p>Clinicians</p>
+              </a>
+            </li>
+            {% endif %}
+
+            {# ── SUPERADMIN-only: Network ── #}
             {% if is_superadmin %}
+            <li class="nav-header">NETWORK</li>
             <li class="nav-item">
               <a href="{% url 'institution:institution-selector' %}"
                  class="nav-link {% if request.resolver_match.url_name == 'institution-selector' %}active{% endif %}">
-                <i class="far fa-circle nav-icon"></i>
-                <p>All Institutions</p>
+                <i class="far fa-circle nav-icon"></i><p>All Institutions</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{% url 'institution:institution-add' %}"
                  class="nav-link {% if request.resolver_match.url_name == 'institution-add' %}active{% endif %}">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Add Institution</p>
+                <i class="far fa-circle nav-icon"></i><p>Add Institution</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{% url 'institution:superadmin-dashboard' %}"
                  class="nav-link {% if request.resolver_match.url_name == 'superadmin-dashboard' %}active{% endif %}">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Superadmin Dashboard</p>
+                <i class="far fa-circle nav-icon"></i><p>Superadmin Dashboard</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{% url 'institution:superadmin-reports' %}"
                  class="nav-link {% if request.resolver_match.url_name == 'superadmin-reports' %}active{% endif %}">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Aggregate Reports</p>
+                <i class="far fa-circle nav-icon"></i><p>Aggregate Reports</p>
               </a>
             </li>
             {% endif %}
 
+            {# ── Superuser-only ── #}
             {% if user.is_superuser %}
-            <!-- Subscription Management (Superuser Only) -->
             <li class="nav-item">
-              <a
-                href="{% url 'subscription-update' %}"
-                class="nav-link {% if request.resolver_match.url_name == 'subscription-update' %}active{% endif %}"
-              >
-                <i class="far fa-circle nav-icon"></i>
-                <p>Update Subscription</p>
+              <a href="{% url 'subscription-update' %}"
+                 class="nav-link {% if request.resolver_match.url_name == 'subscription-update' %}active{% endif %}">
+                <i class="far fa-circle nav-icon"></i><p>Update Subscription</p>
               </a>
             </li>
             {% endif %}
-          </ul>
-        </li>
-        {% endif %}
 
-        {# Institution Admin section — only for ADMIN role (Story 3.1, 3.2) #}
-        {% if user_type == 'ADMIN' %}
-        <li class="nav-header">MY INSTITUTION</li>
-        <li class="nav-item">
-          <a href="{% url 'institution:institution-admin-dashboard' %}"
-             class="nav-link {% if request.resolver_match.url_name == 'institution-admin-dashboard' %}active{% endif %}">
-            <i class="nav-icon fas fa-tachometer-alt"></i>
-            <p>Admin Dashboard</p>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="{% url 'institution:institution-clinician-list' %}"
-             class="nav-link {% if request.resolver_match.url_name == 'institution-clinician-list' or request.resolver_match.url_name == 'institution-clinician-add' %}active{% endif %}">
-            <i class="nav-icon fas fa-user-md"></i>
-            <p>Clinicians</p>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="{% url 'institution:institution-settings' %}"
-             class="nav-link {% if request.resolver_match.url_name == 'institution-settings' %}active{% endif %}">
-            <i class="nav-icon fas fa-cog"></i>
-            <p>Institution Settings</p>
-          </a>
+          </ul>
         </li>
         {% endif %}
 

@@ -12,6 +12,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def institution_scope(request, field='patient__institution'):
+    """Return ORM filter kwargs for institution scoping; {} in Phase 1 (institution is None)."""
+    inst = getattr(request, 'institution', None)
+    return {field: inst} if inst is not None else {}
+
+
 def get_gma_diagnosis_data(institution=None):
     from patients.models import GMAssessment, Patient
     _pts = Patient.objects.for_institution(institution)

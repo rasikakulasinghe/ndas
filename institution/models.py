@@ -8,6 +8,7 @@ from ndas.custom_codes.validators import get_institution_logo_path
 class Institution(TimeStampedModel, UserTrackingMixin):
     name = models.CharField(max_length=255, unique=True, db_index=True)
     slug = models.SlugField(max_length=100, unique=True, db_index=True)
+    short_name = models.CharField(max_length=10, blank=True, default='')
     logo = models.ImageField(
         upload_to=get_institution_logo_path,  # Story 3.3: institution-aware logo path (FR58)
         null=True, blank=True,

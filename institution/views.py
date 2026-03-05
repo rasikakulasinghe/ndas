@@ -145,6 +145,7 @@ def institution_add(request):
                 institution = Institution.objects.create(
                     name=form.cleaned_data['institution_name'],
                     slug=form.cleaned_data['institution_slug'],
+                    short_name=form.cleaned_data['institution_short_name'],
                     subscription_status=SubscriptionStatus.ACTIVE,
                     is_active=True,
                     created_by=request.user,
@@ -196,6 +197,46 @@ def institution_add(request):
     return render(request, 'institution/add.html', {
         'form': form,
         'page_title': 'Onboard New Institution',
+    })
+
+
+@login_required(login_url="user-login")
+@require_http_methods(["GET", "POST"])
+@ratelimit(key='user_or_ip', rate='10/m')
+@handle_view_errors(
+    redirect_url='institution:institution-selector',
+    error_message='Failed to save institution settings.'
+)
+def superadmin_institution_edit(request, institution_id):
+    """
+    SUPERADMIN: edit any institution's profile by pk.
+    No is_active filter — superadmin can edit/reactivate inactive institutions.
+    """
+    from institution.forms import SuperadminInstitutionEditForm
+
+    if getattr(request.user, 'user_type', None) != UserType.SUPERADMIN:
+        return redirect('manage-patients')
+
+    institution = get_object_or_404(Institution, pk=institution_id)
+
+    form = SuperadminInstitutionEditForm(
+        request.POST or None,
+        request.FILES or None,
+        instance=institution,
+    )
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        logger.info(
+            "SUPERADMIN '%s' edited institution '%s' (id=%d)",
+            request.user.username, institution.name, institution.pk,
+        )
+        messages.success(request, f"Institution '{institution.name}' updated successfully.")
+        return redirect('institution:institution-selector')
+
+    return render(request, 'institution/edit.html', {
+        'form': form,
+        'institution': institution,
+        'page_title': f'Edit Institution — {institution.name}',
     })
 
 

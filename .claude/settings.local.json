@@ -71,7 +71,8 @@
       "Bash(venvScriptspython.exe:*)",
       "Bash(source:*)",
       "Bash(sed:*)",
-      "Bash(venvScriptsactivate:*)"
+      "Bash(venvScriptsactivate:*)",
+      "Bash(venv/Scripts/python:*)"
     ],
     "deny": [],
     "ask": []

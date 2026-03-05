@@ -39,6 +39,16 @@ class InstitutionOnboardingForm(forms.Form):
         }),
         help_text="Lowercase, hyphens only. Auto-populated from name. Immutable after creation.",
     )
+    institution_short_name = forms.CharField(
+        max_length=10,
+        label="Short Name",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'e.g. LRH',
+            'id': 'id_institution_short_name',
+        }),
+        help_text="Compact identifier shown in sidebar (max 10 chars, e.g. LRH).",
+    )
 
     # ── First admin account fields ─────────────────────────────────────────
     admin_first_name = forms.CharField(
@@ -99,6 +109,9 @@ class InstitutionOnboardingForm(forms.Form):
                 "This slug is already taken. Choose a unique identifier."
             )
         return slug
+
+    def clean_institution_short_name(self):
+        return sanitize_text_input(self.cleaned_data['institution_short_name']).upper()
 
     def clean_admin_username(self):
         username = self.cleaned_data['admin_username']
@@ -190,11 +203,57 @@ class InstitutionSettingsForm(forms.ModelForm):
     """
     class Meta:
         model = Institution
-        fields = ['name', 'logo']
+        fields = ['name', 'short_name', 'logo']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'short_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g. LRH',
+            }),
             'logo': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
         }
+
+    def clean_name(self):
+        return sanitize_text_input(self.cleaned_data['name'])
+
+    def clean_logo(self):
+        logo = self.cleaned_data.get('logo')
+        if logo and hasattr(logo, 'size'):
+            max_size = getattr(django_settings, 'FILE_UPLOAD_LIMITS', {}).get(
+                'IMAGE_MAX_SIZE', 10 * 1024 * 1024
+            )
+            if logo.size > max_size:
+                raise forms.ValidationError(
+                    f"Logo file size must not exceed {max_size // (1024 * 1024)}MB."
+                )
+            try:
+                image_extension_validation(logo)
+            except Exception as e:
+                raise forms.ValidationError(str(e))
+        return logo
+
+
+class SuperadminInstitutionEditForm(forms.ModelForm):
+    """SUPERADMIN: edit any institution's profile by pk."""
+
+    class Meta:
+        model = Institution
+        fields = ['name', 'short_name', 'logo', 'is_active', 'subscription_status']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'short_name': forms.TextInput(attrs={
+                'class': 'form-control', 'placeholder': 'e.g. LRH',
+            }),
+            'logo': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'subscription_status': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+    def clean_name(self):
+        return sanitize_text_input(self.cleaned_data['name'])
+
+    def clean_short_name(self):
+        return sanitize_text_input(self.cleaned_data['short_name']).upper()
 
     def clean_logo(self):
         logo = self.cleaned_data.get('logo')

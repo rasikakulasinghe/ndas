@@ -13,7 +13,7 @@ import logging
 from patients.models import Patient
 from problemlist.models import Problem, ProblemAction
 from problemlist.forms import ProblemForm, ProblemActionForm
-from ndas.custom_codes.custom_methods import getCountZeroIfNone
+from ndas.custom_codes.custom_methods import getCountZeroIfNone, institution_scope
 from ndas.custom_codes.delete_helpers import (
     has_delete_permission,
     get_redirect_url,
@@ -37,7 +37,7 @@ def problem_manager(request, pid):
     Returns:
         Rendered template with patient problems
     """
-    patient = get_object_or_404(Patient, pk=pid)
+    patient = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), pk=pid)
 
     # Active problems first, then resolved (core design principle)
     problems = Problem.objects.filter(patient=patient).annotate(
@@ -110,7 +110,7 @@ def problem_view(request, pk):
     Returns:
         Rendered problem detail template
     """
-    problem = get_object_or_404(Problem, pk=pk)
+    problem = get_object_or_404(Problem, pk=pk, **institution_scope(request))
     patient = problem.patient
     actions = problem.actions.select_related('performed_by', 'added_by', 'last_edit_by').all()[:10]  # Latest 10 actions for inline timeline
     action_count = getCountZeroIfNone(problem.actions.all())
@@ -138,7 +138,7 @@ def problem_edit(request, pk):
     Returns:
         Rendered edit form or redirect to view on success
     """
-    problem = get_object_or_404(Problem, pk=pk)
+    problem = get_object_or_404(Problem, pk=pk, **institution_scope(request))
     patient = problem.patient
 
     if request.method == "POST":
@@ -186,7 +186,7 @@ def problem_delete(request, pk):
         get_entity_detail_items,
     )
 
-    problem = get_object_or_404(Problem, pk=pk)
+    problem = get_object_or_404(Problem, pk=pk, **institution_scope(request))
     patient_id = problem.patient.pk
 
     # Check permission using delete helper
@@ -342,7 +342,7 @@ def problem_status_change(request, pk):
     Returns:
         Rendered problem row HTML for HTMX swap
     """
-    problem = get_object_or_404(Problem, pk=pk)
+    problem = get_object_or_404(Problem, pk=pk, **institution_scope(request))
     new_status = request.POST.get('status')
 
     if new_status in ['active', 'resolved', 'chronic', 'inactive']:
@@ -389,7 +389,7 @@ def problem_timeline(request, pk):
     Returns:
         Rendered timeline template
     """
-    problem = get_object_or_404(Problem, pk=pk)
+    problem = get_object_or_404(Problem, pk=pk, **institution_scope(request))
     patient = problem.patient
     actions = problem.actions.select_related('performed_by', 'added_by', 'last_edit_by').all()  # Already ordered by -date
 
@@ -416,7 +416,7 @@ def problem_action_add(request, pk):
     Returns:
         Redirect to problem view or timeline
     """
-    problem = get_object_or_404(Problem, pk=pk)
+    problem = get_object_or_404(Problem, pk=pk, **institution_scope(request))
 
     if request.method == "POST":
         form = ProblemActionForm(request.POST)

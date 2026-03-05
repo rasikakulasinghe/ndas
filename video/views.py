@@ -18,6 +18,7 @@ from django.core.exceptions import ValidationError
 
 from patients.models import Patient
 from .models import Video
+from ndas.custom_codes.custom_methods import institution_scope
 from .forms import VideoForm
 from ndas.custom_codes.choice import PROCESSING_STATUS
 from ndas.custom_codes.error_handlers import handle_view_errors
@@ -109,7 +110,7 @@ def video_add(request, patient_id):
 @login_required(login_url="user-login")
 def video_view(request, video_id):
     """View video details and player"""
-    video = get_object_or_404(Video, id=video_id)
+    video = get_object_or_404(Video, id=video_id, **institution_scope(request))
 
     # Check access permissions
     if not request.user.is_staff and video.added_by != request.user:
@@ -153,7 +154,7 @@ def video_view(request, video_id):
 @login_required(login_url="user-login")
 def video_edit(request, video_id):
     """Edit video details with enhanced validation and error handling"""
-    video = get_object_or_404(Video, id=video_id)
+    video = get_object_or_404(Video, id=video_id, **institution_scope(request))
 
     # Check permissions
     if not request.user.is_staff and video.added_by != request.user:
@@ -331,7 +332,7 @@ def video_manager(request):
     # Get unique uploaders for filter dropdown (users who have uploaded videos)
     from users.models import CustomUser
     uploaders = (
-        CustomUser.objects.filter(video_added__isnull=False)
+        CustomUser.objects.filter(video_added__isnull=False, **institution_scope(request, 'institution'))
         .distinct()
         .only("id", "username", "first_name", "last_name")
         .order_by("first_name", "last_name")
@@ -470,7 +471,7 @@ def video_manager_by_patient(request, patient_id):
 def video_delete_confirm(request, video_id):
     """Video delete confirmation page"""
     try:
-        video = get_object_or_404(Video, id=video_id)
+        video = get_object_or_404(Video, id=video_id, **institution_scope(request))
 
         # Check permissions
         if not request.user.is_staff and video.added_by != request.user:
@@ -522,7 +523,7 @@ def video_delete(request, video_id):
 
     try:
         # 1. Retrieve video
-        video = get_object_or_404(Video, id=video_id)
+        video = get_object_or_404(Video, id=video_id, **institution_scope(request))
 
         # 2. Check permissions
         if not has_delete_permission(request.user, video):
