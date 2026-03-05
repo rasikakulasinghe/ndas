@@ -1,10 +1,10 @@
 ---
 project_name: 'NDAS'
 user_name: 'Rasika'
-date: '2026-02-27'
+date: '2026-03-05'
 sections_completed: ['technology_stack', 'language_rules', 'framework_rules', 'testing_rules', 'quality_rules', 'workflow_rules', 'anti_patterns', 'phase2_multi_institution']
 status: 'complete'
-rule_count: 82
+rule_count: 88
 optimized_for_llm: true
 ---
 
@@ -49,6 +49,8 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - **Age calculation:** use `calculate_age_string()` from `custom_methods.py`, not custom datetime logic
 - **Safe counts:** use `getCountZeroIfNone()` from `custom_methods.py` instead of `.count()` where None is possible
 - **Logger placement:** Always define `logger = logging.getLogger(__name__)` at module level — never inside a function or method
+- **Institution scoping helper:** `institution_scope(request, field='patient__institution')` in `custom_methods.py` — returns ORM filter kwargs `{field: inst}` when `request.institution` is set, `{}` in Phase 1 (institution is None). Use this in views needing flexible scoping without the full `InstitutionScopedManager` chain (e.g. cross-model queries). Never write manual `filter(institution=request.institution)` in views.
+- **Dashboard/stats functions require `institution` parameter:** `get_gma_diagnosis_data(institution)`, `get_all_diagnosis_data(institution)`, `get_userStats(institution)`, `get_admissions_data_barchart(institution)` — always pass `request.institution` from views, not `None`.
 - **Patient field names are critical** — use exact names only:
   - `patient.bht` (not `bht_number`), `patient.nnc_no` (not `nnc_number`)
   - `patient.baby_name` (not `patient_name` or `name`), `patient.dob_tob` (not `dob` or `date_of_birth`)
@@ -84,6 +86,12 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Include `{% include 'src/form_error.html' %}` in all forms for error display
 - Use AdminLTE card pattern: `<div class="card"><div class="card-body">...</div></div>`
 - **Never** change CSS framework (AdminLTE 3.2 + Bootstrap 4.6) or add conflicting CSS libraries
+
+**`@handle_view_errors` Behaviour (ValidationError):**
+- `redirect_url` set → redirects there (most common)
+- `render_template` set → renders template with `{'error': error_msg}`
+- Neither set → redirects to `'home'`
+- Does NOT re-call the view to re-render forms — handle form re-rendering inside the view before any save that could raise ValidationError
 
 **URLs:**
 - URL names follow kebab-case: `patient-manager`, `assessment-add`, `video-delete`
@@ -227,6 +235,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 ### Institution Model Rules
 
 - `Institution.slug` is **immutable** — cannot be changed after creation (enforced in `save()` and `clean()`)
+- `Institution.short_name` — `CharField(max_length=10, blank=True)` — used for sidebar/badge display in constrained UI spaces. Prefer `short_name` if set, fall back to `name`. Included in `SuperadminInstitutionEditForm` automatically.
 - Institution logo path uses `get_institution_logo_path()` — never set `upload_to` inline
 - `InstitutionContextMiddleware` (position 14) replaces `SubscriptionCheckMiddleware` in Phase 2; both coexist in `settings.py` for migration safety
 
@@ -262,6 +271,9 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - ❌ Secrets in source code → always use `.env`
 - ❌ New utilities in app files → always extend `ndas/custom_codes/`
 - ❌ Using `Model.objects.all()` or `.filter(institution=...)` on institution-scoped models → use `.for_institution(request.institution)`
+- ❌ Calling `get_gma_diagnosis_data()` / `get_all_diagnosis_data()` / `get_userStats()` / `get_admissions_data_barchart()` without `institution` argument → always pass `request.institution`
+- ❌ Manual `filter(institution=request.institution)` in views where `institution_scope()` or `InstitutionScopedManager` applies → use the appropriate scoping utility
+- ❌ `logging.getLogger("django")` in app views → always `logging.getLogger(__name__)`
 - ❌ `request.user.institution` in templates → use `active_institution` context variable
 - ❌ `{% if request.user.is_superuser %}` in templates → use `{% if is_superadmin %}`
 - ❌ `Notification.objects.create()` in views → all notifications must go through `referral/signals.py`
@@ -306,4 +318,4 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Update when technology stack or patterns change
 - Review quarterly for outdated rules
 
-_Last Updated: 2026-02-27_
+_Last Updated: 2026-03-05_
