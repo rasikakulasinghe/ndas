@@ -47,9 +47,11 @@
            class="brand-image img-circle elevation-3"
            alt="NDAS">
     {% endif %}
-    <span class="brand-text font-weight-light">
+    <span class="brand-text font-weight-light"
+        title="{% if active_institution %}{{ active_institution.name }}{% else %}NDAS{% endif %}"
+        data-toggle="tooltip" data-placement="right" data-container="body">
       {% if active_institution %}
-        {{ active_institution.short_name|default:active_institution.name|slice:":10" }}
+      {{ active_institution.short_name|default:active_institution.name|truncatewords:2 }}
       {% else %}NDAS{% endif %}
     </span>
   </a>
@@ -73,9 +75,9 @@
         <a href="{% url 'user-view' user.id %}" class="d-block"
           >{{user.get_full_name|default:user.username}}</a
         >
-        <small class="text-muted"
-          >{{user.get_position_display|default:"User"}}</small
+        <small class="text-muted">({{user.get_position_display}} - {{user.get_user_type_display|default:"User"}})</small>
         >
+
       </div>
     </div>
 
@@ -98,6 +100,7 @@
           </a>
         </li>
 
+        {% if not is_superadmin or active_institution %}
         <li class="nav-item">
           <a
             href="{% url 'add-patient' %}"
@@ -245,6 +248,7 @@
           </ul>
         </li>
 
+        {% endif %}{# End SUPERADMIN institution gate — items above hidden until institution selected #}
         {# Referrals — shown to all authenticated users (Story 4.3) #}
         <li class="nav-header">REFERRALS</li>
         <li class="nav-item">

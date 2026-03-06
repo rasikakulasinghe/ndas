@@ -1,13 +1,38 @@
 {% extends 'src/base.html' %}
 {% load static %}
 {% block title %}Home{% endblock title%}
+{% block content_header %}
+<div class="row mb-0">
+  <div class="col-sm-6">
+    <h1 class="m-0">Dashboard</h1>
+    <small class="text-muted">
+      {% if active_institution %}{{ active_institution.name }}{% else %}NDAS Network{% endif %}
+    </small>
+  </div>
+  <div class="col-sm-6">
+    <ol class="breadcrumb float-sm-right">
+      <li class="breadcrumb-item active">Dashboard</li>
+    </ol>
+  </div>
+</div>
+{% endblock content_header %}
+
 {% block main_content %}
 
 <section class="content">
 
     <div class="container-fluid">
 {{getCorrectedAge}}
-    <div class="card bg-info"><div class="card-header"><h3 class="card-title">Neurodevelopmental Assessment System (NHK)</h3></div></div>
+    <div class="card bg-info mb-3">
+      <div class="card-header">
+        <h3 class="card-title">
+          {% if active_institution %}{{ active_institution.name }}{% else %}NDAS Network{% endif %}
+        </h3>
+        <div class="card-tools">
+          <small class="text-white">Neurodevelopmental Assessment System</small>
+        </div>
+      </div>
+    </div>
 
     <div class="row">
         <div class="col-lg-3 col-6">

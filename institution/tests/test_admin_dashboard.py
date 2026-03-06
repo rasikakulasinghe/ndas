@@ -77,6 +77,15 @@ class AdminDashboardAccessTest(AdminDashboardTestBase):
         self.assertEqual(response.status_code, 302)
         self.assertIn('login', response['Location'])
 
+    def test_admin_dashboard_shows_institution_banner_card(self):
+        """AC 7: Institution admin dashboard renders bg-info banner card with institution name."""
+        client = Client()
+        client.force_login(self.admin)
+        response = client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.inst.name)
+        self.assertContains(response, 'card bg-info mb-3')
+
 
 @STATIC_OVERRIDE
 class AdminDashboardEmptyStateTest(AdminDashboardTestBase):

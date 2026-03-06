@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import CustomUser, DeveloperContacts, UserActivityLog, UserSession, Subscription
 from .forms import SubscriptionForm
 from django.contrib.auth.admin import UserAdmin
-from django.utils.html import format_html
+from django.utils.html import format_html, mark_safe
 from django.urls import reverse
 from django.utils import timezone
 from datetime import timedelta
@@ -56,9 +56,9 @@ class CustomUserAdmin(UserAdmin):
     
     def email_verified_status(self, obj):
         if obj.is_email_verified:
-            return format_html('<span style="color: green;">✓ Verified</span>')
+            return mark_safe('<span style="color: green;">✓ Verified</span>')
         else:
-            return format_html('<span style="color: red;">✗ Not Verified</span>')
+            return mark_safe('<span style="color: red;">✗ Not Verified</span>')
     email_verified_status.short_description = 'Email Status'
     
 @admin.register(DeveloperContacts)
@@ -396,9 +396,9 @@ class SubscriptionAdmin(admin.ModelAdmin):
     def is_active_display(self, obj):
         """Display active status with icon."""
         if obj.is_active:
-            return format_html('<span style="color: green;">✓ Active</span>')
+            return mark_safe('<span style="color: green;">✓ Active</span>')
         else:
-            return format_html('<span style="color: red;">✗ Inactive</span>')
+            return mark_safe('<span style="color: red;">✗ Inactive</span>')
     is_active_display.short_description = 'Active Status'
 
 

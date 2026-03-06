@@ -4,7 +4,7 @@ Unit tests for refactored patients views.
 Tests the unified patient_manager function and optimized dashboard view.
 """
 
-from django.test import TestCase, Client
+from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -425,6 +425,22 @@ class DashboardTestCase(TestCase):
             # Dashboard should use ~15 queries (optimized from ~50)
             response = self.client.get(reverse('home'))
             self.assertEqual(response.status_code, 200)
+
+    @override_settings(
+        STORAGES={"staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}},
+        RATELIMIT_ENABLE=False,
+    )
+    def test_dashboard_institution_banner_replaces_nhk(self):
+        """AC 5: Home dashboard shows bg-info banner card; hardcoded NHK text is gone."""
+        response = self.client.get(reverse('home'))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        # Old hardcoded text must be gone
+        self.assertNotIn('Neurodevelopmental Assessment System (NHK)', content)
+        # New banner card structure must be present
+        self.assertIn('card bg-info', content)
+        # Subtitle text preserved (without "NHK")
+        self.assertIn('Neurodevelopmental Assessment System', content)
 
 
 class CustomMethodsTestCase(TestCase):
