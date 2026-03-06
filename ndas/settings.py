@@ -170,7 +170,7 @@ STORAGES = {
 }
 
 # ─── Phase 2: Multi-Institution ─────────────────────────────────────────────
-MULTI_INSTITUTION_ENABLED = config('MULTI_INSTITUTION_ENABLED', default=False, cast=bool)
+MULTI_INSTITUTION_ENABLED = config('MULTI_INSTITUTION_ENABLED', default=True, cast=bool)
 DEFAULT_INSTITUTION_NAME = config('DEFAULT_INSTITUTION_NAME', default='Default Institution')
 DEFAULT_INSTITUTION_SLUG = config('DEFAULT_INSTITUTION_SLUG', default='default')
 

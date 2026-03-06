@@ -137,7 +137,7 @@
             class="nav-link {% if request.resolver_match.url_name == 'problem-analysis' %}active{% endif %}"
           >
             <i class="nav-icon fas fa-file-medical"></i>
-            <p>Problem List Manager</p>
+            <p>Problemlist Manager</p>
           </a>
         </li>
 
@@ -250,7 +250,6 @@
 
         {% endif %}{# End SUPERADMIN institution gate — items above hidden until institution selected #}
         {# Referrals — shown to all authenticated users (Story 4.3) #}
-        <li class="nav-header">REFERRALS</li>
         <li class="nav-item">
           <a href="{% url 'referral:referral-inbox' %}" class="nav-link {% if request.resolver_match.url_name == 'referral-inbox' %}active{% endif %}">
             <i class="nav-icon fas fa-share-square"></i>
