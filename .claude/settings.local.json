@@ -72,7 +72,9 @@
       "Bash(source:*)",
       "Bash(sed:*)",
       "Bash(venvScriptsactivate:*)",
-      "Bash(venv/Scripts/python:*)"
+      "Bash(venv/Scripts/python:*)",
+      "Bash(du:*)",
+      "Bash(pip freeze:*)"
     ],
     "deny": [],
     "ask": []

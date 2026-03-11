@@ -1,6 +1,4 @@
 ---
-workflowType: 'prd'
-workflow: 'edit'
 stepsCompleted:
   - step-01-init
   - step-02-discovery
@@ -15,13 +13,17 @@ stepsCompleted:
   - step-09-functional
   - step-10-nonfunctional
   - step-11-polish
-  - step-12-complete
-  - step-e-01-discovery
-  - step-e-02-review
-  - step-e-03-edit
-workflowStatus: complete
-completedDate: '2026-02-19'
-lastEdited: '2026-02-22 (edit 3)'
+classification:
+  projectType: web_app
+  domain: healthcare
+  jurisdiction: Sri Lanka
+  complexity: high
+  projectContext: brownfield
+  scope: full-redocumentation-phase1-and-phase2
+  audience:
+    - developers
+    - clinical-stakeholders
+    - management
 inputDocuments:
   - docs/index.md
   - docs/project-overview.md
@@ -29,553 +31,733 @@ inputDocuments:
   - docs/data-models-main.md
   - docs/api-contracts-main.md
   - docs/component-inventory-main.md
-  - docs/custom-codes-reference.md
   - docs/development-guide.md
-  - _bmad-output/planning-artifacts/product-brief-NDAS-2026-02-22.md
-classification:
-  projectType: web_app
-  domain: healthcare
-  complexity: high
-  projectContext: brownfield
-  prdScope: existing-capabilities
-briefCount: 0
-researchCount: 0
-brainstormingCount: 0
-projectDocsCount: 8
-editHistory:
-  - date: '2026-02-22'
-    changes: >
-      14 targeted improvements from validation-report-2026-02-22:
-      Added NFR18 (WCAG 2.1 AA accessibility); added Journey 4 (research coordinator cohort export);
-      rewrote FR33 (subscription operations), FR36 (staff scope definition);
-      added RPO/RTO to NFR12; added SLA to NFR11; removed implementation leakage from NFR10 and NFR13;
-      added MFA status note and software validation approach to Domain-Specific Requirements;
-      clarified FR3 (identifiers), FR25 (problem statuses), FR30 (patient filter criteria);
-      removed vague "quick" from FR6; added SEO N/A note.
-  - date: '2026-02-22'
-    source: validation-report-2026-02-22.md
-    changes: >
-      12 targeted improvements from second validation pass (edit 3):
-      FR38 rewritten (specific notification triggers enumerated);
-      FR39 removed (superseded by FR67-FR69);
-      FR41 rewritten (manage → specific actions: view, reply, close);
-      FR43 rewritten (pointer to FR50-55 and FR56-59);
-      FR45 rewritten (ORM layer removed → capability-level isolation);
-      FR46 rewritten (slug path removed → capability-level file isolation);
-      FR49 rewritten (feature flag/code paths removed → controlled migration path);
-      FR70 rewritten (polling mechanism removed → 120-second refresh capability);
-      NFR21 rewritten (code paths removed → capabilities inactive);
-      NFR22 rewritten (model names/transaction removed → atomic dual-institution record);
-      Journey 3 multi-centre reference annotated as Phase 2;
-      Phase 2 out-of-scope list added (snapshot versioning, onboarding checklist, referral reassignment).
-  - date: '2026-02-22'
-    source: product-brief-NDAS-2026-02-22.md
-    changes: >
-      Multi-Institution Expansion incorporated from product brief:
-      Executive Summary Phase 2 paragraph; new Target Users section (SUPERADMIN/ADMIN/USER);
-      Multi-Institution Success Criteria (6 metrics);
-      Journeys 5-7 (superadmin onboarding, institution admin startup, cross-institution referral);
-      Multi-Institution Data Isolation subsection in Domain Requirements;
-      Product Scope Phase 2 replaced with 6 detailed capability groups
-      (Multi-Institution Foundation, Migration Path, Superadmin Capabilities, Institution Admin Capabilities,
-      Referral System, Notifications);
-      FR45-FR70 added (33 new Phase 2 FRs across 5 groups, FR38-FR44 retained);
-      NFR19-NFR23 added (Multi-Institution quality attributes).
+  - docs/custom-codes-reference.md
+  - _bmad-output/project-context.md
+documentCounts:
+  briefCount: 0
+  researchCount: 0
+  brainstormingCount: 0
+  projectDocsCount: 9
+workflowType: 'prd'
+workflowStatus: complete
+project_name: NDAS
+user_name: Rasika
+date: '2026-03-09'
 ---
 
 # Product Requirements Document - NDAS
 
 **Author:** Rasika
-**Date:** 2026-02-19
-
----
+**Date:** 2026-03-10
 
 ## Executive Summary
 
-NDAS (Neurodevelopmental Assessment System) is a clinician-facing web application built to support early detection of neurodevelopmental disabilities — including cerebral palsy — in neonatal and paediatric patients. The system consolidates patient records, structured clinical assessments, video-based evaluations, and intervention tracking into a single longitudinal platform, eliminating paper-based record loss and enabling timely clinical decisions. Secondary purpose: generating a structured clinical dataset for neurodevelopmental research.
+NDAS (Neurodevelopmental Assessment System) is a purpose-built clinical web platform for neurodevelopmental assessment and patient record management, developed to address the complete absence of video-based GMA tooling in the Sri Lankan healthcare context. The system serves clinicians, neurologists, and paediatricians who require an integrated environment for conducting, documenting, and sharing structured neurodevelopmental assessments — workflows that generic hospital information systems cannot support.
 
-**Target Users:** Clinicians and neurodevelopmental specialists conducting assessments and managing patient follow-up across the care continuum.
+The system is deployed in two phases: Phase 1 (fully operational) delivers comprehensive single-institution clinical management including patient records, five assessment types, video management, problem tracking, report generation, and clinical attachments. Phase 2 (implemented) extends the platform to multi-institution operation with row-level data isolation, cross-institution patient referrals, expert consultation threads, and HTMX-driven notifications — enabling Sri Lankan clinical networks to share complex case expertise across hospital boundaries. A third phase targeting AI-assisted assessment analysis is on the planning horizon, leveraging the structured video and assessment data accumulated through Phases 1 and 2.
 
-**Core Problem Solved:** Neurodevelopmental conditions are often missed or detected late due to fragmented records, lack of structured assessment tools, and no systematic follow-up mechanism. NDAS enforces a structured clinical workflow from first assessment through intervention response monitoring.
+**Target users:** Clinical staff (data entry, assessment recording), clinicians and neurologists (assessment review, referral), institution administrators (user management, branding), and system superadmins (cross-institution oversight).
 
 ### What Makes This Special
 
-NDAS is not a generic EMR. It is purpose-built for neurodevelopmental surveillance — providing structured instruments (GMA, HINE, CDIC, GPA, Developmental Assessment) tied directly to individual patient timelines. The critical differentiator is longitudinal tracking: each patient's assessments, interventions, and outcomes are linked, allowing clinicians to see trajectory, not just snapshots. Video-based GMA assessments are integrated natively into the clinical workflow, enabling remote review and standardised scoring. The problem list module adds active clinical management capability, connecting diagnoses to actionable interventions and tracking their responses over time.
-
-### Phase 2 — Multi-Institution Expansion
-
-NDAS Phase 2 transforms the platform from a single-institution deployment into a true multi-tenant clinical network. A single NDAS instance serves 10+ hospitals and clinics with complete data isolation between institutions — no additional servers, databases, or deployment cycles per institution added. A superadmin onboards a new institution in under five minutes via one form; no developer involvement required after initial deployment. Two cross-institution capabilities are added as controlled bridges: structured clinical referrals (with frozen patient snapshots) enable specialist consultations across institution boundaries, and a god-view analytics dashboard gives the platform operator aggregate visibility across the entire network.
+NDAS is the only system in the Sri Lankan clinical context that unifies all commonly used neurodevelopmental assessment types — General Movement Assessment (video-based), HINE, CDIC, General Paediatric Assessment, and Developmental Assessment — in a single patient-centred workflow. The video-to-assessment linkage is core: a Video is directly coupled to a GMAssessment record, making the clinical evidence and its structured interpretation inseparable. Phase 2 elevates this further by enabling multi-expert consultation — a clinician at one institution can refer a case and receive structured clinical opinions from specialists at other institutions, a capability impossible in isolated single-institution deployments. The platform is built on a security-first architecture with 14-layer middleware, rate-limited CRUD operations, and institution-level data isolation, reflecting the sensitivity of the patient data it manages.
 
 ## Project Classification
 
-| Attribute | Value |
+| Dimension | Value |
 |-----------|-------|
-| **Project Type** | Web Application (Django multi-page, server-rendered) |
-| **Domain** | Healthcare — Neurodevelopmental Paediatrics |
-| **Complexity** | High (clinical data integrity, role-based access, medical identifiers, patient safety) |
-| **Project Context** | Brownfield — documenting existing system capabilities |
-| **Stack** | Django 4.2 · PostgreSQL/SQLite · AdminLTE 3.2 · Bootstrap 4.6 · HTMX · Video.js |
-
-## Target Users
-
-| Role | Scope | Responsibilities |
-|------|-------|-----------------|
-| **SUPERADMIN** | All institutions | Onboards institutions, manages subscriptions, monitors cross-institutional activity from a god-view dashboard; operates outside any single institution |
-| **ADMIN** | Own institution | Manages the clinical team within their institution — creates and deactivates clinician accounts, monitors patient activity, assessment volumes, and referral status |
-| **USER** | Own institution (referrals bridge institutions) | Registers patients, conducts assessments (GMA, HINE, CDIC, GPA, Developmental Assessment), manages problem lists, sends and receives cross-institution referrals |
+| **Project Type** | Web Application (Django MVT — server-rendered MPA with HTMX) |
+| **Domain** | Healthcare — Clinical / Neurodevelopmental (Sri Lanka jurisdiction) |
+| **Complexity** | High — regulated clinical domain, patient data sensitivity, multi-institution architecture |
+| **Project Context** | Brownfield — Phase 1 fully operational; Phase 2 implemented; Phase 3 (AI) planned |
+| **PRD Scope** | Full re-documentation — Phase 1 operational features + Phase 2 multi-institution + referral |
+| **Audience** | Developers (primary), clinical stakeholders, management teams |
 
 ## Success Criteria
 
 ### User Success
 
-- Clinicians access a patient's complete neurodevelopmental history — all assessments, interventions, and videos — from a single record
-- Structured assessment tools (GMA, HINE, CDIC, GPA, DA) guide clinicians through standardised protocols, reducing evaluation variability
-- Early identification of at-risk patients through structured scoring (e.g., HINE < 73 triggers clinical review)
-- Zero patient records lost — all clinical data persisted with full audit trail (user and timestamp on every record)
+A clinical user session is successful when:
+- A patient record is created or updated without data loss, and all identifier fields (BHT, NNC, PTC, PC, PIN, Disk No.) are correctly captured
+- An assessment (GMA, HINE, CDIC, GPA, or Developmental) is completed end-to-end and a formatted PDF or Excel report is generated without error
+- A video upload completes without failure and is correctly linked to the corresponding GMAssessment record
+- A referral is sent to another institution, a specialist adds a consultation reply, and the referring clinician receives a notification within 120 seconds
 
-### Clinical / Organisational Success
+**User failure indicators (must be eliminated):**
+- Video upload failures or silent data loss during upload
+- Partially completed patient records or assessments that are ambiguous — no clear visual indicator of completeness state
+- Assessment records that cannot be located, duplicated, or linked to the wrong patient
 
-- Earlier CP and neurodevelopmental disability diagnosis through systematic video-based GMA and HINE workflows
-- Fewer missed follow-ups through centralised patient tracking — all patients visible on dashboard regardless of referral source
-- Timely interventions supported by the problem list module, connecting diagnoses to actionable clinical plans
-- Collaborative specialist involvement: multiple clinicians share access to the same patient record and assessment data across centres
-- Research-quality data captured: aggregated assessment scores, cohort-level reporting, anonymised export capability
+### Business Success
+
+| Metric | Target | Timeframe |
+|--------|--------|-----------|
+| Institutions onboarded (Phase 2) | ≥ 10 institutions | 12 months post Phase 2 launch |
+| Case volume | ≥ 500 cases/month per institution | Steady state per institution |
+| Cross-institution referrals processed | Measurable referral throughput with reply rate tracked | Post Phase 2 go-live |
+| Phase 3 AI accuracy | Demonstrable improvement in assessment classification accuracy vs. manual baseline | Phase 3 validation |
+| Phase 3 automation | Automated clinical suggestions accepted by clinicians at a meaningful rate | Phase 3 evaluation |
 
 ### Technical Success
 
-- Multi-user concurrent access: multiple clinicians operate simultaneously without data conflicts
-- Multi-centre deployment: single instance supports multiple clinical sites with user-level access control
-- Secure clinical data handling: role-based access (superuser/staff), 1-hour session timeout, rate limiting on all 24 CRUD operations
-- Full audit trail: every record creation and modification tracked to a named user and timestamp
-- File integrity: video uploads (up to 2GB) and document attachments validated by MIME type and size limits
+- **Availability:** 100% uptime during daytime clinic hours (defined per institution operating hours); planned maintenance windows outside clinic hours only
+- **Video reliability:** Zero silent upload failures; all failed uploads surface a clear error with recovery path
+- **Data integrity:** No cross-institution data leakage (validated by isolation test suite before each Phase 2 institution onboarding)
+- **Audit trail:** All create/edit/delete actions tracked via `UserActivityLog` with user, timestamp, and record reference
+- **Security:** Rate limiting active on all 24 CRUD operations; session expiry enforced; CSP headers applied on all responses
 
 ### Measurable Outcomes
 
-- 100% of patient assessments captured digitally — no paper records required for core clinical workflows
-- All five assessment types (GMA, HINE, CDIC, GPA, DA) operational within a single patient record
-- Cohort reports and aggregated assessment data exportable for research use
-- All data modifications auditable to a named user and timestamp
-- System accessible concurrently by multiple clinicians across multiple clinical centres
+- **Phase 1 baseline:** All 5 assessment types completable end-to-end; report generation functional for PDF and Excel; zero known data loss scenarios
+- **Phase 2 baseline:** Data isolation test suite passes before each institution onboarded; referral lifecycle (PENDING → REPLIED → CLOSED) functions correctly; notifications delivered within 120 seconds
+- **Compliance readiness:** Sri Lankan health data regulations not yet formally implemented — system architecture (audit trail, access control, data residency capability) is designed to accommodate future regulatory requirements when formalised
+- **Phase 3 readiness:** Structured assessment data and video metadata accumulated through Phases 1–2 are clean and accessible for AI pipeline consumption
 
-### Multi-Institution Success *(Phase 2)*
+## Product Scope
 
-- New institution live (institution created + first admin active) within 5 minutes of superadmin form submission — zero developer involvement after initial platform deployment
-- Zero cross-institution data leakage incidents — patient data from Institution A never appears in Institution B's context; verified by automated isolation checks and pre-launch security testing before multi-institution mode is enabled in production
-- Existing single-institution data migrated atomically to default institution with zero data loss before multi-institution flag is enabled
-- More than 10 institutions active on the platform post-launch
-- 0 developer hours consumed per new institution onboarded after initial deployment
-- All active referrals survive subscription state changes and run to clinical completion
+### Phase 1 — Core Platform (Fully Operational)
+
+- Patient record management (full identifier set, birth data, clinical history)
+- Five assessment workflows: GMA (video-linked), HINE, CDIC, General Paediatric Assessment, Developmental Assessment
+- Video upload, streaming, and GMAssessment coupling
+- Problem list with action history
+- PDF and Excel report generation with institution branding
+- Clinical attachments and bookmarks
+- User management, role-based access, subscription control
+- Security: 14-layer middleware, rate limiting, input sanitisation, session management
+
+### Phase 2 — Multi-Institution + Referral (Implemented)
+
+- Institution model with row-level data isolation (`InstitutionScopedManager`)
+- Superadmin cross-institution dashboard, context switching, aggregate analytics
+- Institution admin: user management, logo/branding, PDF branding
+- Patient referral system: dual-record pattern, frozen clinical snapshot, UUID linkage
+- Consultation thread: messages between institutions on a referral
+- Cross-institution notifications: HTMX polling, ≤120-second delivery
+- Patient move between institutions (with audit log)
+- Feature flag (`MULTI_INSTITUTION_ENABLED`) for controlled rollout
+
+### Phase 3 — AI Integration (Planned)
+
+- AI-assisted GMA assessment classification — improving accuracy of neurodevelopmental outcome prediction
+- Automated clinical suggestions surfaced during assessment workflows
+- Training data pipeline leveraging structured assessment records and video metadata from Phases 1–2
+- Scope and implementation approach to be defined in a future PRD iteration
 
 ## User Journeys
 
-### Journey 1 — Dr. Amara: First Assessment of a High-Risk Infant
+### Journey 1 — The Clinician: A Routine Assessment Day
 
-**Persona:** Dr. Amara is a neurodevelopmental specialist at a paediatric unit. She receives referrals from community PHMs for infants with suspected movement abnormalities. Before NDAS, she kept paper notes that were frequently incomplete or missing by the next visit.
+**Persona:** Dr. Amali, a paediatric neurologist at a regional teaching hospital. She sees 15–20 patients per week and relies on structured documentation to track neurodevelopmental progress over time.
 
-**Opening Scene:** A 3-month-old is referred with suspected abnormal general movements. Dr. Amara opens NDAS and registers the patient — entering the BHT, NNC, date of birth, gestational age (32 weeks + 4 days), birth weight, and APGAR scores from the hospital record. The perinatal picture is captured in full in under five minutes.
+**Opening Scene:** Dr. Amali begins her morning clinic. A 4-month-old infant is brought in for a GMA follow-up. A nursing staff member has already registered the patient in NDAS with the BHT, NNC, and birth data. Dr. Amali opens the patient record and sees the prior assessment history at a glance.
 
-**Rising Action:** She uploads the GMA video recorded during the clinic visit. While it processes, she opens a new HINE assessment and works through the scoring items systematically. The structured form enforces completeness — no field can be skipped. She scores 54/78.
+**Rising Action:** She opens a new GMAssessment, selects the linked video recorded during the consultation, and works through the structured assessment fields. She adds indications, records her clinical observations, and notes the diagnosis. She navigates to the HINE section and completes a parallel HINE assessment for the same visit. She adds a problem entry to the problem list noting a concern for follow-up.
 
-**Climax:** HINE < 73 — clinically abnormal. Combined with the GMA video showing absent fidgety movements, the picture is clear. Dr. Amara adds "High-risk for Cerebral Palsy" to the problem list, links it to both assessments, and creates an intervention plan for early physiotherapy referral. Everything is in one place, timestamped, and attributed to her.
+**Climax:** With both assessments complete, Dr. Amali generates a PDF report directly from the record — branded with her institution's header and logo. The report is ready to share with the referring GP and to file in the hospital record. The entire workflow — from patient record to signed report — took under 15 minutes.
 
-**Resolution:** Three months earlier than would have been possible with paper records, this infant is on an intervention pathway. The record is ready for the next clinician who sees this patient — at any centre — with zero information lost.
+**Resolution:** The patient's record is complete, timestamped, and linked to the video evidence. Three months later, when the infant returns, Dr. Amali has a full longitudinal picture at her fingertips.
 
-### Journey 2 — Dr. Amara: Six-Month Follow-Up and Trajectory Review
+**Capabilities revealed:** Patient registration, assessment workflow (GMA + HINE), video upload and linkage, problem list, PDF report generation, audit trail.
 
-**Opening Scene:** The same patient returns for a 6-month review. Dr. Amara opens the record and immediately sees the full timeline: the original GMA video, the HINE score of 54, the physiotherapy intervention started at 3 months.
+---
 
-**Rising Action:** She conducts a new HINE assessment. Score: 67 — still below normal threshold but meaningfully improved. She adds a new CDIC record and completes a Developmental Assessment across all four domains (GM, FMV, HSL, SEB). The system stores age-normed scores against the patient's corrected age.
+### Journey 2 — The Clinician in Doubt: Seeking a Second Opinion
 
-**Climax:** The trajectory is visible: from 54 to 67 on HINE over 3 months of intervention. Dr. Amara updates the problem list — response to physiotherapy documented, intervention continued. She generates a PDF report for the referring specialist summarising the patient's full assessment history in a single document.
+**Persona:** Dr. Amali again — same clinician, harder case. An 8-month-old with atypical movement patterns that don't fit cleanly into her usual classification schema.
 
-**Resolution:** The specialist receives a complete, structured clinical picture. The collaborative care model works because the record is shared and up to date. No phone calls to reconstruct history. No missing notes.
+**Opening Scene:** Dr. Amali has completed her assessment but is uncertain about the outcome classification. She knows a specialist at the National Children's Hospital has seen hundreds of similar cases. Under the old system, she would have sent a WhatsApp message with a video clip and waited days for an informal reply.
 
-### Journey 3 — System Administrator: Onboarding a New Clinician
+**Rising Action:** Instead, she opens the referral panel on the patient record and initiates a referral to the National Children's Hospital. The system captures a frozen snapshot of the patient's full clinical record at this moment — demographics, all assessments, the linked video. She writes a brief clinical question and submits.
 
-**Opening Scene:** A new neurodevelopmental specialist joins the centre's NDAS deployment. The administrator logs in with superuser credentials.
+**Climax:** Within the hour, the specialist at the receiving institution — Dr. Roshan — reviews the referral in his institution's inbox. He has the full clinical picture in front of him: the frozen snapshot, the video, Dr. Amali's assessment notes. He writes a structured consultation reply with his classification and reasoning. NDAS notifies Dr. Amali within 120 seconds.
 
-**Rising Action:** The admin creates a new user account — name, credentials, role set to staff. Subscription is activated. The clinician receives login details and accesses the system immediately. The admin reviews the user activity log to confirm first login.
+**Resolution:** Dr. Amali reads the specialist's opinion, updates her diagnosis, and appends a note to the problem list. The referral thread is now a permanent part of the patient record — a documented clinical consultation, not a lost chat message. She closes the referral.
 
-**Climax:** Six months later, the admin runs a subscription review. One user account is inactive — the admin deactivates it. Another centre requests access; the admin adds a new user scoped to that centre's patient records *(Phase 2)*.
+**Capabilities revealed:** Referral creation, clinical snapshot, referral inbox, consultation thread, notifications, referral lifecycle (PENDING → REPLIED → CLOSED).
 
-**Resolution:** The system remains clean: only active, authorised clinicians have access. The audit trail shows every action taken by every user. The admin has full visibility into system activity without touching clinical data.
+---
 
-### Journey 4 — Dr. Silva (Research Coordinator): Monthly Cohort Export
+### Journey 3 — The Clinical Staff: Getting Patients into the System
 
-**Persona:** Dr. Silva is a neurodevelopmental researcher coordinating a longitudinal study. Each month she extracts an anonymised dataset from NDAS covering the current study cohort — infants assessed in the past 30 days with GMA and HINE records.
+**Persona:** Nimal, a clinical data entry officer at a district hospital. He is the first touchpoint for new patients — his job is to ensure every patient is correctly registered before the clinician sees them.
 
-**Opening Scene:** The monthly data cut is due. Dr. Silva logs into NDAS with her staff credentials and navigates to the reporting module.
+**Opening Scene:** A mother arrives with her premature infant for a neurodevelopmental follow-up. The infant was born at 28 weeks and has a complex birth history. Nimal needs to register the infant in NDAS before Dr. Amali's afternoon clinic.
 
-**Rising Action:** She filters by date range (past 30 days), assessment types (GMA and HINE), and patient status (active). The system shows a preview count: 23 patients in the filtered cohort. She selects anonymised export.
+**Rising Action:** Nimal opens the patient registration form. He enters the infant's identifiers (BHT, NNC), birth details (POG weeks and days, birth weight, HC), APGAR scores, and mother's details. The system validates the birth weight against gestational-age-specific ranges and flags an entry error — he corrects it before saving.
 
-**Climax:** NDAS generates an Excel workbook — one row per patient, assessment scores across columns, no identifying data. The structured, validated data requires no manual cleaning: field names are standardised, ranges were enforced at entry, and no partially complete assessments appear in the export.
+**Climax:** The patient record is saved and immediately visible to Dr. Amali in the afternoon's patient list. Nimal attaches the referring hospital's discharge summary as a clinical attachment directly to the record.
 
-**Resolution:** The monthly cohort file is submitted to the research database before the deadline. No phone calls to clinicians for missing data. No manual transcription errors. NDAS's completeness enforcement at assessment entry is what makes the export clean.
+**Resolution:** By the time Dr. Amali opens the clinic session, every patient's record is complete and clinically ready. No paper forms, no transcription errors from paper to screen during the consultation.
 
-### Journey 5 — Superadmin: Onboarding a New Institution *(Phase 2)*
+**Capabilities revealed:** Patient registration, field validation, clinical attachments, user access controls (data entry role separate from clinical role).
 
-**Persona:** Rasika (platform operator) needs to bring a new district hospital onto NDAS. Under the current model this requires a full deployment cycle. Under Phase 2 it is a form submission.
+---
 
-**Opening Scene:** A new hospital has confirmed their subscription. Rasika logs into the NDAS superadmin dashboard — a god-view showing all institutions as cards with subscription status, user count, patient count, and last activity.
+### Journey 4 — The Institution Admin: Onboarding and Managing Users
 
-**Rising Action:** Rasika clicks "Add Institution" and fills in one form: institution name, slug, and the first admin's name, email, and temporary password. She submits.
+**Persona:** Priya, the IT administrator at a newly onboarded hospital joining the NDAS network. She is responsible for setting up her institution on the platform and managing staff access.
 
-**Climax:** A single atomic transaction creates the institution record and the admin account simultaneously — no orphan institution is possible. Rasika sees the new institution card appear on the dashboard. She switches context into the new institution via the persistent top banner and verifies the setup.
+**Opening Scene:** The superadmin has just created her institution in NDAS and sent her the admin credentials. Priya logs in for the first time.
 
-**Resolution:** The hospital admin receives their credentials and logs in. NDAS serves institution eleven from the same codebase and the same server. Rasika's involvement ends at form submission — no server provisioning, no code deployment, no database configuration.
+**Rising Action:** Priya uploads her hospital's logo, sets the institution's short name (used in space-constrained UI slots), and configures the PDF branding so reports carry the hospital's header. She then creates user accounts for 8 clinical staff members, assigns appropriate roles, and sets initial passwords.
 
-### Journey 6 — Institution Admin: Operational Startup *(Phase 2)*
+**Climax:** She reviews the institution dashboard — active users, recent patient registrations, assessment activity. One of her clinicians reports they can't log in; Priya resets their password without needing to escalate to the superadmin.
 
-**Persona:** A nurse manager at a newly onboarded district hospital receives credentials from Rasika and is responsible for getting her clinical team operational.
+**Resolution:** Within two hours of receiving credentials, Priya's institution is operational. Her clinicians are logging in and registering their first patients.
 
-**Opening Scene:** She logs in for the first time and lands on the institution dashboard — four quadrants: patient stats by status, assessment activity by type this month, referral activity (sent/received/pending/closed), team activity (user count and most active clinicians). All currently empty.
+**Capabilities revealed:** Institution branding, user management (admin scope), institution dashboard, credential management.
 
-**Rising Action:** She uploads the institution logo. She creates clinician accounts — name, credentials, staff position. She registers the first patient and confirms the record appears on the dashboard.
+---
 
-**Climax:** A week later the dashboard shows 12 patients registered, 8 HINE assessments this month, 2 referrals sent. She reviews the team activity panel — one clinician has not logged in. She deactivates the inactive account.
+### Journey 5 — The Superadmin: Cross-Institution Oversight
 
-**Resolution:** The institution is self-sufficient. The admin manages her team, monitors clinical activity, and maintains institutional oversight without developer involvement.
+**Persona:** The NDAS system administrator — responsible for the health of the entire platform across all institutions.
 
-### Journey 7 — Clinician: Cross-Institution Referral *(Phase 2)*
+**Opening Scene:** It's Monday morning. The superadmin logs in and switches to the aggregate cross-institution view. He wants to check whether a newly onboarded hospital is active and how referral volume is trending across the network.
 
-**Persona:** Dr. Amara has a patient whose GMA video requires specialist interpretation from a consultant at a tertiary referral centre — a different institution on the NDAS network.
+**Rising Action:** He reviews the superadmin dashboard — total cases, referral counts, active institutions, user activity by institution. He notices one institution has had no activity in two weeks. He switches context to that institution's view to investigate, confirms it's a known training period, and notes it.
 
-**Opening Scene:** Dr. Amara opens the patient record and navigates to the Referrals tab. She clicks "New Referral", selects the receiving institution and the receiving consultant, and writes a referral message.
+**Climax:** A hospital wants to join the network. The superadmin runs the atomic institution onboarding flow: creates the Institution record, assigns an admin user, and the new institution is live — isolated from all other institutions' data. He runs a quick check against the isolation test results logged from the last deploy to confirm data boundaries are intact.
 
-**Rising Action:** NDAS automatically attaches a frozen snapshot of the patient record — demographics, perinatal history, all assessment scores, and the GMA video — at the moment of referral submission. The receiving consultant is notified. She reviews the frozen snapshot and the video, adds her clinical opinion in the referral thread, and replies.
+**Resolution:** The network grows by one institution. The superadmin has full visibility across all institutions without ever breaking data isolation boundaries for individual users.
 
-**Climax:** Dr. Amara receives a notification that the referral has a reply. She opens the consultation thread — fixed patient header card, frozen snapshot as collapsible panel, alternating opinion entries with clinician name, institution badge, and timestamp. The specialist's opinion is fully documented.
+**Capabilities revealed:** Superadmin dashboard, institution context switching, institution onboarding, aggregate analytics, data isolation validation.
 
-**Resolution:** Dr. Amara closes the referral. The complete consultation thread is permanently recorded in the patient's clinical record — direction, clinician, institution, status, outcome — visible in the Patient Referral Tab. No phone calls, no paper trail, no missing context for the next clinician who opens this record.
+---
 
 ### Journey Requirements Summary
 
-| Journey | Capabilities Revealed |
-|---------|----------------------|
-| First assessment | Patient registration · Perinatal data capture · Video upload · HINE scoring · Problem list creation · Intervention planning |
-| Follow-up review | Longitudinal record access · Sequential assessment entry · Developmental scoring · Trajectory visibility · PDF report generation |
-| Admin onboarding | User account management · Subscription control · Activity log review · Multi-centre access scoping |
-| Research cohort export | Date-filtered cohort selection · Assessment-type filtering · Patient status filtering · Anonymised Excel export · Research-quality data completeness |
-| Superadmin institution onboarding *(Phase 2)* | God-view dashboard · Atomic institution + admin creation · Institution context switching · Zero-deployment onboarding |
-| Institution admin startup *(Phase 2)* | Institution dashboard · Clinician account creation · Logo upload · Team activity monitoring · Account deactivation |
-| Cross-institution referral *(Phase 2)* | Referral initiation · Frozen patient snapshot · Consultation thread · Specialist reply · Referral closure · Patient referral tab |
+| Journey | Core Capabilities Required |
+|---------|---------------------------|
+| Routine Assessment | Patient registration · 5 assessment workflows · Video-GMA linkage · Report generation · Problem list · Audit trail |
+| Second Opinion Referral | Referral creation · Clinical snapshot · Referral inbox · Consultation thread · Notifications · Referral lifecycle |
+| Clinical Staff Registration | Patient form + validation · Attachments · Role-based access |
+| Institution Admin Onboarding | Institution branding · User management · Institution dashboard |
+| Superadmin Oversight | Cross-institution dashboard · Context switching · Onboarding flow · Aggregate analytics · Isolation validation |
 
 ## Domain-Specific Requirements
 
 ### Compliance & Regulatory
 
-- No national statutory healthcare data regulation currently applies; system operates under institutional and hospital authority policy
-- Patient data retained for life with patient consent — records may not be permanently deleted; only deactivated or archived
-- All clinical data modifications attributable to a named, authenticated user with timestamp (audit trail mandatory)
-- Access restricted to authenticated, authorised clinical staff — no anonymous or public access to patient data
-- Multi-factor authentication (MFA) is not currently enforced; institutional network controls and password policy serve as compensating controls — MFA evaluation is deferred to Phase 2
+- **Sri Lankan Health Data Regulations:** No formal regulations currently enacted. System architecture is designed to accommodate future regulatory requirements — audit trail, access control, data residency flexibility, and role-based data boundaries are implemented ahead of regulation.
+- **Clinical Decision Support Classification:** NDAS functions as a clinical decision support tool, not merely a record-storage system. Assessment workflows incorporate structured recommendations aligned with local Sri Lankan neurodevelopmental clinical guidelines. This classification carries clinical responsibility — outputs that influence diagnosis or treatment must be based on validated clinical criteria and clearly attributed to the assessing clinician.
+- **Assessment Guideline Alignment:** All assessment scoring, threshold values, and clinical recommendations must conform to locally accepted neurodevelopmental guidelines (including GMA classification criteria, HINE scoring thresholds, and developmental milestone ranges). Deviations from guideline-defined values require explicit validation before deployment.
+- **Phase 3 AI Regulatory Readiness:** AI-generated clinical suggestions in Phase 3 must be positioned as decision support (not autonomous diagnosis), traceable to the underlying model and training data, and aligned with the same local guidelines governing manual assessments. Clinical validation of AI outputs is required before production use.
 
-### Clinical Validation Constraints
+### Technical Constraints
 
-- All structured assessment instruments (HINE, GMA, CDIC, GPA, Developmental Assessment) enforce complete data entry before submission — partial assessments cannot be saved as final records
-- Assessment scoring follows validated clinical protocols: HINE 0–78 (normal threshold > 73); Developmental Assessment across four domains (GM, FMV, HSL, SEB) with age-normed reference (0–72 months corrected age); APGAR 0–10 at 1, 5, and 10 minutes
-- Perinatal data validation enforced: birth weight 300g–8000g; gestational age 20–44 weeks + 0–6 days
-- GMA assessments require a linked video record; that video cannot be deleted while the assessment link is active
+- **Deployment Flexibility:** System must support both on-premise (local hospital servers) and cloud deployment without architectural changes. Environment-specific configuration managed entirely via environment variables.
+- **Data Isolation (Critical):** A clinician at Institution A must never be able to view, search, or access patient records belonging to Institution B under any circumstance, except: a patient has been formally referred (frozen clinical snapshot accessible to receiving institution only), formally transferred (PatientMoveLog with full audit trail), or a superadmin is viewing in cross-institution context.
+- **Audit Trail:** All create, edit, and delete actions on patient records, assessments, videos, referrals, and user accounts are logged via `UserActivityLog` with user identity, timestamp, and record reference. Access is role-scoped:
+  - **Superadmin** — can view activity logs for all users across all institutions
+  - **Institution Admin** — can view activity logs for users within their own institution only
+  - **Regular users** — no access to activity logs
+- **Session Security:** 1-hour session timeout with browser-close expiry. Rate limiting on all 24 CRUD operations. CSP headers on all responses.
+- **Patient Consent:** No explicit patient consent workflow required at the application level — institutional approval processes operate outside the system boundary.
 
 ### Integration Requirements
 
-- Currently operates as a standalone system — no live integration with external HIS, PACS, or lab systems
-- Architecture supports future multi-centre and multi-institution integration with scoped cross-centre data access
-- PDF and Excel export serves as the current integration bridge for referring specialists and research use
+- **Current state:** Standalone system — no integration with external HIS, laboratory, or imaging systems at this time.
+- **Future readiness:** Data models use structured identifiers (BHT, NNC, PTC, PC, PIN, Disk No.) that align with Sri Lankan hospital record systems, enabling future HIS integration without model changes.
 
-### Software Validation Approach
-
-System changes are validated through user acceptance testing (UAT) with clinical staff before production deployment. Validation scope covers: new assessment workflows, data entry and retrieval, access control changes, and report generation. No formal IEC 62304 or FDA 21 CFR Part 11 compliance is required at the current regulatory stage; UAT sign-off by the responsible clinician and system owner is the accepted release gate.
-
-### Domain Risk Mitigations
+### Risk Mitigations
 
 | Risk | Mitigation |
-|------|-----------|
-| Unauthorised access to patient records | Role-based access (superuser/staff), session timeout, authentication required on all routes |
-| Incomplete or invalid assessment data | Form-level validation, mandatory fields, clinical range checks on all numeric inputs |
-| Video loss breaking GMA assessment integrity | Business rule: video deletion blocked while linked to an active assessment |
-| Record loss / data corruption | Daily automated backups, audit trail on all changes, no hard delete on clinical records |
-| Concurrent edit conflicts | Database-level integrity constraints, timestamped records |
-| Multi-centre data leakage (Phase 2) | Role and centre-scoped access control; query filtering per institution |
-| Referral workflow complexity (Phase 2) | Lightweight structured handoff design — not a full workflow engine |
-| Notification system reliability (Phase 2) | HTMX polling as interim; WebSocket/SSE for production real-time |
+|------|------------|
+| Cross-institution data leakage | `InstitutionScopedManager` enforces row-level isolation at ORM level; automated isolation test suite must pass before each new institution is onboarded |
+| Clinical recommendation error | All assessment thresholds and recommendation logic must reference validated local guideline values; changes to clinical logic require explicit review |
+| Video loss during upload | Client-side upload failure detection with clear error messaging and recovery path; no silent failures permitted |
+| Audit log access control | Logs written at middleware level — not editable via application views; superadmin sees all institutions; institution admin sees own institution only; regular users have no access |
+| Phase 3 AI misuse | AI outputs labelled as decision support only; final clinical decision always attributed to and owned by the assessing clinician |
 
-### Multi-Institution Data Isolation *(Phase 2)*
+## Innovation & Novel Patterns
 
-- Zero cross-institution data leakage is a non-negotiable platform invariant — patient data from Institution A must never appear in Institution B's context under any query, view, or export path
-- Institution data is physically partitioned in file storage under `/{institution_slug}/` and logically isolated at the ORM layer — every model with an institution foreign key is filtered to the active institution on every query with no per-view filtering required
-- Superadmin context-switching does not relax isolation — data remains scoped to the selected institution; superadmin aggregate views are explicit cross-institution reads, not accidental leaks
-- Active referrals survive subscription state changes and institution suspension — clinical consultations in progress run to completion regardless of administrative events
-- Feature flag (`MULTI_INSTITUTION_ENABLED`) gates activation — when disabled, system behaves identically to the current single-institution deployment; flag removed after stable production rollout
+### Detected Innovation Areas
 
-## Web Application Requirements
+**1. Video-Linked Clinical Assessment with Multi-Clinician Opinion Layer**
 
-### Architecture
+The core GMA workflow establishes a strict OneToOne coupling between a clinical video and its assessment record — making clinical evidence and its structured interpretation architecturally inseparable. Beyond the primary assessment, the system supports a multi-clinician opinion layer: additional users can log their own diagnosis selection with a written justification comment against the same assessment, creating a timestamped, attributed opinion log. This enables intra-institution peer review without disrupting the primary assessment record. Combined with the cross-institution referral system, NDAS implements a two-tier expert consultation model: informal peer review within an institution, and formal documented consultation across institutions.
 
-NDAS is a server-rendered multi-page application (MPA) built with Django 4.2. Dynamic interactivity is delivered via HTMX for partial page updates — keeping the application responsive on clinical networks without the overhead of a full SPA. The UI is built on AdminLTE 3.2 + Bootstrap 4.6, providing a structured, responsive clinical dashboard interface.
+**2. Frozen Clinical Snapshot for Asynchronous Multi-Expert Consultation**
 
-- **Rendering:** SSR via Django templates; HTMX handles partial updates, inline status changes, and form submissions without full-page reload
-- **Static Assets:** WhiteNoiseMiddleware serves compressed, cached static files with long-lived cache headers
-- **Video Playback:** Video.js provides cross-browser HTML5 video playback for GMA assessment review
-- **Session Management:** 1-hour inactivity timeout; expires on browser close
-- **CSRF Protection:** CsrfViewMiddleware on all POST requests; tokens embedded in all forms
-- **HTMX Patterns:** Used for problem list status changes, inline interactions, and dynamic content loading
-- **Template Architecture:** All authenticated views extend `src/base.html`; public views extend `src/basic_plane.html`
-- **Future — Real-time Notifications:** Architecture accommodates future WebSocket or SSE for instant clinician notifications; HTMX polling serves as interim approach
+When a cross-institution referral is created, the system atomically captures an immutable snapshot of the patient's full clinical record — demographics, all assessments, linked video, problem list — at the exact moment of referral. The receiving specialist works from this frozen record, immune to subsequent changes by the referring clinician. This solves a fundamental problem in asynchronous clinical collaboration: the specialist and the referring clinician must be working from the same clinical picture. The dual-record pattern (ReferralSent + ReferralReceived, linked only by UUID) ensures both institutions hold an independent, permanent record of the consultation.
 
-### Browser Support
+**3. Dual-Pathway AI for Neurodevelopmental Assessment (Phase 3)**
+
+Phase 3 positions NDAS as an AI-assisted clinical decision support platform through two complementary input pathways:
+- **Computer vision pathway:** Direct analysis of GMA movement videos to detect movement quality patterns correlated with neurodevelopmental outcomes
+- **Structured data pathway:** Classification using the accumulated assessment fields, scoring values, and clinical observations captured through normal clinical use in Phases 1–2
+
+The platform generates its own AI training dataset through routine clinical operation — every completed assessment and linked video contributes to the training corpus. This self-reinforcing data flywheel, grounded in Sri Lankan clinical population data, is the foundation for locally-validated AI models rather than models trained on foreign clinical datasets.
+
+### Market Context & Competitive Landscape
+
+NDAS addresses a gap specific to the Sri Lankan clinical context: no existing system combines video-based GMA assessment, structured neurodevelopmental scoring, multi-institution collaboration, and local clinical guideline alignment in a single platform. Generic EMR systems handle records but not video-linked clinical assessment. International GMA tools (if available) do not address local workflows, multi-institution collaboration, or local guideline recommendations.
+
+### Validation Approach
+
+| Innovation | Validation Method |
+|------------|------------------|
+| Multi-clinician opinion layer | Clinical workflow validation — do clinicians use and trust the opinion log? Do divergent opinions surface useful clinical discussion? |
+| Frozen snapshot referral | Integrity check — snapshot content verified against source record at referral time; immutability enforced at model level |
+| Phase 3 AI (computer vision) | Clinical validation against expert-graded video assessments; accuracy benchmarked against manual classification baseline |
+| Phase 3 AI (structured data) | Cross-validation against existing assessment records; sensitivity/specificity reported against known outcomes |
+
+### Risk Mitigation
+
+| Risk | Mitigation |
+|------|------------|
+| Multi-opinion confusion | Primary assessment clearly distinguished from opinion log; opinion log entries are attributed and timestamped — not anonymous |
+| AI over-reliance | All AI outputs labelled as decision support; clinician attribution mandatory on every assessment regardless of AI suggestion |
+| Training data bias | Phase 3 models trained on Sri Lankan clinical population data from NDAS — not repurposed from foreign datasets; local guideline alignment verified |
+| Snapshot data staleness | Snapshot clearly date-stamped at referral creation; receiving specialist sees snapshot date — not the current record state |
+
+## Web Application Specific Requirements
+
+### Project-Type Overview
+
+NDAS is a server-rendered Multi-Page Application (MPA) built on Django MVT with HTMX for dynamic interactions. There is no client-side JavaScript framework — all page rendering is server-side, with HTMX handling targeted partial-page updates (notifications, dynamic form interactions) without full-page reloads. This architecture prioritises clinical reliability and security over client-side interactivity.
+
+### Browser Matrix
 
 | Browser | Support Level |
 |---------|--------------|
-| Chrome (latest) | Primary |
-| Firefox (latest) | Primary |
-| Microsoft Edge (latest) | Primary |
-| Mobile browsers (Chrome / Safari) | Supported — fully responsive |
-| Internet Explorer | Not supported |
+| Chrome (latest) | Primary — full support required |
+| Firefox (latest) | Primary — full support required |
+| Mobile Chrome (Android) | Secondary — responsive layout required |
+| Mobile Safari (iOS) | Secondary — responsive layout required |
+| Tablet browsers (Chrome/Safari) | Secondary — responsive layout required |
+| Internet Explorer / Legacy Edge | Not supported |
 
-### SEO
-
-SEO is not applicable — NDAS is a closed, authentication-gated clinical intranet system with no public-facing pages.
+All modern browser features used (HTMX, Video.js, CSP nonces, fetch API) are compatible with the supported browser matrix. No polyfills required.
 
 ### Responsive Design
 
-- Bootstrap 4.6 grid — fully responsive across desktop, tablet, and mobile viewports
-- Primary use case: desktop clinical workstations (1024px+) for assessment entry and record management
-- Secondary use case: tablet and mobile for ward rounds and bedside reference
-- AdminLTE 3.2 sidebar collapses to mobile-friendly navigation on smaller screens
-- Assessment entry forms collapse to single-column on mobile viewports
-- Video.js player adapts responsively to viewport width
+- **Primary device:** Desktop / laptop — clinical data entry, assessment completion, report generation
+- **Secondary devices:** Mobile and tablet — used for quick lookups, reviewing records, notifications review; full assessment completion on mobile is a secondary use case
+- **Framework:** AdminLTE 3.2 + Bootstrap 4.6 grid — inherently responsive; all templates must use Bootstrap column classes for multi-device layout
+- **Video playback:** Video.js player must be functional and usable on tablet screens; mobile video playback is secondary
+- **No native app:** NDAS is web-only — no hybrid app wrapper, no PWA manifest required
 
-## Product Scope & Development Roadmap
+### Performance Targets
 
-### Phase 1 — Core System (Operational)
+| Operation | Target | Notes |
+|-----------|--------|-------|
+| Standard page load | < 3 seconds | Clinical list and detail views |
+| Video upload (100MB typical) | Progress indicator required; no silent hang | Upload must show real-time progress; failure must surface explicit error with retry |
+| Video playback start | < 5 seconds to first frame | Streaming via Video.js; server must support HTTP range requests |
+| Notification polling | ≤ 120 seconds end-to-end | HTMX polls every 60 seconds |
+| Report generation (PDF/Excel) | < 10 seconds | Synchronous generation acceptable at current scale |
+| Patient list / search | < 2 seconds | `select_related()` required; N+1 queries are a blocking defect |
 
-NDAS Phase 1 is fully delivered — a complete neurodevelopmental surveillance workflow for a single clinical centre.
+**Video file size context:** Typical GMA assessment videos are approximately 100MB. The system's configured maximum is 2GB (accommodating edge cases). Upload handling must use chunked progress tracking — a 100MB upload on a hospital network (10–50 Mbps) takes 15–80 seconds and must not appear frozen.
 
-- Patient record management — full demographic, perinatal, and identifier capture (BHT, NNC, PTC, PC, PIN, Disk No.)
-- Five structured assessment modules: GMA (video-linked), HINE (0–78, normal > 73), CDIC, GPA, Developmental Assessment (four domains, 0–72 months corrected age)
-- Video management — upload, storage, cross-browser playback, GMA linkage with deletion protection
-- Problem list — active problem tracking, intervention plans, response monitoring with status tracking
-- Reporting — PDF and Excel export for individual patients; anonymised cohort export for research
-- User management — role-based access (superuser/staff), subscription control, activity logging
-- Attachment management and patient bookmarking
-- Security infrastructure — audit trail, rate limiting (24 CRUD operations), CSP headers, session management, input sanitisation, MIME-type file validation
+### SEO Strategy
 
-### Phase 2 — Multi-Institution Expansion (Planned)
+Not applicable. All clinical views are protected by `@login_required`. The only public-facing surface is the login page — no SEO optimisation required.
 
-#### 1. Multi-Institution Foundation
+### Accessibility Level
 
-- **Institution Model** — name, slug (immutable, storage partition key), logo, subscription status, grace period, active flag
-- **Institution Context Middleware** — resolves active institution on every request; ADMIN/USER read from `user.institution`; SUPERADMIN reads from session; replaces current SubscriptionCheckMiddleware
-- **Institution-Scoped QuerySet** — custom ORM manager on every model with an institution FK; queryset automatically filters to active institution; defence-in-depth against cross-institution data exposure
-- **Institution Storage** — custom file storage backend partitions all uploads under `/{institution_slug}/videos/` and `/{institution_slug}/attachments/`; zero changes to model field declarations
-- **User Institution Binding** — institution FK on CustomUser (nullable for SUPERADMIN only); user_type field (SUPERADMIN / ADMIN / USER)
-- **Per-Institution Subscription** — subscription status and grace period scoped to each institution; grace period gives read-only mode; active referrals are excluded from read-only restrictions
+No formal WCAG compliance requirement at this time. Standard AdminLTE semantic HTML structure provides baseline accessibility. Screen reader or keyboard-navigation optimisation is out of scope.
 
-#### 2. Migration Path
+### Implementation Considerations
 
-- **Feature flag** (`MULTI_INSTITUTION_ENABLED`) — when False, system behaves identically to current single-institution deployment; when True, full multi-institution mode activates; removed after stable production rollout
-- **Default institution migration** — existing data migrated atomically to a default institution; zero data loss or manual re-entry; existing deployment becomes a valid multi-institution deployment from day one
+- **HTMX usage pattern:** Targeted partial updates only (notification badge, dynamic form sections) — not full-page HTMX navigation
+- **Inline scripts:** All `<script>` tags require `nonce="{{ request.csp_nonce }}"` — enforced by CSPMiddleware; missing nonces will cause scripts to silently fail in production
+- **AdminLTE constraints:** UI framework is frozen at AdminLTE 3.2 + Bootstrap 4.6 + Font Awesome 6.4 — no version upgrades, no additional CSS frameworks
+- **Video streaming:** Server must support HTTP range requests for Video.js seek functionality; static file serving via WhiteNoise in production
+- **Session behaviour:** 1-hour timeout with browser-close expiry — clinicians on shared workstations will need to re-authenticate each session
 
-#### 3. Superadmin Capabilities
+## Project Scoping & Phased Development
 
-- **Institution Selector Screen** — card grid showing all institutions with logo, name, subscription status, user count, patient count, and last activity
-- **Institution Impersonation with Overlay** — superadmin switches institution context via dropdown; persistent top banner reads "Viewing as: [Institution] [Switch ▼]"; superadmin-only actions (Move Patient, Edit Subscription, Suspend User) injected via template tag
-- **Atomic Institution Onboarding** — single form creates institution details and first ADMIN account in one transaction; no orphan institutions
-- **God-View Analytics Dashboard** — cross-institution health cards: subscription state, user counts, assessment volumes, referral activity per institution; recent cross-institution events audit log; read-only observational view
-- **Cross-Institution Aggregate Reports** — exportable Excel/PDF reports spanning all institutions; three scopes using existing ExcelReportGenerator: per-patient (existing), per-institution aggregate (admin-scoped), cross-institution aggregate (superadmin-scoped)
-- **Patient Move Between Institutions** — superadmin-only multi-step flow: select patient + destination → impact preview (open referrals, assessments, videos, file size) → institution-name confirmation → atomic transfer with audit log entries at both institutions and notifications to both admins
+### MVP Strategy & Philosophy
 
-#### 4. Institution Admin Capabilities
+**MVP Approach:** Platform MVP — NDAS is not a concept being validated; it is an operational clinical system. The scoping exercise defines stabilisation boundaries per phase and the minimum viable scope for the next development horizon (Phase 3 AI).
 
-- **Institution Admin Dashboard** — four-quadrant layout: patient stats by status, assessment activity by type this month, referral activity (sent/received/pending/closed), team activity (user count and most active clinicians); all institution-scoped
-- **User Management** — institution admin creates and deactivates clinicians (USER) within their own institution; superadmin creates the first ADMIN only
-- **Institution Profile** — logo upload and institution display settings
-- **Institution-Level PDF Branding** — institution logo, name, and header injected into all PDF reports generated within that institution's context; uses existing BasePDFGenerator infrastructure
+**Overall posture:** Phase 1 and Phase 2 are implemented and operational. Ongoing effort in both phases is stabilisation (bug fixes + targeted refinements), not new capability development. Phase 3 is the active development frontier.
 
-#### 5. Referral System
+---
 
-- **Referral Model** — dual linked records (ReferralSent + ReferralReceived) via referral UUID; each institution's record is self-contained; Institution A deletion does not destroy Institution B's consultation record
-- **Frozen Patient Snapshot** — `snapshot_data` JSONField captures the full patient profile at referral time; receiving clinician sees exactly what was referred regardless of subsequent updates at the originating institution
-- **Clinical Consultation Thread** — structured thread UI with fixed patient header card, alternating opinion entries with clinician name, institution badge, and timestamp; frozen snapshot as collapsible panel; reply box at bottom
-- **Clinician Referral Inbox** — unified feed: thread list (patient thumbnail, referring institution, date, unread indicator) on left; active thread on right
-- **Referral Lifecycle** — PENDING → REPLIED → CLOSED; status badge visible at a glance on all referral list views; active referrals survive subscription expiry
-- **Patient Referral Tab** — timeline of all referrals (outgoing + incoming) in patient detail view: direction, clinician, institution, status, outcome
+### Phase 1 — Core Platform (Operational / Stabilisation)
 
-#### 6. Notifications
+**Status:** Fully implemented and in clinical use.
 
-- **Notification Model** — recipient FK, notification_type, title, body, link, is_read, created_at; all institution-scoped
-- **HTMX Bell Icon** — navbar bell with unread count; pull-based polling every 60 seconds; reuses existing AdminLTE bell slot
-- **Signal-Driven Referral Events** — post-save signals generate notifications: REFERRAL_RECEIVED → receiving clinician; REFERRAL_REPLIED → sending clinician; REFERRAL_CLOSED → both clinicians and both institution admins
+**Core User Journeys Supported:**
+- Routine clinical assessment (Journey 1) — patient registration → GMA + parallel assessments → report generation
+- Clinical staff data entry (Journey 3) — patient registration, field validation, attachment upload
+- Multi-clinician opinion layer on GMA assessment — intra-institution peer review
 
-#### Out of Scope for Phase 2
+**Must-Have Capabilities (all implemented):**
+- Patient record management with full Sri Lankan clinical identifier set
+- Five assessment workflows: GMA (video-linked), HINE, CDIC, GPA, Developmental
+- Video upload with progress tracking, streaming, and OneToOne GMA coupling
+- Multi-clinician opinion log per GMA assessment (diagnosis selection + justification comment)
+- Problem list with action history
+- PDF and Excel report generation with institution branding
+- Clinical attachments and bookmarks
+- User management, role-based access, subscription control
+- 14-layer security middleware stack, rate limiting, audit trail
 
-The following items were considered for Phase 2 and explicitly deferred:
+**Ongoing Stabilisation Scope:**
+- Known bug fixes across Phase 1 workflows
+- Targeted refinements to existing clinical workflows based on clinical user feedback
+- No new Phase 1 capability additions planned
 
-- **Referral snapshot versioning** — sending an updated patient snapshot mid-consultation; deferred to Phase 3
-- **Institution onboarding checklist** — guided setup checklist surfaced to new institution admins after first login; deferred to Phase 3
-- **Referral reassignment on clinician departure** — automated handover of open referral threads when a clinician account is deactivated; handled manually by the institution admin at launch; deferred to Phase 3
+---
 
-### Phase 3 — Vision (Future)
+### Phase 2 — Multi-Institution + Referral (Operational / Stabilisation)
 
-- Automated risk-scoring and early-warning flags based on longitudinal assessment trajectories
-- Population-level analytics for neurodevelopmental surveillance
-- EMR / PACS / HIS integration for cross-system data exchange
-- Research export pipeline with de-identification and IRB-ready data packages
-- Mobile PWA or offline-capable version for bedside and remote use
+**Status:** Fully implemented; production rollout pending stabilisation validation.
+
+**Core User Journeys Supported:**
+- Clinician seeking second opinion (Journey 2) — referral creation → frozen snapshot → consultation thread → notification
+- Institution admin onboarding (Journey 4) — branding, user management, institution dashboard
+- Superadmin oversight (Journey 5) — cross-institution dashboard, context switching, institution onboarding
+
+**Must-Have Capabilities (all implemented):**
+- Institution model with row-level data isolation (`InstitutionScopedManager`)
+- Superadmin: cross-institution dashboard, context switching, aggregate analytics, atomic institution onboarding
+- Institution admin: user management, logo/branding, PDF branding, institution dashboard
+- Patient referral: dual-record pattern, frozen clinical snapshot, UUID linkage, consultation thread
+- Cross-institution notifications: HTMX polling, ≤120-second delivery
+- Patient move between institutions with audit log
+- Audit log access: superadmin (all institutions), institution admin (own institution only)
+- Feature flag (`MULTI_INSTITUTION_ENABLED`) for controlled rollout
+
+**Ongoing Stabilisation Scope:**
+- Bug fixes and refinements to multi-institution and referral workflows
+- Data isolation test suite (`institution/tests/test_isolation.py`) must pass before `MULTI_INSTITUTION_ENABLED=True` in production
+- No new Phase 2 capability additions planned
+
+---
+
+### Phase 3 — AI Integration (Planned)
+
+**Minimum Viable AI Feature:**
+Automatic movement type identification from GMA video — computer vision analysis of recorded infant movement to classify movement quality patterns according to GMA criteria. This is the highest-value, most direct application of AI to the core clinical workflow.
+
+**Phase 3 Growth Features (post-minimum viable):**
+- Structured data classification: risk scoring and clinical outcome prediction using accumulated assessment fields, scoring values, and clinical observations from Phases 1–2
+- Automated clinical suggestions surfaced during assessment workflows, aligned with local Sri Lankan neurodevelopmental guidelines
+
+**Phase 3 Prerequisites:**
+- Sufficient training data accumulated through Phase 1–2 clinical use (video + assessment records)
+- Clinical validation of AI outputs against expert-graded assessments before production deployment
+- AI outputs must be labelled as decision support — clinician attribution remains mandatory
+
+---
+
+### Explicitly Out of Scope
+
+| Feature | Rationale |
+|---------|-----------|
+| Billing / financial management | Out of scope by design — NDAS is a clinical tool, not a practice management system |
+| Patient-facing portal | Not planned — system is for clinical staff only |
+| Telemedicine / video conferencing | Not planned — NDAS manages recorded assessments, not live consultations |
+| External HIS / laboratory integration | Not planned for current phases — future readiness built into data model identifiers |
+| WCAG accessibility compliance | Not required at this time |
+
+---
+
+### Risk Mitigation Strategy
+
+| Risk Category | Risk | Mitigation |
+|---------------|------|------------|
+| **Technical** | Phase 3 computer vision model requires large, high-quality labelled video dataset | Accumulate training data through Phase 1–2 clinical use before Phase 3 development begins; validate dataset size before committing to model training |
+| **Technical** | Phase 3 CV model performance variability with different video recording conditions | Define minimum video quality standards; include quality check step in Phase 3 upload workflow |
+| **Market** | Phase 2 institution adoption slower than projected | Feature flag allows single-institution fallback at any time; no disruption to Phase 1 users |
+| **Resource** | Phase 3 requires ML/CV expertise beyond current Django stack | Phase 3 is a separate technical domain — plan for dedicated ML engineering capability or partnership |
+| **Stability** | Known bugs in Phase 1 and Phase 2 affecting clinical workflows | Structured bug triage before Phase 3 development begins; clinical workflows must be stable before AI layer is added |
+
+---
 
 ## Functional Requirements
 
-### Patient Record Management
+FRs are organised by capability area with phase labels (Phase 1 / Phase 2 / Phase 3 / Cross-cutting). Each FR defines a user or system capability — not an implementation approach. The FR Summary table at the end of this section maps all 58 FRs to their phase.
 
-- **FR1:** Clinicians can register a new patient with full demographic, perinatal, and clinical identifier data (BHT, NNC, PTC, PC, PIN, Disk No.)
-- **FR2:** Clinicians can view a patient's complete longitudinal record — all assessments, videos, problems, and attachments — in a single view
-- **FR3:** Clinicians can search for patients by name, BHT, NNC, PTC, PC, PIN, or Disk No.
-- **FR4:** Clinicians can edit existing patient demographic and perinatal data
-- **FR5:** Clinicians can attach clinical documents to a patient record
-- **FR6:** Clinicians can bookmark patients for personal reference access
-- **FR7:** The system enforces clinical validation ranges on all patient data fields (birth weight, gestational age, APGAR scores)
-- **FR8:** Patient records are retained permanently with patient consent and cannot be permanently deleted
+### Capability Area 1 — Patient Record Management
 
-### Clinical Assessment
+**FR1:** A clinical staff member can register a new patient with the full Sri Lankan clinical identifier set (BHT, NNC, PTC, PC, PIN, Disk No.), birth data, gestational age (weeks + days), birth weight, head circumference, APGAR scores, and maternal history.
 
-- **FR9:** Clinicians can create a General Movement Assessment (GMA) linked to a video recording
-- **FR10:** Clinicians can create a HINE assessment with structured scoring across all items (0–78)
-- **FR11:** Clinicians can create a CDIC record for rehabilitation and intervention centre tracking
-- **FR12:** Clinicians can create a General Paediatric Assessment (GPA)
-- **FR13:** Clinicians can create a Developmental Assessment scored across four domains (GM, FMV, HSL, SEB) with corrected age reference (0–72 months)
-- **FR14:** The system enforces complete data entry on all assessment instruments before a record can be saved as final
-- **FR15:** Clinicians can view all assessment records for a patient in chronological order
-- **FR16:** Clinicians can edit or delete their own assessment records subject to business rules (superusers can delete any; videos block deletion if assessment-linked)
+**FR2:** The system validates birth weight against gestational-age-specific ranges at registration and flags out-of-range entries before saving; the user must correct or explicitly acknowledge the flag to proceed.
 
-### Video Management
+**FR3:** A clinician can view the complete patient record — all prior assessments (across all types), linked videos, problem list, attachments, and referral history — from a single patient detail view.
 
-- **FR17:** Clinicians can upload video files for clinical assessment use
-- **FR18:** Clinicians can play back uploaded videos within the clinical interface
-- **FR19:** Clinicians can link an uploaded video to a GMA assessment record
-- **FR20:** The system prevents deletion of any video linked to an active assessment
-- **FR21:** The system validates video file type and size at upload and rejects invalid files
+**FR4:** An authorised user can edit an existing patient record; all field-level changes are captured in the audit log with user identity, timestamp, and record reference.
 
-### Problem List & Intervention Management
+**FR5:** A clinical user can search and filter the patient list by name, BHT, NNC, or any standard identifier field, with results returned within 2 seconds.
 
-- **FR22:** Clinicians can add clinical problems to a patient's active problem list
-- **FR23:** Clinicians can create intervention plans linked to specific problems
-- **FR24:** Clinicians can record and update intervention responses over time
-- **FR25:** Clinicians can update the status of problems; valid statuses: Active, Resolved, Monitoring, Discontinued
-- **FR26:** Clinicians can view the complete problem, intervention, and response history for a patient
+---
 
-### Reporting & Data Export
+### Capability Area 2 — Assessment Workflows
 
-- **FR27:** Clinicians can generate a PDF report summarising an individual patient's assessment history
-- **FR28:** Clinicians can export assessment data to Excel format
-- **FR29:** Clinicians can generate anonymised cohort reports for research use
-- **FR30:** Clinicians can filter report data by date range, assessment type, and patient criteria (status, age range, diagnosis)
+**FR6:** A clinician can create a GMA (General Movement Assessment) record for a patient, specifying indications for GMA, clinical observations, and diagnosis, with the record permanently linked to a specific uploaded video.
 
-### User & Access Management
+**FR7:** A clinician can create a HINE (Hammersmith Infant Neurological Examination) assessment for a patient with all structured HINE scoring fields.
 
-- **FR31:** Administrators can create, edit, and deactivate user accounts
-- **FR32:** Administrators can assign and manage user roles (superuser, staff)
-- **FR33:** Administrators can activate, deactivate, and extend user subscriptions and view current subscription status for all accounts within their managed scope
-- **FR34:** Administrators can view user activity logs
-- **FR35:** The system requires authentication for all clinical routes — no unauthenticated access to patient data
-- **FR36:** The system enforces role-based access — superusers access all patient records, assessments, and user accounts system-wide; staff access only records they have registered or to which they are explicitly assigned
-- **FR37:** The system automatically records the identity and timestamp of every record creation and modification
+**FR8:** A clinician can create a CDIC assessment for a patient with all structured CDIC data fields.
 
-### Notifications & Communication *(Phase 2)*
+**FR9:** A clinician can create a General Paediatric Assessment (GPA) for a patient with all structured GPA fields.
 
-- **FR38:** Clinicians can view a personal notification panel displaying alerts for referrals received, replies to referrals they have sent, and referral closure events; each notification links to the relevant patient record or referral thread
-- **FR40:** Clinicians can submit a structured referral to another clinician or specialist
-- **FR41:** Clinicians can view referrals they have received, reply with a clinical opinion, and close the referral thread — all within the referral inbox interface
+**FR10:** A clinician can create a Developmental Assessment for a patient with all structured developmental milestone fields.
 
-### Dashboards & Multi-Centre *(Phase 2)*
+**FR11:** A clinician can view the full assessment history for a patient in chronological order, spanning all five assessment types, from the patient detail view.
 
-- **FR42:** Each user role has access to a role-specific dashboard — clinician view, institutional view, or system-wide admin view
-- **FR43:** The system serves multiple clinical institutions from a single deployed instance; institution-specific administration is provided through the superadmin capabilities (FR50–FR55) and institution admin capabilities (FR56–FR59)
-- **FR44:** The system scopes patient data, reporting, and dashboards by clinical centre in multi-centre deployments
+**FR12:** A clinician can edit an existing assessment record; all changes are tracked in the audit log.
 
-### Multi-Institution Foundation *(Phase 2)*
+---
 
-- **FR45:** The system ensures that all patient data, assessments, reports, and clinical records accessed by a user are restricted to that user's institution — no query or view returns data from outside the active institution's boundary under any access path
-- **FR46:** All files uploaded within an institution's context — videos and attachments — are stored in institution-specific isolation such that users and processes operating in a different institution cannot access them through the application interface or by direct URL
-- **FR47:** The system binds every non-superadmin user to exactly one institution — a user cannot access patient data, assessments, or reports outside their bound institution
-- **FR48:** Each institution has an independent subscription status — grace period grants read-only access; active referrals are excluded from read-only restrictions and continue to completion
-- **FR49:** The system supports a controlled migration path — multi-institution capability can be enabled or disabled without redeployment or data loss; when disabled, all behaviour is identical to the pre-Phase-2 single-institution deployment
+### Capability Area 3 — Video Management
 
-### Superadmin Capabilities *(Phase 2)*
+**FR13:** A clinical user can upload a video file (supported formats: mp4, mov, avi, mkv, webm; maximum 2GB) to a patient record with a real-time progress indicator; upload failures surface an explicit error message with a recovery path — silent failures are not permitted.
 
-- **FR50:** The superadmin can view all institutions on a single dashboard showing subscription status, user count, patient count, and last activity for each institution
-- **FR51:** The superadmin can switch institution context via a persistent on-screen selector — all subsequent views and data are scoped to the selected institution
-- **FR52:** The superadmin can onboard a new institution by submitting one form that creates the institution record and the first ADMIN account atomically — no institution record exists without a corresponding admin account
-- **FR53:** The superadmin can view cross-institution aggregate analytics: assessment volumes, referral activity, user counts, and subscription health across all institutions
-- **FR54:** The superadmin can export cross-institution aggregate reports in Excel and PDF formats at three scopes: per-patient, per-institution aggregate, and cross-institution aggregate
-- **FR55:** The superadmin can move a patient between institutions via a multi-step confirmation flow — impact preview (open referrals, assessments, videos, file size) → institution-name confirmation → atomic transfer with audit log entries at both institutions and notifications to both admins
+**FR14:** The system enforces a strict OneToOne coupling between a video and its linked GMAssessment — one video maps to exactly one GMA record; a video cannot be linked to more than one assessment.
 
-### Institution Admin Capabilities *(Phase 2)*
+**FR15:** A clinician can stream a patient's linked video directly within the patient or assessment record via an embedded video player with seek, pause, and playback controls, with the first frame available within 5 seconds.
 
-- **FR56:** Institution admins can view a role-specific dashboard showing patient stats by status, assessment activity by type for the current month, referral activity (sent/received/pending/closed), and team activity (user count and most active clinicians) — all scoped to their institution
-- **FR57:** Institution admins can create USER accounts within their own institution and deactivate existing accounts
-- **FR58:** Institution admins can upload an institution logo and manage institution display settings
-- **FR59:** All PDF reports generated within an institution's context include the institution logo, name, and header
+**FR16:** An authorised user can delete a video; deletion is blocked if the video is linked to an active GMAssessment record.
 
-### Referral System *(Phase 2)*
+---
 
-- **FR60:** Clinicians can initiate a cross-institution referral by selecting a receiving institution, a receiving clinician, and a referral message — the system automatically attaches a frozen snapshot of the patient record at submission time
-- **FR61:** The frozen patient snapshot captures the full patient profile (demographics, perinatal data, all assessment scores and records) at the moment of referral; subsequent updates to the originating record do not alter the snapshot
-- **FR62:** Clinicians can view and reply to referral threads they have received — each thread displays a fixed patient header, the frozen snapshot as a collapsible panel, and alternating entries with clinician name, institution badge, and timestamp
-- **FR63:** Clinicians can view all referrals (sent and received) in a unified inbox: thread list with patient thumbnail, referring institution, date, and unread indicator on the left; active thread on the right
-- **FR64:** Referrals progress through a defined lifecycle: PENDING → REPLIED → CLOSED; status is visible at a glance on all referral list views
-- **FR65:** The patient detail view includes a Referrals tab showing a timeline of all outgoing and incoming referrals for that patient: direction, clinician, institution, status, and outcome
-- **FR66:** Both the sending and receiving institution retain an independent referral record linked by a shared UUID — deletion or suspension of one institution does not destroy the other institution's consultation record
+### Capability Area 4 — Multi-Clinician Opinion Layer
 
-### Referral Notifications *(Phase 2)*
+**FR17:** Any authorised clinician within the same institution can add a secondary opinion to an existing GMA assessment by selecting a diagnosis and writing a justification comment, without altering the primary assessment record or the primary assessor's data.
 
-- **FR67:** The system notifies the receiving clinician when a new referral arrives at their institution
-- **FR68:** The system notifies the sending clinician when a referral they submitted receives a reply
-- **FR69:** The system notifies both clinicians and both institution admins when a referral is closed
-- **FR70:** Clinicians can view unread notification count in the navigation bar; the count refreshes automatically within 120 seconds without navigating away from the current page
+**FR18:** All secondary opinions on a GMA assessment are stored as an attributed, timestamped opinion log; each entry displays the author's name, their diagnosis selection, and their written justification.
+
+**FR19:** A clinician can view all secondary opinions on a GMA assessment alongside the primary assessment record in a single view.
+
+---
+
+### Capability Area 5 — Problem List
+
+**FR20:** A clinician can add a clinical problem entry to a patient's problem list with a description, problem category, and clinical status.
+
+**FR21:** A clinician can add action history entries to an existing problem, documenting follow-up actions, dates, and outcomes.
+
+**FR22:** A clinician can view the complete problem list and full action history timeline for a patient.
+
+---
+
+### Capability Area 6 — Report Generation
+
+**FR23:** A clinician can generate a formatted PDF report for a patient that includes selected demographic fields, selected assessment records, and the institution's configured branding (logo and header).
+
+**FR24:** A clinician or administrator can generate an Excel report for one or more patient records with configurable field selection, optional anonymisation, and multi-sheet output.
+
+**FR25:** PDF report generation completes within 10 seconds for a typical patient record; the generated report is downloadable immediately.
+
+---
+
+### Capability Area 7 — Clinical Attachments & Bookmarks
+
+**FR26:** A clinical user can upload and attach documents or images (document: max 100MB; image: max 10MB) to a patient record; file type and size are validated before upload proceeds.
+
+**FR27:** A clinical user can bookmark a patient record and access their bookmarks list for quick navigation to frequently reviewed patients.
+
+---
+
+### Capability Area 8 — User Management & Access Control
+
+**FR28:** An institution admin can create, edit, deactivate, and reset passwords for user accounts within their own institution; an institution admin cannot create or modify user accounts in other institutions.
+
+**FR29:** The system enforces role-based access control with distinct permission sets for: clinical staff (patient registration, attachments), clinician (assessments, referrals, reports), institution admin (user management, institution configuration), and superadmin (cross-institution access).
+
+**FR30:** An institution admin can manage subscription status for users within their institution; users with an inactive subscription are blocked from creating or editing records.
+
+**FR31:** All authenticated sessions enforce a 1-hour inactivity timeout and browser-close expiry; upon expiry the user is redirected to the login page.
+
+---
+
+### Capability Area 9 — Multi-Institution Foundation (Phase 2)
+
+**FR32:** The system enforces strict row-level data isolation — a user at Institution A cannot view, search, query, or access any patient records, assessments, videos, or referrals belonging to Institution B, except through a formal referral or authorised transfer.
+
+**FR33:** A superadmin can create a new institution record with full configuration (name, short name, logo, branding); the new institution is immediately active and its data is isolated from all other institutions.
+
+**FR34:** A superadmin can switch context to any institution and view that institution's data without granting cross-institution access to any other user.
+
+**FR35:** An institution admin can configure their institution's display name, short name, logo, and PDF report branding without superadmin involvement.
+
+**FR36:** A superadmin can view aggregate analytics across all institutions including total patient registrations, assessment counts, referral volume, and active user counts per institution.
+
+**FR37:** The system supports a controlled rollout toggle that enables or disables multi-institution features without requiring redeployment; single-institution fallback must remain fully functional when multi-institution mode is disabled.
+
+---
+
+### Capability Area 10 — Patient Referral System (Phase 2)
+
+**FR38:** A clinician can initiate a cross-institution referral for a patient to a specific target institution, writing a clinical question or context note at the time of referral creation.
+
+**FR39:** When a referral is created, the system atomically captures an immutable frozen clinical snapshot of the patient's full record — demographics, all assessment records, linked video, and problem list — at the exact moment of referral creation.
+
+**FR40:** The frozen clinical snapshot is permanently immutable; subsequent edits to the source patient record do not alter the snapshot held by the receiving institution.
+
+**FR41:** A referral generates dual records — one at the sending institution (ReferralSent) and one at the receiving institution (ReferralReceived) — linked only by a shared UUID; both records are permanently retained by each institution independently.
+
+**FR42:** A clinician at the receiving institution can view the full frozen clinical snapshot — including all assessments and the linked video — when reviewing an incoming referral.
+
+**FR43:** The referral lifecycle enforces the sequence PENDING → REPLIED → CLOSED; each state transition is logged with user identity and timestamp.
+
+**FR44:** A clinician at the receiving institution can add a structured consultation reply to a referral, including diagnosis selection and written commentary; the reply transitions the referral from PENDING to REPLIED.
+
+**FR45:** A clinician can close a referral after consultation is complete; the closed referral thread is permanently accessible to both institutions.
+
+---
+
+### Capability Area 11 — Consultation Thread & Notifications (Phase 2)
+
+**FR46:** A clinician can send and receive messages within a referral's consultation thread; all messages are attributed to the sender with a timestamp and are permanently retained.
+
+**FR47:** A clinician receives a notification within 120 seconds of a referral event: new referral received, consultation reply received, or referral closed.
+
+**FR48:** Notifications are delivered via HTMX polling on a ≤60-second poll cycle, achieving end-to-end delivery within 120 seconds.
+
+**FR49:** A clinician can view their notification inbox and navigate directly from a notification to the relevant referral record in a single click.
+
+---
+
+### Capability Area 12 — Patient Transfer (Phase 2)
+
+**FR50:** A superadmin can formally transfer a patient record from one institution to another; the transfer is logged in full (source institution, destination institution, transferred by, timestamp).
+
+**FR51:** After a formal transfer, the patient record is accessible only to the destination institution; the source institution retains a read-only transfer log entry and no further access to the patient's data.
+
+---
+
+### Capability Area 13 — Audit Trail & Activity Logging
+
+**FR52:** The system logs all create, edit, and delete actions on patient records, assessments, videos, referrals, and user accounts with: acting user identity, action type, affected record reference, and timestamp.
+
+**FR53:** A superadmin can view activity logs for all users across all institutions.
+
+**FR54:** An institution admin can view activity logs for users within their own institution only; regular users have no access to any activity logs.
+
+**FR55:** Audit log entries are written at middleware level and are not editable or deletable through any application view.
+
+---
+
+### Capability Area 14 — Phase 3 AI Integration (Planned)
+
+**FR56:** The system will provide AI-assisted movement type identification from GMA videos — surfacing movement quality pattern classifications to the assessing clinician during the GMA assessment workflow — based on computer vision analysis of the linked assessment video.
+
+**FR57:** The system will surface automated clinical suggestions aligned with local Sri Lankan neurodevelopmental guidelines during assessment completion workflows, labelled clearly as decision support (not autonomous diagnosis).
+
+**FR58:** All AI-generated suggestions and classifications must be explicitly labelled as decision support in the UI; clinician attribution remains mandatory on every assessment regardless of AI suggestions; the assessing clinician's recorded diagnosis owns the clinical record.
+
+---
+
+### FR Summary
+
+| Capability Area | FR Range | Count | Phase |
+|-----------------|----------|-------|-------|
+| Patient Record Management | FR1–FR5 | 5 | Phase 1 |
+| Assessment Workflows | FR6–FR12 | 7 | Phase 1 |
+| Video Management | FR13–FR16 | 4 | Phase 1 |
+| Multi-Clinician Opinion Layer | FR17–FR19 | 3 | Phase 1 |
+| Problem List | FR20–FR22 | 3 | Phase 1 |
+| Report Generation | FR23–FR25 | 3 | Phase 1 |
+| Clinical Attachments & Bookmarks | FR26–FR27 | 2 | Phase 1 |
+| User Management & Access Control | FR28–FR31 | 4 | Phase 1 |
+| Multi-Institution Foundation | FR32–FR37 | 6 | Phase 2 |
+| Patient Referral System | FR38–FR45 | 8 | Phase 2 |
+| Consultation Thread & Notifications | FR46–FR49 | 4 | Phase 2 |
+| Patient Transfer | FR50–FR51 | 2 | Phase 2 |
+| Audit Trail & Activity Logging | FR52–FR55 | 4 | Cross-cutting |
+| Phase 3 AI Integration | FR56–FR58 | 3 | Phase 3 |
+| **TOTAL** | | **58** | |
+
+---
 
 ## Non-Functional Requirements
 
+NFRs specify how well the system must perform. Only categories relevant to NDAS are documented: Performance, Security, Data Integrity, Reliability, Scalability, Maintainability, and Compatibility. Accessibility (out of scope per scoping decision) and Integration (no active integrations required) are omitted.
+
 ### Performance
 
-- **NFR1:** Standard page views (patient list, assessment forms) load within 2 seconds on a typical hospital intranet connection
-- **NFR2:** Video playback begins within 5 seconds of initiating playback under hospital network conditions
-- **NFR3:** The system supports a minimum of 20 concurrent users without measurable performance degradation
-- **NFR4:** Video uploads up to 2GB are handled asynchronously — upload progress is visible and does not block other user operations
+**NFR1:** Standard clinical page loads (patient list, patient detail, assessment detail) complete within 3 seconds under normal clinic operating load.
+
+**NFR2:** Patient list and search results are returned within 2 seconds; N+1 query patterns in any list or search view are a blocking defect — `select_related()` and `prefetch_related()` are mandatory for all related object access in list views.
+
+**NFR3:** Video streaming delivers the first frame within 5 seconds; the server must support HTTP range requests to enable Video.js seek functionality.
+
+**NFR4:** Video upload (typical 100MB file) displays a real-time progress indicator and does not appear frozen at any point during transfer; upload progress must be visually updated at least every 5 seconds.
+
+**NFR5:** PDF and Excel report generation completes within 10 seconds for a typical single-patient record; the generated file is immediately downloadable upon completion.
+
+**NFR6:** Notification end-to-end delivery from trigger event to clinician-visible badge occurs within 120 seconds; HTMX polling cycle must not exceed 60 seconds.
+
+---
 
 ### Security
 
-- **NFR5:** All patient data is transmitted exclusively over HTTPS (TLS) — unencrypted clinical data in transit is not permitted
-- **NFR6:** User sessions expire after 60 minutes of inactivity and immediately on browser close
-- **NFR7:** All 24 CRUD operations are rate-limited (10/min for create/edit, 5/min for delete) to prevent automated abuse
-- **NFR8:** All user input is sanitised prior to storage — XSS vectors and injection attacks are neutralised without loss of clinical notation
-- **NFR9:** File uploads are validated by MIME type and file size at ingestion — invalid or oversized files are rejected before storage
-- **NFR10:** All HTTP responses include security headers — Content Security Policy, anti-clickjacking, and transport security directives applied consistently across all responses
+**NFR7:** All data in transit is encrypted via HTTPS/TLS; `SECURE_SSL_REDIRECT` is enforced in production; HTTP connections are not accepted.
+
+**NFR8:** Content Security Policy (CSP) headers are applied on every HTTP response; all inline `<script>` tags require a server-issued nonce — missing nonces cause silent script failure in production (enforced by CSPMiddleware).
+
+**NFR9:** Session timeout is enforced at 1-hour inactivity with browser-close expiry on all authenticated sessions; expired sessions redirect to the login page without data loss.
+
+**NFR10:** Rate limiting is enforced on all 24 CRUD operations: create and edit views at 10 requests/minute, delete views at 5 requests/minute, keyed per user-or-IP.
+
+**NFR11:** All user-supplied text input is sanitised to remove XSS vectors before persistence; all uploaded file MIME types are validated against the allowed extension list; file size limits are enforced before storage is allocated.
+
+**NFR12:** User credentials are stored using Django's PBKDF2+SHA256 default password hasher; no plaintext or reversible credential storage is permitted anywhere in the system.
+
+---
+
+### Data Integrity
+
+**NFR13:** Cross-institution data isolation is absolute — no application code path exists by which a user at Institution A can retrieve, display, or modify patient records, assessments, or referrals belonging to Institution B, except through a formal referral or superadmin-authorised transfer. This constraint is validated by an automated isolation test suite that must pass before multi-institution mode is enabled in any production environment.
+
+**NFR14:** Frozen referral snapshots are written once at referral creation time and are never subsequently modified; immutability is enforced at the model level, not solely by application convention.
+
+**NFR15:** Referral dual-record creation is atomic — either both the sending and receiving institution records are created or neither is; partial creation leaving orphaned records is not permitted.
+
+---
 
 ### Reliability
 
-- **NFR11:** The system maintains 99% uptime during clinic operating hours (08:00–18:00, Monday–Saturday); planned maintenance is scheduled outside these hours
-- **NFR12:** Patient data is recoverable following system failure — Recovery Point Objective (RPO): ≤ 24 hours; Recovery Time Objective (RTO): ≤ 4 hours; automated daily backups required
-- **NFR13:** All multi-step record operations complete atomically — no partial saves are possible; a failure at any step rolls back the entire operation
+**NFR16:** System availability during each institution's defined daytime clinic hours targets 100%; planned maintenance windows are scheduled exclusively outside clinic hours with advance notice to institution admins.
+
+**NFR17:** Video upload failures surface an explicit, user-readable error message with a clear recovery path immediately upon failure detection; silent upload failures — where an upload appears to complete but data is not stored — are not permitted under any circumstances.
+
+---
 
 ### Scalability
 
-- **NFR14:** The system architecture supports deployment across multiple clinical centres without per-centre code changes
-- **NFR15:** The system supports growth from single-centre to multi-institution deployment without re-architecture of the core application
+**NFR18:** The system must support ≥10 active institutions each generating ≥500 patient cases per month without standard page load performance degrading more than 10% versus single-institution baseline metrics.
 
-### Audit & Data Integrity
+**NFR19:** Institution onboarding (creating a new Institution record and assigning its first admin user) executes as an atomic operation with no measurable impact on existing institutions' data access, query performance, or session state.
 
-- **NFR16:** Every record creation, modification, and attempted deletion is logged with user identity and timestamp — the audit trail is permanent and cannot be edited or deleted
-- **NFR17:** Hard deletion of clinical records is restricted — superuser authority and business rule validation are required; records with active clinical dependencies cannot be deleted
+---
 
-### Accessibility
+### Maintainability
 
-- **NFR18:** The system meets WCAG 2.1 Level AA accessibility standards — all clinical workflows are operable via keyboard navigation; form inputs and navigation elements are compatible with screen readers; informational content meets minimum colour contrast ratios (4.5:1 normal text, 3:1 large text)
+**NFR20:** All new Django models must inherit from `TimeStampedModel` and `UserTrackingMixin`; all choice definitions must be added to `ndas/custom_codes/choice.py`; all field validators must be added to `ndas/custom_codes/validators.py`; inline model choices and ad-hoc validators defined outside `custom_codes/` are not permitted.
 
-### Multi-Institution *(Phase 2)*
+**NFR21:** All searchable model fields must declare `db_index=True`; foreign key and related object access in views must use `select_related()` or `prefetch_related()` — unoptimised related object access in any list or search view is treated as a defect.
 
-- **NFR19:** Zero cross-institution data leakage — automated isolation tests must confirm that no query, view, or report returns data outside the active institution's scope before multi-institution mode is enabled in production; any leakage incident constitutes a blocking defect
-- **NFR20:** The system supports a minimum of 20 concurrent institutions without additional infrastructure — institution count growth requires no new servers, databases, or code deployments
-- **NFR21:** Multi-institution capability deactivation restores single-institution behaviour completely — all multi-institution capabilities are inactive when disabled, verified by the existing regression test suite
-- **NFR22:** Referral record creation across the sending and receiving institution is atomic — either both institution records are created or neither is; no partial referral state is possible under any failure condition
-- **NFR23:** Referral event notifications (REFERRAL_RECEIVED, REFERRAL_REPLIED, REFERRAL_CLOSED) are delivered within 120 seconds of the triggering event as measured by the 60-second polling interval plus processing time; no notification is silently dropped
+**NFR22:** `get_object_or_404()` must be used for all single-object lookups in views; direct `.objects.get()` calls in view code are not permitted.
+
+---
+
+### Compatibility
+
+**NFR23:** Full functionality is required on Chrome (latest) and Firefox (latest) desktop; responsive layout is required on mobile Chrome (Android) and mobile Safari (iOS); Internet Explorer and legacy Edge are not supported.
+
+---
+
+### NFR Summary
+
+| Category | NFR Range | Count |
+|---|---|---|
+| Performance | NFR1–NFR6 | 6 |
+| Security | NFR7–NFR12 | 6 |
+| Data Integrity | NFR13–NFR15 | 3 |
+| Reliability | NFR16–NFR17 | 2 |
+| Scalability | NFR18–NFR19 | 2 |
+| Maintainability | NFR20–NFR22 | 3 |
+| Compatibility | NFR23 | 1 |
+| **TOTAL** | | **23** |

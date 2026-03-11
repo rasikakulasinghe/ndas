@@ -5,6 +5,7 @@ import os, math
 from django.utils.timezone import localtime, now
 from django.utils import timezone
 from django.utils.text import slugify
+from django.core.exceptions import ImproperlyConfigured
 from .ndas_enums import PtStatus
 from .validators import sanitize_filename
 import logging
@@ -12,8 +13,20 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+_ALLOWED_SCOPE_FIELDS = frozenset({
+    'patient__institution',
+    'owner__institution',
+    'institution',
+})
+
+
 def institution_scope(request, field='patient__institution'):
     """Return ORM filter kwargs for institution scoping; {} in Phase 1 (institution is None)."""
+    if field not in _ALLOWED_SCOPE_FIELDS:
+        raise ImproperlyConfigured(
+            f"institution_scope: unrecognised field path '{field}'. "
+            "Add to _ALLOWED_SCOPE_FIELDS if intentional."
+        )
     inst = getattr(request, 'institution', None)
     return {field: inst} if inst is not None else {}
 

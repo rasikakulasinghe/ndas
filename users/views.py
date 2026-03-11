@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
-from django.views.decorators.http import require_POST, require_http_methods
+from django.views.decorators.http import require_POST, require_http_methods, require_GET
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.core.paginator import Paginator
@@ -38,12 +38,7 @@ def loginPage(request):
     logged_user = request.user
 
     # Fetch developer contact information for modal
-    try:
-        developer = DeveloperContacts.objects.get(id=1)
-    except DeveloperContacts.DoesNotExist:
-        developer = DeveloperContacts.objects.first()
-        if not developer:
-            developer = DeveloperContacts.objects.create()
+    developer, _ = DeveloperContacts.objects.get_or_create(pk=1)
 
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
@@ -283,15 +278,8 @@ def userChangePassword(request):
 # Go to the developer contact page
 def developerContacts(request):
     logged_user = request.user
-    try:
-        developer = DeveloperContacts.objects.get(id=1)
-    except DeveloperContacts.DoesNotExist:
-        # Use the first available developer contact or create a default
-        developer = DeveloperContacts.objects.first()
-        if not developer:
-            # Create a default developer contact if none exists
-            developer = DeveloperContacts.objects.create()
-    
+    developer, _ = DeveloperContacts.objects.get_or_create(pk=1)
+
     try:
         var = getFullDeviceDetails(request)
     except Exception as e:
@@ -302,6 +290,8 @@ def developerContacts(request):
 
 
 # Email Verification Views
+@require_GET
+@ratelimit(key='ip', rate='10/m', block=True)
 def verify_email(request, token):
     """
     Verify user's email address using the verification token.
@@ -352,26 +342,27 @@ def resend_verification_email(request):
         user = CustomUser.objects.get(email=email)
         
         if user.is_email_verified:
-            messages.info(request, 'Your email is already verified.')
+            # Use neutral message — do not reveal whether account exists or is already verified
+            messages.success(request, 'If an account with this email exists and is unverified, a link has been sent.')
             return redirect('user-login')
-        
+
         # Check if we can send another verification email (rate limiting)
         if user.email_verification_sent_at:
             time_since_last_sent = timezone.now() - user.email_verification_sent_at
             if time_since_last_sent.total_seconds() < 300:  # 5 minutes
                 messages.warning(request, 'Please wait a few minutes before requesting another verification email.')
                 return redirect('user-login')
-        
-        # Send verification email
-        if send_email_verification(user, request):
-            messages.success(request, 'Verification email has been sent. Please check your inbox.')
-        else:
-            messages.error(request, 'Failed to send verification email. Please try again later.')
-        
+
+        # Send verification email (log failures for ops visibility; user always sees neutral message)
+        if not send_email_verification(user, request):
+            logger.error(f"Failed to send verification email to user id={user.id}")
+        messages.success(request, 'If an account with this email exists and is unverified, a link has been sent.')
+
         return redirect('user-login')
-        
+
     except CustomUser.DoesNotExist:
-        messages.error(request, 'No account found with this email address.')
+        # Use neutral message — do not reveal whether account exists
+        messages.success(request, 'If an account with this email exists and is unverified, a link has been sent.')
         return redirect('user-login')
 
 
@@ -877,10 +868,9 @@ def subscription_info(request):
             pass
 
         # Fetch developer contact information
-        try:
-            developer = DeveloperContacts.objects.get(id=1)
-        except DeveloperContacts.DoesNotExist:
-            developer = DeveloperContacts.objects.first()
+        developer = DeveloperContacts.objects.first()
+        if developer is None:
+            developer = DeveloperContacts.objects.create()
 
         context = {
             'subscription': subscription,
@@ -896,10 +886,9 @@ def subscription_info(request):
         logger.error(f"Error in subscription_info view: {e}", exc_info=True)
 
         # Fetch developer contact information
-        try:
-            developer = DeveloperContacts.objects.get(id=1)
-        except DeveloperContacts.DoesNotExist:
-            developer = DeveloperContacts.objects.first()
+        developer = DeveloperContacts.objects.first()
+        if developer is None:
+            developer = DeveloperContacts.objects.create()
 
         messages.error(request, 'Unable to retrieve complete subscription information.')
 

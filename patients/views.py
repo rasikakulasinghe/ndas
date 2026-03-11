@@ -2,7 +2,7 @@ from django.shortcuts import redirect, render, get_object_or_404
 from datetime import timedelta, date
 from django.utils import timezone
 from django.urls import reverse
-from django.db import transaction
+from django.db import transaction, IntegrityError
 import json
 from patients.models import (
     Patient,
@@ -63,10 +63,11 @@ from patients.timeline_utils import get_patient_timeline_events
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 import os
 import logging
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
+from django.conf import settings
 from django.utils.timezone import localtime, now
 from django.utils import timezone
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError, PermissionDenied
 from django.db.models import Q, Count, Exists, OuterRef
 from ndas.custom_codes.ndas_enums import PtStatus
 
@@ -374,6 +375,8 @@ def patient_view(request, pk):
     selected_patient = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), id=pk)
     indications = selected_patient.indecation_for_gma
 
+    # Evaluate each queryset once into a list — template iterates var_* in delete modals,
+    # so lazy querysets would re-evaluate. One query per type; count/slice derived in Python.
     var_file_video = list(
         Video.objects.select_related('added_by', 'last_edit_by')
         .filter(patient=selected_patient).order_by("-id")
@@ -454,10 +457,10 @@ def patient_view(request, pk):
         "patient": selected_patient,
         "file_videos": file_videos,
         "file_video_count": file_video_count,
-        "var_file_video": var_file_video,  # Full queryset for delete modals
+        "var_file_video": var_file_video,
         "file_attachment": file_attachment,
         "file_attachment_count": file_attachment_count,
-        "var_file_attachments": var_file_attachments,  # Full queryset for delete modals
+        "var_file_attachments": var_file_attachments,
         "indications": indications,
         "bookmark": bm,
         "gm_assessments_new": "",
@@ -465,19 +468,19 @@ def patient_view(request, pk):
         "gm_assessments": gm_assessments,
         "gm_assessments_count": gm_assessments_count,
         "gm_last_assessment": gm_last_assessment,
-        "var_gma": var_gma,  # Full queryset for delete modals
+        "var_gma": var_gma,
         "hine_assessments_count": hine_assessments_count,
         "hine_assessments": hine_assessments,
-        "var_hine": var_hine,  # Full queryset for delete modals
+        "var_hine": var_hine,
         "da_assessments_count": da_assessments_count,
         "da_assessments": da_assessments,
-        "var_da": var_da,  # Full queryset for delete modals
+        "var_da": var_da,
         "cdic_record_count": cdic_record_count,
         "cdic_record": cdic_record,
-        "var_cdic": var_cdic,  # Full queryset for delete modals
+        "var_cdic": var_cdic,
         "gpa_assessments_count": gpa_assessments_count,
         "gpa_assessments": gpa_assessments,
-        "var_gpa": var_gpa,  # Full queryset for delete modals
+        "var_gpa": var_gpa,
         "timeline_events": timeline_events,
         "warning_list": warning_list,  # For patient delete modal
         "patient_details": patient_details,  # For patient delete modal
@@ -720,53 +723,56 @@ def search_results(request):
         # Search by BHT
         if combo_pt_param_type == "pts_bht" and BHT_validation(request, search_text):
             pagn = f"Patients > BHT > {search_text}"
-            try:
-                patient = Patient.objects.for_institution(getattr(request, 'institution', None)).get(bht=search_text)
+            _inst = getattr(request, 'institution', None)
+            _bht_results = list(Patient.objects.for_institution(_inst).filter(bht=search_text)[:2])
+            if len(_bht_results) > 1:
+                logger.warning(
+                    f"Duplicate BHT '{search_text}' found in institution {_inst} — "
+                    "data integrity anomaly, returning first result"
+                )
+            patient = _bht_results[0] if _bht_results else None
+            if patient:
                 messages.success(request, f"Found patient with BHT: {search_text}")
-                return render(
-                    request, "patients/view.html", {"patient": patient, "pgn": pagn}
-                )
-            except Patient.DoesNotExist:
+                return render(request, "patients/view.html", {"patient": patient, "pgn": pagn})
+            else:
                 messages.warning(request, f"No patient found with BHT: {search_text}")
-                return render(
-                    request,
-                    "patients/search_notfound.html",
-                    {"pgn": pagn},
-                )
+                return render(request, "patients/search_notfound.html", {"pgn": pagn})
 
         # Search by PHN
         elif combo_pt_param_type == "pts_phn" and PHN_validation(request, search_text):
             pagn = f"Patients > PHN > {search_text}"
-            try:
-                patient = Patient.objects.for_institution(getattr(request, 'institution', None)).get(pin=search_text)
+            _inst = getattr(request, 'institution', None)
+            _phn_results = list(Patient.objects.for_institution(_inst).filter(pin=search_text)[:2])
+            if len(_phn_results) > 1:
+                logger.warning(
+                    f"Duplicate PHN '{search_text}' found in institution {_inst} — "
+                    "data integrity anomaly, returning first result"
+                )
+            patient = _phn_results[0] if _phn_results else None
+            if patient:
                 messages.success(request, f"Found patient with PHN: {search_text}")
-                return render(
-                    request, "patients/view.html", {"patient": patient, "pgn": pagn}
-                )
-            except Patient.DoesNotExist:
+                return render(request, "patients/view.html", {"patient": patient, "pgn": pagn})
+            else:
                 messages.warning(request, f"No patient found with PHN: {search_text}")
-                return render(
-                    request,
-                    "patients/search_notfound.html",
-                    {"pgn": pagn},
-                )
+                return render(request, "patients/search_notfound.html", {"pgn": pagn})
 
         # Search by NNC number
         elif combo_pt_param_type == "pts_nnc_no" and NNC_validation(request, search_text):
             pagn = f"Patients > Clinic Number > {search_text}"
-            try:
-                patient = Patient.objects.for_institution(getattr(request, 'institution', None)).get(nnc_no=search_text)
+            _inst = getattr(request, 'institution', None)
+            _nnc_results = list(Patient.objects.for_institution(_inst).filter(nnc_no=search_text)[:2])
+            if len(_nnc_results) > 1:
+                logger.warning(
+                    f"Duplicate NNC '{search_text}' found in institution {_inst} — "
+                    "data integrity anomaly, returning first result"
+                )
+            patient = _nnc_results[0] if _nnc_results else None
+            if patient:
                 messages.success(request, f"Found patient with clinic number: {search_text}")
-                return render(
-                    request, "patients/view.html", {"patient": patient, "pgn": pagn}
-                )
-            except Patient.DoesNotExist:
+                return render(request, "patients/view.html", {"patient": patient, "pgn": pagn})
+            else:
                 messages.warning(request, f"No patient found with clinic number: {search_text}")
-                return render(
-                    request,
-                    "patients/search_notfound.html",
-                    {"pgn": pagn},
-                )
+                return render(request, "patients/search_notfound.html", {"pgn": pagn})
 
         # Search by baby name
         elif combo_pt_param_type == "pts_name_baby" and Name_baby_validation(request, search_text):
@@ -881,6 +887,8 @@ def assessment_add(request, ptid, fid):
     _inst = getattr(request, 'institution', None)
     patient = get_object_or_404(Patient.objects.for_institution(_inst), pk=ptid)
     _pts_qs = Patient.objects.for_institution(_inst)
+    # Institution scope is enforced via patient__in=_pts_qs (for_institution scoped).
+    # patient_id check below provides defence-in-depth against cross-patient access.
     video_file = get_object_or_404(Video.objects.filter(patient__in=_pts_qs), pk=fid)
 
     # Guard: video must belong to this patient (defence-in-depth after institution scope)
@@ -916,8 +924,11 @@ def assessment_add(request, ptid, fid):
                     diagnosis_list = assessment_form.cleaned_data.get('diagnosis', [])
                     if diagnosis_list:
                         assessment.diagnosis.set(diagnosis_list)
-                
-                logger.info(f"Assessment created successfully: {assessment.id} by user {request.user.id}")
+                    _aid = assessment.id
+                    _uid = request.user.id
+                    transaction.on_commit(lambda: logger.info(
+                        f"Assessment created successfully: {_aid} by user {_uid}"
+                    ))
                 messages.success(request, "Assessment added successfully!")
                 
                 # Return JSON for AJAX requests
@@ -934,8 +945,14 @@ def assessment_add(request, ptid, fid):
             except ValidationError as e:
                 logger.error(f"Validation error in assessment creation: {e}")
                 messages.error(request, "Please correct the errors below.")
+            except IntegrityError as e:
+                logger.error(f"Database integrity error in assessment_add: {e}")
+                assessment_form.add_error(None, "A data conflict occurred. Please refresh and try again.")
+                messages.error(request, "A data conflict occurred. Please refresh and try again.")
+            except PermissionDenied:
+                raise
             except Exception as e:
-                logger.error(f"Unexpected error in assessment creation: {e}")
+                logger.error(f"Unexpected error in assessment_add: {e}")
                 assessment_form.add_error(None, "An unexpected error occurred. Please try again.")
                 messages.error(request, "An unexpected error occurred. Please try again.")
         
@@ -1126,11 +1143,11 @@ def assessment_delete(request, pk):
     )
 
     try:
-        # 1. Retrieve assessment
+        # 1. Retrieve assessment (no lock yet — lock only during actual delete)
         assessment = get_object_or_404(GMAssessment, id=pk, **institution_scope(request))
         patient = assessment.patient
 
-        # 2. Check permissions
+        # 2. Check permissions (no lock needed — read-only check)
         if not has_delete_permission(request.user, assessment):
             logger.warning(
                 f"Unauthorized deletion attempt: user={request.user.username}, "
@@ -1142,7 +1159,7 @@ def assessment_delete(request, pk):
                 "message": "You do not have permission to delete this assessment."
             }, status=403)
 
-        # 3. Verify password
+        # 3. Verify password (no lock needed — bcrypt is slow; don't hold DB lock during this)
         try:
             data = json.loads(request.body)
             password = data.get('password', '')
@@ -1171,7 +1188,7 @@ def assessment_delete(request, pk):
                 "message": "Incorrect password. Please try again."
             }, status=401)
 
-        # 4. Check business rules
+        # 4. Check business rules (no lock needed)
         validation_result = validate_can_delete(assessment)
         if not validation_result['can_delete']:
             return JsonResponse({
@@ -1180,26 +1197,51 @@ def assessment_delete(request, pk):
                 "message": validation_result['reason']
             }, status=400)
 
-        # 5. Store info for logging and response
+        # 5. Store info for logging and response (before lock acquisition)
         assessment_name = get_entity_display_name(assessment)
+        _patient_name = patient.baby_name
+        _patient_id = patient.id
+        _uname = request.user.username
 
-        # 6. Perform deletion
-        assessment.delete()
+        # 6. Acquire lock just before delete — minimal lock-hold window
+        with transaction.atomic():
+            if 'postgresql' in settings.DATABASES['default']['ENGINE']:
+                # Re-fetch with row lock to prevent concurrent deletes (PostgreSQL only)
+                get_object_or_404(
+                    GMAssessment.objects.select_for_update(), id=pk, **institution_scope(request)
+                ).delete()
+            else:
+                assessment.delete()
 
-        # 7. Audit log
-        logger.info(
-            f"Deletion successful: user={request.user.username}, "
-            f"entity=GMAssessment, name={assessment_name}, id={pk}, "
-            f"patient={patient.baby_name}"
-        )
+            # 7. Audit log fires only after successful commit
+            transaction.on_commit(lambda: logger.info(
+                f"Deletion successful: user={_uname}, "
+                f"entity=GMAssessment, name={assessment_name}, id={pk}, "
+                f"patient={_patient_name}"
+            ))
 
         # 8. Return success
         return JsonResponse({
             "success": True,
-            "message": f"GMA Assessment has been deleted successfully.",
-            "redirect_url": reverse("view-patient", kwargs={'pk': patient.id})
+            "message": "GMA Assessment has been deleted successfully.",
+            "redirect_url": reverse("view-patient", kwargs={'pk': _patient_id})
         })
 
+    except Http404:
+        return JsonResponse({
+            "success": False,
+            "error": "Not found",
+            "message": "Assessment not found."
+        }, status=404)
+    except IntegrityError as e:
+        logger.error(f"Database integrity error in assessment_delete: {e}")
+        return JsonResponse({
+            "success": False,
+            "error": "Data integrity error",
+            "message": "A data conflict occurred. Please refresh and try again."
+        }, status=409)
+    except PermissionDenied:
+        raise
     except Exception as e:
         logger.exception(
             f"Deletion error: user={request.user.username}, "
@@ -1466,6 +1508,16 @@ def bookmark_add(request, item_id, bookmark_type):
                             "bookmark_type": bookmark_type,
                         },
                     )
+            except IntegrityError as e:
+                logger.error(f"Database integrity error in bookmark_add: {e}")
+                messages.error(request, "A data conflict occurred. Please refresh and try again.")
+                return render(
+                    request,
+                    "bookmark/add.html",
+                    {"form": bookmark_form_data, "item_id": item_id, "bookmark_type": bookmark_type},
+                )
+            except PermissionDenied:
+                raise
             except Exception as e:
                 messages.error(request, f"Error creating bookmark: {str(e)}")
                 return render(
@@ -1508,6 +1560,16 @@ def bookmark_add(request, item_id, bookmark_type):
 @login_required(login_url="user-login")
 def bookmark_view(request, pk):
     bookmark = get_object_or_404(Bookmark, id=pk, **institution_scope(request, 'owner__institution'))
+    # Institution scope enforced above — only bookmarks owned by the current institution are accessible.
+    # NOTE: Bookmark.object_id is a generic field with no patient FK (architectural constraint).
+    # If a future version of this view resolves object_id to a Patient record, enforce institution
+    # scope at resolution time:
+    #   patient = get_object_or_404(
+    #       Patient.objects.for_institution(getattr(request, 'institution', None)),
+    #       id=bookmark.object_id
+    #   )
+    # Stale cross-institution bookmarks will then 404 rather than expose cross-institution data.
+    # TODO: enforce institution scope on patient resolution when this feature is extended.
     return render(request, "bookmark/view.html", {"bookmark": bookmark})
 
 
@@ -1584,23 +1646,34 @@ def bookmark_delete(request, pk):
 
         # 5. Store info for logging and response
         bookmark_name = get_entity_display_name(bookmark)
+        _uname = request.user.username
+        _bm_name = bookmark_name
 
-        # 6. Perform deletion
-        bookmark.delete()
+        # 6. Perform deletion — audit log deferred to post-commit
+        with transaction.atomic():
+            bookmark.delete()
+            transaction.on_commit(lambda: logger.info(
+                f"Deletion successful: user={_uname}, entity=Bookmark, name={_bm_name}, id={pk}"
+            ))
 
-        # 7. Audit log
-        logger.info(
-            f"Deletion successful: user={request.user.username}, "
-            f"entity=Bookmark, name={bookmark_name}, id={pk}"
-        )
-
-        # 8. Return success
+        # 7. Return success
         return JsonResponse({
             "success": True,
-            "message": f"Bookmark has been deleted successfully.",
+            "message": "Bookmark has been deleted successfully.",
             "redirect_url": reverse("bookmark-manager-user", kwargs={'username': request.user.username})
         })
 
+    except Http404:
+        return JsonResponse({"success": False, "error": "Not found", "message": "Bookmark not found."}, status=404)
+    except IntegrityError as e:
+        logger.error(f"Database integrity error in bookmark_delete: {e}")
+        return JsonResponse({
+            "success": False,
+            "error": "Data integrity error",
+            "message": "A data conflict occurred. Please refresh and try again."
+        }, status=409)
+    except PermissionDenied:
+        raise
     except Exception as e:
         logger.exception(
             f"Deletion error: user={request.user.username}, "
@@ -2164,6 +2237,9 @@ def attachment_delete(request, pk):
 
         # 5. Store info for logging and response
         attachment_name = get_entity_display_name(attachment)
+        _uname = request.user.username
+        _att_name = attachment_name
+        _patient_name = patient.baby_name
 
         # 6. Delete file from storage
         if attachment.attachment:
@@ -2172,15 +2248,14 @@ def attachment_delete(request, pk):
             except Exception as e:
                 logger.warning(f"Failed to delete attachment file: {e}")
 
-        # 7. Perform deletion
-        attachment.delete()
-
-        # 8. Audit log
-        logger.info(
-            f"Deletion successful: user={request.user.username}, "
-            f"entity=Attachment, name={attachment_name}, id={pk}, "
-            f"patient={patient.baby_name}"
-        )
+        # 7. Perform deletion — audit log deferred to post-commit
+        with transaction.atomic():
+            attachment.delete()
+            transaction.on_commit(lambda: logger.info(
+                f"Deletion successful: user={_uname}, "
+                f"entity=Attachment, name={_att_name}, id={pk}, "
+                f"patient={_patient_name}"
+            ))
 
         # 9. Return success
         return JsonResponse({
@@ -2189,6 +2264,17 @@ def attachment_delete(request, pk):
             "redirect_url": reverse("view-patient", kwargs={'pk': patient.id})
         })
 
+    except Http404:
+        return JsonResponse({"success": False, "error": "Not found", "message": "Attachment not found."}, status=404)
+    except IntegrityError as e:
+        logger.error(f"Database integrity error in attachment_delete: {e}")
+        return JsonResponse({
+            "success": False,
+            "error": "Data integrity error",
+            "message": "A data conflict occurred. Please refresh and try again."
+        }, status=409)
+    except PermissionDenied:
+        raise
     except Exception as e:
         logger.exception(
             f"Deletion error: user={request.user.username}, "
@@ -2577,16 +2663,18 @@ def cdic_assessment_delete(request, aid):
 
         # 5. Store info for logging and response
         cdic_name = get_entity_display_name(cdic_record)
+        _uname = request.user.username
+        _cdic_name = cdic_name
+        _patient_name = patient.baby_name
 
-        # 6. Perform deletion
-        cdic_record.delete()
-
-        # 7. Audit log
-        logger.info(
-            f"Deletion successful: user={request.user.username}, "
-            f"entity=CDICRecord, name={cdic_name}, id={aid}, "
-            f"patient={patient.baby_name}"
-        )
+        # 6. Perform deletion — audit log deferred to post-commit
+        with transaction.atomic():
+            cdic_record.delete()
+            transaction.on_commit(lambda: logger.info(
+                f"Deletion successful: user={_uname}, "
+                f"entity=CDICRecord, name={_cdic_name}, id={aid}, "
+                f"patient={_patient_name}"
+            ))
 
         # 8. Return success
         return JsonResponse({
@@ -2595,6 +2683,17 @@ def cdic_assessment_delete(request, aid):
             "redirect_url": reverse("view-patient", kwargs={'pk': patient.id})
         })
 
+    except Http404:
+        return JsonResponse({"success": False, "error": "Not found", "message": "CDIC record not found."}, status=404)
+    except IntegrityError as e:
+        logger.error(f"Database integrity error in cdic_record_delete: {e}")
+        return JsonResponse({
+            "success": False,
+            "error": "Data integrity error",
+            "message": "A data conflict occurred. Please refresh and try again."
+        }, status=409)
+    except PermissionDenied:
+        raise
     except Exception as e:
         logger.exception(
             f"Deletion error: user={request.user.username}, "
@@ -2956,16 +3055,18 @@ def hine_assessment_delete(request, hine_id):
 
         # 5. Store info for logging and response
         hine_name = get_entity_display_name(hine_assessment)
+        _uname = request.user.username
+        _hine_name = hine_name
+        _patient_name = patient.baby_name
 
-        # 6. Perform deletion
-        hine_assessment.delete()
-
-        # 7. Audit log
-        logger.info(
-            f"Deletion successful: user={request.user.username}, "
-            f"entity=HINEAssessment, name={hine_name}, id={hine_id}, "
-            f"patient={patient.baby_name}"
-        )
+        # 6. Perform deletion — audit log deferred to post-commit
+        with transaction.atomic():
+            hine_assessment.delete()
+            transaction.on_commit(lambda: logger.info(
+                f"Deletion successful: user={_uname}, "
+                f"entity=HINEAssessment, name={_hine_name}, id={hine_id}, "
+                f"patient={_patient_name}"
+            ))
 
         # 8. Return success
         return JsonResponse({
@@ -2974,6 +3075,17 @@ def hine_assessment_delete(request, hine_id):
             "redirect_url": reverse("view-patient", kwargs={'pk': patient.id})
         })
 
+    except Http404:
+        return JsonResponse({"success": False, "error": "Not found", "message": "HINE assessment not found."}, status=404)
+    except IntegrityError as e:
+        logger.error(f"Database integrity error in hine_assessment_delete: {e}")
+        return JsonResponse({
+            "success": False,
+            "error": "Data integrity error",
+            "message": "A data conflict occurred. Please refresh and try again."
+        }, status=409)
+    except PermissionDenied:
+        raise
     except Exception as e:
         logger.exception(
             f"Deletion error: user={request.user.username}, "
@@ -3383,16 +3495,18 @@ def da_assessment_delete(request, da_id):
 
         # 5. Store info for logging and response
         da_name = get_entity_display_name(da_assessment)
+        _uname = request.user.username
+        _da_name = da_name
+        _patient_name = patient.baby_name
 
-        # 6. Perform deletion
-        da_assessment.delete()
-
-        # 7. Audit log
-        logger.info(
-            f"Deletion successful: user={request.user.username}, "
-            f"entity=DevelopmentalAssessment, name={da_name}, id={da_id}, "
-            f"patient={patient.baby_name}"
-        )
+        # 6. Perform deletion — audit log deferred to post-commit
+        with transaction.atomic():
+            da_assessment.delete()
+            transaction.on_commit(lambda: logger.info(
+                f"Deletion successful: user={_uname}, "
+                f"entity=DevelopmentalAssessment, name={_da_name}, id={da_id}, "
+                f"patient={_patient_name}"
+            ))
 
         # 8. Return success
         return JsonResponse({
@@ -3401,6 +3515,17 @@ def da_assessment_delete(request, da_id):
             "redirect_url": reverse("view-patient", kwargs={'pk': patient.id})
         })
 
+    except Http404:
+        return JsonResponse({"success": False, "error": "Not found", "message": "Developmental assessment not found."}, status=404)
+    except IntegrityError as e:
+        logger.error(f"Database integrity error in da_assessment_delete: {e}")
+        return JsonResponse({
+            "success": False,
+            "error": "Data integrity error",
+            "message": "A data conflict occurred. Please refresh and try again."
+        }, status=409)
+    except PermissionDenied:
+        raise
     except Exception as e:
         logger.exception(
             f"Deletion error: user={request.user.username}, "
@@ -3692,16 +3817,18 @@ def gpa_delete(request, gpa_id):
 
         # 5. Store info for logging and response
         gpa_name = get_entity_display_name(gpa_record)
+        _uname = request.user.username
+        _gpa_name = gpa_name
+        _patient_name = patient.baby_name
 
-        # 6. Perform deletion
-        gpa_record.delete()
-
-        # 7. Audit log
-        logger.info(
-            f"Deletion successful: user={request.user.username}, "
-            f"entity=GeneralPaediatricAssessment, name={gpa_name}, id={gpa_id}, "
-            f"patient={patient.baby_name}"
-        )
+        # 6. Perform deletion — audit log deferred to post-commit
+        with transaction.atomic():
+            gpa_record.delete()
+            transaction.on_commit(lambda: logger.info(
+                f"Deletion successful: user={_uname}, "
+                f"entity=GeneralPaediatricAssessment, name={_gpa_name}, id={gpa_id}, "
+                f"patient={_patient_name}"
+            ))
 
         # 8. Return success
         return JsonResponse({
@@ -3710,6 +3837,17 @@ def gpa_delete(request, gpa_id):
             "redirect_url": reverse("view-patient", kwargs={'pk': patient.id})
         })
 
+    except Http404:
+        return JsonResponse({"success": False, "error": "Not found", "message": "GPA assessment not found."}, status=404)
+    except IntegrityError as e:
+        logger.error(f"Database integrity error in gpa_assessment_delete: {e}")
+        return JsonResponse({
+            "success": False,
+            "error": "Data integrity error",
+            "message": "A data conflict occurred. Please refresh and try again."
+        }, status=409)
+    except PermissionDenied:
+        raise
     except Exception as e:
         logger.exception(
             f"Deletion error: user={request.user.username}, "

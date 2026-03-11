@@ -1,136 +1,54 @@
 {
   "workflow_version": "1.2.0",
-  "timestamps": {
-    "started": "2026-02-19T00:00:00Z",
-    "last_updated": "2026-02-19T01:00:00Z"
-  },
-  "mode": "completed",
+  "timestamps": {"started": "2026-03-09T00:00:00Z", "last_updated": "2026-03-09T12:00:00Z", "completed": "2026-03-09T12:00:00Z"},
+  "mode": "initial_scan",
   "scan_level": "exhaustive",
   "project_root": "D:/Projects/Current Projects/NDAS - Project/NDAS",
   "project_knowledge": "D:/Projects/Current Projects/NDAS - Project/NDAS/docs",
+  "project_types": [{"part_id": "main", "project_type_id": "backend", "display_name": "NDAS Django Backend + Web"}],
   "completed_steps": [
-    {
-      "step": "step_1",
-      "status": "completed",
-      "timestamp": "2026-02-19T00:01:00Z",
-      "summary": "Classified as monolith with 1 part. Type: backend (Django+Python). User override: requires_ui_components=true."
-    },
-    {
-      "step": "step_2",
-      "status": "completed",
-      "timestamp": "2026-02-19T00:02:00Z",
-      "summary": "Found 10 existing project docs. User context: ignore temp_documents directory."
-    },
-    {
-      "step": "step_3",
-      "status": "completed",
-      "timestamp": "2026-02-19T00:03:00Z",
-      "summary": "Tech stack: Django 4.2.16 on Python 3.x. Frontend: AdminLTE 3.2 + Bootstrap 4.6 + HTMX. Architecture: MTV server-side rendering, 13-layer middleware."
-    },
-    {
-      "step": "step_4_batch_1",
-      "status": "completed",
-      "timestamp": "2026-02-19T00:05:00Z",
-      "summary": "Custom codes documented. Output: docs/custom-codes-reference.md (8 modules)."
-    },
-    {
-      "step": "step_4_batch_2",
-      "status": "completed",
-      "timestamp": "2026-02-19T00:10:00Z",
-      "summary": "Data models documented. Apps: patients (11 models), video (1), users (5), problemlist (2), reports (2). Output: docs/data-models-main.md."
-    },
-    {
-      "step": "step_4_batch_3",
-      "status": "completed",
-      "timestamp": "2026-02-19T00:20:00Z",
-      "summary": "API contracts documented. 100+ URL patterns across 5 apps. Output: docs/api-contracts-main.md."
-    },
-    {
-      "step": "step_4_batch_4",
-      "status": "completed",
-      "timestamp": "2026-02-19T00:30:00Z",
-      "summary": "UI components documented. 100+ templates across 16 directories. Output: docs/component-inventory-main.md."
-    },
-    {
-      "step": "step_5_6_8_9",
-      "status": "completed",
-      "timestamp": "2026-02-19T00:50:00Z",
-      "summary": "Architecture, project overview, and development guide generated. Outputs: docs/architecture.md, docs/project-overview.md, docs/development-guide.md."
-    },
-    {
-      "step": "step_10",
-      "status": "completed",
-      "timestamp": "2026-02-19T01:00:00Z",
-      "summary": "Master index generated. Output: docs/index.md."
-    },
-    {
-      "step": "step_12",
-      "status": "completed",
-      "timestamp": "2026-02-19T01:00:00Z",
-      "summary": "All documentation generated and finalized. Exhaustive scan complete."
-    }
+    {"step": "step_0.5", "status": "completed", "timestamp": "2026-03-09T00:01:00Z", "summary": "Loaded documentation requirements for 12 project types"},
+    {"step": "step_0.6", "status": "completed", "timestamp": "2026-03-09T00:02:00Z", "summary": "No existing docs found — initial_scan mode, exhaustive level selected"},
+    {"step": "step_1", "status": "completed", "timestamp": "2026-03-09T00:05:00Z", "summary": "Classified as monolith, 1 part, project_type_id=backend (Django Python web+backend)"},
+    {"step": "step_2", "status": "completed", "timestamp": "2026-03-09T00:06:00Z", "summary": "Found existing docs: CLAUDE.md, DEPLOYMENT.md, AGENTS.md, requirements.txt, .env.example"},
+    {"step": "step_3", "status": "completed", "timestamp": "2026-03-09T00:10:00Z", "summary": "Tech stack: Django 4.2.16, Python, SQLite/PostgreSQL, AdminLTE 3.2, Bootstrap 4.6, HTMX, Video.js"},
+    {"step": "step_4", "status": "completed", "timestamp": "2026-03-09T02:00:00Z", "summary": "Exhaustive scan: 7 apps read, all models/views/urls extracted. APIs: ~80+ endpoints, Data: 25+ models, Components: 80+ templates"},
+    {"step": "step_5", "status": "completed", "timestamp": "2026-03-09T02:30:00Z", "summary": "Source tree documented with full annotated tree"},
+    {"step": "step_6", "status": "completed", "timestamp": "2026-03-09T02:35:00Z", "summary": "Dev setup and deployment documented"},
+    {"step": "step_8", "status": "completed", "timestamp": "2026-03-09T03:00:00Z", "summary": "Architecture doc written covering middleware, custom_codes, patterns, Phase 2 preview"},
+    {"step": "step_9", "status": "completed", "timestamp": "2026-03-09T03:30:00Z", "summary": "All supporting docs written: project-overview, component-inventory, development-guide, api-contracts, data-models"},
+    {"step": "step_10", "status": "completed", "timestamp": "2026-03-09T04:00:00Z", "summary": "Master index generated at docs/index.md"},
+    {"step": "step_11", "status": "completed", "timestamp": "2026-03-09T04:05:00Z", "summary": "Validation complete, no incomplete markers found"},
+    {"step": "step_12", "status": "completed", "timestamp": "2026-03-09T04:10:00Z", "summary": "Workflow complete"}
   ],
   "current_step": "completed",
-  "project_types": [
-    {
-      "part_id": "main",
-      "project_type_id": "backend",
-      "display_name": "Django Web Application (Monolith)"
-    }
-  ],
-  "project_parts": [
-    {
-      "part_id": "main",
-      "root_path": "D:/Projects/Current Projects/NDAS - Project/NDAS",
-      "project_type_id": "backend",
-      "display_name": "NDAS Django Application",
-      "primary_language": "Python",
-      "framework": "Django 4.2.16",
-      "architecture_pattern": "MTV (Model-Template-View)",
-      "documentation_requirements": {
-        "requires_api_scan": true,
-        "requires_data_models": true,
-        "requires_state_management": false,
-        "requires_ui_components": true,
-        "requires_deployment_config": true,
-        "requires_hardware_docs": false,
-        "requires_asset_inventory": false
-      }
-    }
-  ],
   "findings": {
-    "project_classification": "Monolith Django backend web app, 1 part, Python, AdminLTE+Bootstrap+HTMX frontend",
-    "existing_docs_count": 10,
-    "user_context": "Ignore temp_documents directory.",
-    "enhanced_scan_priorities": {
-      "HIGH": [
-        "ndas/custom_codes/ — COMPLETED: docs/custom-codes-reference.md",
-        "Patient model field mapping — COMPLETED: docs/data-models-main.md",
-        "Data models + relationships per app — COMPLETED: docs/data-models-main.md",
-        "URL routing + app responsibilities matrix — COMPLETED: docs/api-contracts-main.md",
-        "validators.py / sanitization API — COMPLETED: docs/custom-codes-reference.md",
-        "delete_helpers.py — COMPLETED: docs/custom-codes-reference.md",
-        "Cross-app dependency graph — COMPLETED: docs/architecture.md"
-      ],
-      "MEDIUM": [
-        "Security/middleware stack — COMPLETED: docs/architecture.md",
-        "Medical domain glossary — COMPLETED: docs/project-overview.md + docs/index.md"
-      ],
-      "LOW": [
-        "Test coverage inventory — NOT COMPLETED (low priority)"
-      ]
-    }
+    "project_classification": "Django MVT monolith, single-part, backend+web project type",
+    "technology_stack": "Django 4.2.16 on Python, SQLite/PostgreSQL, AdminLTE 3.2 + Bootstrap 4.6, HTMX, Video.js",
+    "apis": "~80+ URL endpoints across 7 apps documented in api-contracts-main.md",
+    "data_models": "25+ models across 7 apps documented in data-models-main.md",
+    "components": "80+ templates across all apps documented in component-inventory-main.md",
+    "batches_completed": [
+      {"path": "patients/", "files_scanned": 12, "summary": "Root app: Patient model, GMAssessment, CDIC, HINE, Developmental, Attachment, Bookmark"},
+      {"path": "users/", "files_scanned": 8, "summary": "Auth app: CustomUser, UserActivityLog, UserSession, Subscription"},
+      {"path": "video/", "files_scanned": 6, "summary": "Video app: Video model, upload/streaming views"},
+      {"path": "reports/", "files_scanned": 8, "summary": "Reports: PDF/Excel generators, ReportTemplate, ReportConfig"},
+      {"path": "problemlist/", "files_scanned": 5, "summary": "Problem tracking: Problem, ProblemAction"},
+      {"path": "institution/", "files_scanned": 6, "summary": "Phase 2: Institution, PatientMoveLog, InstitutionScopedManager"},
+      {"path": "referral/", "files_scanned": 7, "summary": "Phase 2: ReferralSent, ReferralReceived, ReferralMessage, Notification"},
+      {"path": "ndas/custom_codes/", "files_scanned": 9, "summary": "Base classes, choices, validators, middleware, error handlers"}
+    ]
   },
   "outputs_generated": [
-    "docs/project-scan-report.json",
-    "docs/index.md",
-    "docs/project-overview.md",
-    "docs/architecture.md",
-    "docs/data-models-main.md",
-    "docs/api-contracts-main.md",
-    "docs/component-inventory-main.md",
-    "docs/custom-codes-reference.md",
-    "docs/development-guide.md"
+    "project-scan-report.json",
+    "project-overview.md",
+    "architecture.md",
+    "data-models-main.md",
+    "api-contracts-main.md",
+    "component-inventory-main.md",
+    "development-guide.md",
+    "source-tree-analysis.md",
+    "index.md"
   ],
-  "resume_instructions": "Scan is complete. All documentation has been generated. Use docs/index.md as the entry point."
+  "resume_instructions": "Workflow complete — all steps finished"
 }
