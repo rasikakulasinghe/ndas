@@ -1,7 +1,7 @@
 {% extends 'src/base.html' %}
 {% block title %}Admin Dashboard{% endblock %}
 
-{% block content_header %}
+{% comment %} {% block content_header %}
 <div class="row mb-0">
   <div class="col-sm-6">
     <h1 class="m-0">Staff Dashboard</h1>
@@ -15,11 +15,11 @@
     </ol>
   </div>
 </div>
-{% endblock content_header %}
+{% endblock content_header %} {% endcomment %}
 
 {% block main_content %}
 <div class="container-fluid">
-    <div class="card bg-info mb-3">
+    {% comment %} <div class="card bg-info mb-3">
       <div class="card-header">
         <h3 class="card-title">
           {% if active_institution %}{{ active_institution.name }}{% else %}NDAS Network{% endif %}
@@ -28,7 +28,7 @@
           <small class="text-white">Neurodevelopmental Assessment System</small>
         </div>
       </div>
-    </div>
+    </div> {% endcomment %}
     <!-- User Management Quick Stats -->
     <div class="row mb-4">
         <div class="col-lg-3 col-6">

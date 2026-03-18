@@ -527,14 +527,6 @@ class PatientForm(UniqueFieldValidationMixin, forms.ModelForm):
             resustn_note = sanitize_html(resustn_note, strip=True)
         return resustn_note
 
-    def clean_current_problems(self):
-        """Sanitize current problems (allows safe HTML)"""
-        current_problems = self.cleaned_data.get("current_problems")
-        if current_problems:
-            # Sanitize HTML to prevent XSS while allowing safe formatting
-            current_problems = sanitize_html(current_problems, strip=True)
-        return current_problems
-
     def clean(self):
         """Cross-field validation"""
         cleaned_data = super().clean()

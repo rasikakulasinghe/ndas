@@ -8,6 +8,8 @@ class Position(models.TextChoices):
     OCCUPATIONAL_THERAPIST = "Occupational Therapist", "Occupational Therapist"
     NURSING_OFFICER = "Nursing officer", "Nursing officer"
     SENIOR_REGISTRAR = "Senior Registrar", "Senior Registrar"
+    SPEECH_THERAPIST = "Speech Therapist", "Speech Therapist"
+    PSYCHOLOGIST = "Psychologist", "Psychologist"
 
 # Keep the old POSSITION for backward compatibility
 POSSITION = Position.choices

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.core.exceptions import ValidationError
 from ndas.custom_codes.Custom_abstract_class import TimeStampedModel, UserTrackingMixin
@@ -90,3 +91,37 @@ class PatientMoveLog(TimeStampedModel, UserTrackingMixin):
 
     class Meta:
         ordering = ['-created_at']
+
+
+class InstitutionSwitchLog(TimeStampedModel, UserTrackingMixin):
+    """
+    Persistent audit trail for SUPERADMIN institution context switches.
+
+    Inherits TimeStampedModel (created_at, updated_at) and UserTrackingMixin
+    (added_by, last_edit_by) per mandatory model pattern in CLAUDE.md.
+    `user` is the explicit actor field; `added_by` is auto-populated by
+    UserActivityMiddleware and should match.
+
+    `previous_institution_id` is intentionally an IntegerField (not a FK) so that
+    the audit record survives institution deletion — SET_NULL would destroy the
+    historical reference.
+    """
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, related_name='institution_switch_logs'
+    )
+    institution = models.ForeignKey(
+        'Institution', on_delete=models.SET_NULL,
+        null=True, related_name='switch_logs'
+    )
+    # Intentional IntegerField (not FK): preserves the ID even if institution is deleted.
+    previous_institution_id = models.IntegerField(null=True, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [models.Index(fields=['user', 'created_at'])]
+
+    def __str__(self):
+        return f"{self.user} → Institution {self.institution_id} at {self.created_at}"

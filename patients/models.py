@@ -1,4 +1,7 @@
 from django.db import models
+from django.db.models import Exists, OuterRef, Subquery, BooleanField, Case, When, Value
+from django.db.models.functions import Coalesce
+from django.utils.functional import cached_property
 from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -48,6 +51,105 @@ from django.apps import apps
 from institution.managers import InstitutionScopedManager as _InstitutionScopedManager
 
 logger = logging.getLogger(__name__)
+
+
+class PatientQuerySet(models.QuerySet):
+    """
+    Custom queryset for Patient that provides status annotation support.
+    Inheriting from QuerySet ensures with_status_annotations() is chainable.
+    """
+
+    def with_status_annotations(self, user=None):
+        """
+        Annotate queryset with patient status booleans, eliminating N+1 queries
+        in list views. Each property checks for the annotation first and falls back
+        to direct DB queries for single-instance access.
+
+        Args:
+            user: Optional User instance. When provided, _is_bookmarked is scoped
+                  to that user (F9 fix). When None, _is_bookmarked reflects any user's
+                  bookmark — use only for superadmin/system views where user context
+                  is unavailable.
+
+        Semantic note (F10):
+            - _is_last_gma_normal / _is_last_hine_normal: "is the LATEST assessment normal?"
+              Used for display badges. A patient with past abnormal + recent normal shows True.
+            - is_gma_abnormal_ann / is_hine_abnormal_ann (added by getPatientList for filtering):
+              "does ANY historical assessment show abnormal?" Used for list filtering.
+            Both are semantically correct for their respective purposes.
+        """
+        # Lazy import to avoid circular: patients.models <-> video.models
+        from video.models import Video
+
+        bookmark_filter = {'bookmark_type': 'Patient', 'object_id': OuterRef('pk')}
+        if user is not None:
+            bookmark_filter['added_by'] = user
+
+        return self.annotate(
+            # True = patient HAS videos (isNewPatient property negates this)
+            _has_videos=Exists(
+                Video.objects.filter(patient=OuterRef('pk'))
+            ),
+            _is_discharged=Exists(
+                CDICRecord.objects.filter(patient=OuterRef('pk'), is_discharged=True)
+            ),
+            # GMA: is_diagnosis_normal is a property checking diagnosis_conclusion=='NORMAL'
+            _is_last_gma_normal=Coalesce(
+                Subquery(
+                    GMAssessment.objects.filter(patient=OuterRef('pk'))
+                    .order_by('-id')
+                    .values(is_norm=Case(
+                        When(diagnosis_conclusion='NORMAL', then=Value(True)),
+                        default=Value(False),
+                        output_field=BooleanField()
+                    ))[:1],
+                    output_field=BooleanField()
+                ),
+                Value(True)  # Default: no assessment → treated as normal (matches property fallback)
+            ),
+            # HINE: is_normal is a property checking score > 73
+            _is_last_hine_normal=Coalesce(
+                Subquery(
+                    HINEAssessment.objects.filter(patient=OuterRef('pk'))
+                    .order_by('-id')
+                    .values(is_norm=Case(
+                        When(score__gt=73, then=Value(True)),
+                        default=Value(False),
+                        output_field=BooleanField()
+                    ))[:1],
+                    output_field=BooleanField()
+                ),
+                Value(True)  # Default: no assessment → treated as normal (matches property fallback)
+            ),
+            # DA: is_dx_normal is an actual DB field
+            _is_last_da_normal=Coalesce(
+                Subquery(
+                    DevelopmentalAssessment.objects.filter(patient=OuterRef('pk'))
+                    .order_by('-id').values('is_dx_normal')[:1],
+                    output_field=BooleanField()
+                ),
+                Value(True)  # Default: no assessment → treated as normal (matches property fallback)
+            ),
+            # F9 FIX: Scoped to `user` when provided so isBookmarked reflects this user's
+            # bookmarks, not any user's bookmark.
+            _is_bookmarked=Exists(
+                Bookmark.objects.filter(**bookmark_filter)
+            ),
+        )
+
+
+class PatientManager(_InstitutionScopedManager):
+    """
+    Extends InstitutionScopedManager with queryset annotation support.
+    Uses PatientQuerySet so with_status_annotations() is chainable from views.
+    """
+
+    def get_queryset(self):
+        return PatientQuerySet(self.model, using=self._db)
+
+    def with_status_annotations(self, user=None):
+        """Direct access: Patient.objects.with_status_annotations(user=request.user)"""
+        return self.get_queryset().with_status_annotations(user=user)
 
 
 class Patient(TimeStampedModel, UserTrackingMixin):
@@ -326,8 +428,8 @@ class Patient(TimeStampedModel, UserTrackingMixin):
         db_index=True,
     )
 
-    # Institution-scoped manager (Story 1.4)
-    objects = _InstitutionScopedManager()
+    # Institution-scoped manager with annotation support (Story 1.4 + adversarial review N+1 fix)
+    objects = PatientManager()
 
     class Meta:
         verbose_name = _("Patient")
@@ -377,13 +479,21 @@ class Patient(TimeStampedModel, UserTrackingMixin):
 
     def save(self, *args, **kwargs):
         """Override save to perform additional validation"""
+        # F11 FIX: Clear cached_property values before save so that a re-used instance
+        # (e.g. in tests or after assessment changes) gets fresh computed values.
+        for prop in ('isScreeningPositive', 'getGMAIndicationsList', 'getDiagnosisList'):
+            self.__dict__.pop(prop, None)
         self.full_clean()
         super().save(*args, **kwargs)
 
-    # Optimized properties with caching where appropriate
+    # Optimized properties with annotation-first fallback pattern
     @property
     def isNewPatient(self):
-        """Check if patient has any video records"""
+        """True if patient has no video records. Uses annotation if pre-fetched."""
+        # _has_videos annotation: True = has videos; isNewPatient = not has videos
+        has_videos = getattr(self, '_has_videos', None)
+        if has_videos is not None:
+            return not has_videos
         if hasattr(self, "pk") and self.pk:
             Video = apps.get_model("video", "Video")
             return not Video.objects.filter(patient=self.pk).exists()
@@ -391,7 +501,10 @@ class Patient(TimeStampedModel, UserTrackingMixin):
 
     @property
     def isDischarged(self):
-        """Check if patient is discharged"""
+        """Check if patient is discharged. Uses annotation if pre-fetched."""
+        annotated = getattr(self, '_is_discharged', None)
+        if annotated is not None:
+            return annotated
         latest_record = CDICRecord.objects.filter(patient=self).order_by("-id").first()
         return latest_record.is_discharged if latest_record else False
 
@@ -400,9 +513,9 @@ class Patient(TimeStampedModel, UserTrackingMixin):
         """Return formatted APGAR scores"""
         return f"{self.apgar_1} - {self.apgar_5} - {self.apgar_10}"
 
-    @property
+    @cached_property
     def isScreeningPositive(self):
-        """Check if patient has positive screening results"""
+        """Check if patient has positive screening results. TODO: migrate to queryset annotation."""
         if not hasattr(self, "pk") or not self.pk:
             return False
 
@@ -447,7 +560,10 @@ class Patient(TimeStampedModel, UserTrackingMixin):
 
     @property
     def isLastGMANormal(self):
-        """Check if last GMA assessment is normal"""
+        """Check if last GMA assessment is normal. Uses annotation if pre-fetched."""
+        annotated = getattr(self, '_is_last_gma_normal', None)
+        if annotated is not None:
+            return annotated
         if not hasattr(self, "pk") or not self.pk:
             return True
         try:
@@ -459,7 +575,10 @@ class Patient(TimeStampedModel, UserTrackingMixin):
 
     @property
     def isLastHINENormal(self):
-        """Check if last HINE assessment is normal"""
+        """Check if last HINE assessment is normal. Uses annotation if pre-fetched."""
+        annotated = getattr(self, '_is_last_hine_normal', None)
+        if annotated is not None:
+            return annotated
         if not hasattr(self, "pk") or not self.pk:
             return True
         latest = HINEAssessment.objects.filter(patient=self).order_by("-id").first()
@@ -467,7 +586,10 @@ class Patient(TimeStampedModel, UserTrackingMixin):
 
     @property
     def isLastDANormal(self):
-        """Check if last DA assessment is normal"""
+        """Check if last DA assessment is normal. Uses annotation if pre-fetched."""
+        annotated = getattr(self, '_is_last_da_normal', None)
+        if annotated is not None:
+            return annotated
         if not hasattr(self, "pk") or not self.pk:
             return True
         latest = (
@@ -482,7 +604,10 @@ class Patient(TimeStampedModel, UserTrackingMixin):
 
     @property
     def isBookmarked(self):
-        """Check if patient is bookmarked"""
+        """Check if patient is bookmarked. Uses annotation (bool) if pre-fetched, else returns Bookmark or None."""
+        annotated = getattr(self, '_is_bookmarked', None)
+        if annotated is not None:
+            return annotated
         if not hasattr(self, "pk") or not self.pk:
             return None
         try:
@@ -490,18 +615,18 @@ class Patient(TimeStampedModel, UserTrackingMixin):
         except Bookmark.DoesNotExist:
             return None
 
-    @property
+    @cached_property
     def getGMAIndicationsList(self):
-        """Get list of GMA indications"""
+        """Get list of GMA indications. TODO: migrate to queryset annotation."""
         return ", ".join(
             map(
                 str, list(self.indecation_for_gma.all().values_list("title", flat=True))
             )
         )
 
-    @property
+    @cached_property
     def getDiagnosisList(self):
-        """Get comprehensive diagnosis list from all assessments"""
+        """Get comprehensive diagnosis list from all assessments. TODO: migrate to queryset annotation."""
         if not hasattr(self, "pk") or not self.pk:
             return "No assessments", "No assessments", "No assessments"
 

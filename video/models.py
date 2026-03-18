@@ -1,7 +1,8 @@
 import os
 import logging
 from datetime import timedelta
-from django.db import models
+from django.conf import settings
+from django.db import models, transaction
 from django.utils import timezone
 from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
 from django.utils.translation import gettext_lazy as _
@@ -280,9 +281,19 @@ class Video(TimeStampedModel, UserTrackingMixin):
                 )
                 self._try_fallback_estimation()
 
-        # Validate before saving
-        self.clean()
-        super().save(*args, **kwargs)
+        # === PHASE 2: Atomic DB write (validation + save are a single unit) ===
+        with transaction.atomic():
+            # On PostgreSQL: lock existing record to prevent concurrent metadata overwrites.
+            # F5 FIX: .exists() does not acquire a row lock — use .select_for_update().first()
+            # which issues SELECT ... FOR UPDATE and holds the lock for the transaction.
+            # F14 FIX: use self._state.db instead of hardcoded 'default' to support DB routing.
+            if self.pk:
+                db_alias = self._state.db or 'default'
+                db_engine = settings.DATABASES.get(db_alias, {}).get('ENGINE', '')
+                if 'postgresql' in db_engine:
+                    Video.objects.using(db_alias).select_for_update().filter(pk=self.pk).first()
+            self.clean()
+            super().save(*args, **kwargs)
 
     def _get_video_file_path(self):
         """Helper method to get video file path for metadata extraction"""

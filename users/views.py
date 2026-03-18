@@ -14,6 +14,8 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from datetime import date
 from django_ratelimit.decorators import ratelimit
+from django_ratelimit.core import is_ratelimited
+from django_ratelimit.exceptions import Ratelimited
 from .forms import CustomUserRegistrationForm, UserPasswordChange, CustomUserEditForm, SubscriptionForm
 from .models import DeveloperContacts, Subscription
 from .utils import (
@@ -33,8 +35,15 @@ from django.urls import reverse
 logger = logging.getLogger(__name__)
 
 # Create your views here.
-@ratelimit(key='ip', rate='3/m', method='POST', block=True)
+# F6 FIX: Use block=False on both decorators so both counters are always incremented
+# before any blocking decision. With block=True the outer decorator raises immediately,
+# leaving the inner counter un-incremented — an attacker exploiting the outer limit can
+# bypass the inner counter indefinitely.
+@ratelimit(key='post:username', rate='5/m', method='POST', block=False)
+@ratelimit(key='ip', rate='3/m', method='POST', block=False)
 def loginPage(request):
+    if getattr(request, 'limited', False):
+        raise Ratelimited()
     logged_user = request.user
 
     # Fetch developer contact information for modal
@@ -316,7 +325,7 @@ def verify_email(request, token):
         
         return redirect('user-login')
         
-    except CustomUser.DoesNotExist:
+    except (CustomUser.DoesNotExist, CustomUser.MultipleObjectsReturned):
         messages.error(request, 'Invalid verification link.')
         return redirect('user-login')
 
@@ -360,8 +369,8 @@ def resend_verification_email(request):
 
         return redirect('user-login')
 
-    except CustomUser.DoesNotExist:
-        # Use neutral message — do not reveal whether account exists
+    except (CustomUser.DoesNotExist, CustomUser.MultipleObjectsReturned):
+        # Use neutral message — do not reveal whether account exists or if duplicates exist
         messages.success(request, 'If an account with this email exists and is unverified, a link has been sent.')
         return redirect('user-login')
 
@@ -372,14 +381,38 @@ class RateLimitedPasswordResetView(auth_views.PasswordResetView):
     Password reset view with rate limiting.
 
     Rate limited to:
-    - 3 requests per hour per IP address
+    - 3 requests per hour per IP address (class-level decorator)
+    - 5 requests per hour per email address (post() override)
 
     This prevents abuse of the password reset functionality and protects against:
     - Email enumeration attacks
     - Password reset email spam
     - Resource exhaustion
     """
-    pass
+
+    def post(self, request, *args, **kwargs):
+        email = request.POST.get('email', '').lower().strip()
+        if email:
+            # F7 FIX: Prefix key with view-specific namespace to prevent cache key collisions
+            # with other rate limiters that might use 'email:...' keys.
+            # F8 FIX: Empty email falls through here (not rate-limited per-email, which is
+            # correct — the class-level IP decorator still protects against empty-email flooding).
+            limited = is_ratelimited(
+                request,
+                fn=self.post,
+                key=f'pwreset_email:{email}',
+                rate='5/h',
+                method='POST',
+                increment=True,
+            )
+            if limited:
+                # Neutral message — same as success to prevent timing/enumeration attacks
+                messages.info(
+                    request,
+                    'If an account with this email exists, a reset link has been sent.'
+                )
+                return redirect(request.path)
+        return super().post(request, *args, **kwargs)
 
 
 @login_required(login_url='user-login')

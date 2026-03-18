@@ -63,7 +63,7 @@ from patients.timeline_utils import get_patient_timeline_events
 from django.views.decorators.http import require_http_methods, require_GET, require_POST
 import os
 import logging
-from django.http import JsonResponse, Http404
+from django.http import JsonResponse, Http404, HttpResponseForbidden
 from django.conf import settings
 from django.utils.timezone import localtime, now
 from django.utils import timezone
@@ -284,82 +284,41 @@ def patient_add(request):
         data_form = PatientForm(request.POST)
 
         if data_form.is_valid():
-            # Additional server-side validation
-            cleaned_data = data_form.cleaned_data
-
-            # Validate POG ranges
-            pog_wks = cleaned_data.get("pog_wks")
-            pog_days = cleaned_data.get("pog_days")
-
-            if pog_wks and (int(pog_wks) < 20 or int(pog_wks) > 44):
-                data_form.add_error("pog_wks", "POG weeks must be between 20 and 44")
-
-            if pog_days and (int(pog_days) < 0 or int(pog_days) > 6):
-                data_form.add_error("pog_days", "POG days must be between 0 and 6")
-
-            # Validate APGAR scores
-            apgar_fields = ["apgar_1", "apgar_5", "apgar_10"]
-            for field in apgar_fields:
-                value = cleaned_data.get(field)
-                if value is not None and (int(value) < 0 or int(value) > 10):
-                    data_form.add_error(
-                        field,
-                        f'{field.replace("_", " ").title()} score must be between 0 and 10',
-                    )
-
-            # Validate birth weight
-            birth_weight = cleaned_data.get("birth_weight")
-            if birth_weight and (birth_weight < 300 or birth_weight > 8000):
-                data_form.add_error(
-                    "birth_weight", "Birth weight must be between 300g and 8000g"
-                )
-
-            # Validate measurements
-            length = cleaned_data.get("length")
-            if length and (length < 10 or length > 90):
-                data_form.add_error("length", "Length must be between 10cm and 90cm")
-
-            ofc = cleaned_data.get("ofc")
-            if ofc and (ofc < 15 or ofc > 70):
-                data_form.add_error("ofc", "OFC must be between 15cm and 70cm")
-
-            # Check for duplicate BHT
-            bht = cleaned_data.get("bht")
-            if bht and Patient.objects.for_institution(getattr(request, 'institution', None)).filter(bht=bht).exists():
-                data_form.add_error("bht", "A patient with this BHT already exists")
-
-            # Validate date of birth (not in future)
-            dob_tob = cleaned_data.get("dob_tob")
-            if dob_tob and dob_tob > timezone.now():
-                data_form.add_error("dob_tob", "Date of birth cannot be in the future")
-
-            # If validation passes, save the patient
-            if not data_form.errors:
-                try:
+            # Form-level clean() already validated all fields (POG, APGAR, birth weight,
+            # length, OFC, dob_tob, BHT uniqueness). Proceed directly to save.
+            try:
+                with transaction.atomic():
                     var_pt_add = data_form.save(commit=False)
+                    var_pt_add.institution = getattr(request, 'institution', None)
                     var_pt_add.save()
 
                     # Save many-to-many relationships (including GMA indicators)
                     data_form.save_m2m()
 
-                    # Get count of GMA indicators for success message
-                    gma_count = var_pt_add.indecation_for_gma.count()
-                    gma_message = (
-                        f" with {gma_count} GMA indicator(s)" if gma_count > 0 else ""
-                    )
+                # Get count of GMA indicators for success message
+                gma_count = var_pt_add.indecation_for_gma.count()
+                gma_message = (
+                    f" with {gma_count} GMA indicator(s)" if gma_count > 0 else ""
+                )
 
-                    messages.success(
-                        request,
-                        f'New patient "{var_pt_add.baby_name}" added successfully{gma_message}!',
-                    )
-                    return redirect("view-patient", var_pt_add.id)
+                messages.success(
+                    request,
+                    f'New patient "{var_pt_add.baby_name}" added successfully{gma_message}!',
+                )
+                return redirect("view-patient", var_pt_add.id)
 
-                except Exception as e:
-                    messages.error(
-                        request,
-                        "An error occurred while saving the patient. Please try again.",
-                    )
-                    return render(request, "patients/add.html", {"form": data_form})
+            except Exception as e:
+                logger.error(
+                    "Error saving new patient for user=%s: %s",
+                    request.user.username,
+                    e,
+                    exc_info=True,
+                )
+                messages.error(
+                    request,
+                    "An error occurred while saving the patient. Please try again.",
+                )
+                return render(request, "patients/add.html", {"form": data_form})
 
         # If form is not valid, return with errors
         return render(request, "patients/add.html", {"form": data_form})
@@ -648,7 +607,14 @@ def patient_edit(request, pk):
                 return redirect("manage-patients")
 
             except Exception as e:
-                messages.error(request, f"An error occurred while saving: {str(e)}")
+                logger.error(
+                    "Error editing patient pk=%s for user=%s: %s",
+                    pk,
+                    request.user.username,
+                    e,
+                    exc_info=True,
+                )
+                messages.error(request, "An error occurred while saving. Please try again.")
                 return render(
                     request,
                     "patients/edit.html",
@@ -1559,18 +1525,24 @@ def bookmark_add(request, item_id, bookmark_type):
 
 @login_required(login_url="user-login")
 def bookmark_view(request, pk):
+    # F4: guard matches bookmark_delete — institution_scope() returns {} when institution is
+    # None, which would expose all-institution data. Block explicitly instead.
+    if not getattr(request, 'institution', None):
+        return HttpResponseForbidden()
     bookmark = get_object_or_404(Bookmark, id=pk, **institution_scope(request, 'owner__institution'))
-    # Institution scope enforced above — only bookmarks owned by the current institution are accessible.
-    # NOTE: Bookmark.object_id is a generic field with no patient FK (architectural constraint).
-    # If a future version of this view resolves object_id to a Patient record, enforce institution
-    # scope at resolution time:
-    #   patient = get_object_or_404(
-    #       Patient.objects.for_institution(getattr(request, 'institution', None)),
-    #       id=bookmark.object_id
-    #   )
-    # Stale cross-institution bookmarks will then 404 rather than expose cross-institution data.
-    # TODO: enforce institution scope on patient resolution when this feature is extended.
-    return render(request, "bookmark/view.html", {"bookmark": bookmark})
+    # Resolve bookmarked patient with institution scope.
+    # Institution scope enforced here — stale cross-institution bookmarks will 404.
+    # Architectural note: Bookmark.object_id is PositiveIntegerField (already an int type).
+    # F16: explicit int() cast guards against any edge case where object_id arrives as str.
+    try:
+        patient_id = int(bookmark.object_id)
+    except (TypeError, ValueError):
+        raise Http404("Invalid bookmark object reference.")
+    patient = get_object_or_404(
+        Patient.objects.for_institution(getattr(request, 'institution', None)),
+        id=patient_id
+    )
+    return render(request, "bookmark/view.html", {"bookmark": bookmark, "patient": patient})
 
 
 @login_required(login_url="user-login")
@@ -1583,6 +1555,11 @@ def bookmark_delete(request, pk):
     Accepts: DELETE method with JSON payload {password: str}
     Returns: JSON {success: bool, message: str, redirect_url: str}
     """
+    # Guard: if institution context is absent, deny access rather than silently returning unscoped results.
+    # institution_scope() returns {} when institution is None, which would expose all-institution data.
+    if not getattr(request, 'institution', None):
+        return HttpResponseForbidden()
+
     from ndas.custom_codes.delete_helpers import (
         has_delete_permission,
         validate_can_delete,

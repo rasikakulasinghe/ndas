@@ -65,10 +65,27 @@ class InstitutionContextMiddleware(MiddlewareMixin):
     def _resolve_superadmin_context(self, request, Institution):
         active_id = request.session.get('active_institution_id')
         if active_id:
+            # Per-request cache: avoid repeated DB hits within a single request cycle.
+            # F1 FIX: Compare cached pk against session id — middleware can be called multiple
+            # times per request, and the session could have changed between calls.
+            cached = getattr(request, '_institution_cache', None)
+            if cached is not None and cached.pk == active_id:
+                request.institution = cached
+                return None
             try:
                 request.institution = Institution.objects.get(pk=active_id, is_active=True)
+                request._institution_cache = request.institution
             except Institution.DoesNotExist:
-                # Clear stale session value and send to selector
+                request.session.pop('active_institution_id', None)
+                return redirect(reverse('institution:institution-selector'))
+            except Institution.MultipleObjectsReturned:
+                # PK collision is a data-integrity error — log it before redirecting
+                logger.error(
+                    "Data integrity error: multiple Institution rows with pk=%s. "
+                    "Clearing session context for user=%s.",
+                    active_id,
+                    getattr(request.user, 'username', '?'),
+                )
                 request.session.pop('active_institution_id', None)
                 return redirect(reverse('institution:institution-selector'))
         else:

@@ -19,12 +19,25 @@ from django.views.decorators.http import require_GET, require_POST, require_http
 from django.views.static import serve as django_serve_static
 from django_ratelimit.decorators import ratelimit
 
-from institution.models import Institution
+from institution.models import Institution, InstitutionSwitchLog
 from ndas.custom_codes.choice import UserType, SubscriptionStatus
 from ndas.custom_codes.error_handlers import handle_view_errors
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
+
+
+def _get_client_ip(request):
+    """
+    Return the real client IP address, respecting X-Forwarded-For in proxy/LB setups.
+    Takes the leftmost IP in X-Forwarded-For (the original client), falling back to
+    REMOTE_ADDR. Strips whitespace to guard against header injection.
+    """
+    forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR', '')
+    if forwarded_for:
+        # X-Forwarded-For: client, proxy1, proxy2 — take the leftmost (real client)
+        return forwarded_for.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR')
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -91,18 +104,24 @@ def institution_switch(request, institution_id):
 
     # Log context switch for audit trail
     previous_id = request.session.get('active_institution_id')
-    previous_name = '(none)'
-    if previous_id:
-        try:
-            previous_name = Institution.objects.get(pk=previous_id).name
-        except Institution.DoesNotExist:
-            previous_name = f'(id={previous_id}, deleted)'
 
     request.session['active_institution_id'] = institution.pk
 
+    # Persistent audit trail — failure must never block the switch
+    try:
+        InstitutionSwitchLog.objects.create(
+            user=request.user,
+            institution=institution,
+            previous_institution_id=previous_id,
+            ip_address=_get_client_ip(request),  # F3: use real client IP, not proxy IP
+        )
+    except Exception as e:
+        logger.error("Failed to write InstitutionSwitchLog: %s", e)
+
+    # F15: log by ID only — avoids an extra DB query just for the log message
     logger.info(
-        "SUPERADMIN %s switched institution context: '%s' → '%s' (id=%d)",
-        request.user.username, previous_name, institution.name, institution.pk,
+        "SUPERADMIN %s switched institution context: prev_id=%s → '%s' (id=%d)",
+        request.user.username, previous_id, institution.name, institution.pk,
     )
 
     messages.success(request, f"Viewing as: {institution.name}")

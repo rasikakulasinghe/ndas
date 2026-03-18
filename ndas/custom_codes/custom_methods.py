@@ -544,7 +544,7 @@ def calculate_age_string(start_date, end_date, format_type="detailed"):
         return f"{years} year{'s' if years != 1 else ''} and {months} month{'s' if months != 1 else ''}"
 
 
-def getPatientList(pts_type, institution=None):
+def getPatientList(pts_type, institution=None, user=None):
     """
     Get filtered patient queryset based on patient status type.
 
@@ -583,13 +583,14 @@ def getPatientList(pts_type, institution=None):
         'hine_assessments', 'developmental_assessments', 'cdic_records'
     )
 
+    # Add status annotations that model properties will use (eliminates N+1 in list views).
+    # F9: pass user so _is_bookmarked reflects this user's bookmarks only.
+    var_ptl = var_ptl.with_status_annotations(user=user)
+
     from video.models import Video
 
-    # Add N+1-eliminating annotations to base queryset — available on every returned Patient
+    # Add filter-specific annotations (used for queryset filtering below, not duplicated from with_status_annotations)
     var_ptl = var_ptl.annotate(
-        has_videos_ann=Exists(Video.objects.filter(patient=OuterRef('pk'))),
-        is_discharged_ann=Exists(CDICRecord.objects.filter(patient=OuterRef('pk'), is_discharged=True)),
-        is_bookmarked_ann=Exists(Bookmark.objects.filter(bookmark_type='Patient', object_id=OuterRef('pk'))),
         is_gma_abnormal_ann=Exists(GMAssessment.objects.filter(patient=OuterRef('pk'), diagnosis_conclusion='ABNORMAL')),
         is_hine_abnormal_ann=Exists(HINEAssessment.objects.filter(patient=OuterRef('pk'), score__lt=73)),
     )
@@ -597,7 +598,8 @@ def getPatientList(pts_type, institution=None):
     if pts_type == PtStatus.ALL:
         return var_ptl
     elif pts_type == PtStatus.NEW:
-        return var_ptl.filter(has_videos_ann=False)
+        # _has_videos provided by with_status_annotations() above
+        return var_ptl.filter(_has_videos=False)
     elif pts_type == PtStatus.DISCHARGED:
         return var_ptl.filter(cdic_records__is_discharged=True).distinct()
     elif pts_type == PtStatus.DIAGNOSED:
@@ -607,7 +609,7 @@ def getPatientList(pts_type, institution=None):
             Q(gmassessment__diagnosis_conclusion='ABNORMAL') and
             Q(hine_assessments__score__lt = 73) and
             Q(developmental_assessments__is_dx_normal=False)
-        ).filter(has_videos_ann=True).distinct()
+        ).filter(_has_videos=True).distinct()
     elif pts_type == PtStatus.DX_GMA_ABNORMAL:
         return var_ptl.filter(gmassessment__diagnosis_conclusion='ABNORMAL').distinct()
     elif pts_type == PtStatus.DX_GMA_NORMAL:
