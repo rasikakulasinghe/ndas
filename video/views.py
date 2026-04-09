@@ -46,8 +46,8 @@ def video_add(request, patient_id):
                 if video.recorded_on and hasattr(patient, 'dob_tob') and patient.dob_tob:
                     if video.recorded_on.date() < patient.dob_tob.date():
                         form.add_error('recorded_on', 'Recording date cannot be before patient birth date.')
-                        raise ValidationError('Recording date cannot be before patient birth date.')
-                
+                        raise ValueError('recording_date_before_dob')
+
                 video.save()
 
                 logger.info(f"Video uploaded successfully: {video.id} by user {request.user.id}")
@@ -172,7 +172,7 @@ def video_edit(request, video_id):
                 if updated_video.recorded_on and hasattr(video.patient, 'dob_tob') and video.patient.dob_tob:
                     if updated_video.recorded_on.date() < video.patient.dob_tob.date():
                         form.add_error('recorded_on', 'Recording date cannot be before patient birth date.')
-                        raise ValidationError('Recording date cannot be before patient birth date.')
+                        raise ValueError('recording_date_before_dob')
                 
                 updated_video.save()
 
@@ -314,7 +314,8 @@ def video_manager(request):
     if bookmarked_filter:
         from patients.models import Bookmark
         bookmarked_video_ids = Bookmark.objects.filter(
-            bookmark_type="Video"
+            bookmark_type="Video",
+            added_by=request.user
         ).values_list('object_id', flat=True)
         queryset = queryset.filter(id__in=bookmarked_video_ids)
 
@@ -492,9 +493,6 @@ def video_delete_confirm(request, video_id):
 
         return render(request, "video/delete-confirm.html", context)
 
-    except Video.DoesNotExist:
-        messages.error(request, "Video not found.")
-        return redirect("video:manager")
     except Exception as e:
         logger.error(f"Error in video_delete_confirm: {str(e)}")
         messages.error(request, "An error occurred while loading the video.")
@@ -602,6 +600,12 @@ def video_delete(request, video_id):
             "redirect_url": get_redirect_url('Video')
         })
 
+    except Http404:
+        return JsonResponse({
+            "success": False,
+            "error": "Not found",
+            "message": "Video not found."
+        }, status=404)
     except Exception as e:
         logger.error(
             f"Deletion error: user={request.user.username}, "

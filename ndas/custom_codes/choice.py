@@ -19,6 +19,7 @@ LOGIN_STATUS_CHOICES = [
     ('success', 'Login Success'),
     ('failed', 'Login Failed'),
     ('logout', 'Logout'),
+    ('admin', 'Admin Action'),
 ]
 
 MODE_OF_DELIVERY = (

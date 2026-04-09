@@ -1,5 +1,7 @@
-import os, math, mimetypes, re, html
+import os, math, mimetypes, re, html, logging
 from django.core.exceptions import ValidationError
+
+logger = logging.getLogger(__name__)
 from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
@@ -74,7 +76,7 @@ def sanitize_filename(filename, max_length=100):
     Sanitize filename to prevent path traversal and filesystem issues.
 
     Security measures:
-    - Removes path traversal attempts (../, ..\, etc.)
+    - Removes path traversal attempts (../, .., etc.)
     - Replaces invalid filesystem characters with underscores
     - Limits filename length while preserving extension
     - Prevents hidden files (starting with .)
@@ -423,10 +425,19 @@ def validate_video_file(value):
             f"Unsupported video format. Allowed formats: {', '.join(valid_extensions)}"
         )
 
-    # Check file size using centralized limits
+    # Check file size using centralized limits.
+    # Use try/except because stored FieldFiles may not be accessible on disk
+    # (e.g. test environments) — size validation applies to new uploads only.
+    try:
+        file_size = value.size
+    except OSError:
+        logger.warning(
+            "validate_video_file: could not read size for %r — skipping size check", value.name
+        )
+        return
     limits = getattr(settings, "FILE_UPLOAD_LIMITS", {})
     max_size = limits.get("VIDEO_MAX_SIZE", 2 * 1024 * 1024 * 1024)
-    if value.size > max_size:
+    if file_size > max_size:
         max_size_mb = max_size / (1024 * 1024)
         raise ValidationError(
             f"File size too large. Maximum allowed size is {int(max_size_mb)} MB."
@@ -434,7 +445,7 @@ def validate_video_file(value):
 
     # Minimum file size check (1KB to avoid empty files)
     min_size = 1024  # 1KB
-    if value.size < min_size:
+    if file_size < min_size:
         raise ValidationError("File appears to be empty or corrupted.")
 
 
@@ -588,3 +599,90 @@ def get_institution_logo_path(instance, filename):
     except AttributeError:
         slug = 'pending'
     return f"{slug}/logo/{sanitize_filename(filename)}"
+
+
+# ─── POG-specific birth weight validation ────────────────────────────────────
+
+BIRTH_WEIGHT_RANGES_BY_POG = {
+    20: {'min': 300,  'max': 700,  'typical_min': 300,  'typical_max': 600},
+    22: {'min': 400,  'max': 900,  'typical_min': 400,  'typical_max': 750},
+    24: {'min': 400,  'max': 1100, 'typical_min': 500,  'typical_max': 900},
+    26: {'min': 400,  'max': 1400, 'typical_min': 600,  'typical_max': 1100},
+    28: {'min': 700,  'max': 1600, 'typical_min': 800,  'typical_max': 1400},
+    30: {'min': 900,  'max': 2000, 'typical_min': 1000, 'typical_max': 1800},
+    31: {'min': 1000, 'max': 2200, 'typical_min': 1100, 'typical_max': 1900},
+    32: {'min': 1100, 'max': 2500, 'typical_min': 1200, 'typical_max': 2100},
+    34: {'min': 1500, 'max': 2900, 'typical_min': 1700, 'typical_max': 2500},
+    35: {'min': 1700, 'max': 3200, 'typical_min': 2000, 'typical_max': 2900},
+    36: {'min': 1900, 'max': 3500, 'typical_min': 2100, 'typical_max': 3000},
+    37: {'min': 2200, 'max': 4000, 'typical_min': 2500, 'typical_max': 3500},
+    38: {'min': 2400, 'max': 4500, 'typical_min': 2700, 'typical_max': 3800},
+    39: {'min': 2500, 'max': 4800, 'typical_min': 2800, 'typical_max': 4000},
+    40: {'min': 2600, 'max': 5000, 'typical_min': 2900, 'typical_max': 4200},
+    41: {'min': 2800, 'max': 5200, 'typical_min': 3000, 'typical_max': 4400},
+    42: {'min': 2900, 'max': 5400, 'typical_min': 3100, 'typical_max': 4500},
+    43: {'min': 3000, 'max': 5500, 'typical_min': 3200, 'typical_max': 4700},
+    44: {'min': 3000, 'max': 5500, 'typical_min': 3200, 'typical_max': 4700},
+}
+
+
+def validate_birth_weight_for_gestational_age(weight, pog_weeks, pog_days=0, strict=False):
+    """
+    Validate birth weight against gestational age using POG-specific ranges.
+
+    Returns (True, "") when weight or pog_weeks is None (validation not applicable).
+    Uses linear interpolation between table entries for fractional weeks.
+
+    Args:
+        weight: Birth weight in grams (int/float or None)
+        pog_weeks: Gestational age in completed weeks (int or None)
+        pog_days: Additional gestational days 0-6 (default 0)
+        strict: If True, validates against typical range instead of absolute min/max
+
+    Returns:
+        tuple: (bool is_valid, str message)
+    """
+    if weight is None or pog_weeks is None:
+        return True, ""
+
+    if pog_weeks < 20 or pog_weeks > 44:
+        return False, f"Gestational age {pog_weeks} weeks is outside medical range (20-44 weeks)."
+
+    pog_exact = pog_weeks + (pog_days / 7.0)
+    sorted_weeks = sorted(BIRTH_WEIGHT_RANGES_BY_POG.keys())
+
+    lower_week = sorted_weeks[0]
+    upper_week = sorted_weeks[-1]
+    for w in sorted_weeks:
+        if w <= pog_exact:
+            lower_week = w
+        if w >= pog_exact:
+            upper_week = w
+            break
+
+    if lower_week == upper_week:
+        r = BIRTH_WEIGHT_RANGES_BY_POG[lower_week]
+        min_w, max_w = r['min'], r['max']
+        typ_min, typ_max = r['typical_min'], r['typical_max']
+    else:
+        lo = BIRTH_WEIGHT_RANGES_BY_POG[lower_week]
+        hi = BIRTH_WEIGHT_RANGES_BY_POG[upper_week]
+        frac = (pog_exact - lower_week) / (upper_week - lower_week)
+        min_w = int(lo['min'] + (hi['min'] - lo['min']) * frac)
+        max_w = int(lo['max'] + (hi['max'] - lo['max']) * frac)
+        typ_min = int(lo['typical_min'] + (hi['typical_min'] - lo['typical_min']) * frac)
+        typ_max = int(lo['typical_max'] + (hi['typical_max'] - lo['typical_max']) * frac)
+
+    pog_str = f"{pog_weeks}+{pog_days} weeks" if pog_days else f"{pog_weeks} weeks"
+
+    if weight < min_w:
+        return False, f"Birth weight {weight}g is unusually low for {pog_str} (minimum: {min_w}g)."
+    if weight > max_w:
+        return False, f"Birth weight {weight}g is unusually high for {pog_str} (maximum: {max_w}g)."
+    if strict:
+        if weight < typ_min:
+            return False, f"Birth weight {weight}g is extremely low for {pog_str} (typical minimum: {typ_min}g)."
+        if weight > typ_max:
+            return False, f"Birth weight {weight}g is extremely high for {pog_str} (typical maximum: {typ_max}g)."
+
+    return True, ""

@@ -4,18 +4,26 @@ Unit tests for refactored patients views.
 Tests the unified patient_manager function and optimized dashboard view.
 """
 
+from datetime import timedelta
 from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from datetime import datetime
 from patients.models import Patient, GMAssessment
 from video.models import Video
 from ndas.custom_codes.ndas_enums import PtStatus
 
 User = get_user_model()
 
+STATIC_OVERRIDE = override_settings(
+    STORAGES={
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    }
+)
 
+
+@STATIC_OVERRIDE
 class PatientManagerTestCase(TestCase):
     """Test unified patient_manager view with various filters."""
 
@@ -96,10 +104,22 @@ class PatientManagerTestCase(TestCase):
             tp_mobile='0711234564',
             added_by=self.user
         )
-        # Add GM assessment without diagnosis
+        # Create a Video fixture for patient_dx_pending (bypass file validation).
+        # recorded_on must be >= patient.dob_tob (both set to timezone.now() so dates match).
+        video_pending = Video(
+            title='Test Video Pending',
+            patient=self.patient_dx_pending,
+            recorded_on=timezone.now(),
+            added_by=self.user,
+        )
+        video_pending.video_file.name = 'videos/test_pending.mp4'
+        video_pending.save()
+
+        # Add GM assessment without diagnosis (dx_pending state)
         GMAssessment.objects.create(
             patient=self.patient_dx_pending,
             date_of_assessment=timezone.now(),
+            video_file=video_pending,
             added_by=self.user
         )
 
@@ -323,6 +343,7 @@ class PatientManagerTestCase(TestCase):
         self.assertIn('login', response.url)
 
 
+@STATIC_OVERRIDE
 class DashboardTestCase(TestCase):
     """Test optimized dashboard view."""
 

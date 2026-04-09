@@ -1,5 +1,8 @@
+import os
 from django import forms
+from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import UploadedFile
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 import logging
@@ -51,7 +54,7 @@ class VideoForm(forms.ModelForm):
             'class': 'custom-file-input',
             'accept': 'video/mp4,video/avi,video/mov,video/wmv,video/mkv,video/webm'
         }),
-        help_text='Upload video file (supported formats: MP4, AVI, MOV, WMV, MKV, WEBM - max 500MB)',
+        help_text='Upload video file (supported formats: MP4, AVI, MOV, MKV, WEBM - max 2 GB)',
         required=False  # Will be set to True in __init__ for new videos
     )
 
@@ -73,25 +76,29 @@ class VideoForm(forms.ModelForm):
     def clean_video_file(self):
         video_file = self.cleaned_data.get('video_file')
 
-        # Only validate if a new file is being uploaded
-        # When editing without uploading a new file, video_file will be False (not None)
-        if video_file and hasattr(video_file, 'read'):
+        # Only validate if a new file is being uploaded (UploadedFile instance).
+        # When editing without a new file, FileField.clean() returns False (required=False),
+        # which save_form_data converts to "" — skip validation in that case.
+        if video_file and isinstance(video_file, UploadedFile):
             # Sanitize the filename to prevent directory traversal and other attacks
             if hasattr(video_file, 'name'):
                 video_file.name = sanitize_filename(video_file.name)
 
-            # Check file size (max 500MB)
-            max_size = 500 * 1024 * 1024  # 500MB in bytes
+            # Check file size using centralized settings limit
+            limits = getattr(settings, 'FILE_UPLOAD_LIMITS', {})
+            max_size = limits.get('VIDEO_MAX_SIZE', 2 * 1024 * 1024 * 1024)
+            max_size_mb = max_size // (1024 * 1024)
             if video_file.size > max_size:
                 raise ValidationError(
-                    _('Video file is too large. Maximum size allowed is 500MB.')
+                    _(f'Video file is too large. Maximum size allowed is {max_size_mb} MB.')
                 )
 
-            # Check file extension
-            allowed_extensions = ['.mp4', '.avi', '.mov', '.wmv', '.mkv', '.webm']
-            file_extension = video_file.name.lower().split('.')[-1]
+            # Check file extension — must match settings.ALLOWED_FILE_EXTENSIONS['VIDEO']
+            allowed_ext_dict = getattr(settings, 'ALLOWED_FILE_EXTENSIONS', {})
+            allowed_extensions = allowed_ext_dict.get('VIDEO', ['.mp4', '.mov', '.avi', '.mkv', '.webm'])
+            _, file_extension = os.path.splitext(video_file.name.lower())
 
-            if f'.{file_extension}' not in allowed_extensions:
+            if file_extension not in allowed_extensions:
                 raise ValidationError(
                     _('Unsupported file format. Allowed formats: MP4, AVI, MOV, WMV, MKV, WEBM')
                 )

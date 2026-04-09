@@ -6,7 +6,7 @@ from ndas.custom_codes.custom_methods import getCurrentDateTime, getFullDeviceDe
 from django.contrib import messages
 from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, Http404
 from django.views.decorators.http import require_POST, require_http_methods, require_GET
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -749,15 +749,15 @@ def admin_user_delete(request, pk):
                 "message": "Incorrect password. Please try again."
             }, status=401)
 
-        # 5. Perform soft delete (deactivation)
+        # 4. Perform soft delete (deactivation)
         user.is_active = False
         user.save()
 
-        # 6. Audit log
+        # 5. Audit log
         log_user_activity(
             request,
             request.user,
-            UserActivityLog.LOGIN_SUCCESS,
+            UserActivityLog.ADMIN_ACTION,
             failed_reason=f"Admin action: Deleted (deactivated) user: {user.username}"
         )
 
@@ -773,6 +773,12 @@ def admin_user_delete(request, pk):
             "redirect_url": reverse('admin-user-list')
         })
 
+    except Http404:
+        return JsonResponse({
+            "success": False,
+            "error": "Not found",
+            "message": "User not found."
+        }, status=404)
     except Exception as e:
         logger.error(
             f"User deletion error: admin={request.user.username}, "
@@ -806,7 +812,7 @@ def admin_user_toggle_status(request, pk):
         log_user_activity(
             request,
             request.user,
-            UserActivityLog.LOGIN_SUCCESS,
+            UserActivityLog.ADMIN_ACTION,
             failed_reason=f"Admin action: User {status}: {user.username}"
         )
         

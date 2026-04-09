@@ -209,6 +209,7 @@ class UserActivityLog(TimeStampedModel, UserTrackingMixin):
     LOGIN_SUCCESS = 'success'
     LOGIN_FAILED = 'failed'
     LOGOUT = 'logout'
+    ADMIN_ACTION = 'admin'
     
     # Core Fields
     user = models.ForeignKey(

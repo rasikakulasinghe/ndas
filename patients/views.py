@@ -550,6 +550,12 @@ def patient_delete(request, pk):
             "redirect_url": get_redirect_url('Patient')
         })
 
+    except Http404:
+        return JsonResponse({
+            "success": False,
+            "error": "Not found",
+            "message": "Patient not found."
+        }, status=404)
     except Exception as e:
         logger.exception(
             f"Deletion error: user={request.user.username}, "
