@@ -1,10 +1,10 @@
 ---
 project_name: 'NDAS'
 user_name: 'Rasika'
-date: '2026-04-12'
+date: '2026-05-09'
 sections_completed: ['technology_stack', 'language_rules', 'framework_rules', 'testing_rules', 'quality_rules', 'workflow_rules', 'anti_patterns', 'phase2_multi_institution']
 status: 'complete'
-rule_count: 92
+rule_count: 102
 optimized_for_llm: true
 ---
 
@@ -53,12 +53,13 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - **Import order:** stdlib → Django → third-party → local (`custom_codes` first, then app-level)
 - **Institution scoping helper:** `institution_scope(request, field='patient__institution')` in `custom_methods.py` returns ORM filter kwargs — use instead of manual `filter(institution=request.institution)` in views
 - **Dashboard/stats functions require `institution` parameter:** `get_gma_diagnosis_data(institution)`, `get_all_diagnosis_data(institution)`, `get_userStats(institution)`, `get_admissions_data_barchart(institution)` — always pass `request.institution`, never `None`
+- **Audit log FK pattern:** when a model records historical state that must survive related-record deletion, use `IntegerField` (not `ForeignKey`) for the historical ID field. Example: `InstitutionSwitchLog.previous_institution_id` is an `IntegerField` — a FK with `SET_NULL` would destroy the historical reference on institution delete.
 - **Patient field names are exact — do not guess:**
   - `patient.bht` (not `bht_number`), `patient.nnc_no` (not `nnc_number`)
   - `patient.baby_name` (not `patient_name` or `name`), `patient.dob_tob` (not `dob` or `date_of_birth`)
   - `patient.pog_wks` / `patient.pog_days` (not `gestational_age_weeks/days`)
   - `patient.birth_weight` (not `birth_weight_g`), `patient.hc` (not `head_circumference`)
-  - `patient.apgar_1` / `patient.apgar_5` (not `apgar_1_min` / `apgar_5_min`)
+  - `patient.apgar_1` / `patient.apgar_5` / `patient.apgar_10` (not `apgar_1_min` / `apgar_5_min` / `apgar_10_min`)
 
 ### Framework-Specific Rules (Django)
 
@@ -112,6 +113,11 @@ _This file contains critical rules and patterns that AI agents must follow when 
   - Attachments → `get_attachment_path_file_name()`
   - Institution logos → `get_institution_logo_path()`
 
+**Protected Media Serving:**
+- In dev, media files are served through `institution/views.py:protected_media_view` which enforces institution isolation: institution-partitioned paths (`/{slug}/videos/`, `/{slug}/attachments/`) are restricted to users whose `request.institution.slug` matches the path slug; SUPERADMIN bypasses this check
+- In production, Nginx serves media files directly — the recommended pattern for file isolation is X-Accel-Redirect with a Django auth endpoint
+- When adding any new view that serves media files, reference `protected_media_view` as the implementation model — never call `django.views.static.serve` directly without the institution slug-isolation check
+
 **Input Sanitization (use the right one — they are NOT interchangeable):**
 - Free-text fields → `sanitize_text_input()` (preserves medical notation like `BP < 120/80`)
 - Rich text / CKEditor fields → `sanitize_html()` (bleach, medical-safe tag whitelist)
@@ -128,14 +134,17 @@ _This file contains critical rules and patterns that AI agents must follow when 
 ### Testing Rules
 
 - **Test runner:** `python manage.py test [app_name]` — standard Django test runner, no pytest
-- **Test location:** `tests/` directory within each app, or `test_*.py` files at app root
+- **Test location:** `tests/` directory within each app (e.g. `patients/tests/test_crud.py`)
 - **Run per app:** `patients`, `users`, `video`, `reports`, `problemlist`, `institution`, `referral`
-- **Target specific test:** `python manage.py test patients.tests.PatientModelTest.test_method_name`
+- **Target specific test:** `python manage.py test patients.tests.test_patient_crud.PatientListViewTest.test_method`
 - **Test database:** Django creates a temporary SQLite test DB automatically — no manual setup needed
 - **Model tests:** use `TestCase` (not `SimpleTestCase`) — requires DB access
-- **View tests:** use Django `Client` or `RequestFactory`; always log in before testing protected views
+- **View tests:** use Django `Client`; always authenticate with `force_login(user)` — not `client.login(username=..., password=...)` which is slower and error-prone
 - **Rate-limited views:** disable or mock `@ratelimit` in tests to avoid unexpected 403s
 - **File upload tests:** use `SimpleUploadedFile` from `django.core.files.uploadedfile`
+- **Static files in template-rendering tests:** wrap test classes with `@override_settings(STORAGES={"staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}})` — without this, tests that render full templates fail with a staticfiles manifest error
+- **`added_by` in test fixtures:** `UserActivityMiddleware` does not run in tests — set `added_by=user` directly in `Model.objects.create()` inside `setUp()`. This is the only context where setting `added_by` manually is correct.
+- **Shared setUp:** use a `TestBase(TestCase)` mixin per test module — create superuser, staff_user, and other_staff users as the standard fixture set
 - **No coverage enforcement** currently configured — focus on critical path coverage
 - **Avoid testing middleware directly** — test view behaviour end-to-end instead
 - **Isolation test suite** (`institution/tests/test_isolation.py`) is mandatory before enabling `MULTI_INSTITUTION_ENABLED=True` in production — any cross-institution data leakage is a blocking defect
@@ -167,6 +176,13 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Validation ranges: birth weight 300g–8000g; APGAR 0–10; gestational age 20–44 wks + 0–6 days
 - `calculate_age_string()` returns a display string — do not do arithmetic on the result
 - Always display all patient identifiers (BHT, NNC, PTC, PC, PIN, Disk No.) — none is the sole display key
+- **Patient field alias traps:**
+  - `patient.apgar_1` / `patient.apgar_5` / `patient.apgar_10` (not `apgar_1_min`, `apgar_5_min`, `apgar_10_min`)
+  - `patient.ofc` (Occipital Frontal Circumference in cm) — distinct from `patient.hc` (Head Circumference); do not conflate
+  - `patient.length` (length in cm) — not `height` or `length_cm`
+
+**Institution Display:**
+- `Institution.short_name` (max 10 chars) — prefer over `Institution.name` in space-constrained UI slots (nav headers, badges, table cells)
 
 ### Development Workflow Rules
 
@@ -218,7 +234,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - ❌ `Model.objects.get(id=pk)` → always `get_object_or_404()`
 - ❌ Inline choices in model fields → add to `ndas/custom_codes/choice.py`
 - ❌ `entity.delete()` directly in views → use `has_delete_permission()` + `validate_can_delete()` first
-- ❌ Setting `added_by` / `last_edit_by` manually → auto-handled by `UserActivityMiddleware`
+- ❌ Setting `added_by` / `last_edit_by` manually in views → auto-handled by `UserActivityMiddleware` (exception: test fixtures in `setUp()` only)
 - ❌ Reordering middleware → breaks security, session, and CSP nonce injection
 - ❌ Changing Bootstrap/AdminLTE/Font Awesome versions → breaks the entire UI
 - ❌ Hardcoding `upload_to` paths → use existing path generator functions
@@ -228,6 +244,10 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - ❌ `logging.getLogger("django")` in app code → always `logging.getLogger(__name__)`
 - ❌ `sanitize_text_input()` and `sanitize_html()` used interchangeably → wrong choice causes XSS or strips valid HTML
 - ❌ `cache.get()` + `cache.set()` for atomic ops → use `cache.add()` to avoid race conditions
+- ❌ `ForeignKey` with `SET_NULL` for audit log "previous state" fields → use `IntegerField` so the historical ID survives the related record's deletion (see `InstitutionSwitchLog.previous_institution_id`)
+- ❌ Serving media files from a view without institution slug validation → always follow the `protected_media_view` pattern in `institution/views.py`; never call `django.views.static.serve` directly without the slug-isolation check
+- ❌ `client.login(username=..., password=...)` in tests → use `self.client.force_login(user)` — faster and not affected by password hashing
+- ❌ Rendering full templates in tests without static override → always decorate test classes with `@override_settings(STORAGES={"staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}})` to avoid manifest errors
 
 ### Phase 2: Multi-Institution Rules
 
@@ -281,6 +301,8 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Read this file before implementing any code in this project
 - Follow ALL rules exactly as documented — when in doubt, prefer the more restrictive option
 - Check `ndas/custom_codes/` before writing any new utility or helper function
+- Check `docs/data-models-main.md` for exact field names before writing any ORM query
+- Check `docs/api-contracts-main.md` for existing URL names before defining new routes
 - Phase 2 rules apply to all new `institution/` and `referral/` code regardless of `MULTI_INSTITUTION_ENABLED` value
 - Update this file if new patterns emerge during implementation
 
@@ -289,4 +311,4 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Update when technology stack or architectural patterns change
 - Review quarterly for outdated rules
 
-_Last Updated: 2026-04-12_
+_Last Updated: 2026-05-09_
