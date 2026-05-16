@@ -80,7 +80,8 @@
       "Bash(cd \"D:\\\\Projects\\\\Current Projects\\\\NDAS - Project\\\\NDAS\" && venv\\\\Scripts\\\\python manage.py makemigrations institution --name=\"institutionswitchlog_add_timestamped_mixin\" 2>&1)",
       "Bash(cd \"D:/Projects/Current Projects/NDAS - Project/NDAS\" && printf \"1\\\\n\" | venv/Scripts/python manage.py makemigrations institution --name=\"institutionswitchlog_add_timestamped_mixin\" 2>&1)",
       "Bash(cd \"D:/Projects/Current Projects/NDAS - Project/NDAS\" && printf \"1\\\\ntimezone.now\\\\n\" | venv/Scripts/python manage.py makemigrations institution --name=\"institutionswitchlog_add_timestamped_mixin\" 2>&1)",
-      "Bash(Get-ChildItem -Path \"D:\\\\Projects\\\\Current Projects\\\\NDAS - Project\\\\NDAS\" -Recurse -Directory)"
+      "Bash(Get-ChildItem -Path \"D:\\\\Projects\\\\Current Projects\\\\NDAS - Project\\\\NDAS\" -Recurse -Directory)",
+      "PowerShell(Get-ChildItem -Path \"D:\\\\Projects\\\\Current Projects\\\\NDAS - Project\\\\NDAS\" -Recurse -Directory | Select-Object -First 30 | ForEach-Object { $_.FullName })"
     ],
     "deny": [],
     "ask": []
