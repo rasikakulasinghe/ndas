@@ -5,7 +5,7 @@ import os, math
 from django.utils.timezone import localtime, now
 from django.utils import timezone
 from django.utils.text import slugify
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 from .ndas_enums import PtStatus
 from .validators import sanitize_filename
 import logging
@@ -28,6 +28,16 @@ def institution_scope(request, field='patient__institution'):
             "Add to _ALLOWED_SCOPE_FIELDS if intentional."
         )
     inst = getattr(request, 'institution', None)
+    if inst is None and not request.user.is_superuser:
+        # Only deny when the user has an institution assigned but the request context
+        # is missing — this indicates a middleware misconfiguration, not a Phase 1 /
+        # transitional user (who legitimately has institution=None on their profile).
+        if getattr(request.user, 'institution_id', None) is not None:
+            logger.warning(
+                "institution_scope: non-superuser %s has institution assigned but no request context — denying to prevent silent cross-institution exposure.",
+                request.user.username,
+            )
+            raise PermissionDenied("Institution context required.")
     return {field: inst} if inst is not None else {}
 
 
@@ -76,10 +86,16 @@ def get_userStats(institution=None):
     da_counts         = _counts(DevelopmentalAssessment.objects.filter(patient__in=_pts))
     cdic_counts       = _counts(CDICRecord.objects.filter(patient__in=_pts))
     attachment_counts = _counts(Attachment.objects.filter(patient__in=_pts))
-    bookmark_counts   = _counts(
-        Bookmark.objects.filter(owner__institution=institution) if institution else Bookmark.objects.all(),
-        field='owner_id'
-    )
+    if institution:
+        bookmark_counts = _counts(
+            Bookmark.objects.filter(owner__institution=institution),
+            field='owner_id',
+        )
+    else:
+        bookmark_counts = {
+            row['owner_id']: row['count']
+            for row in Bookmark.objects.values('owner_id').annotate(count=Count('id'))
+        }
 
     # Note: superuser contributions (institution=None) are excluded from this breakdown.
     # Dashboard total counts above remain correct; only the per-user breakdown is affected.

@@ -2,8 +2,8 @@
 title: 'NDAS Security & Performance Hardening — Adversarial Review Fixes'
 slug: 'security-hardening-adversarial-review'
 created: '2026-05-16'
-status: 'ready-for-dev'
-stepsCompleted: [1, 2, 3, 4]
+status: 'completed'
+stepsCompleted: [1, 2, 3, 4, 5]
 tech_stack: ['Django 4.2.16', 'Python 3.x', 'django-ratelimit 4.1.0', 'django-csp 3.8']
 files_to_modify: ['reports/views.py', 'users/views.py', 'video/views.py', 'ndas/settings.py', 'ndas/custom_codes/custom_methods.py']
 code_patterns: ['institution_scope()', 'admin_required decorator', '@ratelimit decorator stack order', '_counts() aggregation helper', 'has_delete_permission()']
@@ -137,7 +137,7 @@ Tasks are ordered dependency-first: utility functions before the views that use 
 
 ---
 
-- [ ] **Task 1: Fix `institution_scope()` None guard for non-superusers (Fix #8)**
+- [x] **Task 1: Fix `institution_scope()` None guard for non-superusers (Fix #8)**
   - File: `ndas/custom_codes/custom_methods.py`
   - Action: After resolving `inst = getattr(request, 'institution', None)`, add a guard: if `inst is None` and `not request.user.is_superuser`, call `logger.warning(...)` then `raise PermissionDenied("Institution context required.")`. Superusers continue to receive `{}` (full access by design).
   - Exact replacement in `institution_scope()` (line 31):
@@ -155,7 +155,7 @@ Tasks are ordered dependency-first: utility functions before the views that use 
 
 ---
 
-- [ ] **Task 2: Fix `get_userStats()` bookmark aggregation (Fix #11)**
+- [x] **Task 2: Fix `get_userStats()` bookmark aggregation (Fix #11)**
   - File: `ndas/custom_codes/custom_methods.py`
   - Action: Replace the bookmark_counts line (line 79–82) with an explicit branch that avoids passing `Bookmark.objects.all()` to `_counts()` (which would re-annotate an already-annotatable queryset). Use direct aggregation for the global case:
     ```python
@@ -174,7 +174,7 @@ Tasks are ordered dependency-first: utility functions before the views that use 
 
 ---
 
-- [ ] **Task 3: Fix DEBUG CSP to re-enable script-src protection (Fix #7)**
+- [x] **Task 3: Fix DEBUG CSP to re-enable script-src protection (Fix #7)**
   - File: `ndas/settings.py`
   - Action: In the `if DEBUG:` block (line 294), remove `"'unsafe-inline'"` and `"'unsafe-eval'"` from `CSP_SCRIPT_SRC`. The nonce mechanism (`CSP_INCLUDE_NONCE_IN = ['script-src']`, line 288) already handles inline scripts that have a nonce — `'unsafe-inline'` is not needed alongside nonces for scripts.
   - Replace line 294:
@@ -188,7 +188,7 @@ Tasks are ordered dependency-first: utility functions before the views that use 
 
 ---
 
-- [ ] **Task 4: Add institution scoping + safe file handles to the 5 assessment PDF download views (Fixes #1 + #10)**
+- [x] **Task 4: Add institution scoping + safe file handles to the 5 assessment PDF download views (Fixes #1 + #10)**
   - File: `reports/views.py`
   - Action part A — Add import at top of file:
     ```python
@@ -223,7 +223,7 @@ Tasks are ordered dependency-first: utility functions before the views that use 
 
 ---
 
-- [ ] **Task 5: Fix `download_report` file handle + add report ownership check; add cache.set in `report_builder` (Fixes #10 + #14)**
+- [x] **Task 5: Fix `download_report` file handle + add report ownership check; add cache.set in `report_builder` (Fixes #10 + #14)**
   - File: `reports/views.py`
   - Action part A — Add `cache` import at top of file (alongside existing imports):
     ```python
@@ -248,7 +248,7 @@ Tasks are ordered dependency-first: utility functions before the views that use 
 
 ---
 
-- [ ] **Task 6: Add institution scope to `userView` and `userViewByUsername` (Fix #3)**
+- [x] **Task 6: Add institution scope to `userView` and `userViewByUsername` (Fix #3)**
   - File: `users/views.py`
   - Action — Replace both views:
     ```python
@@ -275,7 +275,7 @@ Tasks are ordered dependency-first: utility functions before the views that use 
 
 ---
 
-- [ ] **Task 7: Scope `admin_activity_logs` by institution + fix double COUNT (Fixes #4 + #15)**
+- [x] **Task 7: Scope `admin_activity_logs` by institution + fix double COUNT (Fixes #4 + #15)**
   - File: `users/views.py`
   - Action — Replace the view body (lines 847–861):
     ```python
@@ -303,7 +303,7 @@ Tasks are ordered dependency-first: utility functions before the views that use 
 
 ---
 
-- [ ] **Task 8: Add rate limiting to `userEdit` and `userChangePassword` (Fix #6)**
+- [x] **Task 8: Add rate limiting to `userEdit` and `userChangePassword` (Fix #6)**
   - File: `users/views.py`
   - Action — Add `@require_http_methods` and `@ratelimit` decorators to both views in the mandatory project order:
     ```python
@@ -323,7 +323,7 @@ Tasks are ordered dependency-first: utility functions before the views that use 
 
 ---
 
-- [ ] **Task 9: Remove `is_staff` bypass from video edit and delete confirm (Fix #12)**
+- [x] **Task 9: Remove `is_staff` bypass from video edit and delete confirm (Fix #12)**
   - File: `video/views.py`
   - Action — In both `video_edit` (line 160) and `video_delete_confirm` (line 478), change the permission guard:
     ```python
@@ -410,3 +410,12 @@ For each new test module:
 - **Fix #8 scope:** The guard in `institution_scope()` covers all 37 call sites at once. In Phase 1 (before `MULTI_INSTITUTION_ENABLED=True`), `request.institution` is typically `None` for all users, which would make ALL staff requests raise `PermissionDenied`. **Verify that Phase 1 compatibility is maintained** — if `InstitutionContextMiddleware` always provides a non-None institution for staff in the current deployment, this is safe. If `institution` is still `None` in Phase 1 for all users, this guard must be gated on `MULTI_INSTITUTION_ENABLED`.
 - **Fix #14 trade-off:** A user who closes their browser (session expires) and returns to `report_history` to re-download a report from the same day will receive HTTP 403. This is the intended security trade-off with session-keyed caching.
 - **Fix #14 scope gap:** The `delete_report` endpoint (line 252) is not covered by ownership checking — it can delete any report file by UUID. This is a residual risk but is out of scope for this spec.
+
+## Review Notes
+
+- Adversarial review completed: 11 findings, 2 fixed, 9 skipped (noise or out of scope)
+- Resolution approach: auto-fix
+- **F7 (fixed):** `report_builder` now calls `request.session.create()` before accessing `session_key` so the cache key is never `None` for brand-new sessions.
+- **F1 (fixed):** `institution_scope` guard narrowed to only deny when `user.institution_id` is set but `request.institution` is missing (middleware misconfiguration). Phase 1 and transitional users with `institution=None` pass through cleanly.
+- Skipped (out of scope): F3 (userEdit no institution scope), F4 (admin user views unscoped), F5 (delete_report no ownership check), F6 (report_history shows all files).
+- Skipped (noise): F2 (video_view read-only asymmetry by design), F8 (CSP nonce operative via django-csp), F9 (ORM paths verified correct), F10 (test logic correct), F11 (allowlist design observation).

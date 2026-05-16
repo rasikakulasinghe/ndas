@@ -157,7 +157,7 @@ def video_edit(request, video_id):
     video = get_object_or_404(Video, id=video_id, **institution_scope(request))
 
     # Check permissions
-    if not request.user.is_staff and video.added_by != request.user:
+    if not request.user.is_superuser and video.added_by != request.user:
         messages.error(request, "You do not have permission to edit this video.")
         return redirect("manage-patients")
 
@@ -475,7 +475,7 @@ def video_delete_confirm(request, video_id):
         video = get_object_or_404(Video, id=video_id, **institution_scope(request))
 
         # Check permissions
-        if not request.user.is_staff and video.added_by != request.user:
+        if not request.user.is_superuser and video.added_by != request.user:
             messages.error(request, "You do not have permission to delete this video.")
             return redirect("video:manager")
 

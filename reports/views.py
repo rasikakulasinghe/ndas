@@ -12,10 +12,12 @@ from datetime import datetime, timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, FileResponse, Http404
+from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.conf import settings
 from django_ratelimit.decorators import ratelimit
 
+from ndas.custom_codes.custom_methods import institution_scope
 from reports.utils.pdf_generator import (
     PatientPDFGenerator, GMAssessmentPDFGenerator,
     HINEAssessmentPDFGenerator, DAAssessmentPDFGenerator,
@@ -163,6 +165,14 @@ def report_builder(request):
             # Extract just the filename (with .xlsx extension already included)
             file_id = os.path.basename(file_path)
 
+            if not request.session.session_key:
+                request.session.create()
+            cache.set(
+                f"report_owner_{file_id}_{request.session.session_key}",
+                request.user.pk,
+                timeout=24 * 3600,
+            )
+
             # Add success message with metadata
             from django.contrib import messages
             total_records = metadata.get('total_records', 0)
@@ -299,6 +309,11 @@ def download_report(request, file_id):
     # Validate file_id format
     file_path = get_validated_report_path(file_id)
 
+    # Ownership check: report must have been generated in this session
+    owner_pk = cache.get(f"report_owner_{file_id}_{request.session.session_key}")
+    if owner_pk is None or owner_pk != request.user.pk:
+        raise PermissionDenied("You are not authorized to download this report.")
+
     if not os.path.exists(file_path):
         raise Http404("Report file not found or has expired")
 
@@ -316,10 +331,14 @@ def download_report(request, file_id):
         content_type = 'application/pdf'
         filename = f"report_{datetime.now().strftime('%Y%m%d')}.pdf"
 
-    # Serve file - FileResponse handles closing the file
-    response = FileResponse(open(file_path, 'rb'), content_type=content_type)
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    return response
+    f = open(file_path, 'rb')
+    try:
+        response = FileResponse(f, content_type=content_type)
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+    except Exception:
+        f.close()
+        raise
 
 
 # Assessment PDF Download Views
@@ -328,85 +347,105 @@ def download_report(request, file_id):
 @ratelimit(key='user', rate='100/h')
 def download_gm_assessment_pdf(request, assessment_id):
     """Download GM Assessment PDF"""
-    assessment = get_object_or_404(GMAssessment, id=assessment_id)
+    assessment = get_object_or_404(GMAssessment, id=assessment_id, **institution_scope(request))
 
     # Generate PDF
     generator = GMAssessmentPDFGenerator(institution=getattr(request, 'institution', None))
     file_path = generator.generate(assessment_id)
 
-    # Serve file - FileResponse handles closing the file
     filename = f"GM_Assessment_{assessment_id}_{datetime.now().strftime('%Y%m%d')}.pdf"
-    response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    return response
+    f = open(file_path, 'rb')
+    try:
+        response = FileResponse(f, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+    except Exception:
+        f.close()
+        raise
 
 
 @login_required(login_url='user-login')
 @ratelimit(key='user', rate='100/h')
 def download_hine_assessment_pdf(request, assessment_id):
     """Download HINE Assessment PDF"""
-    assessment = get_object_or_404(HINEAssessment, id=assessment_id)
+    assessment = get_object_or_404(HINEAssessment, id=assessment_id, **institution_scope(request))
 
     # Generate PDF
     generator = HINEAssessmentPDFGenerator(institution=getattr(request, 'institution', None))
     file_path = generator.generate(assessment_id)
 
-    # Serve file - FileResponse handles closing the file
     filename = f"HINE_Assessment_{assessment_id}_{datetime.now().strftime('%Y%m%d')}.pdf"
-    response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    return response
+    f = open(file_path, 'rb')
+    try:
+        response = FileResponse(f, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+    except Exception:
+        f.close()
+        raise
 
 
 @login_required(login_url='user-login')
 @ratelimit(key='user', rate='100/h')
 def download_da_assessment_pdf(request, assessment_id):
     """Download Developmental Assessment PDF"""
-    assessment = get_object_or_404(DevelopmentalAssessment, id=assessment_id)
+    assessment = get_object_or_404(DevelopmentalAssessment, id=assessment_id, **institution_scope(request))
 
     # Generate PDF
     generator = DAAssessmentPDFGenerator(institution=getattr(request, 'institution', None))
     file_path = generator.generate(assessment_id)
 
-    # Serve file - FileResponse handles closing the file
     filename = f"DA_Assessment_{assessment_id}_{datetime.now().strftime('%Y%m%d')}.pdf"
-    response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    return response
+    f = open(file_path, 'rb')
+    try:
+        response = FileResponse(f, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+    except Exception:
+        f.close()
+        raise
 
 
 @login_required(login_url='user-login')
 @ratelimit(key='user', rate='100/h')
 def download_cdic_assessment_pdf(request, assessment_id):
     """Download CDIC Record PDF"""
-    assessment = get_object_or_404(CDICRecord, id=assessment_id)
+    assessment = get_object_or_404(CDICRecord, id=assessment_id, **institution_scope(request))
 
     # Generate PDF
     generator = CDICAssessmentPDFGenerator(institution=getattr(request, 'institution', None))
     file_path = generator.generate(assessment_id)
 
-    # Serve file - FileResponse handles closing the file
     filename = f"CDIC_Record_{assessment_id}_{datetime.now().strftime('%Y%m%d')}.pdf"
-    response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    return response
+    f = open(file_path, 'rb')
+    try:
+        response = FileResponse(f, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+    except Exception:
+        f.close()
+        raise
 
 
 @login_required(login_url='user-login')
 @ratelimit(key='user', rate='100/h')
 def download_gpa_assessment_pdf(request, assessment_id):
     """Download GPA Assessment PDF"""
-    assessment = get_object_or_404(GeneralPaediatricAssessment, id=assessment_id)
+    assessment = get_object_or_404(GeneralPaediatricAssessment, id=assessment_id, **institution_scope(request))
 
     # Generate PDF
     generator = GPAAssessmentPDFGenerator(institution=getattr(request, 'institution', None))
     file_path = generator.generate(assessment_id)
 
-    # Serve file - FileResponse handles closing the file
     filename = f"GPA_Assessment_{assessment_id}_{datetime.now().strftime('%Y%m%d')}.pdf"
-    response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    return response
+    f = open(file_path, 'rb')
+    try:
+        response = FileResponse(f, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+    except Exception:
+        f.close()
+        raise
 
 
 # Helper Functions

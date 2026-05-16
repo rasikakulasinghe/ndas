@@ -203,16 +203,24 @@ def logoutPage(request):
 
 @login_required(login_url='user-login')
 def userView(request, pk):
-    custom_user = get_object_or_404(CustomUser, id=pk)
+    if request.user.is_superuser:
+        custom_user = get_object_or_404(CustomUser, id=pk)
+    else:
+        custom_user = get_object_or_404(CustomUser, id=pk, institution=request.institution)
     loged_user = request.user
     return render(request, 'users/user_view.html', {'custom_user': custom_user, 'user' : loged_user})
 
 @login_required(login_url='user-login')
 def userViewByUsername(request, username):
-    custom_user = get_object_or_404(CustomUser, username=username)
+    if request.user.is_superuser:
+        custom_user = get_object_or_404(CustomUser, username=username)
+    else:
+        custom_user = get_object_or_404(CustomUser, username=username, institution=request.institution)
     return render(request, 'users/user_view.html', {'custom_user': custom_user,})
 
 @login_required(login_url='user-login')
+@require_http_methods(["GET", "POST"])
+@ratelimit(key='user_or_ip', rate='10/m')
 def userEdit(request, pk):
     """
     Edit user profile with enhanced security and validation.
@@ -267,6 +275,8 @@ def userEdit(request, pk):
 
 # change the password
 @login_required(login_url='user-login')
+@require_http_methods(["GET", "POST"])
+@ratelimit(key='user_or_ip', rate='10/m')
 def userChangePassword(request):
     custom_user = request.user
     form = UserPasswordChange(custom_user, request.POST or None)
@@ -846,18 +856,22 @@ def admin_user_activity(request, pk):
 @admin_required
 def admin_activity_logs(request):
     """Admin view to see all system activity logs."""
-    activities = UserActivityLog.objects.select_related('user').all().order_by('-login_timestamp')
-    
-    # Pagination
+    if request.user.is_superuser:
+        activities = UserActivityLog.objects.select_related('user').all().order_by('-login_timestamp')
+    else:
+        activities = UserActivityLog.objects.select_related('user').filter(
+            user__institution=request.institution
+        ).order_by('-login_timestamp')
+
     paginator = Paginator(activities, 100)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
+
     context = {
         'page_obj': page_obj,
-        'total_activities': activities.count(),
+        'total_activities': paginator.count,
     }
-    
+
     return render(request, 'users/admin/activity_logs.html', context)
 
 
