@@ -1,10 +1,10 @@
 ---
 project_name: 'NDAS'
 user_name: 'Rasika'
-date: '2026-05-09'
+date: '2026-05-16'
 sections_completed: ['technology_stack', 'language_rules', 'framework_rules', 'testing_rules', 'quality_rules', 'workflow_rules', 'anti_patterns', 'phase2_multi_institution']
 status: 'complete'
-rule_count: 102
+rule_count: 112
 optimized_for_llm: true
 ---
 
@@ -16,12 +16,12 @@ _This file contains critical rules and patterns that AI agents must follow when 
 
 ## Technology Stack & Versions
 
-- **Framework:** Django 4.2.16 (Python 3.x)
+- **Framework:** Django 6.0 (Python 3.13)
 - **Database:** SQLite (development) / PostgreSQL (production via env vars)
 - **Frontend:** AdminLTE 3.2 + Bootstrap 4.6 + Font Awesome 6.4 — NEVER change versions
 - **Dynamic UI:** HTMX (no full-page JS framework; use hx-* attributes in templates)
 - **Video Player:** Video.js
-- **HTML Sanitization:** bleach 6.1.0
+- **HTML Sanitization:** bleach 6.3.0
 - **PDF Reports:** reportlab 4.4.3
 - **Excel Reports:** openpyxl 3.1.5
 - **Rate Limiting:** django-ratelimit 4.1.0
@@ -51,9 +51,10 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - **Safe counts:** use `getCountZeroIfNone()` from `custom_methods.py` instead of `.count()` where None is possible
 - **Logger:** always `logger = logging.getLogger(__name__)` at module level — never `logging.getLogger("django")` in app code, never inside functions
 - **Import order:** stdlib → Django → third-party → local (`custom_codes` first, then app-level)
-- **Institution scoping helper:** `institution_scope(request, field='patient__institution')` in `custom_methods.py` returns ORM filter kwargs — use instead of manual `filter(institution=request.institution)` in views
+- **Institution scoping helper:** `institution_scope(request, field='patient__institution')` in `custom_methods.py` returns ORM filter kwargs — use instead of manual `filter(institution=request.institution)` in views. Raises `PermissionDenied` if a non-superuser has `institution_id` set but `request.institution` is `None` (middleware misconfiguration guard added 2026-05-16). Returns `{}` only for genuine Phase 1 / superuser contexts where `institution_id` is also `None`.
 - **Dashboard/stats functions require `institution` parameter:** `get_gma_diagnosis_data(institution)`, `get_all_diagnosis_data(institution)`, `get_userStats(institution)`, `get_admissions_data_barchart(institution)` — always pass `request.institution`, never `None`
 - **Audit log FK pattern:** when a model records historical state that must survive related-record deletion, use `IntegerField` (not `ForeignKey`) for the historical ID field. Example: `InstitutionSwitchLog.previous_institution_id` is an `IntegerField` — a FK with `SET_NULL` would destroy the historical reference on institution delete.
+- **Video edit/delete ownership:** Staff may only modify (`video_edit`, `video_delete_confirm`) videos they personally uploaded (`video.added_by == request.user`). Superusers retain unrestricted access. Never use a bare `is_staff` bypass that removes the ownership check — this was a security defect corrected on 2026-05-16.
 - **Patient field names are exact — do not guess:**
   - `patient.bht` (not `bht_number`), `patient.nnc_no` (not `nnc_number`)
   - `patient.baby_name` (not `patient_name` or `name`), `patient.dob_tob` (not `dob` or `date_of_birth`)
@@ -70,10 +71,13 @@ _This file contains critical rules and patterns that AI agents must follow when 
   2. `@require_http_methods(["GET", "POST"])` or `@require_GET` or `@require_POST`
   3. `@ratelimit(key='user_or_ip', rate='10/m')` for create/edit; `'5/m'` for delete
   4. `@handle_view_errors(redirect_url=..., error_message=...)`
+- `userEdit` and `userChangePassword` are now rate-limited at `10/m` (fixed 2026-05-16 — they were previously unthrottled). All user account management views must carry `@ratelimit` without exception.
 - **Always** use `get_object_or_404()` — never `Model.objects.get()`
 - **Always** use `select_related()` / `prefetch_related()` for queries with related objects
 - Redirect on successful POST — never re-render the same template on success
 - `@handle_view_errors` with `redirect_url` redirects on error; with `render_template` renders with `{'error': msg}`; neither → redirects to `'home'`. It does NOT re-render forms — handle form re-rendering inside the view before any save that could raise `ValidationError`
+- **Admin activity logs:** `admin_activity_logs` view must filter by `user__institution` for non-superuser staff — branch on `request.user.is_superuser`, same pattern as `admin_user_list`. Never return all-institution logs to a plain `is_staff` user.
+- **Report temp file ownership:** immediately after generating a report `file_id` in `report_builder`, call `cache.set(f"report_owner_{file_id}_{request.session.session_key}", request.user.pk, 24*3600)`. In `download_report`, retrieve and verify this cache key before serving the file — raise `PermissionDenied` if absent or mismatched. Requires `from django.core.cache import cache` in `reports/views.py`.
 
 **Models:**
 - Add `db_index=True` to all filterable/searchable fields
@@ -89,7 +93,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Always include `{% csrf_token %}` in every form
 - Include `{% include 'src/form_error.html' %}` in all forms for error display
 - Use AdminLTE card pattern: `<div class="card"><div class="card-body">...</div></div>`
-- Inline `<script>` tags need `nonce="{{ request.csp_nonce }}"` — injected by CSPMiddleware
+- Inline `<script>` tags need `nonce="{{ request.csp_nonce }}"` in **all environments** (DEBUG and production). As of 2026-05-16, `'unsafe-inline'` and `'unsafe-eval'` are removed from `CSP_SCRIPT_SRC` in the DEBUG block — nonces are required in development too. Scripts without a nonce silently fail everywhere.
 - **Never** change CSS framework or add conflicting CSS libraries
 
 **URLs:**
@@ -148,6 +152,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - **No coverage enforcement** currently configured — focus on critical path coverage
 - **Avoid testing middleware directly** — test view behaviour end-to-end instead
 - **Isolation test suite** (`institution/tests/test_isolation.py`) is mandatory before enabling `MULTI_INSTITUTION_ENABLED=True` in production — any cross-institution data leakage is a blocking defect
+- **Security test suites (added 2026-05-16):** `reports/tests/test_security.py`, `users/tests/test_security.py`, `video/tests/test_security.py` — cover institution isolation on PDF downloads, ownership checks on video edit/delete, rate limiting on user account views, and report download ownership. Run these when modifying views or permissions in the corresponding apps.
 
 ### Code Quality & Style Rules
 
@@ -221,6 +226,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 **Deployment:**
 - Always run `python manage.py check --deploy` and `collectstatic --noinput` before production deploy
 - No new servers or infrastructure per institution — all institutions served by the same Gunicorn + Nginx stack
+- **DEBUG CSP script policy (changed 2026-05-16):** `'unsafe-inline'` and `'unsafe-eval'` are removed from `CSP_SCRIPT_SRC` in the DEBUG block. New inline scripts must carry `nonce="{{ request.csp_nonce }}"` in development — you will no longer get a silent pass locally. Test script execution during development before assuming production behaviour.
 
 **App Dependency Order (never create circular imports):**
 - `patients` is the root app (`/`) — all other apps depend on it, not vice versa
@@ -248,6 +254,10 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - ❌ Serving media files from a view without institution slug validation → always follow the `protected_media_view` pattern in `institution/views.py`; never call `django.views.static.serve` directly without the slug-isolation check
 - ❌ `client.login(username=..., password=...)` in tests → use `self.client.force_login(user)` — faster and not affected by password hashing
 - ❌ Rendering full templates in tests without static override → always decorate test classes with `@override_settings(STORAGES={"staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}})` to avoid manifest errors
+- ❌ Assuming `institution_scope()` returns `{}` safely for all non-superusers → it now raises `PermissionDenied` when a non-superuser has `institution_id` set but `request.institution` is `None`; never swallow this exception — it signals a middleware misconfiguration
+- ❌ Staff bypassing video ownership with `is_staff` check → staff may only edit/delete their own uploads; use `request.user.is_superuser` to gate unrestricted access, not `request.user.is_staff`
+- ❌ Serving report temp files without ownership verification → always set `cache.set(f"report_owner_{file_id}_{request.session.session_key}", request.user.pk, 24*3600)` at generation time and verify at download time; a UUID alone is not an access control
+- ❌ Adding `'unsafe-inline'` or `'unsafe-eval'` to `CSP_SCRIPT_SRC` for any environment → both are removed from the DEBUG block as of 2026-05-16; restoring them (even temporarily) undermines the nonce-based script safety model across all environments
 
 ### Phase 2: Multi-Institution Rules
 
@@ -311,4 +321,4 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Update when technology stack or architectural patterns change
 - Review quarterly for outdated rules
 
-_Last Updated: 2026-05-09_
+_Last Updated: 2026-05-16_
