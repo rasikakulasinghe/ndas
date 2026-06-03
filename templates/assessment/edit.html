@@ -187,14 +187,14 @@
 
                 <!-- Management Plan -->
                 <div class="form-group">
-                  <label for="{{ form.managment_plan.id_for_label }}">
-                    <i class="fas fa-tasks mr-2"></i>{{ form.managment_plan.label }}
+                  <label for="{{ form.management_plan.id_for_label }}">
+                    <i class="fas fa-tasks mr-2"></i>{{ form.management_plan.label }}
                   </label>
-                  {{ form.managment_plan }}
-                  <small class="form-text text-muted">{{ form.managment_plan.help_text|default:"Recommended treatment and intervention plan" }}</small>
-                  {% if form.managment_plan.errors %}
+                  {{ form.management_plan }}
+                  <small class="form-text text-muted">{{ form.management_plan.help_text|default:"Recommended treatment and intervention plan" }}</small>
+                  {% if form.management_plan.errors %}
                     <div class="invalid-feedback d-block">
-                      {% for error in form.managment_plan.errors %}{{ error }}{% endfor %}
+                      {% for error in form.management_plan.errors %}{{ error }}{% endfor %}
                     </div>
                   {% endif %}
                 </div>
@@ -216,15 +216,15 @@
                 <!-- Parent Informed -->
                 <div class="form-group">
                   <div class="form-check">
-                    {{ form.parant_informed }}
-                    <label class="form-check-label" for="{{ form.parant_informed.id_for_label }}">
-                      <i class="fas fa-info-circle mr-2"></i>{{ form.parant_informed.label }}
+                    {{ form.parent_informed }}
+                    <label class="form-check-label" for="{{ form.parent_informed.id_for_label }}">
+                      <i class="fas fa-info-circle mr-2"></i>{{ form.parent_informed.label }}
                     </label>
                   </div>
-                  <small class="form-text text-muted">{{ form.parant_informed.help_text|default:"Check if the parent has been informed of the assessment results" }}</small>
-                  {% if form.parant_informed.errors %}
+                  <small class="form-text text-muted">{{ form.parent_informed.help_text|default:"Check if the parent has been informed of the assessment results" }}</small>
+                  {% if form.parent_informed.errors %}
                     <div class="invalid-feedback d-block">
-                      {% for error in form.parant_informed.errors %}{{ error }}{% endfor %}
+                      {% for error in form.parent_informed.errors %}{{ error }}{% endfor %}
                     </div>
                   {% endif %}
                 </div>
@@ -370,7 +370,7 @@
         }
         
         // Management Plan validation
-        const managementPlan = form.querySelector('[name="managment_plan"]');
+        const managementPlan = form.querySelector('[name="management_plan"]');
         if (managementPlan && !managementPlan.value.trim()) {
             showFieldError(managementPlan, 'Management plan is required');
             isValid = false;

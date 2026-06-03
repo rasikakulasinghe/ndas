@@ -99,8 +99,8 @@ def delete_modal(entity, modal_id=None):
         'Attachment': f'/attachment/delete/{entity_id}/',
         'Bookmark': f'/bookmarks/delete/{entity_id}/',
         'Problem': f'/problems/delete/{entity_id}/',
-        'CustomUser': f'/users/admin/user/delete/{entity_id}/',
-        'User': f'/users/admin/user/delete/{entity_id}/',
+        'CustomUser': f'/users/admin/users/{entity_id}/delete/',
+        'User': f'/users/admin/users/{entity_id}/delete/',
     }
 
     delete_url = url_map.get(entity_type, f'/{entity_type.lower()}/delete/{entity_id}/')

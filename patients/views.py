@@ -1533,7 +1533,7 @@ def bookmark_add(request, item_id, bookmark_type):
 def bookmark_view(request, pk):
     # F4: guard matches bookmark_delete — institution_scope() returns {} when institution is
     # None, which would expose all-institution data. Block explicitly instead.
-    if not getattr(request, 'institution', None):
+    if not getattr(request, 'institution', None) and not request.user.is_superuser:
         return HttpResponseForbidden()
     bookmark = get_object_or_404(Bookmark, id=pk, **institution_scope(request, 'owner__institution'))
     # Resolve bookmarked patient with institution scope.
@@ -1563,7 +1563,7 @@ def bookmark_delete(request, pk):
     """
     # Guard: if institution context is absent, deny access rather than silently returning unscoped results.
     # institution_scope() returns {} when institution is None, which would expose all-institution data.
-    if not getattr(request, 'institution', None):
+    if not getattr(request, 'institution', None) and not request.user.is_superuser:
         return HttpResponseForbidden()
 
     from ndas.custom_codes.delete_helpers import (
