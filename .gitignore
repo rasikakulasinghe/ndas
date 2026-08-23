@@ -2,6 +2,9 @@ venv
 media
 staticfiles/
 
+# Secrets - never commit
+.env
+
 # Playwright
 node_modules/
 /test-results/

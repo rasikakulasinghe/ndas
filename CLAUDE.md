@@ -4,29 +4,25 @@ Guidance for Claude Code (claude.ai/code) working in this repository.
 
 **Last Updated:** 2025-12-25
 
-<!-- OPENSPEC:START -->
-## OpenSpec Instructions
+## Planning & Proposals
 
-For planning, proposals, or architecture changes, see `openspec/AGENTS.md` for:
-- Change proposal workflow
-- Spec format and conventions
-- Validation commands
-
-<!-- OPENSPEC:END -->
+For planning, proposals, or architecture changes, use the BMAD skills `bmad-spec` and `bmad-architecture` (OpenSpec was removed from this repo).
 
 ## Project Overview
 
 **NDAS** - Django medical system for patient records, video-based neurodevelopmental assessments, and evaluation workflows.
 
-**Stack:** Django 4.2.16 | PostgreSQL/SQLite | AdminLTE 3.2 | Bootstrap 4.6 | HTMX | Video.js
+**Stack:** Django 6.0 | PostgreSQL/SQLite | AdminLTE 3.2 | Bootstrap 4.6 | HTMX | Video.js
 
-**Apps:** `patients/` (root URL), `users/`, `video/`, `reports/`, `problemlist/`
+**Apps:** `patients/` (root URL), `users/`, `video/`, `reports/`, `problemlist/`, `institution/` (Phase 2, multi-institution), `referral/` (Phase 2, cross-institution referrals)
 
 ## Quick Commands
 
 ```bash
 # Environment (Windows)
-venv\Scripts\activate && pip install -r requirements.txt
+venv\Scripts\activate
+# No requirements.txt is tracked currently — dependencies are already installed in venv/.
+# To rebuild the venv from scratch: pip freeze > requirements.txt from a known-good venv first.
 
 # Database
 python manage.py makemigrations [app] && python manage.py migrate

@@ -86,7 +86,9 @@
       "Bash(Get-Content \"C:\\\\Users\\\\user\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\D--Projects-Current-Projects-NDAS---Project-NDAS\\\\cb4376f7-4a42-475e-893a-cb6159d0baa3\\\\tasks\\\\beatv74kn.output\" -ErrorAction SilentlyContinue)",
       "Bash(Select-Object -Last 60)",
       "Bash(python -c \"import django; print\\(django.__version__\\)\")",
-      "Bash(venv/Scripts/python.exe -c \"import django; print\\(django.__version__\\)\")"
+      "Bash(venv/Scripts/python.exe -c \"import django; print\\(django.__version__\\)\")",
+      "Bash(uv run *)",
+      "Bash(PYTHONIOENCODING=utf-8 uv run _bmad/scripts/resolve_config.py --project-root \"D:\\\\Projects\\\\Current Projects\\\\NDAS - Project\\\\NDAS\")"
     ],
     "deny": [],
     "ask": []

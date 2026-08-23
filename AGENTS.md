@@ -4,27 +4,57 @@ Workflow guidance for AI agents. For project patterns and architecture, see `CLA
 
 **Last Updated:** 2025-12-25
 
-<!-- OPENSPEC:START -->
-## OpenSpec Instructions
+<!-- bmad:context -->
+<!-- Verified 2026-08-23 against 6f7aa29. Managed by bmad-project-context; edits inside this block are replaced on refresh. Keep anything you want preserved outside the markers. -->
 
-For proposals, breaking changes, or architecture work, see `openspec/AGENTS.md` for the complete spec-driven workflow.
+## NDAS
 
-<!-- OPENSPEC:END -->
+Django medical system for patient records, video-based neurodevelopmental assessments, and evaluation workflows. Solo-maintained, single `main` branch, no CI. Architecture and patterns: `CLAUDE.md`. Generated reference docs (data models, API contracts, source tree, dev guide): `docs/index.md`.
+
+## Policy
+
+- Never commit `.env` — real config (including `SECRET_KEY`) was committed here before; it's gitignored now, don't re-add it.
+- Never set `MULTI_INSTITUTION_ENABLED=True` in production until `institution/tests/test_isolation.py` passes on staging — any cross-institution data leak is a blocking defect.
+
+## Where things are
+
+- `institution/` (multi-institution isolation) and `referral/` (cross-institution referrals) are Phase 2 apps, undocumented in `CLAUDE.md` — see `docs/index.md` and `docs/architecture.md`.
+- Proposals / architecture changes: use the BMAD skills `bmad-spec` and `bmad-architecture` — OpenSpec was removed from this repo (old pointers are dead).
+- Security test suites `video/tests/test_security.py`, `users/tests/test_security.py`, `reports/tests/test_security.py` cover ownership/isolation/rate-limit checks — run them when touching views or permissions in those apps.
+
+## Running and verifying
+
+- No `requirements.txt` is tracked (deleted, never restored) — reconstruct from the working `venv` (`pip freeze`) rather than `pip install -r requirements.txt`.
+- `python run_qa_tests.py` is a separate Playwright E2E smoke suite (needs `python manage.py runserver` already running, logs in as `testadmin`) — distinct from `python manage.py test`.
+- Test fixtures: `UserActivityMiddleware` doesn't run under the test client — set `added_by=user` manually in `Model.objects.create()` inside `setUp()`. Authenticate with `force_login(user)`, not `client.login()`. Test classes that render full templates need `@override_settings(STORAGES={"staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}})` or they fail on a staticfiles manifest error.
+
+## Conventions that differ from defaults
+
+- Historical/audit FK fields (e.g. `InstitutionSwitchLog.previous_institution_id`) use `IntegerField`, not `ForeignKey(..., on_delete=SET_NULL)` — so the historical ID survives the related record's deletion.
+- Atomic cache ops use `cache.add(key, value, timeout)`, never `cache.get()` + `cache.set()` — the latter race-conditions.
+
+## Known pitfalls
+
+- Inline `<script>` tags need `nonce="{{ request.csp_nonce }}"` in DEBUG too, not just production — `unsafe-inline`/`unsafe-eval` are removed from `CSP_SCRIPT_SRC` in both; a script without a nonce silently fails everywhere.
+- `institution_scope()` (`ndas/custom_codes/custom_methods.py`) raises `PermissionDenied` when a non-superuser has `institution_id` set but `request.institution` is `None` — that signals a middleware misconfiguration; never swallow it.
+- Staff may only edit/delete videos they personally uploaded (`video.added_by == request.user`); a bare `is_staff` bypass was a real security defect here once — gate unrestricted access on `is_superuser`, not `is_staff`.
+- `InstitutionScopedManager.for_institution(None)` returns ALL records — intentional Phase 1-compatibility fallback, not a bug. Don't "fix" it.
+- Any new report-download endpoint must verify the `report_owner_{file_id}_{session_key}` cache key set by `report_builder` before serving the file — a UUID/file_id alone is not access control.
+
+<!-- /bmad:context -->
 
 ## Pre-Task Checklist
 
 Before starting any task:
 - [ ] Read `CLAUDE.md` for project patterns
-- [ ] Check `openspec list` for active changes
 - [ ] Verify Patient field names (common errors in CLAUDE.md)
 
 ## Development Workflows
 
 ### Bug Fixes
 
-1. Check `temp_documents/BUG_AND_PERFORMANCE_ANALYSIS.md` for existing documentation
-2. Use `get_object_or_404()` not `.objects.get()`
-3. Test: `python manage.py test [app_name]`
+1. Use `get_object_or_404()` not `.objects.get()`
+2. Test: `python manage.py test [app_name]`
 
 ### Model Changes
 
