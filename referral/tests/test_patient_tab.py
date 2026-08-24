@@ -144,3 +144,35 @@ class PatientReferralsTimelineTest(PatientTabTestBase):
             str(shared_uuid_unrelated), uuids,
             "AC #5: Unrelated institution's referral must not appear in patient tab",
         )
+
+
+@STATIC_OVERRIDE
+class PatientReferralsTabNoInstitutionContextTest(PatientTabTestBase):
+    def test_no_institution_context_gets_no_patient_data(self):
+        """
+        Security regression: a user with no resolvable institution context
+        (e.g. a broken/unset institution FK — the transitional Phase-1 state
+        InstitutionContextMiddleware._resolve_user_context permits through with
+        request.institution=None) must NOT receive an unfiltered Patient
+        queryset from for_institution(None) — they must get a 404/redirect
+        instead of any other institution's patient data.
+
+        Note: SUPERADMIN is not used here — InstitutionContextMiddleware
+        intercepts SUPERADMIN requests with no active_institution_id in
+        session and redirects to the institution selector before the view is
+        ever reached, so it cannot exercise this view-level guard.
+        """
+        no_institution_user = User.objects.create_user(
+            username='no_inst_tab', password='Testpass1!',
+            first_name='No', last_name='Institution',
+            position='Medical Officer', mobile_primary='0770991005',
+            user_type=UserType.USER, institution=None,
+        )
+        client = Client()
+        client.force_login(no_institution_user)
+        response = client.get(self.tab_url)
+        # Http404 raised by get_object_or_404 is caught by @handle_view_errors
+        # and redirected to 'home' — never a 200 with patient data.
+        self.assertEqual(response.status_code, 302,
+            "User with no institution context must be redirected, not shown the patient")
+        self.assertEqual(response.url, reverse('home'))

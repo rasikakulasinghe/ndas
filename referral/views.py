@@ -36,7 +36,7 @@ def referral_initiate(request, patient_id):
     institution = getattr(request, 'institution', None) or getattr(request.user, 'institution', None)
 
     patient = get_object_or_404(
-        Patient.objects.for_institution(institution),
+        Patient.objects.for_institution(institution) if institution else Patient.objects.none(),
         id=patient_id,
     )
 
@@ -442,7 +442,7 @@ def patient_referrals_tab(request, patient_id):
     institution = getattr(request, 'institution', None) or getattr(request.user, 'institution', None)
 
     patient = get_object_or_404(
-        Patient.objects.for_institution(institution),
+        Patient.objects.for_institution(institution) if institution else Patient.objects.none(),
         id=patient_id,
     )
 

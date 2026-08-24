@@ -763,7 +763,7 @@ class ExcelReportGenerator:
 
         # Add sheets based on parameters (optimized queries)
         if parameters.get('patients', False):
-            queryset = Patient.objects.select_related('added_by', 'last_edit_by').all()
+            queryset = Patient.objects.for_institution(institution).select_related('added_by', 'last_edit_by')
             if start_datetime:
                 queryset = queryset.filter(created_at__gte=start_datetime)
             if end_datetime:
@@ -788,6 +788,9 @@ class ExcelReportGenerator:
             if end_datetime:
                 queryset = queryset.filter(date_of_assessment__lte=end_datetime)
 
+            if institution:
+                queryset = queryset.filter(patient__institution=institution)
+
             # Apply advanced filters
             queryset = self.apply_advanced_filters(queryset, filters, 'gm')
 
@@ -802,6 +805,9 @@ class ExcelReportGenerator:
                 queryset = queryset.filter(date_of_assessment__gte=start_datetime)
             if end_datetime:
                 queryset = queryset.filter(date_of_assessment__lte=end_datetime)
+
+            if institution:
+                queryset = queryset.filter(patient__institution=institution)
 
             # Apply advanced filters
             queryset = self.apply_advanced_filters(queryset, filters, 'hine')
@@ -818,6 +824,9 @@ class ExcelReportGenerator:
             if end_datetime:
                 queryset = queryset.filter(date_of_assessment__lte=end_datetime)
 
+            if institution:
+                queryset = queryset.filter(patient__institution=institution)
+
             # Apply advanced filters
             queryset = self.apply_advanced_filters(queryset, filters, 'developmental')
 
@@ -833,6 +842,9 @@ class ExcelReportGenerator:
             if end_datetime:
                 queryset = queryset.filter(assessment_date__lte=end_datetime)
 
+            if institution:
+                queryset = queryset.filter(patient__institution=institution)
+
             # Apply advanced filters
             queryset = self.apply_advanced_filters(queryset, filters, 'cdic')
 
@@ -847,6 +859,9 @@ class ExcelReportGenerator:
                 queryset = queryset.filter(assessment_date__gte=start_datetime)
             if end_datetime:
                 queryset = queryset.filter(assessment_date__lte=end_datetime)
+
+            if institution:
+                queryset = queryset.filter(patient__institution=institution)
 
             # Apply advanced filters
             queryset = self.apply_advanced_filters(queryset, filters, 'gpa')

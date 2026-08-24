@@ -1,8 +1,12 @@
 """
 Security tests for reports app.
 
-Covers: AC 1 (Fix #1 IDOR), AC 15/16 (Fix #14 report ownership).
+Covers: AC 1 (Fix #1 IDOR), AC 15/16 (Fix #14 report ownership),
+cross-tenant Excel export scoping (spec-fix-cross-tenant-data-leaks).
 """
+import os
+import shutil
+import tempfile
 import uuid
 from unittest.mock import patch
 
@@ -13,7 +17,10 @@ from django.urls import reverse
 from django.utils import timezone
 
 from institution.models import Institution
-from patients.models import GMAssessment, Patient
+from patients.models import (
+    CDICRecord, DevelopmentalAssessment, GeneralPaediatricAssessment,
+    GMAssessment, HINEAssessment, Patient,
+)
 from video.models import Video
 
 User = get_user_model()
@@ -144,3 +151,153 @@ class ReportOwnershipTest(ReportSecurityBase):
         # File doesn't exist on disk → 404, but ownership check passed (not 403)
         self.assertEqual(response.status_code, 404)
         self.assertNotEqual(response.status_code, 403)
+
+
+@STATIC_OVERRIDE
+class ExcelExportInstitutionScopingTest(TestCase):
+    """
+    spec-fix-cross-tenant-data-leaks: ExcelReportGenerator.generate(institution=...)
+    must scope all six sheet types (patients + 5 assessment types) to the given
+    institution, instead of leaking every institution's data.
+    """
+
+    def setUp(self):
+        self.inst_a = Institution.objects.create(name='Excel Hospital A', slug='excel-hosp-a')
+        self.inst_b = Institution.objects.create(name='Excel Hospital B', slug='excel-hosp-b')
+
+        self.staff_a = User.objects.create_user(
+            username='excel_staff_a', password='StaffPass123!', email='excel_a@test.com',
+            is_staff=True, institution=self.inst_a, mobile_primary='0700000010',
+        )
+
+        common_patient_fields = dict(
+            mother_name='Test Mother',
+            gender='Male',
+            dob_tob=timezone.now() - timezone.timedelta(days=60),
+            mo_delivery='Normal vaginal delivery (NVD)',
+            pog_wks=38,
+            pog_days=0,
+            birth_weight=3000,
+            ofc=34,
+            tp_mobile='0771234567',
+        )
+        # Institution A gets TWO patients, institution B gets ONE — deliberately
+        # asymmetric so a mis-scoped filter (e.g. inverted, or scoped to the
+        # wrong institution) produces a distinguishable count instead of
+        # silently matching by coincidence, as it would with a symmetric 1:1 split.
+        self.patient_a = Patient.objects.create(
+            bht='BHT-EXCEL-A-001', baby_name='Excel Baby A',
+            institution=self.inst_a, **common_patient_fields,
+        )
+        self.patient_a2 = Patient.objects.create(
+            bht='BHT-EXCEL-A-002', baby_name='Excel Baby A2',
+            institution=self.inst_a, **common_patient_fields,
+        )
+        self.patient_b = Patient.objects.create(
+            bht='BHT-EXCEL-B-001', baby_name='Excel Baby B',
+            institution=self.inst_b, **common_patient_fields,
+        )
+
+        # Videos required for GMAssessment — bulk_create bypasses Video.save()'s
+        # real-storage .size access (same pattern as ReportSecurityBase above).
+        self.video_a, self.video_a2, self.video_b = Video.objects.bulk_create([
+            Video(patient=self.patient_a, title='ExcelVideoA',
+                  video_file='videos/excel_dummy_a.mp4', recorded_on=timezone.now()),
+            Video(patient=self.patient_a2, title='ExcelVideoA2',
+                  video_file='videos/excel_dummy_a2.mp4', recorded_on=timezone.now()),
+            Video(patient=self.patient_b, title='ExcelVideoB',
+                  video_file='videos/excel_dummy_b.mp4', recorded_on=timezone.now()),
+        ])
+
+        now = timezone.now()
+        today = now.date()
+
+        for patient, video in (
+            (self.patient_a, self.video_a),
+            (self.patient_a2, self.video_a2),
+            (self.patient_b, self.video_b),
+        ):
+            GMAssessment.objects.create(
+                patient=patient, video_file=video, date_of_assessment=now,
+            )
+            HINEAssessment.objects.create(
+                patient=patient, date_of_assessment=now, score=70,
+                assessment_done_by='Dr. Test',
+            )
+            DevelopmentalAssessment.objects.create(
+                patient=patient, date_of_assessment=now,
+            )
+            CDICRecord.objects.create(
+                patient=patient, assessment_date=today,
+            )
+            GeneralPaediatricAssessment.objects.create(
+                patient=patient, assessment_date=now,
+                healthcare_provider='Dr. Test',
+                current_problems='None', physical_examination='Normal',
+                investigation_summary='N/A', prescribed_medications='None',
+                next_plan='Routine follow-up',
+            )
+
+        self._tmp_dir = tempfile.mkdtemp(prefix='ndas_excel_test_')
+        self.addCleanup(lambda: shutil.rmtree(self._tmp_dir, ignore_errors=True))
+
+    def _generate(self, institution):
+        from reports.utils.excel_generator import ExcelReportGenerator
+
+        generator = ExcelReportGenerator()
+        output_path = os.path.join(self._tmp_dir, f'{uuid.uuid4()}.xlsx')
+        parameters = {
+            'patients': True,
+            'gm_assessments': True,
+            'hine_assessments': True,
+            'developmental_assessments': True,
+            'cdic_records': True,
+            'gpa_assessments': True,
+        }
+        _, metadata = generator.generate(
+            output_path=output_path, parameters=parameters, institution=institution,
+        )
+        return metadata
+
+    def test_institution_scoped_export_excludes_other_institution(self):
+        """
+        Given institution=A (2 patients), every sheet returns exactly 2 records —
+        never institution B's 1. The asymmetric 2-vs-1 split means an inverted
+        filter (e.g. .exclude() instead of .filter(), or a filter scoped to the
+        wrong institution variable) would yield 1, not 2, so it can't pass by
+        coincidence the way a symmetric 1-vs-1 fixture could.
+        """
+        metadata = self._generate(self.inst_a)
+        sheets = metadata['sheets']
+        self.assertEqual(sheets['Patients'], 2, "Both of institution A's patients must appear")
+        self.assertEqual(sheets['GM Assessments'], 2)
+        self.assertEqual(sheets['HINE Assessments'], 2)
+        self.assertEqual(sheets['Developmental Assessments'], 2)
+        self.assertEqual(sheets['CDIC Records'], 2)
+        self.assertEqual(sheets['GPA Assessments'], 2)
+
+    def test_institution_b_scoped_export_returns_only_its_own_record(self):
+        """
+        Given institution=B (1 patient), every sheet returns exactly 1 record —
+        never institution A's 2. Pins down that scoping tracks whichever
+        institution is actually passed in, not just "institution A vs unfiltered".
+        """
+        metadata = self._generate(self.inst_b)
+        sheets = metadata['sheets']
+        self.assertEqual(sheets['Patients'], 1, "Only institution B's patient must appear")
+        self.assertEqual(sheets['GM Assessments'], 1)
+        self.assertEqual(sheets['HINE Assessments'], 1)
+        self.assertEqual(sheets['Developmental Assessments'], 1)
+        self.assertEqual(sheets['CDIC Records'], 1)
+        self.assertEqual(sheets['GPA Assessments'], 1)
+
+    def test_none_institution_export_stays_unfiltered(self):
+        """Phase-1 backward compat: institution=None must remain unfiltered (all 3 patients)."""
+        metadata = self._generate(None)
+        sheets = metadata['sheets']
+        self.assertEqual(sheets['Patients'], 3, "Unscoped export must include both institutions")
+        self.assertEqual(sheets['GM Assessments'], 3)
+        self.assertEqual(sheets['HINE Assessments'], 3)
+        self.assertEqual(sheets['Developmental Assessments'], 3)
+        self.assertEqual(sheets['CDIC Records'], 3)
+        self.assertEqual(sheets['GPA Assessments'], 3)
