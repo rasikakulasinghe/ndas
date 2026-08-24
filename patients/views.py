@@ -1671,6 +1671,12 @@ def bookmark_delete(request, pk):
 
 @login_required(login_url="user-login")
 def bookmark_manager_user(request, username):
+    if request.user.username != username and not request.user.is_superuser:
+        logger.warning(
+            f"Blocked cross-user bookmark list access: user={request.user.username}, "
+            f"requested_username={username}"
+        )
+        return HttpResponseForbidden()
     user = get_object_or_404(CustomUser, username=username)
     var_patients_list = Bookmark.objects.filter(owner=user).order_by("-id")
     paginator = Paginator(var_patients_list, 10)

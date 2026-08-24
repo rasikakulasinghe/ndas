@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.contrib import messages
 from django.conf import settings
 from django.http import HttpResponseRedirect
+from django.utils.http import url_has_allowed_host_and_scheme
 
 logger = logging.getLogger(__name__)
 
@@ -135,6 +136,12 @@ class InstitutionContextMiddleware(MiddlewareMixin):
                     'Active referrals continue normally. Contact your administrator to renew.'
                 )
                 referer = request.META.get('HTTP_REFERER', '/')
+                if not url_has_allowed_host_and_scheme(
+                    referer,
+                    allowed_hosts={request.get_host()},
+                    require_https=request.is_secure(),
+                ):
+                    referer = '/'
                 return HttpResponseRedirect(referer)
 
         return None

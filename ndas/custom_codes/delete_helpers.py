@@ -27,6 +27,10 @@ def has_delete_permission(user: User, entity: Any) -> bool:
     Business Rules:
         - Superusers can delete any entity
         - Staff users can delete their own records (based on added_by field)
+        - Bookmarks are the exception: ownership is the 'owner' field, not
+          'added_by' — checked before the generic added_by branch so a staff
+          user who merely added_by a bookmark they don't own is not granted
+          delete rights by falling through to the generic check.
         - Non-staff users cannot delete anything
     """
     if not user or not user.is_authenticated:
@@ -36,17 +40,17 @@ def has_delete_permission(user: User, entity: Any) -> bool:
     if user.is_superuser:
         return True
 
+    # Bookmarks use an 'owner' field (not 'added_by') as their documented
+    # ownership field — staff may delete only bookmarks they own. Checked
+    # first so this entity type never falls through to the generic
+    # added_by branch below, which would use the wrong field for it.
+    if entity.__class__.__name__ == 'Bookmark':
+        return bool(user.is_staff and getattr(entity, 'owner', None) == user)
+
     # Check if entity has an 'added_by' field
     if hasattr(entity, 'added_by'):
         # Staff users can delete their own records
         if user.is_staff and entity.added_by == user:
-            return True
-
-    # Staff users can delete certain entity types regardless of ownership
-    # (Add specific logic for different entity types here if needed)
-    if user.is_staff:
-        # Allow staff to delete bookmarks (always own their bookmarks)
-        if entity.__class__.__name__ == 'Bookmark':
             return True
 
     return False

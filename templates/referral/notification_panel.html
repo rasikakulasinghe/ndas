@@ -5,20 +5,23 @@
   <div class="dropdown-divider"></div>
 
   {% for notif in notifications %}
-  <a href="{% url 'referral:notification-mark-read' notif.pk %}"
-     class="dropdown-item {% if not notif.is_read %}bg-light{% endif %}">
-    <div class="media">
-      <div class="media-body">
-        <p class="mb-0 {% if not notif.is_read %}font-weight-bold{% endif %}">
-          {{ notif.title }}
-        </p>
-        {% if notif.body %}
-        <p class="text-muted text-sm mb-0">{{ notif.body|truncatechars:80 }}</p>
-        {% endif %}
-        <p class="text-muted text-xs mb-0">{{ notif.created_at|date:"d M Y H:i" }}</p>
+  <form method="post" action="{% url 'referral:notification-mark-read' notif.pk %}" class="m-0 p-0">
+    {% csrf_token %}
+    <button type="submit"
+            class="dropdown-item text-left w-100 border-0 bg-transparent {% if not notif.is_read %}bg-light{% endif %}">
+      <div class="media">
+        <div class="media-body">
+          <p class="mb-0 {% if not notif.is_read %}font-weight-bold{% endif %}">
+            {{ notif.title }}
+          </p>
+          {% if notif.body %}
+          <p class="text-muted text-sm mb-0">{{ notif.body|truncatechars:80 }}</p>
+          {% endif %}
+          <p class="text-muted text-xs mb-0">{{ notif.created_at|date:"d M Y H:i" }}</p>
+        </div>
       </div>
-    </div>
-  </a>
+    </button>
+  </form>
   {% if not forloop.last %}
   <div class="dropdown-divider"></div>
   {% endif %}

@@ -82,6 +82,42 @@ class InstitutionContextMiddlewareTest(TestCase):
         self.assertIsNotNone(response)  # Should redirect back
         self.assertEqual(response.status_code, 302)
 
+    def test_grace_institution_post_blocked_external_referer_redirects_home(self):
+        """Security: GRACE + POST with an off-site Referer must never redirect off-site."""
+        user = _make_clinician('clinician3b', self.institution_grace)
+        request = _make_request(self.factory, path='/patient/add/', method='POST')
+        request.META['HTTP_REFERER'] = 'https://evil.example/phish'
+        request.user = user
+        response = self.middleware.process_request(request)
+        self.assertIsNotNone(response)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/')
+
+    def test_grace_institution_post_blocked_protocol_relative_referer_redirects_home(self):
+        """
+        Security: a protocol-relative Referer (//evil.example/phish) is a classic
+        open-redirect bypass for naive validation — url_has_allowed_host_and_scheme
+        must reject it too, not just absolute https:// URLs.
+        """
+        user = _make_clinician('clinician3c', self.institution_grace)
+        request = _make_request(self.factory, path='/patient/add/', method='POST')
+        request.META['HTTP_REFERER'] = '//evil.example/phish'
+        request.user = user
+        response = self.middleware.process_request(request)
+        self.assertIsNotNone(response)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/')
+
+    def test_grace_institution_post_blocked_no_referer_defaults_home(self):
+        """The no-Referer-header default path ('/') must remain a safe, unmolested redirect."""
+        user = _make_clinician('clinician3d', self.institution_grace)
+        request = _make_request(self.factory, path='/patient/add/', method='POST')
+        request.user = user
+        response = self.middleware.process_request(request)
+        self.assertIsNotNone(response)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/')
+
     def test_grace_institution_referral_post_allowed(self):
         """AC #4: GRACE + POST to /referral/ is exempt and passes through."""
         user = _make_clinician('clinician4', self.institution_grace)

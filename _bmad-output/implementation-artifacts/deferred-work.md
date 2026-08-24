@@ -21,3 +21,11 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-fix-cross-tenant-data-leaks.md`
   summary: InstitutionScopedManager has no safe helper (e.g. for_institution_or_none()) to stop future call sites from repeating the for_institution(None)-returns-unfiltered footgun this spec just patched at multiple call sites
   evidence: Raised by the blind-hunter review layer — the fix pattern (`for_institution(institution) if institution else X.objects.none()`) is now duplicated ad hoc across referral/views.py (x3) and the Excel generator with no shared abstraction or guard, so the next call site can silently reintroduce the same cross-tenant leak. Architectural improvement, not appropriate to bundle into this narrow bugfix (spec's Never section forbids touching InstitutionScopedManager itself).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-auth-permission-bypasses.md`
+  summary: patients/views.py's bookmark_edit has no ownership/institution check at all — the exact same IDOR class as bookmark_manager_user, but for editing another user's bookmark content, not just viewing the list
+  evidence: Found incidentally by the verification-gap review layer while tracing consumers of the Bookmark ownership model this spec fixed. bookmark_edit (patients/views.py:1685-1699) fetches `Bookmark.objects.select_related(...).get(id=pk)` with no owner/staff/superuser/institution check before rendering the edit form and saving changes — any authenticated user can edit any other user's bookmark by guessing/incrementing pk. Worth prioritizing soon since it's arguably worse than the view-only IDOR just fixed (write access, not just read).
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-fix-auth-permission-bypasses.md`
+  summary: bookmark_manager_user still lacks @require_http_methods and @ratelimit, unlike sibling bookmark views (e.g. bookmark_delete)
+  evidence: Raised by the blind-hunter review layer — pre-existing gap, not introduced by this spec's ownership-guard fix, but inconsistent with CLAUDE.md's documented view pattern and the rate-limiting already applied to every other bookmark write/read endpoint in this file.

@@ -97,6 +97,25 @@ class NotificationPanelViewTest(NotificationPanelBase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'No notifications')
 
+    def test_panel_renders_mark_read_as_post_form_not_get_link(self):
+        """
+        Security regression: the mark-read control must be a POST form with a
+        CSRF token, not a plain GET `<a href>` — a template revert back to a
+        link would silently reopen the CSRF-unsafe GET mutation this spec
+        fixed, and no view-level test would catch it since view tests hit the
+        URL directly rather than rendering this template.
+        """
+        notif = self._make_notification()
+        client = Client()
+        client.force_login(self.user)
+        response = client.get(reverse('referral:notification-panel'))
+        mark_read_url = reverse('referral:notification-mark-read', args=[notif.pk])
+        self.assertContains(response, f'action="{mark_read_url}"')
+        self.assertContains(response, 'method="post"')
+        self.assertContains(response, 'csrfmiddlewaretoken')
+        self.assertNotContains(response, f'href="{mark_read_url}"',
+            msg_prefix='mark-read must never be reachable via a plain GET link again')
+
 
 @STATIC_OVERRIDE
 class NotificationMarkReadTest(NotificationPanelBase):
@@ -105,7 +124,7 @@ class NotificationMarkReadTest(NotificationPanelBase):
         notif = self._make_notification(is_read=False)
         client = Client()
         client.force_login(self.user)
-        response = client.get(reverse('referral:notification-mark-read', args=[notif.pk]))
+        response = client.post(reverse('referral:notification-mark-read', args=[notif.pk]))
         # Should redirect to notification's link
         self.assertEqual(response.status_code, 302)
         notif.refresh_from_db()
@@ -116,7 +135,7 @@ class NotificationMarkReadTest(NotificationPanelBase):
         other_notif = self._make_notification(user=self.other_user)
         client = Client()
         client.force_login(self.user)
-        response = client.get(reverse('referral:notification-mark-read', args=[other_notif.pk]))
+        response = client.post(reverse('referral:notification-mark-read', args=[other_notif.pk]))
         self.assertEqual(response.status_code, 404,
             'AC #5: Cross-user notification access must return 404')
 
@@ -127,8 +146,36 @@ class NotificationMarkReadTest(NotificationPanelBase):
         notif.save()
         client = Client()
         client.force_login(self.user)
-        response = client.get(reverse('referral:notification-mark-read', args=[notif.pk]))
+        response = client.post(reverse('referral:notification-mark-read', args=[notif.pk]))
         self.assertRedirects(response, '/referral/inbox/', fetch_redirect_response=False)
+
+    def test_mark_read_rejects_get(self):
+        """Security: GET must be rejected (405) — state mutation requires POST+CSRF."""
+        notif = self._make_notification(is_read=False)
+        client = Client()
+        client.force_login(self.user)
+        response = client.get(reverse('referral:notification-mark-read', args=[notif.pk]))
+        self.assertEqual(response.status_code, 405,
+            'GET must be rejected now that mark-read is a state-mutating POST-only endpoint')
+        notif.refresh_from_db()
+        self.assertFalse(notif.is_read, 'A rejected GET must not mutate state')
+
+    def test_mark_read_rejects_post_without_csrf_token(self):
+        """
+        Security: this is the actual CSRF-protection claim — a POST with no CSRF
+        token/cookie (as a third-party cross-site form would send) must be
+        rejected by CsrfViewMiddleware, not just method-gated. Django's default
+        test Client bypasses CSRF checks, so enforce_csrf_checks=True is required
+        to prove this, rather than merely proving GET is rejected.
+        """
+        notif = self._make_notification(is_read=False)
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(self.user)
+        response = client.post(reverse('referral:notification-mark-read', args=[notif.pk]))
+        self.assertEqual(response.status_code, 403,
+            'A POST with no CSRF token must be rejected by CsrfViewMiddleware')
+        notif.refresh_from_db()
+        self.assertFalse(notif.is_read, 'A CSRF-rejected POST must not mutate state')
 
 
 @STATIC_OVERRIDE

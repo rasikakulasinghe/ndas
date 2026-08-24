@@ -546,7 +546,7 @@ def notification_panel(request):
 
 
 @login_required(login_url="user-login")
-@require_GET
+@require_http_methods(["POST"])
 @ratelimit(key='user_or_ip', rate='10/m')
 def notification_mark_read(request, pk):
     """
