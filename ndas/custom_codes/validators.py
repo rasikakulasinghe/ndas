@@ -39,6 +39,21 @@ def sanitize_text_input(value):
     # Convert to string if not already
     text = str(value)
 
+    # Unescape HTML entities first to prevent double-encoding bypasses.
+    # Without this, an entity-encoded payload like "&lt;script&gt;...&lt;/script&gt;"
+    # contains no raw "<" characters when the strip regexes below run, so it
+    # would pass every filter untouched and only become live markup afterward.
+    # Decoding first ensures the strips below actually see (and remove) it.
+    # Loop to a fixed point (bounded) rather than a single pass: html.unescape()
+    # only decodes one layer per call, so a multiply-encoded payload like
+    # "&amp;lt;script&amp;gt;" would otherwise still have one layer of
+    # encoding left over after a single call, undecoded but also unstripped.
+    for _ in range(3):
+        decoded = html.unescape(text)
+        if decoded == text:
+            break
+        text = decoded
+
     # Remove script tags and their content (case insensitive)
     text = re.sub(
         r"<script[^>]*>.*?</script>", "", text, flags=re.IGNORECASE | re.DOTALL
@@ -55,10 +70,6 @@ def sanitize_text_input(value):
     # This regex preserves medical notation like "< 5" or "> 38"
     # by only matching tags that start with < followed by a letter
     text = re.sub(r"<(/)?([a-zA-Z][a-zA-Z0-9]*)[^>]*>", "", text)
-
-    # Unescape HTML entities to prevent double-encoding
-    # This converts &lt; back to < and &gt; back to >
-    text = html.unescape(text)
 
     # Normalize whitespace (replace multiple spaces/tabs/newlines with single space)
     # Preserve single newlines for paragraph breaks

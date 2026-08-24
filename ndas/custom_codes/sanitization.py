@@ -33,13 +33,64 @@ ALLOWED_ATTRIBUTES = {
 
 ALLOWED_PROTOCOLS = ['http', 'https', 'mailto', 'tel']
 
+# Matches an opening <a ...> tag that has at least one attribute.
+_ANCHOR_OPEN_TAG_RE = re.compile(r'<a\s+[^>]*>', re.IGNORECASE)
+# Whitespace around _blank is intentional: per the HTML5 "rules for choosing
+# a browsing context name", browsers strip ASCII whitespace before comparing
+# the target value, so target=" _blank" opens a new tab exactly like
+# target="_blank" — an exact-match regex would silently miss it.
+_TARGET_BLANK_RE = re.compile(r'target\s*=\s*(["\'])\s*_blank\s*\1', re.IGNORECASE)
+_REL_ATTR_RE = re.compile(r'rel\s*=\s*(["\'])(.*?)\1', re.IGNORECASE)
+
+
+def _enforce_noopener_noreferrer(html_content: str) -> str:
+    """
+    Ensure every anchor tag with target="_blank" carries rel="noopener noreferrer".
+
+    bleach's attribute allowlist can only keep or drop attributes an author
+    already supplied -- it has no way to synthesize a new one. Without a
+    forced rel, a target="_blank" link opened by a user lets the destination
+    page use window.opener to redirect the original tab to a phishing page
+    (reverse tabnabbing). This runs as a post-process over bleach's own
+    sanitized, well-formed <a> tags, so a regex here is safe and standard.
+
+    Any existing rel value (e.g. "nofollow") is preserved and merged with,
+    not replaced by, the noopener/noreferrer tokens. Running this twice on
+    already-fixed output is a no-op (idempotent).
+    """
+    def _fix_tag(match):
+        tag = match.group(0)
+        if not _TARGET_BLANK_RE.search(tag):
+            return tag
+
+        rel_match = _REL_ATTR_RE.search(tag)
+        if rel_match:
+            quote = rel_match.group(1)
+            existing_tokens = rel_match.group(2).split()
+            existing_lower = {token.lower() for token in existing_tokens}
+            merged_tokens = list(existing_tokens)
+            for token in ('noopener', 'noreferrer'):
+                if token not in existing_lower:
+                    merged_tokens.append(token)
+            new_rel_attr = f'rel={quote}{" ".join(merged_tokens)}{quote}'
+            tag = tag[:rel_match.start()] + new_rel_attr + tag[rel_match.end():]
+        else:
+            # No rel attribute present -- insert one before the closing '>'
+            tag = tag[:-1].rstrip() + ' rel="noopener noreferrer">'
+        return tag
+
+    return _ANCHOR_OPEN_TAG_RE.sub(_fix_tag, html_content)
+
 
 def sanitize_html(html_content: str, strip: bool = False) -> str:
     """
     Sanitize HTML content to prevent XSS attacks.
 
     Removes potentially dangerous HTML tags and attributes while preserving
-    safe formatting tags suitable for medical documentation.
+    safe formatting tags suitable for medical documentation. Any anchor
+    (<a>) with target="_blank" also gets rel="noopener noreferrer" forced
+    onto it (merged with any existing rel value) to prevent reverse
+    tabnabbing -- see _enforce_noopener_noreferrer().
 
     Args:
         html_content (str): Raw HTML content to sanitize
@@ -75,6 +126,11 @@ def sanitize_html(html_content: str, strip: bool = False) -> str:
             parse_email=True,
             skip_tags=['pre', 'code'],
         )
+
+    # Force rel="noopener noreferrer" on any target="_blank" anchor to
+    # prevent reverse-tabnabbing. Must run after bleach.clean()/linkify()
+    # so it only ever sees already-sanitized, well-formed <a> tags.
+    cleaned = _enforce_noopener_noreferrer(cleaned)
 
     return cleaned
 
