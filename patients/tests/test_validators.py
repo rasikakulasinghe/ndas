@@ -6,10 +6,15 @@ to ensure medical data integrity.
 """
 from django.test import TestCase
 from django.core.exceptions import ValidationError
+from django.contrib.auth import get_user_model
+from django.utils import timezone
 from ndas.custom_codes.validators import (
     validate_birth_weight_for_gestational_age,
     BIRTH_WEIGHT_RANGES_BY_POG
 )
+from patients.models import Patient
+
+User = get_user_model()
 
 
 class BirthWeightValidationTest(TestCase):
@@ -177,3 +182,62 @@ class BirthWeightValidationTest(TestCase):
                     f"Week {week} max ({ranges['max']}) is significantly less than week {week-1} ({prev_max})")
 
             prev_max = ranges['max']
+
+
+class PatientCleanPOGWeightValidationTest(TestCase):
+    """
+    Regression tests confirming Patient.clean() actually wires in
+    validate_birth_weight_for_gestational_age() (part of
+    spec-fix-medical-data-correctness).
+
+    Previously Patient.clean() called validate_birth_weight() (which raises
+    ValidationError directly rather than returning a tuple) for its
+    POG-specific check, so `if result is not None` was always False and the
+    POG-specific validation never actually ran. This proves it's wired in
+    at the model/save() level, not just correct as a standalone function.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='pog_user',
+            password='Testpass1!',
+            email='pog_user@example.com',
+            is_staff=True,
+        )
+
+    def _build_patient(self, bht, birth_weight, pog_wks, pog_days=0):
+        return Patient(
+            bht=bht,
+            baby_name='POG Test Baby',
+            mother_name='POG Test Mother',
+            gender='Male',
+            dob_tob=timezone.now() - timezone.timedelta(days=10),
+            mo_delivery='Normal vaginal delivery (NVD)',
+            pog_wks=pog_wks,
+            pog_days=pog_days,
+            birth_weight=birth_weight,
+            ofc=34,
+            tp_mobile='0771234567',
+            added_by=self.user,
+        )
+
+    def test_implausible_weight_for_gestational_age_raises_on_birth_weight(self):
+        """
+        birth_weight=3000 (term-sized) at pog_wks=22 (extremely premature) is
+        implausible per BIRTH_WEIGHT_RANGES_BY_POG. save() must raise
+        ValidationError referencing 'birth_weight'.
+        """
+        patient = self._build_patient('BHT-POG-001', birth_weight=3000, pog_wks=22)
+
+        with self.assertRaises(ValidationError) as ctx:
+            patient.save()
+
+        self.assertIn('birth_weight', ctx.exception.message_dict)
+
+    def test_plausible_weight_for_gestational_age_saves_successfully(self):
+        """birth_weight=500 at pog_wks=22 is within the plausible POG range and must save."""
+        patient = self._build_patient('BHT-POG-002', birth_weight=500, pog_wks=22)
+
+        patient.save()
+
+        self.assertIsNotNone(patient.pk)

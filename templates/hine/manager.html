@@ -55,7 +55,7 @@
               </a>
               <div class="dropdown-divider"></div>
               <a class="dropdown-item" href="#">
-                <i class="fas fa-check-circle mr-2 text-success"></i>Normal (≥60)
+                <i class="fas fa-check-circle mr-2 text-success"></i>Normal (>73)
               </a>
               <a class="dropdown-item" href="#">
                 <i class="fas fa-exclamation-triangle mr-2 text-warning"></i>Moderate (40-59)
@@ -166,7 +166,7 @@
                   <span class="badge badge-warning px-2 py-1">
                     <i class="fas fa-star mr-1"></i>BOOKMARKED
                   </span>
-                  {% elif HINERecord.score >= 60 %}
+                  {% elif HINERecord.score > 73 %}
                   <span class="badge badge-success px-2 py-1">
                     <i class="fas fa-check-circle mr-1"></i>NORMAL
                   </span>
@@ -192,7 +192,7 @@
 
                 <td class="text-center align-middle py-3 px-3 d-none d-md-table-cell">
                   <div class="score-display">
-                    <span class="h5 mb-0 font-weight-bold {% if HINERecord.score >= 60 %}text-success{% elif HINERecord.score >= 40 %}text-warning{% else %}text-danger{% endif %}">
+                    <span class="h5 mb-0 font-weight-bold {% if HINERecord.score > 73 %}text-success{% elif HINERecord.score >= 40 %}text-warning{% else %}text-danger{% endif %}">
                       {{ HINERecord.score }}
                     </span>
                     <small class="text-muted d-block">/78</small>

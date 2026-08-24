@@ -704,8 +704,22 @@ class BirthWeightViewValidationTest(TestCase):
         )
 
     def test_birth_weight_300_accepted(self):
-        """AC #5: 300g must be accepted (redirects to view-patient)."""
-        response = self._post_with_birth_weight(300)
+        """AC #5: 300g must be accepted (redirects to view-patient).
+
+        Uses pog_wks=20 (overriding the class default of 38) because 300g is
+        only medically plausible at the extremely-premature end of gestation
+        per BIRTH_WEIGHT_RANGES_BY_POG (min=300g at 20 weeks; min=2400g at 38
+        weeks). Since spec-fix-medical-data-correctness wired
+        validate_birth_weight_for_gestational_age() into Patient.clean(),
+        300g at 38 weeks (this class's default) is now correctly rejected as
+        implausible for a near-term baby — this test isolates the basic
+        300-8000g field-level boundary this AC targets from that POG-specific
+        check by using a gestational age where 300g is actually plausible.
+        """
+        data = dict(self.REQUIRED_FIELDS)
+        data['pog_wks'] = 20
+        data['birth_weight'] = 300
+        response = self.client.post(self.url, data)
         self.assertEqual(response.status_code, 302)
         self.assertIn('view', response.url)
 

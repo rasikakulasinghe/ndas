@@ -621,9 +621,12 @@ def getPatientList(pts_type, institution=None, user=None):
     elif pts_type == PtStatus.DIAGNOSED:
         return var_ptl.filter(Q(gmassessment__diagnosis_conclusion='ABNORMAL') | Q(hine_assessments__score__lt = 73) | Q(developmental_assessments__is_dx_normal=False)).distinct()
     elif pts_type == PtStatus.DX_NORMAL:
+        # Must use `|` (bitwise OR), never Python's `and`/`or` — Q objects are
+        # always truthy, so `and` silently short-circuits to just the last Q,
+        # dropping the GMA/HINE exclusions entirely (see spec-fix-medical-data-correctness).
         return var_ptl.exclude(
-            Q(gmassessment__diagnosis_conclusion='ABNORMAL') and
-            Q(hine_assessments__score__lt = 73) and
+            Q(gm_assessments__diagnosis_conclusion='ABNORMAL') |
+            Q(hine_assessments__score__lt = 73) |
             Q(developmental_assessments__is_dx_normal=False)
         ).filter(_has_videos=True).distinct()
     elif pts_type == PtStatus.DX_GMA_ABNORMAL:

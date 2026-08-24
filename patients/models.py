@@ -453,7 +453,7 @@ class Patient(TimeStampedModel, UserTrackingMixin):
 
     def clean(self):
         """Model-wide validation"""
-        from ndas.custom_codes.validators import validate_birth_weight
+        from ndas.custom_codes.validators import validate_birth_weight_for_gestational_age
 
         super().clean()
 
@@ -471,7 +471,7 @@ class Patient(TimeStampedModel, UserTrackingMixin):
         # Comprehensive POG-specific birth weight validation
         if self.birth_weight and self.pog_wks:
             pog_days = self.pog_days if self.pog_days else 0
-            result = validate_birth_weight(self.birth_weight)
+            result = validate_birth_weight_for_gestational_age(self.birth_weight, self.pog_wks, pog_days)
             if result is not None:
                 is_valid, message = result
                 if not is_valid:
@@ -744,11 +744,8 @@ class Patient(TimeStampedModel, UserTrackingMixin):
         gma_count = GMAssessment.objects.filter(patient=self).count()
         current_age = int((timezone.now().date() - self.dob_tob.date()).days / 30)
 
-        try:
-            last_hine_record = HINEAssessment.objects.filter(patient=self).last()
-            last_hine_score = last_hine_record.score if last_hine_record else 0
-        except AttributeError:
-            last_hine_score = 0
+        last_hine_record = self.get_latest_hine_assessment()
+        last_hine_score = last_hine_record.score if last_hine_record else 0
 
         rc_state = False
 

@@ -2829,7 +2829,7 @@ def hine_assessment_manager(request):
         
         if score_range:
             if score_range == 'normal':
-                var_hine_list = var_hine_list.filter(score__gte=60)
+                var_hine_list = var_hine_list.filter(score__gt=73)
             elif score_range == 'moderate':
                 var_hine_list = var_hine_list.filter(score__gte=40, score__lt=60)
             elif score_range == 'significant':
@@ -2850,13 +2850,13 @@ def hine_assessment_manager(request):
             elif date_range == 'year':
                 start_date = now - timedelta(days=365)
                 var_hine_list = var_hine_list.filter(date_of_assessment__gte=start_date)
-        
+
         # Calculate statistics using aggregation (single query instead of 4)
         from django.db.models import Count, Case, When, IntegerField, Q
 
         stats = var_hine_list.aggregate(
             total=Count('id'),
-            normal=Count('id', filter=Q(score__gte=60)),
+            normal=Count('id', filter=Q(score__gt=73)),
             moderate=Count('id', filter=Q(score__gte=40, score__lt=60)),
             significant=Count('id', filter=Q(score__lt=40))
         )
@@ -2912,7 +2912,7 @@ def hine_assessment_manager_by_patients(request, pid):
         
         if score_range:
             if score_range == 'normal':
-                var_hine_list = var_hine_list.filter(score__gte=60)
+                var_hine_list = var_hine_list.filter(score__gt=73)
             elif score_range == 'moderate':
                 var_hine_list = var_hine_list.filter(score__gte=40, score__lt=60)
             elif score_range == 'significant':
@@ -2938,7 +2938,7 @@ def hine_assessment_manager_by_patients(request, pid):
 
         stats = var_hine_list.aggregate(
             total=Count('id'),
-            normal=Count('id', filter=Q(score__gte=60)),
+            normal=Count('id', filter=Q(score__gt=73)),
             moderate=Count('id', filter=Q(score__gte=40, score__lt=60)),
             significant=Count('id', filter=Q(score__lt=40))
         )

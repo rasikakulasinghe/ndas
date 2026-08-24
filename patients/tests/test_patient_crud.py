@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 
-from patients.models import Patient
+from patients.models import Patient, HINEAssessment
 
 User = get_user_model()
 
@@ -327,3 +327,96 @@ class PatientDeleteViewTest(PatientTestBase):
             content_type='application/json',
         )
         self.assertEqual(response.status_code, 302)
+
+
+# ---------------------------------------------------------------------------
+# 6. HINE Assessment Manager — score_range='normal' filter
+# ---------------------------------------------------------------------------
+
+@STATIC_OVERRIDE
+class HINEManagerNormalScoreRangeFilterTest(PatientTestBase):
+    """
+    Regression tests for the HINE manager's 'normal' score_range filter.
+
+    The filter previously used score__gte=60, but HINEAssessment.is_normal /
+    severity_category define "Normal" as score > 73 (60-73 is "Mild
+    Abnormality"). Clinicians filtering for 'normal' results were shown
+    patients with a mild neurological abnormality. Part of
+    spec-fix-medical-data-correctness.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.mild_abnormal_record = HINEAssessment.objects.create(
+            patient=self.patient,
+            date_of_assessment=timezone.now() - timezone.timedelta(days=5),
+            score=70,  # Mild Abnormality per model (60 < score <= 73)
+            assessment_done_by='Dr. Mild',
+            added_by=self.staff_user,
+        )
+        self.normal_record = HINEAssessment.objects.create(
+            patient=self.patient,
+            date_of_assessment=timezone.now() - timezone.timedelta(days=3),
+            score=75,  # Normal per model (score > 73)
+            assessment_done_by='Dr. Normal',
+            added_by=self.staff_user,
+        )
+
+    def test_normal_filter_excludes_mild_abnormality_score(self):
+        """score=70 (60-73 'Mild Abnormality') must not appear under score_range=normal."""
+        self.client.force_login(self.superuser)
+        response = self.client.get(
+            reverse('hine-assessment-manager'), {'score_range': 'normal'}
+        )
+        self.assertEqual(response.status_code, 200)
+        record_ids = [r.id for r in response.context['hine_record_list']]
+        self.assertNotIn(self.mild_abnormal_record.id, record_ids)
+
+    def test_normal_filter_includes_normal_score(self):
+        """score=75 (> 73, Normal) must appear under score_range=normal."""
+        self.client.force_login(self.superuser)
+        response = self.client.get(
+            reverse('hine-assessment-manager'), {'score_range': 'normal'}
+        )
+        self.assertEqual(response.status_code, 200)
+        record_ids = [r.id for r in response.context['hine_record_list']]
+        self.assertIn(self.normal_record.id, record_ids)
+
+    def test_badge_shows_normal_only_above_73(self):
+        """
+        Regression: templates/hine/manager.html's NORMAL badge previously used
+        the same stale score>=60 threshold as the filter — a score of 70 would
+        render a green 'NORMAL' badge even though it's excluded from the
+        score_range=normal filter results. Both must now agree.
+        """
+        self.client.force_login(self.superuser)
+        response = self.client.get(reverse('hine-assessment-manager'))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        # score=70's row must not carry the NORMAL badge (it's 60-73, Mild
+        # Abnormality) — a crude but sufficient check since manager.html has
+        # exactly one NORMAL-badge occurrence per matching row.
+        normal_badge_count = content.count('fa-check-circle mr-1"></i>NORMAL')
+        self.assertEqual(
+            normal_badge_count, 1,
+            "Exactly one HINE record (score=75) should render the NORMAL badge, "
+            "not the score=70 'Mild Abnormality' record too",
+        )
+
+    def test_patient_scoped_manager_normal_filter_excludes_mild_abnormality_score(self):
+        """
+        Regression: hine_assessment_manager_by_patients duplicates the same
+        score_range='normal' filter/stats logic as the general manager, but
+        independently — this proves the patient-scoped route was actually
+        fixed too, not just the general one (they don't share code, so a
+        revert to either one individually would go undetected without this).
+        """
+        self.client.force_login(self.superuser)
+        response = self.client.get(
+            reverse('hine-assessment-manager-patient', args=[self.patient.id]),
+            {'score_range': 'normal'},
+        )
+        self.assertEqual(response.status_code, 200)
+        record_ids = [r.id for r in response.context['hine_record_list']]
+        self.assertNotIn(self.mild_abnormal_record.id, record_ids)
+        self.assertIn(self.normal_record.id, record_ids)
