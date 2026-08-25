@@ -1694,6 +1694,12 @@ def bookmark_edit(request, pk):
     except Bookmark.DoesNotExist:
         messages.error(request, "Bookmark not found.")
         return redirect("bookmark-manager-user", request.user.username)
+    if request.user != selected_bm.owner and not request.user.is_superuser:
+        logger.warning(
+            f"Blocked cross-user bookmark edit access: user={request.user.username}, "
+            f"bookmark_id={pk}, owner={getattr(selected_bm.owner, 'username', None)}"
+        )
+        return HttpResponseForbidden()
     bm_form = BookmarkForm(instance=selected_bm)
     if request.method == "POST":
         bm_form_data = BookmarkForm(request.POST, instance=selected_bm)

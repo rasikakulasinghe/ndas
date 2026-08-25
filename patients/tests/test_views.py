@@ -850,3 +850,151 @@ class UserStatsQueryCountTest(TestCase):
         self.assertEqual(result[self.user.username]['Video'], 1)
         # user2 has no records — must be 0, not absent
         self.assertEqual(result[self.user2.username]['Patient'], 0)
+
+
+@STATIC_OVERRIDE
+class PatientManagerGMAssessmentFilterTest(TestCase):
+    """
+    Regression tests for the getPatientList() invalid related-name fix
+    (gmassessment__ -> gm_assessments__) in
+    ndas/custom_codes/custom_methods.py.
+
+    Self-contained: builds its own Patient/Video/GMAssessment fixtures with
+    real diagnosis_conclusion values, independent of PatientManagerTestCase's
+    existing under-fixtured dx_normal/dx_abnormal patients (see
+    spec-fix-bookmark-edit-idor-and-patientlist-bug).
+
+    Before the fix, 'diagnosed', 'gma_abnormal' and 'gma_normal' filters
+    referenced the non-existent related-name 'gmassessment', raising a
+    Django FieldError (500) whenever these filters were used.
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(
+            username='gmafilteruser',
+            password='testpass123',
+            email='gmafilter@example.com',
+            is_staff=True,
+        )
+        self.client.force_login(self.user)
+
+        self.patient_abnormal = Patient.objects.create(
+            bht='GMA-ABN-001',
+            baby_name='Abnormal GMA Baby',
+            mother_name='Mother Abnormal',
+            dob_tob=timezone.now(),
+            gender='Male',
+            pog_wks=37,
+            pog_days=3,
+            birth_weight=2900,
+            ofc=32,
+            mo_delivery='Normal vaginal delivery (NVD)',
+            tp_mobile='0711234571',
+            added_by=self.user,
+        )
+        video_abnormal = Video.objects.create(
+            patient=self.patient_abnormal,
+            title='Abnormal GMA Video',
+            recorded_on=timezone.now(),
+            added_by=self.user,
+        )
+        GMAssessment.objects.create(
+            patient=self.patient_abnormal,
+            video_file=video_abnormal,
+            date_of_assessment=timezone.now(),
+            diagnosis_conclusion='ABNORMAL',
+            added_by=self.user,
+        )
+
+        self.patient_normal = Patient.objects.create(
+            bht='GMA-NRM-001',
+            baby_name='Normal GMA Baby',
+            mother_name='Mother Normal',
+            dob_tob=timezone.now(),
+            gender='Female',
+            pog_wks=39,
+            pog_days=1,
+            birth_weight=3100,
+            ofc=34,
+            mo_delivery='Normal vaginal delivery (NVD)',
+            tp_mobile='0711234572',
+            added_by=self.user,
+        )
+        video_normal = Video.objects.create(
+            patient=self.patient_normal,
+            title='Normal GMA Video',
+            recorded_on=timezone.now(),
+            added_by=self.user,
+        )
+        GMAssessment.objects.create(
+            patient=self.patient_normal,
+            video_file=video_normal,
+            date_of_assessment=timezone.now(),
+            diagnosis_conclusion='NORMAL',
+            added_by=self.user,
+        )
+
+        self.patient_no_assessment = Patient.objects.create(
+            bht='GMA-NONE-001',
+            baby_name='No Assessment Baby',
+            mother_name='Mother None',
+            dob_tob=timezone.now(),
+            gender='Male',
+            pog_wks=38,
+            pog_days=0,
+            birth_weight=3000,
+            ofc=33,
+            mo_delivery='Normal vaginal delivery (NVD)',
+            tp_mobile='0711234573',
+            added_by=self.user,
+        )
+
+    def test_diagnosed_filter_returns_200_and_includes_gma_patients(self):
+        """
+        'diagnosed' filter must not raise FieldError. Per getPatientList's actual
+        PtStatus.DIAGNOSED query (gm_assessments ABNORMAL | HINE score<73 |
+        DA is_dx_normal=False), this filter scopes to patients flagged abnormal
+        in any assessment modality -- not "has any diagnosis conclusion at all".
+        So only patient_abnormal (GMAssessment ABNORMAL) matches; patient_normal
+        (GMAssessment NORMAL) correctly does not.
+        """
+        response = self.client.get(
+            reverse('manage-patients-filtered', kwargs={'filter_type': 'diagnosed'})
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        # The current patient_manager view exposes the filtered/paginated
+        # list under 'patients_page_obj' (not 'pts' — that key belongs to
+        # the older, now-stale PatientManagerTestCase conventions above).
+        patients = list(response.context['patients_page_obj'])
+        self.assertIn(self.patient_abnormal, patients)
+        self.assertNotIn(self.patient_normal, patients)
+        self.assertNotIn(self.patient_no_assessment, patients)
+
+    def test_gma_abnormal_filter_returns_200_and_correct_membership(self):
+        """'gma_abnormal' filter must not raise FieldError and scope to ABNORMAL only."""
+        response = self.client.get(
+            reverse('manage-patients-filtered', kwargs={'filter_type': 'gma_abnormal'})
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        patients = list(response.context['patients_page_obj'])
+        self.assertIn(self.patient_abnormal, patients)
+        self.assertNotIn(self.patient_normal, patients)
+        self.assertNotIn(self.patient_no_assessment, patients)
+
+    def test_gma_normal_filter_returns_200_and_correct_membership(self):
+        """'gma_normal' filter must not raise FieldError and scope to NORMAL only."""
+        response = self.client.get(
+            reverse('manage-patients-filtered', kwargs={'filter_type': 'gma_normal'})
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        patients = list(response.context['patients_page_obj'])
+        self.assertIn(self.patient_normal, patients)
+        self.assertNotIn(self.patient_abnormal, patients)
+        self.assertNotIn(self.patient_no_assessment, patients)
