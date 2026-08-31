@@ -138,3 +138,83 @@ class AdminActivityLogScopingTest(UserSecurityBase):
         user_ids_in_logs = {log.user_id for log in page_obj.object_list}
         self.assertIn(self.staff_a.pk, user_ids_in_logs)
         self.assertIn(self.staff_b.pk, user_ids_in_logs)
+
+
+@STATIC_OVERRIDE
+class AdminUserCrudInstitutionScopingTest(UserSecurityBase):
+    """
+    admin_user_edit/delete/toggle_status/activity previously used
+    get_object_or_404(CustomUser, pk=pk) with no institution filter, unlike
+    their sibling userView/userViewByUsername/admin_user_list/admin_activity_logs
+    — staff from one institution could manage users at another institution.
+    """
+
+    def test_cross_institution_edit_returns_404(self):
+        self.client.force_login(self.staff_a)
+        url = reverse('admin-user-edit', kwargs={'pk': self.staff_b.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_same_institution_edit_returns_200(self):
+        self.client.force_login(self.staff_a)
+        url = reverse('admin-user-edit', kwargs={'pk': self.staff_a2.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_superuser_can_edit_any_institution_user(self):
+        self.client.force_login(self.superuser)
+        url = reverse('admin-user-edit', kwargs={'pk': self.staff_b.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_cross_institution_delete_returns_404(self):
+        import json
+        self.client.force_login(self.staff_a)
+        url = reverse('admin-user-delete', kwargs={'pk': self.staff_b.pk})
+        response = self.client.generic(
+            'DELETE', url,
+            data=json.dumps({'password': 'StaffPass123!'}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 404)
+        self.staff_b.refresh_from_db()
+        self.assertTrue(self.staff_b.is_active, "Cross-institution delete must not deactivate the target")
+
+    def test_cross_institution_toggle_status_returns_404(self):
+        self.client.force_login(self.staff_a)
+        url = reverse('admin-user-toggle-status', kwargs={'pk': self.staff_b.pk})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 404)
+        self.staff_b.refresh_from_db()
+        self.assertTrue(self.staff_b.is_active, "Cross-institution toggle must not change the target's status")
+
+    def test_cross_institution_activity_returns_404(self):
+        self.client.force_login(self.staff_a)
+        url = reverse('admin-user-activity', kwargs={'pk': self.staff_b.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+
+@STATIC_OVERRIDE
+class ChangePasswordSessionTest(UserSecurityBase):
+    """
+    userChangePassword previously never called update_session_auth_hash after
+    form.save(). Django invalidates the session auth hash whenever the
+    password changes, so without it, the user was silently logged out on
+    the request immediately following their own password change.
+    """
+
+    def test_session_survives_own_password_change(self):
+        self.client.force_login(self.staff_a)
+        url = reverse('user-change-password')
+        response = self.client.post(url, {
+            'old_password': 'StaffPass123!',
+            'new_password1': 'NewSecurePass456!',
+            'new_password2': 'NewSecurePass456!',
+        })
+        self.assertEqual(response.status_code, 200)
+
+        # If the session auth hash wasn't refreshed, this next request would
+        # be treated as unauthenticated and redirect to login instead of 200.
+        follow_up = self.client.get(reverse('user-view', kwargs={'pk': self.staff_a.pk}))
+        self.assertEqual(follow_up.status_code, 200)

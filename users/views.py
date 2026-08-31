@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from users.models import CustomUser, UserActivityLog, UserSession
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth import views as auth_views
 from ndas.custom_codes.custom_methods import getCurrentDateTime, getFullDeviceDetails
 from django.contrib import messages
@@ -283,6 +283,10 @@ def userChangePassword(request):
     if request.method == 'POST':
         if form.is_valid():
             form.save()
+            # Django invalidates the session auth hash whenever the password
+            # changes; without this, the user is silently logged out on their
+            # very next request.
+            update_session_auth_hash(request, form.user)
             messages.success(request, "Your password has been changed")
             return render(request, 'users/user_view.html', {'custom_user': custom_user})
         else:
@@ -655,7 +659,10 @@ def admin_user_add(request):
 @admin_required
 def admin_user_edit(request, pk):
     """Admin view to edit existing users."""
-    user = get_object_or_404(CustomUser, pk=pk)
+    if request.user.is_superuser:
+        user = get_object_or_404(CustomUser, pk=pk)
+    else:
+        user = get_object_or_404(CustomUser, pk=pk, institution=request.institution)
     
     if request.method == 'POST':
         form = AdminUserEditForm(request.POST, request.FILES, instance=user)
@@ -717,7 +724,10 @@ def admin_user_delete(request, pk):
     """
     try:
         # 1. Retrieve user
-        user = get_object_or_404(CustomUser, pk=pk)
+        if request.user.is_superuser:
+            user = get_object_or_404(CustomUser, pk=pk)
+        else:
+            user = get_object_or_404(CustomUser, pk=pk, institution=request.institution)
 
         # 2. Check self-deletion
         if user == request.user:
@@ -805,7 +815,10 @@ def admin_user_delete(request, pk):
 @require_POST
 def admin_user_toggle_status(request, pk):
     """Admin view to toggle user active status."""
-    user = get_object_or_404(CustomUser, pk=pk)
+    if request.user.is_superuser:
+        user = get_object_or_404(CustomUser, pk=pk)
+    else:
+        user = get_object_or_404(CustomUser, pk=pk, institution=request.institution)
     
     # Prevent self-deactivation
     if user == request.user:
@@ -836,7 +849,10 @@ def admin_user_toggle_status(request, pk):
 @admin_required
 def admin_user_activity(request, pk):
     """Admin view to see specific user's activity."""
-    user = get_object_or_404(CustomUser, pk=pk)
+    if request.user.is_superuser:
+        user = get_object_or_404(CustomUser, pk=pk)
+    else:
+        user = get_object_or_404(CustomUser, pk=pk, institution=request.institution)
     activities = UserActivityLog.objects.select_related('user').filter(user=user).order_by('-login_timestamp')
     
     # Pagination
