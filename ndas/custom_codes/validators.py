@@ -63,8 +63,27 @@ def sanitize_text_input(value):
     # Remove event handlers (onclick, onload, onerror, etc.)
     text = re.sub(r'\s*on\w+\s*=\s*["\']?[^"\']*["\']?', "", text, flags=re.IGNORECASE)
 
-    # Remove dangerous protocols from URLs (javascript:, data:, vbscript:)
-    text = re.sub(r"(javascript|data|vbscript):", "", text, flags=re.IGNORECASE)
+    # Remove dangerous protocols from URLs (javascript:, data:, vbscript:).
+    # Browsers strip whitespace/control characters (tab, newline, CR, etc.) from
+    # a URL before parsing its scheme, so "java\tscript:alert(1)" is still parsed
+    # as a live javascript: URI even though the literal string "javascript:" never
+    # appears. Match each protocol name with optional \s* between every character
+    # so such obfuscated payloads are still recognized and stripped.
+    #
+    # Two guards keep this from over-matching ordinary prose (CLAUDE.md requires
+    # preserving medical notation): a leading \b so "metadata:" (a word ending in
+    # "data:") is not treated as the "data" protocol, and a `(?=\S)` lookahead so
+    # "Data: BP 120/80" / "Investigation data: pending" (colon-then-space, the
+    # normal English label pattern) are left untouched — a real dangerous URI
+    # never has whitespace immediately after its scheme's colon.
+    text = re.sub(
+        r"\bj\s*a\s*v\s*a\s*s\s*c\s*r\s*i\s*p\s*t\s*:(?=\S)"
+        r"|\bd\s*a\s*t\s*a\s*:(?=\S)"
+        r"|\bv\s*b\s*s\s*c\s*r\s*i\s*p\s*t\s*:(?=\S)",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    )
 
     # Remove HTML tags while preserving content
     # This regex preserves medical notation like "< 5" or "> 38"

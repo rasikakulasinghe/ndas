@@ -366,3 +366,70 @@ class ExcelExportInstitutionScopingTest(TestCase):
         self.assertEqual(sheets['Developmental Assessments'], 3)
         self.assertEqual(sheets['CDIC Records'], 3)
         self.assertEqual(sheets['GPA Assessments'], 3)
+
+
+@STATIC_OVERRIDE
+class ExcelFormulaInjectionTest(TestCase):
+    """
+    Regression test for spreadsheet formula injection: a patient free-text
+    field starting with =/+/-/@ must be escaped (leading single-quote) in
+    the exported .xlsx, not stored as a live formula.
+    """
+
+    def setUp(self):
+        self.inst = Institution.objects.create(name='Formula Test Hospital', slug='formula-test-hosp')
+        self.patient = Patient.objects.create(
+            bht='BHT-FORMULA-001',
+            baby_name='=HYPERLINK("http://evil.example/",A1)',
+            mother_name='+1+1',
+            nnc_no='-2+3',
+            gender='Male',
+            dob_tob=timezone.now() - timezone.timedelta(days=10),
+            mo_delivery='Normal vaginal delivery (NVD)',
+            pog_wks=38, pog_days=0, birth_weight=3000, ofc=34,
+            tp_mobile='0771234567',
+            institution=self.inst,
+        )
+        self._tmp_dir = tempfile.mkdtemp(prefix='ndas_excel_formula_test_')
+        self.addCleanup(lambda: shutil.rmtree(self._tmp_dir, ignore_errors=True))
+
+    def test_malicious_patient_fields_are_escaped_in_exported_cells(self):
+        """End-to-end round trip through real openpyxl write+read for all four
+        formula-triggering leading characters (=, +, -, @ is covered at the
+        unit level in EscapeExcelFormulaTest)."""
+        from openpyxl import load_workbook
+        from reports.utils.excel_generator import ExcelReportGenerator
+
+        generator = ExcelReportGenerator()
+        output_path = os.path.join(self._tmp_dir, f'{uuid.uuid4()}.xlsx')
+        generator.generate(
+            output_path=output_path,
+            parameters={'patients': True},
+            institution=self.inst,
+        )
+
+        wb = load_workbook(output_path)
+        ws = wb['Patients']
+        headers = [c.value for c in ws[1]]
+        row = ws[2]
+
+        def cell(header):
+            return row[headers.index(header)].value
+
+        baby_name_cell = cell('Baby Name')
+        mother_name_cell = cell('Mother Name')
+        nnc_no_cell = cell('NNC')
+
+        self.assertTrue(
+            baby_name_cell.startswith("'="),
+            f"Expected leading-quote-escaped formula, got: {baby_name_cell!r}",
+        )
+        self.assertIn('HYPERLINK', baby_name_cell)
+        self.assertTrue(
+            mother_name_cell.startswith("'+"),
+            f"Expected leading-quote-escaped formula, got: {mother_name_cell!r}",
+        )
+        self.assertTrue(
+            nnc_no_cell.startswith("'-"),
+            f"Expected leading-quote-escaped formula, got: {nnc_no_cell!r}",
+        )

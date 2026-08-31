@@ -13,7 +13,7 @@ import logging
 from patients.models import Patient
 from problemlist.models import Problem, ProblemAction
 from problemlist.forms import ProblemForm, ProblemActionForm
-from ndas.custom_codes.custom_methods import getCountZeroIfNone, institution_scope
+from ndas.custom_codes.custom_methods import escape_excel_row, getCountZeroIfNone, institution_scope
 from ndas.custom_codes.delete_helpers import (
     has_delete_permission,
     get_redirect_url,
@@ -589,7 +589,7 @@ def problem_analysis_export(request):
 
     # Data rows
     for problem in problems:
-        ws.append([
+        ws.append(escape_excel_row([
             problem.patient.bht if problem.patient.bht else 'N/A',
             problem.patient.baby_name,
             problem.patient.mother_name if problem.patient.mother_name else 'N/A',
@@ -603,7 +603,7 @@ def problem_analysis_export(request):
             problem.outcome if problem.outcome else 'N/A',
             problem.added_by.username if problem.added_by else 'N/A',
             problem.created_at.strftime('%Y-%m-%d %H:%M') if problem.created_at else 'N/A',
-        ])
+        ]))
 
     # Save to BytesIO
     output = BytesIO()

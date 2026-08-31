@@ -619,3 +619,65 @@ class ProblemXSSPreventionTest(TestCase):
 
         # Verify medical notation is preserved
         self.assertIn('> 24 hours', saved_problem.outcome)
+
+
+class ProblemAnalysisExportFormulaInjectionTest(TestCase):
+    """
+    Regression test for spreadsheet formula injection in problem_analysis_export:
+    a free-text field starting with =/+/-/@ must be escaped (leading single-quote)
+    in the exported .xlsx, not stored as a live formula.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='formula_export_user',
+            password='testpass123',
+            is_staff=True,
+        )
+        self.patient = Patient.objects.create(
+            baby_name='Formula Export Baby',
+            mother_name='Test Mother',
+            bht='BHT-FORMULA-001',
+            gender='Male',
+            dob_tob=timezone.now(),
+            mo_delivery='Normal vaginal delivery (NVD)',
+            birth_weight=3000,
+            ofc=34.0,
+            tp_mobile='0771234567',
+            pog_wks=38,
+            pog_days=0,
+        )
+        Problem.objects.create(
+            patient=self.patient,
+            name='=HYPERLINK("http://evil.example/",A1)',
+            action_taken='@SUM(1,1)',
+            status='active',
+            added_by=self.user,
+        )
+        self.client.login(username='formula_export_user', password='testpass123')
+
+    def test_malicious_problem_fields_are_escaped_in_exported_cells(self):
+        from io import BytesIO
+        from openpyxl import load_workbook
+
+        url = reverse('problem-analysis-export')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        wb = load_workbook(BytesIO(response.content))
+        ws = wb.active
+        headers = [c.value for c in ws[1]]
+        problem_col = headers.index('Problem') + 1
+        action_col = headers.index('Action Taken') + 1
+        row = ws[2]
+
+        problem_cell = row[problem_col - 1].value
+        action_cell = row[action_col - 1].value
+        self.assertTrue(
+            problem_cell.startswith("'="),
+            f"Expected leading-quote-escaped formula, got: {problem_cell!r}",
+        )
+        self.assertTrue(
+            action_cell.startswith("'@"),
+            f"Expected leading-quote-escaped formula, got: {action_cell!r}",
+        )

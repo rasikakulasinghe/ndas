@@ -139,6 +139,7 @@ patient.apgar_5          # NOT apgar_5_min
 - **File Validation**: MIME type checking via python-magic, size limits enforced
 - **HTTP Methods**: `@require_GET`, `@require_http_methods(["GET", "POST"])`
 - **Session**: 1 hour timeout, browser-close expiry
+- **Excel/Formula Injection**: any Excel export must call `escape_excel_row()` (or `escape_excel_formula()` per cell) from `ndas/custom_codes/custom_methods.py` on user-controlled free text before `ws.append(row)` — openpyxl/Excel treats a leading `=`, `+`, `-`, `@`, tab, or CR as a live formula
 
 ### File Upload Limits
 

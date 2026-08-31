@@ -16,6 +16,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
 
+from ndas.custom_codes.custom_methods import escape_excel_row
 from patients.models import (
     Patient, GMAssessment, HINEAssessment,
     DevelopmentalAssessment, CDICRecord, GeneralPaediatricAssessment
@@ -48,6 +49,14 @@ class ExcelReportGenerator:
             # Convert to local time and remove timezone info
             return timezone.localtime(dt).replace(tzinfo=None)
         return dt
+
+    @staticmethod
+    def sanitize_row(row):
+        """
+        Escape spreadsheet formula injection in every cell of a data row
+        before ws.append(). See ndas.custom_codes.custom_methods.escape_excel_row.
+        """
+        return escape_excel_row(row)
 
     @staticmethod
     def anonymize_value(value, field_name, patient_id):
@@ -414,7 +423,7 @@ class ExcelReportGenerator:
 
                 row.append(value)
 
-            ws.append(row)
+            ws.append(self.sanitize_row(row))
 
         # Auto-adjust widths
         self.auto_adjust_column_widths(ws)
@@ -446,7 +455,7 @@ class ExcelReportGenerator:
                 getattr(assessment, 'diagnosis_conclusion', ''),
                 self.make_naive(assessment.created_at),
             ]
-            ws.append(row)
+            ws.append(self.sanitize_row(row))
 
         # Auto-adjust widths
         self.auto_adjust_column_widths(ws)
@@ -478,7 +487,7 @@ class ExcelReportGenerator:
                 assessment.score,
                 self.make_naive(assessment.created_at),
             ]
-            ws.append(row)
+            ws.append(self.sanitize_row(row))
 
         # Auto-adjust widths
         self.auto_adjust_column_widths(ws)
@@ -521,7 +530,7 @@ class ExcelReportGenerator:
                 self.make_naive(assessment.created_at),
                 assessment.added_by.username if assessment.added_by else '',
             ]
-            ws.append(row)
+            ws.append(self.sanitize_row(row))
 
         self.auto_adjust_column_widths(ws)
 
@@ -558,7 +567,7 @@ class ExcelReportGenerator:
                 self.make_naive(record.created_at),
                 record.added_by.username if record.added_by else '',
             ]
-            ws.append(row)
+            ws.append(self.sanitize_row(row))
 
         self.auto_adjust_column_widths(ws)
 
@@ -593,7 +602,7 @@ class ExcelReportGenerator:
                 self.make_naive(assessment.created_at),
                 assessment.added_by.username if assessment.added_by else '',
             ]
-            ws.append(row)
+            ws.append(self.sanitize_row(row))
 
         self.auto_adjust_column_widths(ws)
 
@@ -604,6 +613,13 @@ class ExcelReportGenerator:
         Args:
             workbook: Openpyxl workbook object
             metadata: Dict containing sheet counts and statistics
+
+        Unlike the other add_*_sheet methods, this one writes cells directly
+        (ws['A1'] = ...) instead of via ws.append(self.sanitize_row(row)).
+        Safe today because `metadata` only ever carries generator-produced
+        values (dates, counts) — never user free text — but if a free-text
+        field (e.g. a custom report title) is ever added here, it MUST go
+        through escape_excel_formula() first.
         """
         ws = workbook.create_sheet("Summary Statistics", 0)  # Make it the first sheet
 

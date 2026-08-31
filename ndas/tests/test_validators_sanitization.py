@@ -100,3 +100,51 @@ class SanitizeTextInputBasicXssTest(TestCase):
     def test_empty_and_none_values_pass_through(self):
         self.assertEqual(sanitize_text_input(""), "")
         self.assertIsNone(sanitize_text_input(None))
+
+
+class SanitizeTextInputObfuscatedProtocolTest(TestCase):
+    """
+    Regression: the dangerous-protocol strip used a literal-string regex
+    (javascript|data|vbscript): that only matched the exact unbroken string.
+    Browsers strip whitespace/control characters (tab, newline, CR) from a
+    URL before parsing its scheme, so "java\\tscript:alert(1)" is still a
+    live javascript: URI to a browser even though it never contains the
+    literal substring "javascript:" — the old regex let it through untouched.
+    """
+
+    def test_tab_obfuscated_javascript_protocol_is_stripped(self):
+        result = sanitize_text_input("java\tscript:alert(1)")
+        self.assertNotIn("javascript:", result.replace("\t", "").lower())
+        self.assertNotIn("script:", result.lower())
+
+    def test_newline_obfuscated_javascript_protocol_is_stripped(self):
+        result = sanitize_text_input("java\nscript:alert(1)")
+        self.assertNotIn("script:", result.lower())
+
+    def test_space_obfuscated_data_protocol_is_stripped(self):
+        result = sanitize_text_input("da ta:text/html,<script>alert(1)</script>")
+        self.assertNotIn("data:", result.lower())
+        self.assertNotIn("ta:", result.lower())
+
+    def test_obfuscated_vbscript_protocol_is_stripped(self):
+        result = sanitize_text_input("vb\tscript:msgbox(1)")
+        self.assertNotIn("script:", result.lower())
+
+    def test_unobfuscated_protocols_still_stripped(self):
+        """Non-regression: the plain (non-obfuscated) case must keep working."""
+        result = sanitize_text_input("javascript:alert(1)")
+        self.assertNotIn("javascript:", result.lower())
+
+    def test_data_label_with_trailing_space_preserved(self):
+        """
+        "Data: BP 120/80" is ordinary English labeling, not a data: URI — a
+        real dangerous URI never has whitespace right after its colon. Must
+        survive intact (CLAUDE.md requires preserving medical notation).
+        """
+        result = sanitize_text_input("Investigation data: pending review")
+        self.assertEqual(result, "Investigation data: pending review")
+
+    def test_metadata_word_not_treated_as_data_protocol(self):
+        """"metadata:" must not be treated as the "data" protocol mid-word."""
+        result = sanitize_text_input("See metadata:version=2 for details")
+        self.assertIn("metadata:version=2", result)

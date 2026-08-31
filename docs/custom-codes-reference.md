@@ -1011,6 +1011,25 @@ video_count = getCountZeroIfNone(patient.videos.filter(active=True))
 
 ---
 
+### `escape_excel_formula(value)`
+
+Neutralizes spreadsheet formula injection in a single cell value. openpyxl/Excel treats any string cell whose first character is `=`, `+`, `-`, `@`, tab, or carriage return as a live formula; prefixes a leading single-quote so it's stored as literal text instead. Non-string values pass through unchanged.
+
+- **Parameters:** `value` — the raw cell value (any type)
+- **Returns:** the value unchanged, or `"'" + value` if it's a string starting with a formula-trigger character
+
+### `escape_excel_row(row)`
+
+Applies `escape_excel_formula` to every cell in a data row. **Call this on every row of user-controlled free text before `ws.append(row)`** in any Excel export — this is mandatory, not optional, for any new export path.
+
+```python
+from ndas.custom_codes.custom_methods import escape_excel_row
+
+ws.append(escape_excel_row([patient.baby_name, patient.mother_name, patient.bht]))
+```
+
+---
+
 ### `extract_video_metadata(video_file_path)`
 
 Extracts video metadata (duration, resolution, codec, bitrate) using moviepy first, falling back to `ffprobe`.

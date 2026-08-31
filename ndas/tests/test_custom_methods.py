@@ -17,12 +17,69 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
-from ndas.custom_codes.custom_methods import getPatientList
+from ndas.custom_codes.custom_methods import escape_excel_formula, escape_excel_row, getPatientList
 from ndas.custom_codes.ndas_enums import PtStatus
 from patients.models import Patient, GMAssessment
 from video.models import Video
 
 User = get_user_model()
+
+
+class EscapeExcelFormulaTest(TestCase):
+    """
+    Regression tests for escape_excel_formula/escape_excel_row — part of
+    spec-fix-sanitization-xss-and-formula-injection.
+
+    openpyxl marks any string cell starting with =, +, -, or @ as a live
+    formula. Free-text fields exported to Excel (patient names, problem
+    notes, etc.) are user-controlled, so without escaping, a value like
+    '=HYPERLINK("http://evil/",A1)' becomes a live formula for whoever
+    opens the exported file (formula/DDE injection).
+    """
+
+    def test_leading_equals_is_escaped(self):
+        result = escape_excel_formula('=HYPERLINK("http://evil/",A1)')
+        self.assertTrue(result.startswith("'="))
+
+    def test_leading_plus_is_escaped(self):
+        result = escape_excel_formula('+1+1')
+        self.assertTrue(result.startswith("'+"))
+
+    def test_leading_minus_is_escaped(self):
+        result = escape_excel_formula('-1+1')
+        self.assertTrue(result.startswith("'-"))
+
+    def test_leading_at_is_escaped(self):
+        result = escape_excel_formula('@SUM(1,1)')
+        self.assertTrue(result.startswith("'@"))
+
+    def test_leading_tab_is_escaped(self):
+        result = escape_excel_formula('\t=1+1')
+        self.assertTrue(result.startswith("'\t"))
+
+    def test_leading_carriage_return_is_escaped(self):
+        result = escape_excel_formula('\r=1+1')
+        self.assertTrue(result.startswith("'\r"))
+
+    def test_ordinary_string_is_unchanged(self):
+        result = escape_excel_formula('Baby Alpha')
+        self.assertEqual(result, 'Baby Alpha')
+
+    def test_none_is_unchanged(self):
+        self.assertIsNone(escape_excel_formula(None))
+
+    def test_non_string_values_are_unchanged(self):
+        self.assertEqual(escape_excel_formula(42), 42)
+        self.assertEqual(escape_excel_formula(True), True)
+
+    def test_escape_excel_row_escapes_only_dangerous_cells(self):
+        row = ['=cmd|calc', 42, 'Normal Name', None, '@evil']
+        result = escape_excel_row(row)
+        self.assertEqual(result[0], "'=cmd|calc")
+        self.assertEqual(result[1], 42)
+        self.assertEqual(result[2], 'Normal Name')
+        self.assertIsNone(result[3])
+        self.assertEqual(result[4], "'@evil")
 
 
 class GetPatientListDxNormalTest(TestCase):

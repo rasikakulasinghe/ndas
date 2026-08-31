@@ -330,6 +330,36 @@ def getCountZeroIfNone(var_value):
         return var_value.count()
 
 
+_FORMULA_TRIGGER_CHARS = ('=', '+', '-', '@', '\t', '\r')
+
+
+def escape_excel_formula(value):
+    """
+    Neutralize spreadsheet formula injection in a single cell value.
+
+    openpyxl (and Excel/LibreOffice on open) treats any string cell whose
+    first character is =, +, -, or @ as a live formula. Free-text fields
+    written into an exported spreadsheet (patient names, problem notes, etc.)
+    are user-controlled, so a value like '=HYPERLINK("http://evil/",A1)'
+    would execute as a formula for whoever opens the file. Prefixing with a
+    single quote forces Excel to treat it as literal text; openpyxl does not
+    do this for us. Per OWASP CSV-injection guidance, a leading tab or
+    carriage return is included alongside =/+/-/@ since some spreadsheet
+    importers treat those as formula-triggering too.
+
+    Non-string values (numbers, dates, None, bool) can't carry a formula and
+    are returned unchanged.
+    """
+    if isinstance(value, str) and value[:1] in _FORMULA_TRIGGER_CHARS:
+        return "'" + value
+    return value
+
+
+def escape_excel_row(row):
+    """Apply escape_excel_formula to every cell in a data row before ws.append()."""
+    return [escape_excel_formula(v) for v in row]
+
+
 def extract_video_metadata(video_file_path):
     """
     Extract video metadata including duration using multiple methods
