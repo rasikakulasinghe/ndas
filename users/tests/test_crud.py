@@ -2,6 +2,11 @@
 CRUD operation tests for the users app.
 
 Covers: User view (detail), user edit, admin user add/edit/delete.
+
+Lives under users/tests/ (not a top-level users/tests.py) because a
+top-level tests.py collides with this tests/ package and breaks
+`manage.py test` discovery for the whole project. Do not reintroduce
+a top-level users/tests.py.
 """
 
 import json

@@ -174,6 +174,7 @@ patient.apgar_5          # NOT apgar_5_min
 - Change CSS framework or Bootstrap version
 - Reorder security middleware
 - Store secrets in code (use `.env`)
+- Add a top-level `<app>/tests.py` to an app that already has an `<app>/tests/` package — it collides with the package and breaks `python manage.py test` discovery for the entire project (silently, until someone runs the bare command with no app args)
 
 ## Reports Module
 

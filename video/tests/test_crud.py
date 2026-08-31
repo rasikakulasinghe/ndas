@@ -5,6 +5,11 @@ Covers: Video manager (list), add (GET), view (detail), edit, delete.
 Note: Actual file upload tests are skipped because validate_video_file
       requires real MIME type inspection. The focus here is on view
       access control, GET rendering, and DELETE mechanics.
+
+Lives under video/tests/ (not a top-level video/tests.py) because a
+top-level tests.py collides with this tests/ package and breaks
+`manage.py test` discovery for the whole project. Do not reintroduce
+a top-level video/tests.py.
 """
 
 import json
@@ -169,11 +174,11 @@ class VideoDetailViewTest(VideoTestBase):
         self.assertIn('login', response.url)
 
     def test_other_staff_can_view_video(self):
-        """All staff users can view any video (permission: not is_staff AND not owner)."""
+        """video_view allows any staff user, owner or not (permission: `not is_staff and added_by != user` blocks only non-staff non-owners)."""
         self.client.force_login(self.other_staff)
         url = reverse('video:view', kwargs={'video_id': self.video.pk})
         response = self.client.get(url)
-        # Staff permission check: only non-staff non-owners are blocked
+        # Permission check: `not is_staff and added_by != user` does not block this user (is_staff=True).
         self.assertEqual(response.status_code, 200)
 
     def test_non_owner_non_staff_cannot_view_video(self):
@@ -210,13 +215,26 @@ class VideoEditViewTest(VideoTestBase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
-    def test_other_staff_can_edit_video(self):
-        """All staff users can edit any video (permission: not is_staff AND not owner)."""
+    def test_other_staff_cannot_edit_video(self):
+        """video_edit blocks any non-superuser, non-owner user, staff included."""
         self.client.force_login(self.other_staff)
         url = reverse('video:edit', kwargs={'video_id': self.video.pk})
         response = self.client.get(url)
-        # Staff bypass the permission check (only non-staff non-owners are blocked)
-        self.assertEqual(response.status_code, 200)
+        # Permission check: `not is_superuser and added_by != user` blocks this user.
+        self.assertEqual(response.status_code, 302)
+
+    def test_non_owner_non_staff_cannot_edit_video(self):
+        """Non-staff user who did not upload the video is blocked from editing."""
+        non_owner = User.objects.create_user(
+            username='non_owner_edit',
+            password=self.PASSWORD,
+            email='nonowner_edit@test.com',
+        )
+        self.client.force_login(non_owner)
+        url = reverse('video:edit', kwargs={'video_id': self.video.pk})
+        response = self.client.get(url)
+        # Permission check: `not is_superuser and added_by != user` blocks this user.
+        self.assertEqual(response.status_code, 302)
 
     def test_edit_post_redirects(self):
         # Video edit POST without a file clears the FileField (FileInput behaviour),
