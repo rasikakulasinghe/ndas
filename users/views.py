@@ -34,6 +34,33 @@ from django.urls import reverse
 
 logger = logging.getLogger(__name__)
 
+
+def get_institution_scoped_user_or_404(request, **lookup):
+    """
+    Fetch a CustomUser by `lookup` (e.g. pk=pk or username=username), scoped
+    to the requester's institution.
+
+    Superusers may access any user. Non-superusers may only access a user at
+    their own institution — `institution=request.institution`, matching the
+    pre-existing userView/userViewByUsername behavior exactly, including
+    matching another institution=None user when the requester also has no
+    institution assigned yet (the accepted single-tenant/not-yet-onboarded
+    state; see deferred-work.md for the narrower "two different unassigned
+    institutions" edge case this doesn't attempt to distinguish).
+    `request.institution` missing entirely (e.g. Phase 1 /
+    MULTI_INSTITUTION_ENABLED=False, where InstitutionContextMiddleware never
+    sets the attribute) is treated the same as None, not an AttributeError.
+
+    Single source of truth for the scoping pattern shared by
+    userView/userViewByUsername/admin_user_edit/admin_user_delete/
+    admin_user_toggle_status/admin_user_activity, so a future admin-lookup
+    view can't reintroduce the cross-institution IDOR by forgetting to copy it.
+    """
+    if request.user.is_superuser:
+        return get_object_or_404(CustomUser, **lookup)
+    _inst = getattr(request, 'institution', None)
+    return get_object_or_404(CustomUser, institution=_inst, **lookup)
+
 # Create your views here.
 # F6 FIX: Use block=False on both decorators so both counters are always incremented
 # before any blocking decision. With block=True the outer decorator raises immediately,
@@ -203,19 +230,13 @@ def logoutPage(request):
 
 @login_required(login_url='user-login')
 def userView(request, pk):
-    if request.user.is_superuser:
-        custom_user = get_object_or_404(CustomUser, id=pk)
-    else:
-        custom_user = get_object_or_404(CustomUser, id=pk, institution=request.institution)
+    custom_user = get_institution_scoped_user_or_404(request, id=pk)
     loged_user = request.user
     return render(request, 'users/user_view.html', {'custom_user': custom_user, 'user' : loged_user})
 
 @login_required(login_url='user-login')
 def userViewByUsername(request, username):
-    if request.user.is_superuser:
-        custom_user = get_object_or_404(CustomUser, username=username)
-    else:
-        custom_user = get_object_or_404(CustomUser, username=username, institution=request.institution)
+    custom_user = get_institution_scoped_user_or_404(request, username=username)
     return render(request, 'users/user_view.html', {'custom_user': custom_user,})
 
 @login_required(login_url='user-login')
@@ -659,10 +680,7 @@ def admin_user_add(request):
 @admin_required
 def admin_user_edit(request, pk):
     """Admin view to edit existing users."""
-    if request.user.is_superuser:
-        user = get_object_or_404(CustomUser, pk=pk)
-    else:
-        user = get_object_or_404(CustomUser, pk=pk, institution=request.institution)
+    user = get_institution_scoped_user_or_404(request, pk=pk)
     
     if request.method == 'POST':
         form = AdminUserEditForm(request.POST, request.FILES, instance=user)
@@ -724,10 +742,7 @@ def admin_user_delete(request, pk):
     """
     try:
         # 1. Retrieve user
-        if request.user.is_superuser:
-            user = get_object_or_404(CustomUser, pk=pk)
-        else:
-            user = get_object_or_404(CustomUser, pk=pk, institution=request.institution)
+        user = get_institution_scoped_user_or_404(request, pk=pk)
 
         # 2. Check self-deletion
         if user == request.user:
@@ -815,10 +830,7 @@ def admin_user_delete(request, pk):
 @require_POST
 def admin_user_toggle_status(request, pk):
     """Admin view to toggle user active status."""
-    if request.user.is_superuser:
-        user = get_object_or_404(CustomUser, pk=pk)
-    else:
-        user = get_object_or_404(CustomUser, pk=pk, institution=request.institution)
+    user = get_institution_scoped_user_or_404(request, pk=pk)
     
     # Prevent self-deactivation
     if user == request.user:
@@ -849,10 +861,7 @@ def admin_user_toggle_status(request, pk):
 @admin_required
 def admin_user_activity(request, pk):
     """Admin view to see specific user's activity."""
-    if request.user.is_superuser:
-        user = get_object_or_404(CustomUser, pk=pk)
-    else:
-        user = get_object_or_404(CustomUser, pk=pk, institution=request.institution)
+    user = get_institution_scoped_user_or_404(request, pk=pk)
     activities = UserActivityLog.objects.select_related('user').filter(user=user).order_by('-login_timestamp')
     
     # Pagination

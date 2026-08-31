@@ -3,6 +3,8 @@ Security tests for users app.
 
 Covers: AC 3-7 (Fix #3 cross-institution user views, Fix #4 activity log scoping).
 """
+import json
+
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
@@ -149,11 +151,22 @@ class AdminUserCrudInstitutionScopingTest(UserSecurityBase):
     — staff from one institution could manage users at another institution.
     """
 
+    # --- admin_user_edit ---
+
     def test_cross_institution_edit_returns_404(self):
         self.client.force_login(self.staff_a)
         url = reverse('admin-user-edit', kwargs={'pk': self.staff_b.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
+
+    def test_cross_institution_edit_post_returns_404(self):
+        """The scoped lookup runs before the POST/form branch, so POST 404s too."""
+        self.client.force_login(self.staff_a)
+        url = reverse('admin-user-edit', kwargs={'pk': self.staff_b.pk})
+        response = self.client.post(url, {'first_name': 'Hijacked'})
+        self.assertEqual(response.status_code, 404)
+        self.staff_b.refresh_from_db()
+        self.assertNotEqual(self.staff_b.first_name, 'Hijacked')
 
     def test_same_institution_edit_returns_200(self):
         self.client.force_login(self.staff_a)
@@ -167,8 +180,9 @@ class AdminUserCrudInstitutionScopingTest(UserSecurityBase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
+    # --- admin_user_delete ---
+
     def test_cross_institution_delete_returns_404(self):
-        import json
         self.client.force_login(self.staff_a)
         url = reverse('admin-user-delete', kwargs={'pk': self.staff_b.pk})
         response = self.client.generic(
@@ -180,6 +194,32 @@ class AdminUserCrudInstitutionScopingTest(UserSecurityBase):
         self.staff_b.refresh_from_db()
         self.assertTrue(self.staff_b.is_active, "Cross-institution delete must not deactivate the target")
 
+    def test_same_institution_delete_succeeds(self):
+        self.client.force_login(self.staff_a)
+        url = reverse('admin-user-delete', kwargs={'pk': self.staff_a2.pk})
+        response = self.client.generic(
+            'DELETE', url,
+            data=json.dumps({'password': 'StaffPass123!'}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.staff_a2.refresh_from_db()
+        self.assertFalse(self.staff_a2.is_active)
+
+    def test_superuser_can_delete_any_institution_user(self):
+        self.client.force_login(self.superuser)
+        url = reverse('admin-user-delete', kwargs={'pk': self.staff_b.pk})
+        response = self.client.generic(
+            'DELETE', url,
+            data=json.dumps({'password': 'SuperPass123!'}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.staff_b.refresh_from_db()
+        self.assertFalse(self.staff_b.is_active)
+
+    # --- admin_user_toggle_status ---
+
     def test_cross_institution_toggle_status_returns_404(self):
         self.client.force_login(self.staff_a)
         url = reverse('admin-user-toggle-status', kwargs={'pk': self.staff_b.pk})
@@ -188,11 +228,41 @@ class AdminUserCrudInstitutionScopingTest(UserSecurityBase):
         self.staff_b.refresh_from_db()
         self.assertTrue(self.staff_b.is_active, "Cross-institution toggle must not change the target's status")
 
+    def test_same_institution_toggle_status_succeeds(self):
+        self.client.force_login(self.staff_a)
+        url = reverse('admin-user-toggle-status', kwargs={'pk': self.staff_a2.pk})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.staff_a2.refresh_from_db()
+        self.assertFalse(self.staff_a2.is_active)
+
+    def test_superuser_can_toggle_any_institution_user_status(self):
+        self.client.force_login(self.superuser)
+        url = reverse('admin-user-toggle-status', kwargs={'pk': self.staff_b.pk})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.staff_b.refresh_from_db()
+        self.assertFalse(self.staff_b.is_active)
+
+    # --- admin_user_activity ---
+
     def test_cross_institution_activity_returns_404(self):
         self.client.force_login(self.staff_a)
         url = reverse('admin-user-activity', kwargs={'pk': self.staff_b.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
+
+    def test_same_institution_activity_returns_200(self):
+        self.client.force_login(self.staff_a)
+        url = reverse('admin-user-activity', kwargs={'pk': self.staff_a2.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_superuser_can_view_any_institution_user_activity(self):
+        self.client.force_login(self.superuser)
+        url = reverse('admin-user-activity', kwargs={'pk': self.staff_b.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
 
 
 @STATIC_OVERRIDE
@@ -218,3 +288,19 @@ class ChangePasswordSessionTest(UserSecurityBase):
         # be treated as unauthenticated and redirect to login instead of 200.
         follow_up = self.client.get(reverse('user-view', kwargs={'pk': self.staff_a.pk}))
         self.assertEqual(follow_up.status_code, 200)
+
+    def test_failed_password_change_does_not_break_session(self):
+        """A rejected form (wrong old password) must not touch the session at all."""
+        self.client.force_login(self.staff_a)
+        url = reverse('user-change-password')
+        response = self.client.post(url, {
+            'old_password': 'WrongOldPassword!',
+            'new_password1': 'NewSecurePass456!',
+            'new_password2': 'NewSecurePass456!',
+        })
+        self.assertEqual(response.status_code, 200)
+
+        follow_up = self.client.get(reverse('user-view', kwargs={'pk': self.staff_a.pk}))
+        self.assertEqual(follow_up.status_code, 200)
+        self.staff_a.refresh_from_db()
+        self.assertTrue(self.staff_a.check_password('StaffPass123!'), "Password must be unchanged")
