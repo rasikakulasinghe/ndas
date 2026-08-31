@@ -16,6 +16,30 @@ from ndas.custom_codes.error_handlers import handle_view_errors
 logger = logging.getLogger(__name__)
 
 
+def _is_thread_participant(user, sent, received, institution):
+    """
+    Is `user` allowed to view/reply to this referral thread at `institution`?
+
+    Allowed: the assigned clinician on whichever side matched this institution
+    (sent.from_clinician or received.to_clinician), or an ADMIN at this
+    institution. Institution membership alone is NOT authorization — a
+    colleague who isn't assigned to the referral must be denied.
+
+    Deliberately broader than referral_close's admin check: an admin at
+    EITHER the sending or receiving institution may view/reply on behalf of
+    their clinicians, but only the sending institution's admin may close the
+    referral (closing is a stronger, sender-owned action).
+    """
+    from ndas.custom_codes.choice import UserType
+
+    user_type = getattr(user, 'user_type', None)
+    is_inst_admin = user_type == UserType.ADMIN and user.institution == institution
+    return (
+        (sent is not None and (sent.from_clinician == user or is_inst_admin))
+        or (received is not None and (received.to_clinician == user or is_inst_admin))
+    )
+
+
 @login_required(login_url="user-login")
 @require_http_methods(["GET", "POST"])
 @ratelimit(key='user_or_ip', rate='10/m')
@@ -218,7 +242,8 @@ def _thread_panel_response(request, referral_uuid):
         institution=institution,
     ).first()
 
-    if not sent and not received:
+    thread_exists = sent is not None or received is not None
+    if not thread_exists or not _is_thread_participant(request.user, sent, received, institution):
         from django.http import HttpResponse
         return HttpResponse(
             '<p class="text-center text-danger p-3">Thread not found.</p>',
@@ -303,7 +328,8 @@ def referral_reply(request, referral_uuid):
         institution=institution,
     ).first()
 
-    if not sent and not received:
+    thread_exists = sent is not None or received is not None
+    if not thread_exists or not _is_thread_participant(request.user, sent, received, institution):
         from django.http import HttpResponse
         return HttpResponse('<p class="text-danger p-3">Referral not found.</p>', status=404)
 

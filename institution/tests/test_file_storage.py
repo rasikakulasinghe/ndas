@@ -197,6 +197,48 @@ class ProtectedMediaViewTest(TestCase):
             # Http404 means file doesn't exist on disk — access check PASSED for SUPERADMIN
             pass
 
+    def test_clinician_blocked_from_other_institution_logo(self):
+        """Clinician from Institution A cannot access Institution B's logo path."""
+        request = self._make_media_request(
+            'hospital-b/logo/logo.png',
+            self.clinician_a,
+            self.institution_a,
+        )
+        response = protected_media_view(request, path='hospital-b/logo/logo.png')
+        self.assertEqual(response.status_code, 403)
+
+    def test_clinician_allowed_own_institution_logo_path(self):
+        """Clinician from Institution A can access Institution A's own logo path structure."""
+        from django.http import Http404
+
+        request = self._make_media_request(
+            'hospital-a/logo/logo.png',
+            self.clinician_a,
+            self.institution_a,
+        )
+        try:
+            response = protected_media_view(request, path='hospital-a/logo/logo.png')
+            self.assertNotEqual(response.status_code, 403)
+        except Http404:
+            # File doesn't exist on disk — access check PASSED
+            pass
+
+    def test_superadmin_can_access_any_institution_logo(self):
+        """SUPERADMIN can access any institution's logo path."""
+        from django.http import Http404
+
+        request = self._make_media_request(
+            'hospital-b/logo/logo.png',
+            self.superadmin,
+            None,
+        )
+        try:
+            response = protected_media_view(request, path='hospital-b/logo/logo.png')
+            self.assertNotEqual(response.status_code, 403)
+        except Http404:
+            # File doesn't exist on disk — access check PASSED for SUPERADMIN
+            pass
+
     def test_non_institution_path_not_blocked(self):
         """Non-partitioned paths (e.g. institution_logos/) are not blocked by institution check."""
         from django.http import Http404

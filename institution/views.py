@@ -908,8 +908,9 @@ def protected_media_view(request, path):
     """
     Serve media files with institution isolation enforcement (development only).
 
-    Institution-partitioned paths (/{slug}/videos/ and /{slug}/attachments/) are restricted
-    to the owning institution's users. SUPERADMIN can access any institution's files.
+    Institution-partitioned paths (/{slug}/videos/, /{slug}/attachments/, and
+    /{slug}/logo/) are restricted to the owning institution's users. SUPERADMIN
+    can access any institution's files.
 
     In production: Nginx handles media serving. An X-Accel-Redirect approach with
     a Django auth endpoint is recommended for production file isolation.
@@ -917,9 +918,12 @@ def protected_media_view(request, path):
     user_type = getattr(request.user, 'user_type', UserType.USER)
     _inst = getattr(request, 'institution', None)
 
-    # Check if path is institution-partitioned: format is "{slug}/videos/..." or "{slug}/attachments/..."
+    # Check if path is institution-partitioned: format is "{slug}/videos/...",
+    # "{slug}/attachments/...", or "{slug}/logo/..." (see get_institution_logo_path).
+    # Compare case-insensitively: NTFS (this project's dev/production OS) resolves
+    # paths case-insensitively, so a lowercase-only check here would be bypassable.
     parts = path.split('/')
-    if len(parts) >= 2 and parts[1] in ('videos', 'attachments'):
+    if len(parts) >= 2 and parts[1].lower() in ('videos', 'attachments', 'logo'):
         path_slug = parts[0]
         # SUPERADMIN can access all institution files
         if user_type != UserType.SUPERADMIN:

@@ -50,6 +50,23 @@ class ThreadTestBase(TestCase):
             position='Consultant', mobile_primary='0771111003',
             user_type=UserType.USER, institution=self.inst_b,
         )
+        # Non-participant colleague at inst_a — same institution as clin_a but not
+        # assigned to this referral. Used to verify institution membership alone
+        # is not sufficient to access the thread.
+        self.clin_a_colleague = User.objects.create_user(
+            username='clin_a_colleague_thread', password='Testpass1!',
+            first_name='Colleague', last_name='Alpha',
+            position='Medical Officer', mobile_primary='0771111004',
+            user_type=UserType.USER, institution=self.inst_a,
+        )
+        # Institution ADMIN at inst_b (the receiving side) — not a participant
+        # clinician, but should still be granted access per _is_thread_participant.
+        self.admin_b = User.objects.create_user(
+            username='admin_b_thread', password='Testpass1!',
+            first_name='Admin', last_name='Beta',
+            position='Administrator', mobile_primary='0771111005',
+            user_type=UserType.ADMIN, institution=self.inst_b,
+        )
         self.shared_uuid = uuid.uuid4()
         self.snapshot = {
             'schema_version': 1,
@@ -114,6 +131,22 @@ class ThreadViewTest(ThreadTestBase):
         response = client.get(url)
         self.assertIsNone(response.context['reply_form'])
 
+    def test_non_participant_colleague_cannot_view_thread(self):
+        """A same-institution colleague who is not from_clinician/to_clinician is denied (404)."""
+        client = Client()
+        client.force_login(self.clin_a_colleague)
+        url = reverse('referral:referral-thread-panel', args=[self.shared_uuid])
+        response = client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_institution_admin_can_view_thread(self):
+        """An ADMIN at either institution (not just the assigned clinician) is granted access."""
+        client = Client()
+        client.force_login(self.admin_b)
+        url = reverse('referral:referral-thread-panel', args=[self.shared_uuid])
+        response = client.get(url)
+        self.assertEqual(response.status_code, 200)
+
 
 @STATIC_OVERRIDE
 class ReferralReplyTest(ThreadTestBase):
@@ -167,6 +200,18 @@ class ReferralReplyTest(ThreadTestBase):
         self.assertEqual(
             ReferralMessage.objects.count(), 0,
             "M2: Empty body must not create a ReferralMessage",
+        )
+
+    def test_non_participant_colleague_cannot_reply(self):
+        """A same-institution colleague who is not from_clinician/to_clinician cannot reply (404)."""
+        client = Client()
+        client.force_login(self.clin_a_colleague)
+        url = reverse('referral:referral-reply', args=[self.shared_uuid])
+        response = client.post(url, {'body': 'I am not a participant on this referral.'})
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(
+            ReferralMessage.objects.count(), 0,
+            "Non-participant reply must not create a ReferralMessage",
         )
 
     def test_reply_updates_timestamp(self):
