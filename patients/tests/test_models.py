@@ -15,7 +15,9 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
-from patients.models import Patient, HINEAssessment, GMAssessment
+from django.core.exceptions import ValidationError
+
+from patients.models import Bookmark, Patient, HINEAssessment, GMAssessment
 from video.models import Video
 
 User = get_user_model()
@@ -138,3 +140,92 @@ class PatientGetRCTest(TestCase):
             "last_hine_score must default to 0 (< 73) so an abnormal-GMA, "
             "no-HINE patient is still flagged for physiotherapy referral",
         )
+
+
+class BookmarkVideoMappingTest(TestCase):
+    """
+    Regression tests for Bookmark's model_mapping: bookmark_type='Video'
+    previously mapped to ("patients", "Video") instead of ("video", "Video")
+    — Video actually lives in the video app. apps.get_model("patients",
+    "Video") raised LookupError, silently swallowed by a broad except in
+    both _validate_bookmarked_object and _get_bookmarked_object, so a
+    Video-type bookmark's existence was never actually validated and
+    bookmarked_object always resolved to None.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='bm_video_user',
+            password='Testpass1!',
+            email='bm_video_user@example.com',
+            is_staff=True,
+        )
+        self.patient = Patient.objects.create(
+            bht='BHT-BMV-001',
+            baby_name='Bookmark Video Baby',
+            mother_name='Bookmark Video Mother',
+            gender='Male',
+            dob_tob=timezone.now() - timezone.timedelta(days=30),
+            mo_delivery='Normal vaginal delivery (NVD)',
+            pog_wks=38,
+            pog_days=0,
+            birth_weight=3000,
+            ofc=34,
+            tp_mobile='0771234567',
+            added_by=self.user,
+        )
+        self.video = Video.objects.create(
+            patient=self.patient,
+            title='Bookmark Mapping Test Video',
+            recorded_on=timezone.now(),
+            added_by=self.user,
+        )
+
+    def test_video_bookmark_with_existing_object_id_is_valid(self):
+        bookmark = Bookmark(
+            title='Valid Video Bookmark',
+            bookmark_type='Video',
+            object_id=self.video.pk,
+            added_by=self.user,
+        )
+        bookmark.save()  # must not raise
+        self.assertTrue(Bookmark.objects.filter(pk=bookmark.pk).exists())
+
+    def test_video_bookmark_with_nonexistent_object_id_is_rejected(self):
+        """Existence validation must actually run for Video bookmarks now."""
+        bogus_id = self.video.pk + 99999
+        bookmark = Bookmark(
+            title='Invalid Video Bookmark',
+            bookmark_type='Video',
+            object_id=bogus_id,
+            added_by=self.user,
+        )
+        with self.assertRaises(ValidationError):
+            bookmark.save()
+
+    def test_video_bookmarked_object_resolves_to_the_video(self):
+        bookmark = Bookmark.objects.create(
+            title='Resolvable Video Bookmark',
+            bookmark_type='Video',
+            object_id=self.video.pk,
+            added_by=self.user,
+        )
+        self.assertEqual(bookmark.bookmarked_object, self.video)
+        self.assertEqual(bookmark.bookmarked_object_title, self.video.title)
+
+    def test_patient_bookmark_with_nonexistent_object_id_is_rejected(self):
+        """
+        Regression: existence validation must actually run for EVERY
+        bookmark_type, not just Video — the deliberately-raised
+        ValidationError was previously swallowed by the same broad except
+        that catches genuine model-lookup failures, for any bookmark_type.
+        """
+        bogus_id = self.patient.pk + 99999
+        bookmark = Bookmark(
+            title='Invalid Patient Bookmark',
+            bookmark_type='Patient',
+            object_id=bogus_id,
+            added_by=self.user,
+        )
+        with self.assertRaises(ValidationError):
+            bookmark.save()

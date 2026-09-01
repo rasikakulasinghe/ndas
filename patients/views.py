@@ -1421,6 +1421,12 @@ def bookmark_add(request, item_id, bookmark_type):
         return redirect("manage-patients")
 
     # Validate item belongs to the active institution (F4: prevent cross-institution bookmarking)
+    # NOTE: this dict's keys must stay in sync with Bookmark.MODEL_MAPPING
+    # (patients/models.py) — it can't just reuse that mapping directly since
+    # it also carries a per-type institution-scoping filter clause, but a
+    # bookmark_type present in one and missing from the other is a bug
+    # (exactly the class of drift that caused the Video/app_label mismatch
+    # Bookmark.MODEL_MAPPING itself was introduced to prevent).
     _inst = getattr(request, 'institution', None)
     if _inst is not None:
         _type_model_map = {
@@ -1480,6 +1486,18 @@ def bookmark_add(request, item_id, bookmark_type):
                             "bookmark_type": bookmark_type,
                         },
                     )
+            except ValidationError as e:
+                # In practice this is Bookmark.full_clean()'s object_id-existence
+                # check (title/description already passed form validation above)
+                # — an expected, user-triggerable race (item deleted between page
+                # load and submit), not a server error, hence warning not error.
+                logger.warning(f"Validation error in bookmark_add: {e}")
+                messages.error(request, "The item you tried to bookmark could not be found.")
+                return render(
+                    request,
+                    "bookmark/add.html",
+                    {"form": bookmark_form_data, "item_id": item_id, "bookmark_type": bookmark_type},
+                )
             except IntegrityError as e:
                 logger.error(f"Database integrity error in bookmark_add: {e}")
                 messages.error(request, "A data conflict occurred. Please refresh and try again.")
@@ -1491,7 +1509,8 @@ def bookmark_add(request, item_id, bookmark_type):
             except PermissionDenied:
                 raise
             except Exception as e:
-                messages.error(request, f"Error creating bookmark: {str(e)}")
+                logger.error(f"Unexpected error in bookmark_add: {e}")
+                messages.error(request, "An unexpected error occurred while creating the bookmark. Please try again.")
                 return render(
                     request,
                     "bookmark/add.html",
@@ -1700,6 +1719,27 @@ def bookmark_edit(request, pk):
             f"bookmark_id={pk}, owner={getattr(selected_bm.owner, 'username', None)}"
         )
         return HttpResponseForbidden()
+    # BookmarkForm only exposes title/description (object_id is deliberately
+    # not editable), so a save()-time ValidationError on object_id can't be
+    # mapped back onto the form by Django's ModelForm._post_clean — it would
+    # raise ValueError from inside bm_form_data.is_valid() itself, before
+    # any save() call is even reached. Check existence upfront instead of
+    # relying on that failure path: if the bookmarked item was deleted after
+    # this bookmark was created, block the edit with a clean message.
+    if not selected_bm.bookmarked_object_exists:
+        logger.warning(
+            f"Attempted edit of orphaned bookmark {pk} "
+            f"(type={selected_bm.bookmark_type}, object_id={selected_bm.object_id})"
+        )
+        messages.error(
+            request,
+            "This bookmark's item no longer exists, so it can't be edited. "
+            "You can still delete it from your bookmark list.",
+        )
+        # bookmark-view assumes object_id always refers to a Patient (a
+        # pre-existing, separate limitation — see deferred-work.md), so it
+        # isn't a safe redirect target here; the bookmark list is.
+        return redirect("bookmark-manager-user", request.user.username)
     bm_form = BookmarkForm(instance=selected_bm)
     if request.method == "POST":
         bm_form_data = BookmarkForm(request.POST, instance=selected_bm)

@@ -2089,6 +2089,21 @@ class Attachment(TimeStampedModel, UserTrackingMixin):
 
 
 class Bookmark(TimeStampedModel, UserTrackingMixin):
+    # (app_label, model_name) for each bookmark_type — single source of truth,
+    # used by _validate_bookmarked_object, _get_bookmarked_object, and
+    # bookmarked_object_exists so none of these can drift apart the way they
+    # did when 'Video' was wrong here.
+    MODEL_MAPPING = {
+        "Patient": ("patients", "Patient"),
+        "Video": ("video", "Video"),
+        "GMA": ("patients", "GMAssessment"),
+        "HINE": ("patients", "HINEAssessment"),
+        "Attachment": ("patients", "Attachment"),
+        "DA": ("patients", "DevelopmentalAssessment"),
+        "CDICR": ("patients", "CDICRecord"),
+        "GPA": ("patients", "GeneralPaediatricAssessment"),
+    }
+
     # Core fields with proper validation and indexing
     title = models.CharField(
         max_length=200,  # Increased from 100 for better descriptions
@@ -2215,40 +2230,33 @@ class Bookmark(TimeStampedModel, UserTrackingMixin):
         if not self.bookmark_type or not self.object_id:
             return
 
+        if self.bookmark_type not in self.MODEL_MAPPING:
+            return
+
+        # Resolving the model class is wrapped separately from the existence
+        # check below: a lookup failure here (e.g. a future MODEL_MAPPING
+        # typo) is logged and skipped rather than blocking every save, but a
+        # ValidationError we deliberately raise for a genuinely-missing
+        # object must propagate, not be caught by the same broad except.
         try:
             # Import models dynamically to avoid circular imports
             from django.apps import apps
 
-            model_mapping = {
-                "Patient": ("patients", "Patient"),
-                "Video": ("patients", "Video"),
-                "GMA": ("patients", "GMAssessment"),
-                "HINE": ("patients", "HINEAssessment"),
-                "Attachment": ("patients", "Attachment"),
-                "DA": ("patients", "DevelopmentalAssessment"),
-                "CDICR": ("patients", "CDICRecord"),
-                "GPA": ("patients", "GeneralPaediatricAssessment"),
-            }
-
-            if self.bookmark_type in model_mapping:
-                app_label, model_name = model_mapping[self.bookmark_type]
-                model_class = apps.get_model(app_label, model_name)
-
-                if not model_class.objects.filter(pk=self.object_id).exists():
-                    raise ValidationError(
-                        {
-                            "object_id": _(
-                                f"The referenced {self.bookmark_type} object does not exist."
-                            )
-                        }
-                    )
-
+            app_label, model_name = self.MODEL_MAPPING[self.bookmark_type]
+            model_class = apps.get_model(app_label, model_name)
+            exists = model_class.objects.filter(pk=self.object_id).exists()
         except Exception as e:
-            # Log the error but don't fail validation
-            import logging
-
-            logger = logging.getLogger(__name__)
             logger.warning(f"Could not validate bookmarked object: {e}")
+            return
+
+        if not exists:
+            raise ValidationError(
+                {
+                    "object_id": _(
+                        f"The referenced {self.bookmark_type} object does not exist."
+                    )
+                }
+            )
 
     # Properties for better data access
     @property
@@ -2259,29 +2267,48 @@ class Bookmark(TimeStampedModel, UserTrackingMixin):
         return self._bookmarked_object
 
     def _get_bookmarked_object(self):
-        """Helper method to retrieve the bookmarked object"""
+        """
+        Helper method to retrieve the bookmarked object.
+
+        Unlike _validate_bookmarked_object, this intentionally returns None
+        on ANY failure (unknown bookmark_type, unresolvable model, deleted
+        object, etc.) rather than raising — this is a read-only accessor
+        (e.g. for display), not a save()-time validation gate, so callers
+        should treat None as "nothing to show" rather than an error.
+        """
         try:
             from django.apps import apps
 
-            model_mapping = {
-                "Patient": ("patients", "Patient"),
-                "Video": ("patients", "Video"),
-                "GMA": ("patients", "GMAssessment"),
-                "HINE": ("patients", "HINEAssessment"),
-                "Attachment": ("patients", "Attachment"),
-                "DA": ("patients", "DevelopmentalAssessment"),
-                "CDICR": ("patients", "CDICRecord"),
-                "GPA": ("patients", "GeneralPaediatricAssessment"),
-            }
-
-            if self.bookmark_type in model_mapping:
-                app_label, model_name = model_mapping[self.bookmark_type]
+            if self.bookmark_type in self.MODEL_MAPPING:
+                app_label, model_name = self.MODEL_MAPPING[self.bookmark_type]
                 model_class = apps.get_model(app_label, model_name)
                 return model_class.objects.get(pk=self.object_id)
 
         except Exception:
             pass
         return None
+
+    @property
+    def bookmarked_object_exists(self):
+        """
+        Cheap existence check for the bookmarked object — `.exists()` rather
+        than `bookmarked_object`'s `.get(...)`, since callers that only need
+        to know "is this bookmark orphaned?" (e.g. bookmark_edit's pre-check)
+        shouldn't pay for fetching the full object. Unknown bookmark_type or
+        any lookup failure is treated as "exists" (True) — this mirrors
+        _validate_bookmarked_object's fail-open behavior for lookup errors,
+        not the deliberate ValidationError for a confirmed-missing object.
+        """
+        if self.bookmark_type not in self.MODEL_MAPPING:
+            return True
+        try:
+            from django.apps import apps
+
+            app_label, model_name = self.MODEL_MAPPING[self.bookmark_type]
+            model_class = apps.get_model(app_label, model_name)
+            return model_class.objects.filter(pk=self.object_id).exists()
+        except Exception:
+            return True
 
     @property
     def bookmarked_object_title(self):

@@ -198,7 +198,11 @@ def get_patient_timeline_events(patient) -> List[Dict[str, Any]]:
                     'can_preview': True,
                     'preview_data': json.dumps({
                         'assessor': gma.added_by.get_full_name() if gma.added_by else 'Unknown',
-                        'observation': gma.observation[:200] if gma.observation else 'No observation recorded',
+                        # diagnosis_other holds supplementary diagnosis notes, not raw
+                        # clinical observation — keep the key/label matched to that.
+                        # Empty string (not a fallback sentence) so the JS preview
+                        # can correctly omit this row entirely when there's nothing to show.
+                        'notes': gma.diagnosis_other[:200] if gma.diagnosis_other else '',
                         'diagnosis': diagnosis_text,
                         'video': gma.video_file.title if gma.video_file else 'No video linked'
                     })

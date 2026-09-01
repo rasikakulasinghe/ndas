@@ -18,6 +18,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 from patients.models import Bookmark, Patient
+from video.models import Video
 
 User = get_user_model()
 
@@ -108,10 +109,9 @@ class BookmarkEditSecurityTest(TestCase):
             is_staff=True,
             is_superuser=True,
         )
-        # bookmark_type='Patient' maps correctly in Bookmark._validate_bookmarked_object's
-        # model_mapping (unlike 'Video', which maps to the wrong app and is silently
-        # swallowed by that method's broad except — see deferred-work.md); using a real
-        # Patient keeps this fixture valid independent of that pre-existing bug.
+        # Using a real Patient (rather than Video) keeps this fixture's bookmark
+        # existence-check exercised regardless of which bookmark_type is chosen —
+        # see test_models.py::BookmarkVideoMappingTest for Video-specific coverage.
         self.patient = Patient.objects.create(
             bht='BE-BHT-001',
             baby_name='Bookmark Test Baby',
@@ -189,3 +189,63 @@ class BookmarkEditSecurityTest(TestCase):
         self.assertEqual(response.url, reverse('bookmark-view', kwargs={'pk': self.bookmark.pk}))
         self.bookmark.refresh_from_db()
         self.assertEqual(self.bookmark.title, 'Superuser Update')
+
+    def test_editing_orphaned_bookmark_post_does_not_500(self):
+        """
+        Regression: Bookmark.save() now genuinely validates that object_id
+        still exists (see spec-fix-gma-timeline-and-video-bookmark-mapping).
+        Editing a bookmark whose target was since deleted must show a clean
+        error, not raise an uncaught ValidationError/ValueError.
+        """
+        self.patient.delete()
+
+        self.client.force_login(self.owner)
+        response = self.client.post(
+            self._edit_url(),
+            {'title': 'Attempted Update', 'description': 'Updated'},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse('bookmark-manager-user', kwargs={'username': self.owner.username}),
+        )
+        self.bookmark.refresh_from_db()
+        self.assertNotEqual(self.bookmark.title, 'Attempted Update')
+
+    def test_editing_orphaned_bookmark_get_redirects(self):
+        """GET must also redirect, not render an edit form for a dead reference."""
+        self.patient.delete()
+
+        self.client.force_login(self.owner)
+        response = self.client.get(self._edit_url())
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse('bookmark-manager-user', kwargs={'username': self.owner.username}),
+        )
+
+    def test_editing_orphaned_video_bookmark_does_not_500(self):
+        """Same orphan check for a Video-type bookmark — the type whose model_mapping was wrong."""
+        video = Video.objects.create(
+            patient=self.patient,
+            title='Orphan Test Video',
+            recorded_on=timezone.now(),
+            added_by=self.owner,
+        )
+        video_bookmark = Bookmark.objects.create(
+            title='Video Bookmark',
+            bookmark_type='Video',
+            object_id=video.pk,
+            owner=self.owner,
+            added_by=self.owner,
+        )
+        video.delete()
+
+        self.client.force_login(self.owner)
+        response = self.client.post(
+            reverse('bookmark-edit', kwargs={'pk': video_bookmark.pk}),
+            {'title': 'Attempted Update', 'description': 'Updated'},
+        )
+        self.assertEqual(response.status_code, 302)
+        video_bookmark.refresh_from_db()
+        self.assertNotEqual(video_bookmark.title, 'Attempted Update')

@@ -10,9 +10,10 @@ the documented "staff delete own records" rule.
 """
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 from ndas.custom_codes.delete_helpers import has_delete_permission
-from patients.models import Bookmark
+from patients.models import Bookmark, Patient
 
 User = get_user_model()
 
@@ -38,10 +39,27 @@ class HasDeletePermissionBookmarkTest(TestCase):
             is_staff=True,
             is_superuser=True,
         )
+        # This test suite is about has_delete_permission()'s ownership logic,
+        # not bookmarked-object existence — but Bookmark.save() runs that
+        # validation regardless, so object_id must point at a real row.
+        self.patient = Patient.objects.create(
+            bht='BHT-DH-001',
+            baby_name='Delete Helper Baby',
+            mother_name='Delete Helper Mother',
+            gender='Male',
+            dob_tob=timezone.now(),
+            mo_delivery='Normal vaginal delivery (NVD)',
+            pog_wks=38,
+            pog_days=0,
+            birth_weight=3000,
+            ofc=34,
+            tp_mobile='0771234567',
+            added_by=self.owner_staff,
+        )
         self.bookmark = Bookmark.objects.create(
             title='Test Bookmark',
-            bookmark_type='Video',
-            object_id=1,
+            bookmark_type='Patient',
+            object_id=self.patient.pk,
             owner=self.owner_staff,
             added_by=self.owner_staff,
         )
@@ -50,8 +68,8 @@ class HasDeletePermissionBookmarkTest(TestCase):
         # delete rights when it ran before the owner-specific check.
         self.bookmark_added_by_other = Bookmark.objects.create(
             title='Added By Other',
-            bookmark_type='Video',
-            object_id=2,
+            bookmark_type='Patient',
+            object_id=self.patient.pk,
             owner=self.owner_staff,
             added_by=self.other_staff,
         )

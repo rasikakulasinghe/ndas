@@ -233,9 +233,9 @@
                         <dl class="row">
                             <dt class="col-sm-3">Assessor:</dt>
                             <dd class="col-sm-9">${this.escapeHtml(data.assessor || 'Unknown')}</dd>
-                            ${data.observation ? `
-                                <dt class="col-sm-3">Observation:</dt>
-                                <dd class="col-sm-9">${this.escapeHtml(data.observation)}</dd>
+                            ${data.notes ? `
+                                <dt class="col-sm-3">Additional Diagnosis:</dt>
+                                <dd class="col-sm-9">${this.escapeHtml(data.notes)}</dd>
                             ` : ''}
                             ${data.diagnosis ? `
                                 <dt class="col-sm-3">Diagnosis:</dt>
