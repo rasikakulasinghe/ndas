@@ -916,7 +916,11 @@ def protected_media_view(request, path):
     a Django auth endpoint is recommended for production file isolation.
     """
     user_type = getattr(request.user, 'user_type', UserType.USER)
-    _inst = getattr(request, 'institution', None)
+    # request.institution is not populated here: InstitutionContextMiddleware
+    # exempts '/media/' from context resolution (to avoid running the
+    # subscription check, which can log the user out, on asset requests like
+    # <img> tags). Fall back to the user's own institution directly.
+    _inst = getattr(request, 'institution', None) or getattr(request.user, 'institution', None)
 
     # Check if path is institution-partitioned: format is "{slug}/videos/...",
     # "{slug}/attachments/...", or "{slug}/logo/..." (see get_institution_logo_path).

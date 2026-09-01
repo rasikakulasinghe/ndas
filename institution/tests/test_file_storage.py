@@ -239,6 +239,32 @@ class ProtectedMediaViewTest(TestCase):
             # File doesn't exist on disk — access check PASSED for SUPERADMIN
             pass
 
+    def test_clinician_allowed_own_logo_when_request_institution_unset(self):
+        """Regression: InstitutionContextMiddleware exempts '/media/' from context
+        resolution, so real media requests never get request.institution set by the
+        middleware. The view must fall back to request.user.institution instead of
+        treating an unset request.institution as "no institution" (which would 403
+        every clinician out of their own institution's logo/video/attachment files).
+        """
+        from django.http import Http404
+
+        request = self.factory.get('/media/hospital-a/logo/logo.png')
+        request.user = self.clinician_a
+        # Deliberately NOT setting request.institution — matches real middleware behavior.
+        try:
+            response = protected_media_view(request, path='hospital-a/logo/logo.png')
+            self.assertNotEqual(response.status_code, 403)
+        except Http404:
+            # File doesn't exist on disk — access check PASSED
+            pass
+
+    def test_clinician_blocked_from_other_institution_logo_when_request_institution_unset(self):
+        """Regression companion: the fallback must still enforce isolation."""
+        request = self.factory.get('/media/hospital-b/logo/logo.png')
+        request.user = self.clinician_a
+        response = protected_media_view(request, path='hospital-b/logo/logo.png')
+        self.assertEqual(response.status_code, 403)
+
     def test_non_institution_path_not_blocked(self):
         """Non-partitioned paths (e.g. institution_logos/) are not blocked by institution check."""
         from django.http import Http404
