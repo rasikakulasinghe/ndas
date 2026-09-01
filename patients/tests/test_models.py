@@ -17,7 +17,13 @@ from django.utils import timezone
 
 from django.core.exceptions import ValidationError
 
-from patients.models import Bookmark, Patient, HINEAssessment, GMAssessment
+from patients.models import (
+    Bookmark,
+    Patient,
+    HINEAssessment,
+    GMAssessment,
+    DevelopmentalAssessment,
+)
 from video.models import Video
 
 User = get_user_model()
@@ -140,6 +146,102 @@ class PatientGetRCTest(TestCase):
             "last_hine_score must default to 0 (< 73) so an abnormal-GMA, "
             "no-HINE patient is still flagged for physiotherapy referral",
         )
+
+
+class LatestAssessmentTiebreakerTest(TestCase):
+    """
+    Regression tests for get_latest_gma_assessment/hine_assessment/da_assessment's
+    -id tiebreaker.
+
+    All three previously ordered only by `-date_of_assessment`, which is
+    nondeterministic when two records for the same patient share the exact
+    same date_of_assessment. Adding `-id` as a secondary sort key makes
+    "latest" deterministically mean "most recently created among ties".
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='tiebreak_user',
+            password='Testpass1!',
+            email='tiebreak_user@example.com',
+            is_staff=True,
+        )
+        self.patient = Patient.objects.create(
+            bht='BHT-TB-001',
+            baby_name='Tiebreak Baby',
+            mother_name='Tiebreak Mother',
+            gender='Male',
+            dob_tob=timezone.now() - timezone.timedelta(days=200),
+            mo_delivery='Normal vaginal delivery (NVD)',
+            pog_wks=38,
+            pog_days=0,
+            birth_weight=3000,
+            ofc=34,
+            tp_mobile='0771234568',
+            added_by=self.user,
+        )
+        self.same_date = timezone.make_aware(timezone.datetime(2026, 3, 1))
+
+    def test_get_latest_gma_assessment_breaks_tie_by_id(self):
+        # video_file has a one-to-one uniqueness constraint on GMAssessment,
+        # so the two tied assessments each need their own video.
+        video_a = Video.objects.create(
+            patient=self.patient,
+            title='Tiebreak Video A',
+            recorded_on=self.same_date,
+            added_by=self.user,
+        )
+        video_b = Video.objects.create(
+            patient=self.patient,
+            title='Tiebreak Video B',
+            recorded_on=self.same_date,
+            added_by=self.user,
+        )
+        GMAssessment.objects.create(
+            patient=self.patient,
+            video_file=video_a,
+            date_of_assessment=self.same_date,
+            diagnosis_conclusion='NORMAL',
+            added_by=self.user,
+        )
+        newest = GMAssessment.objects.create(
+            patient=self.patient,
+            video_file=video_b,
+            date_of_assessment=self.same_date,
+            diagnosis_conclusion='ABNORMAL',
+            added_by=self.user,
+        )
+        self.assertEqual(self.patient.get_latest_gma_assessment().pk, newest.pk)
+
+    def test_get_latest_hine_assessment_breaks_tie_by_id(self):
+        HINEAssessment.objects.create(
+            patient=self.patient,
+            date_of_assessment=self.same_date,
+            score=50,
+            assessment_done_by='Dr. First',
+            added_by=self.user,
+        )
+        newest = HINEAssessment.objects.create(
+            patient=self.patient,
+            date_of_assessment=self.same_date,
+            score=75,
+            assessment_done_by='Dr. Second',
+            added_by=self.user,
+        )
+        self.assertEqual(self.patient.get_latest_hine_assessment().pk, newest.pk)
+
+    def test_get_latest_da_assessment_breaks_tie_by_id(self):
+        DevelopmentalAssessment.objects.create(
+            patient=self.patient,
+            date_of_assessment=self.same_date,
+            added_by=self.user,
+        )
+        newest = DevelopmentalAssessment.objects.create(
+            patient=self.patient,
+            date_of_assessment=self.same_date,
+            added_by=self.user,
+        )
+        self.assertEqual(self.patient.get_latest_da_assessment().pk, newest.pk)
 
 
 class BookmarkVideoMappingTest(TestCase):

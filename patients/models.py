@@ -833,7 +833,10 @@ class Patient(TimeStampedModel, UserTrackingMixin):
         return (
             GMAssessment.objects.filter(patient=self)
             .select_related("video_file")
-            .order_by("-date_of_assessment")
+            # -id tiebreaker: two assessments can share the exact same
+            # date_of_assessment, and order_by on that field alone is
+            # nondeterministic between calls in that case.
+            .order_by("-date_of_assessment", "-id")
             .first()
         )
 
@@ -843,7 +846,7 @@ class Patient(TimeStampedModel, UserTrackingMixin):
             return None
         return (
             HINEAssessment.objects.filter(patient=self)
-            .order_by("-date_of_assessment")
+            .order_by("-date_of_assessment", "-id")
             .first()
         )
 
@@ -853,7 +856,7 @@ class Patient(TimeStampedModel, UserTrackingMixin):
             return None
         return (
             DevelopmentalAssessment.objects.filter(patient=self)
-            .order_by("-date_of_assessment")
+            .order_by("-date_of_assessment", "-id")
             .first()
         )
 
