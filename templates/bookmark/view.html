@@ -112,6 +112,11 @@
                      class="btn btn-outline-primary btn-lg" data-toggle="tooltip" data-placement="top" title="View CDIC Record">
                     <i class="fas fa-clipboard-list mr-2"></i>View CDIC Record
                   </a>
+                {% elif bookmark.bookmark_type == 'GPA' %}
+                  <a href="{% url 'gpa-view' bookmark.object_id %}" target="_blank"
+                     class="btn btn-outline-primary btn-lg" data-toggle="tooltip" data-placement="top" title="View General Paediatric Assessment">
+                    <i class="fas fa-notes-medical mr-2"></i>View GPA Record
+                  </a>
                 {% endif %}
               </div>
             </div>

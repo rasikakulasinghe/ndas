@@ -1555,19 +1555,26 @@ def bookmark_view(request, pk):
     if not getattr(request, 'institution', None) and not request.user.is_superuser:
         return HttpResponseForbidden()
     bookmark = get_object_or_404(Bookmark, id=pk, **institution_scope(request, 'owner__institution'))
-    # Resolve bookmarked patient with institution scope.
-    # Institution scope enforced here — stale cross-institution bookmarks will 404.
-    # Architectural note: Bookmark.object_id is PositiveIntegerField (already an int type).
-    # F16: explicit int() cast guards against any edge case where object_id arrives as str.
-    try:
-        patient_id = int(bookmark.object_id)
-    except (TypeError, ValueError):
-        raise Http404("Invalid bookmark object reference.")
-    patient = get_object_or_404(
-        Patient.objects.for_institution(getattr(request, 'institution', None)),
-        id=patient_id
-    )
-    return render(request, "bookmark/view.html", {"bookmark": bookmark, "patient": patient})
+    # Existence check must go through bookmarked_object_exists (routes by
+    # bookmark.bookmark_type via Bookmark.MODEL_MAPPING) rather than assuming
+    # object_id is always a Patient pk — that assumption 404'd every non-Patient
+    # bookmark (Video/GMA/HINE/Attachment/DA/CDICR/GPA) whose object_id didn't
+    # coincidentally also match a Patient row. The template resolves the actual
+    # "view linked resource" link itself, per bookmark_type, with its own
+    # institution-scoped lookup (assessment_view, hine_assessment_view, etc.
+    # all filter on institution_scope(request) before fetching).
+    if not bookmark.bookmarked_object_exists:
+        logger.warning(
+            f"Attempted view of orphaned bookmark {pk} "
+            f"(type={bookmark.bookmark_type}, object_id={bookmark.object_id})"
+        )
+        messages.error(
+            request,
+            "This bookmark's item no longer exists. "
+            "You can still delete it from your bookmark list.",
+        )
+        return redirect("bookmark-manager-user", request.user.username)
+    return render(request, "bookmark/view.html", {"bookmark": bookmark})
 
 
 @login_required(login_url="user-login")
@@ -1736,9 +1743,9 @@ def bookmark_edit(request, pk):
             "This bookmark's item no longer exists, so it can't be edited. "
             "You can still delete it from your bookmark list.",
         )
-        # bookmark-view assumes object_id always refers to a Patient (a
-        # pre-existing, separate limitation — see deferred-work.md), so it
-        # isn't a safe redirect target here; the bookmark list is.
+        # The bookmark list is a simpler, always-safe redirect target than
+        # bookmark-view here — no need to round-trip through its own
+        # orphan-check just to land back on this same list.
         return redirect("bookmark-manager-user", request.user.username)
     bm_form = BookmarkForm(instance=selected_bm)
     if request.method == "POST":

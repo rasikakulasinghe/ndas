@@ -10,6 +10,10 @@ still allowing the owning user and superusers to view it.
 Also includes BookmarkEditSecurityTest, a regression test for the
 bookmark_edit write-access IDOR fix. Part of
 spec-fix-bookmark-edit-idor-and-patientlist-bug.
+
+Also includes BookmarkViewRoutingTest, a regression test for bookmark_view
+no longer assuming object_id always refers to a Patient — see the
+"bookmark_view doesn't route by bookmark_type" entry in deferred-work.md.
 """
 from django.test import TestCase, Client, override_settings
 from django.urls import reverse
@@ -249,3 +253,105 @@ class BookmarkEditSecurityTest(TestCase):
         self.assertEqual(response.status_code, 302)
         video_bookmark.refresh_from_db()
         self.assertNotEqual(video_bookmark.title, 'Attempted Update')
+
+
+@STATIC_OVERRIDE
+class BookmarkViewRoutingTest(TestCase):
+    """
+    Regression tests for bookmark_view no longer assuming object_id always
+    refers to a Patient.
+
+    Previously bookmark_view always did
+    get_object_or_404(Patient.objects.for_institution(...), id=bookmark.object_id)
+    regardless of bookmark.bookmark_type, so every non-Patient bookmark type
+    (Video/GMA/HINE/Attachment/DA/CDICR/GPA) 404'd unless its object_id
+    coincidentally also matched an existing Patient row. The fix uses the
+    generic, MODEL_MAPPING-driven bookmarked_object_exists property instead.
+
+    Uses a superuser to keep these tests focused on the routing bug rather
+    than the separate, pre-existing institution-context guard that bookmark_view
+    shares with bookmark_delete (request.institution required for non-superusers).
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.owner = User.objects.create_user(
+            username='bvr_owner',
+            password='Testpass1!',
+            email='bvr_owner@example.com',
+            is_staff=True,
+            is_superuser=True,
+        )
+        self.patient = Patient.objects.create(
+            bht='BVR-BHT-001',
+            baby_name='Routing Test Baby',
+            mother_name='Routing Test Mother',
+            dob_tob=timezone.now(),
+            gender='Male',
+            pog_wks=38,
+            pog_days=0,
+            birth_weight=3000,
+            ofc=33,
+            mo_delivery='Normal vaginal delivery (NVD)',
+            tp_mobile='0711234598',
+            added_by=self.owner,
+        )
+        self.video = Video.objects.create(
+            patient=self.patient,
+            title='Routing Test Video',
+            recorded_on=timezone.now(),
+            added_by=self.owner,
+        )
+
+    def _view_url(self, bookmark):
+        return reverse('bookmark-view', kwargs={'pk': bookmark.pk})
+
+    def test_patient_bookmark_view_succeeds(self):
+        """Patient-type bookmarks keep working exactly as before the fix."""
+        bookmark = Bookmark.objects.create(
+            title='Patient Bookmark',
+            bookmark_type='Patient',
+            object_id=self.patient.pk,
+            owner=self.owner,
+            added_by=self.owner,
+        )
+        self.client.force_login(self.owner)
+        response = self.client.get(self._view_url(bookmark))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse('view-patient', kwargs={'pk': self.patient.pk}))
+
+    def test_video_bookmark_view_no_longer_404s(self):
+        """
+        Regression: a Video-type bookmark must render, not 404, even though
+        object_id (the video's pk) does not correspond to any Patient row.
+        """
+        bookmark = Bookmark.objects.create(
+            title='Video Bookmark',
+            bookmark_type='Video',
+            object_id=self.video.pk,
+            owner=self.owner,
+            added_by=self.owner,
+        )
+        self.client.force_login(self.owner)
+        response = self.client.get(self._view_url(bookmark))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse('video:view', kwargs={'video_id': self.video.pk}))
+
+    def test_orphaned_video_bookmark_redirects_instead_of_500(self):
+        """A bookmark whose target was since deleted must redirect cleanly, not 404/500."""
+        bookmark = Bookmark.objects.create(
+            title='Video Bookmark',
+            bookmark_type='Video',
+            object_id=self.video.pk,
+            owner=self.owner,
+            added_by=self.owner,
+        )
+        self.video.delete()
+
+        self.client.force_login(self.owner)
+        response = self.client.get(self._view_url(bookmark), follow=False)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse('bookmark-manager-user', kwargs={'username': self.owner.username}),
+        )
