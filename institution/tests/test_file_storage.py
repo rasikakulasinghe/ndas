@@ -281,3 +281,71 @@ class ProtectedMediaViewTest(TestCase):
         except Http404:
             # File doesn't exist on disk — access check was not triggered (correct)
             pass
+
+
+@override_settings(MULTI_INSTITUTION_ENABLED=True, DEBUG=False)
+class ProtectedMediaViewProductionModeTest(TestCase):
+    """
+    Regression test for the NDAS-01 fix: in production (DEBUG=False),
+    Nginx must never serve /media/ from disk directly, since that bypasses
+    institution isolation entirely. protected_media_view must instead
+    perform the same authorization check and then hand serving off to
+    Nginx via X-Accel-Redirect, rather than skipping the check.
+    """
+
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.institution_a = Institution.objects.create(
+            name='Hospital A',
+            slug='hospital-a',
+            subscription_status=SubscriptionStatus.ACTIVE,
+        )
+        self.institution_b = Institution.objects.create(
+            name='Hospital B',
+            slug='hospital-b',
+            subscription_status=SubscriptionStatus.ACTIVE,
+        )
+        self.clinician_a = User.objects.create_user(
+            username='clinician_a_prod',
+            password='testpass123',
+            first_name='A',
+            last_name='Clinician',
+            mobile_primary='0771230021',
+            user_type=UserType.USER,
+            institution=self.institution_a,
+        )
+
+    def _make_media_request(self, path, user, institution):
+        request = self.factory.get(f'/media/{path}')
+        request.user = user
+        request.institution = institution
+        return request
+
+    def test_authorized_request_gets_x_accel_redirect_not_raw_bytes(self):
+        """A clinician's own-institution file is authorized, then delegated to
+        Nginx via X-Accel-Redirect — Django never reads the file from disk."""
+        request = self._make_media_request(
+            'hospital-a/videos/assessment.mp4',
+            self.clinician_a,
+            self.institution_a,
+        )
+        response = protected_media_view(request, path='hospital-a/videos/assessment.mp4')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response['X-Accel-Redirect'],
+            '/x-accel-media/hospital-a/videos/assessment.mp4',
+        )
+
+    def test_cross_institution_request_still_blocked_before_x_accel_redirect(self):
+        """The authorization check must still run — and still 403 — before any
+        X-Accel-Redirect is issued, even when Django isn't serving the bytes itself."""
+        request = self._make_media_request(
+            'hospital-b/videos/secret.mp4',
+            self.clinician_a,
+            self.institution_a,
+        )
+        response = protected_media_view(request, path='hospital-b/videos/secret.mp4')
+
+        self.assertEqual(response.status_code, 403)
+        self.assertNotIn('X-Accel-Redirect', response)

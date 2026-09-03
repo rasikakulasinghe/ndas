@@ -70,7 +70,7 @@
                                 class="btn btn-sm btn-outline-info timeline-preview-btn"
                                 data-event-type="{{ event.type }}"
                                 data-event-id="{{ event.detail_url|cut:'/'|last }}"
-                                data-preview='{{ event.preview_data|safe }}'>
+                                data-preview='{{ event.preview_data }}'>
                             <i class="fas fa-eye"></i> Quick Preview
                         </button>
                         {% endif %}

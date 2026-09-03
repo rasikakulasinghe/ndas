@@ -5,6 +5,8 @@ Institution management views for Phase 2 Multi-Institution expansion.
 Implements superadmin network operations (Epic 2) and institution admin self-management (Epic 3).
 """
 import logging
+import mimetypes
+from urllib.parse import quote
 
 from django.conf import settings
 from django.contrib import messages
@@ -12,7 +14,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db import transaction, IntegrityError
 from django.db.models import Count, Max
-from django.http import FileResponse, HttpResponseForbidden
+from django.http import FileResponse, HttpResponse, HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
@@ -906,14 +908,19 @@ def institution_settings(request):
 @login_required(login_url="user-login")
 def protected_media_view(request, path):
     """
-    Serve media files with institution isolation enforcement (development only).
+    Serve media files with institution isolation enforcement.
 
     Institution-partitioned paths (/{slug}/videos/, /{slug}/attachments/, and
     /{slug}/logo/) are restricted to the owning institution's users. SUPERADMIN
     can access any institution's files.
 
-    In production: Nginx handles media serving. An X-Accel-Redirect approach with
-    a Django auth endpoint is recommended for production file isolation.
+    In DEBUG, Django serves the file bytes directly. In production, this view
+    only performs the authorization check above and hands the actual byte
+    serving off to Nginx via X-Accel-Redirect (see DEPLOYMENT.md §2.6 for the
+    required 'internal' Nginx location) — this keeps every /media/ request
+    passing through the check below while still letting Nginx stream the
+    file. Nginx must NEVER `alias` /media/ straight to disk: that bypasses
+    this view, and with it all institution isolation, entirely.
     """
     user_type = getattr(request.user, 'user_type', UserType.USER)
     # request.institution is not populated here: InstitutionContextMiddleware
@@ -937,4 +944,16 @@ def protected_media_view(request, path):
                     "Access denied: this file belongs to another institution."
                 )
 
-    return django_serve_static(request, path, document_root=settings.MEDIA_ROOT)
+    if settings.DEBUG:
+        return django_serve_static(request, path, document_root=settings.MEDIA_ROOT)
+
+    # Production: authorization already passed above. Delegate the actual
+    # file transfer to Nginx's internal 'x-accel-media' location, which is
+    # unreachable from outside except via this header — this is what lets
+    # Nginx (not Django) stream large video files, including Range requests
+    # for video seeking, without re-implementing that in Python.
+    content_type, _encoding = mimetypes.guess_type(path)
+    response = HttpResponse(content_type=content_type or 'application/octet-stream')
+    response['X-Accel-Redirect'] = f'/x-accel-media/{quote(path)}'
+    response['Content-Disposition'] = 'inline'
+    return response

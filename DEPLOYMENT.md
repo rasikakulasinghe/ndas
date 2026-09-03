@@ -353,9 +353,28 @@ server {
         add_header Cache-Control "public, immutable";
     }
 
+    # /media/ holds patient videos, clinical attachments, and profile
+    # pictures. It MUST proxy to Django rather than being aliased straight
+    # to disk — institution.views.protected_media_view is what enforces
+    # that a clinician can only reach files belonging to their own
+    # institution. Aliasing this path serves every patient's files to
+    # anyone who can guess a URL, with no login and no isolation.
     location /media/ {
+        proxy_pass http://ndas_app;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Unreachable directly (no external request can specify this prefix) —
+    # only reachable via the X-Accel-Redirect header that
+    # protected_media_view sets after it has authorized the request above.
+    # This is what lets Nginx stream the actual bytes (including Range
+    # requests for video seeking) once Django has approved access.
+    location /x-accel-media/ {
+        internal;
         alias /var/www/yourdomain.com/media/;
-        expires 7d;
     }
 
     location / {

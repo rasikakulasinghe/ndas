@@ -385,10 +385,89 @@ def validateAttachmentSize(var_uploaded_file):
     return file_size <= max_size
 
 
+# Real (content-sniffed) MIME types accepted per extension for non-video
+# attachments. Mirrors the python-magic check already used for video uploads
+# in video/forms.py — extension alone is not trusted, since a malicious file
+# can simply be renamed to a permitted extension.
+ATTACHMENT_ALLOWED_MIMES = {
+    '.jpg': ['image/jpeg'], '.jpeg': ['image/jpeg'],
+    '.png': ['image/png'],
+    '.gif': ['image/gif'],
+    '.bmp': ['image/bmp', 'image/x-ms-bmp'],
+    '.webp': ['image/webp'],
+    '.pdf': ['application/pdf'],
+    '.doc': ['application/msword'],
+    '.docx': [
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/zip',  # docx is a zip container; some magic DBs report this
+    ],
+    '.txt': ['text/plain'],
+    '.rtf': ['text/rtf', 'application/rtf'],
+    '.odt': ['application/vnd.oasis.opendocument.text', 'application/zip'],
+    '.mp4': ['video/mp4', 'video/x-m4v'],
+    '.mov': ['video/quicktime'],
+    '.avi': ['video/x-msvideo', 'video/avi'],
+    '.mkv': ['video/x-matroska'],
+    '.webm': ['video/webm'],
+}
+
+
+def detect_file_mime(uploaded_file):
+    """
+    Sniff the real MIME type from the first 2KB of file content.
+
+    Returns None (fail-open) if python-magic isn't installed or detection
+    otherwise errors — matching the existing video-upload MIME check.
+    """
+    try:
+        import magic
+    except ImportError:
+        logger.error(
+            "python-magic library not installed. Content-based file validation skipped."
+        )
+        return None
+
+    try:
+        uploaded_file.seek(0)
+        file_header = uploaded_file.read(2048)
+        uploaded_file.seek(0)
+        return magic.Magic(mime=True).from_buffer(file_header)
+    except Exception as e:
+        logger.error(f"Error detecting file MIME type for '{uploaded_file.name}': {e}")
+        return None
+
+
+def validate_file_content_matches_extension(uploaded_file, extension):
+    """
+    Confirm the uploaded file's real content type matches its extension.
+
+    Returns True when detection can't run (no magic DB entry for this
+    extension, or python-magic unavailable/erroring) so this never blocks
+    uploads on infrastructure gaps — only on a confirmed mismatch.
+    """
+    allowed_mimes = ATTACHMENT_ALLOWED_MIMES.get(extension)
+    if not allowed_mimes:
+        return True
+
+    detected = detect_file_mime(uploaded_file)
+    if detected is None:
+        return True
+
+    if detected not in allowed_mimes:
+        logger.warning(
+            f"File content/extension mismatch for '{uploaded_file.name}': "
+            f"extension '{extension}' but detected content type '{detected}'"
+        )
+        return False
+
+    return True
+
+
 def validateAttachmentType(var_uploaded_file):
     """
     Validate attachment file type.
-    Uses settings-based allowed extensions for all attachment types.
+    Uses settings-based allowed extensions for all attachment types, then
+    verifies the file's actual content matches that extension.
     """
     from django.conf import settings
 
@@ -408,7 +487,10 @@ def validateAttachmentType(var_uploaded_file):
                       '.mp4', '.mov', '.avi', '.mkv', '.webm',
                       '.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt']
 
-    return extension in all_allowed
+    if extension not in all_allowed:
+        return False
+
+    return validate_file_content_matches_extension(var_uploaded_file, extension)
 
 
 # New Django Model Validators for NDAS System
@@ -566,6 +648,14 @@ def validate_attachment_file(value):
     if ext not in all_allowed_extensions:
         raise ValidationError(
             f"Unsupported file format. Allowed formats: {', '.join(all_allowed_extensions)}"
+        )
+
+    # Verify the file's actual content matches its extension (not just the
+    # filename) — see validate_file_content_matches_extension().
+    if not validate_file_content_matches_extension(value, ext):
+        raise ValidationError(
+            "File content does not match its extension. The file may be "
+            "corrupted or mislabeled."
         )
 
     # Check file size (use largest allowed size)

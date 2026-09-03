@@ -21,10 +21,13 @@ urlpatterns = [
     path("debug/bootstrap/", views.debug_bootstrap, name="debug-bootstrap"),
 ]
 
-if settings.DEBUG:
-    urlpatterns += [
-        path('media/<path:path>', protected_media_view, name='protected-media'),
-    ]
+# Always routed through Django, in DEBUG and in production alike — this is
+# what enforces institution isolation on patient videos/attachments/logos.
+# Nginx must proxy_pass /media/ here rather than aliasing it to disk; see
+# institution.views.protected_media_view and DEPLOYMENT.md §2.6.
+urlpatterns += [
+    path('media/<path:path>', protected_media_view, name='protected-media'),
+]
 
 # Custom error handlers
 handler404 = "ndas.views.handler404"

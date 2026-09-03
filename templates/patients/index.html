@@ -297,6 +297,13 @@
         new Chart(ctx, {
           type: 'bar',
           data: {
+            {% comment %}
+              labels/data are server-formatted month strings ("Jan 2026") and
+              integer counts (custom_methods.get_admissions_data_barchart) —
+              never user-entered text, so |safe here doesn't expose free-text
+              XSS. Kept as-is rather than escapejs'd per-item to preserve the
+              JS array/number literal syntax.
+            {% endcomment %}
             labels: {{ bar_chart_monthly_admissions.labels|safe }},
             datasets: [{
               label: 'Admissions',
@@ -325,10 +332,10 @@
           type: 'pie',
           
           data: {
-            labels: [{% for key in diagnosis_data_gma %}"{{ key|safe }}", {% endfor %}],
+            labels: [{% for key in diagnosis_data_gma %}"{{ key|escapejs }}", {% endfor %}],
             datasets: [{
               label: 'Diagnosis',
-              data: [{% for value in diagnosis_data_gma.values %}{{ value|safe }}, {% endfor %}],
+              data: [{% for value in diagnosis_data_gma.values %}{{ value }}, {% endfor %}],
               borderWidth: 1
             }]
 
@@ -355,10 +362,10 @@
         type: 'pie',
         
         data: {
-          labels: [{% for key in diagnosis_data_all %}"{{ key|safe }}", {% endfor %}],
+          labels: [{% for key in diagnosis_data_all %}"{{ key|escapejs }}", {% endfor %}],
           datasets: [{
             label: 'Diagnosis',
-            data: [{% for value in diagnosis_data_all.values %}{{ value|safe }}, {% endfor %}],
+            data: [{% for value in diagnosis_data_all.values %}{{ value }}, {% endfor %}],
             borderWidth: 1
           }]
 
