@@ -595,8 +595,16 @@ def admin_dashboard(request):
 
 @admin_required
 def admin_user_list(request):
-    """Admin view to list all users with search and filtering."""
+    """Admin view to list all users with search and filtering.
+
+    The institution filter field and the Institution table column are
+    superuser-only: non-superuser admins are always scoped to their own
+    institution's users, so filtering/displaying by institution would be a
+    no-op for them.
+    """
     form = UserSearchForm(request.GET)
+    if not request.user.is_superuser:
+        del form.fields['institution']
     _inst = getattr(request, 'institution', None)
     if request.user.is_superuser:
         users = CustomUser.objects.all().order_by('-date_joined')
@@ -633,12 +641,20 @@ def admin_user_list(request):
             users = users.filter(is_staff=True)
         elif is_staff == 'false':
             users = users.filter(is_staff=False)
-    
+
+        if request.user.is_superuser:
+            institution_filter = form.cleaned_data.get('institution')
+            if institution_filter:
+                users = users.filter(institution=institution_filter)
+
+    if request.user.is_superuser:
+        users = users.select_related('institution')
+
     # Pagination
     paginator = Paginator(users, 25)  # Show 25 users per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
+
     context = {
         'page_obj': page_obj,
         'form': form,

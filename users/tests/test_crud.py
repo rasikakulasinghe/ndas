@@ -203,3 +203,55 @@ class AdminUserManagementTest(UserTestBase):
         data = json.loads(response.content)
         self.assertFalse(data.get('success'))
         self.assertEqual(data.get('error'), 'Not found')
+
+
+@STATIC_OVERRIDE
+class AdminUserListInstitutionFilterTest(UserTestBase):
+    """admin_user_list's institution filter/column is superuser-only."""
+
+    def setUp(self):
+        super().setUp()
+        from institution.models import Institution
+        self.inst_a = Institution.objects.create(name='Inst Alpha', slug='inst-alpha')
+        self.inst_b = Institution.objects.create(name='Inst Beta', slug='inst-beta')
+        self.user_a = User.objects.create_user(
+            username='user_a', password=self.PASSWORD, email='user_a@test.com',
+            institution=self.inst_a,
+        )
+        self.user_b = User.objects.create_user(
+            username='user_b', password=self.PASSWORD, email='user_b@test.com',
+            institution=self.inst_b,
+        )
+
+    def test_superuser_can_filter_by_institution(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(reverse('admin-user-list'), {'institution': self.inst_a.pk})
+        self.assertEqual(response.status_code, 200)
+        page_users = list(response.context['page_obj'])
+        self.assertIn(self.user_a, page_users)
+        self.assertNotIn(self.user_b, page_users)
+
+    def test_superuser_no_filter_sees_all_institutions(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(reverse('admin-user-list'))
+        page_users = list(response.context['page_obj'])
+        self.assertIn(self.user_a, page_users)
+        self.assertIn(self.user_b, page_users)
+        self.assertContains(response, 'Institution')
+
+    def test_institution_filter_field_hidden_for_non_superuser_staff(self):
+        self.client.force_login(self.staff_user)
+        response = self.client.get(reverse('admin-user-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn('institution', response.context['form'].fields)
+
+    def test_institution_query_param_ignored_for_non_superuser_staff(self):
+        # staff_user has no institution assigned, so admin_user_list scopes
+        # them to CustomUser.objects.none(); passing ?institution must not
+        # error and must not leak cross-institution users.
+        self.client.force_login(self.staff_user)
+        response = self.client.get(reverse('admin-user-list'), {'institution': self.inst_a.pk})
+        self.assertEqual(response.status_code, 200)
+        page_users = list(response.context['page_obj'])
+        self.assertNotIn(self.user_a, page_users)
+        self.assertNotIn(self.user_b, page_users)

@@ -130,3 +130,19 @@
 - source_spec: none
   summary: Bookmark.get_bookmarked_object_url() (patients/models.py ~2378-2403) is unused dead code (no call sites anywhere in the repo) and, independent of that, is itself broken for 5 of its 8 mapped types — it maps "Video" to url name "file-view" (does not exist; the real name is the namespaced "video:view"), and passes kwargs={"pk": object_id} for HINE/DA/CDICR/GPA whose actual url patterns use hine_id/da_id/cdic_id/gpa_id, not pk. Every one of these mismatches is silently swallowed by the method's own `except NoReverseMatch` and returns None.
   evidence: Found while fixing the sibling bookmark_view routing bug (see entry immediately above) — considered reusing this helper instead of templates/bookmark/view.html's own per-type `{% url %}` tags, but the helper turned out to be both unused and broken. If this method is ever wired up (e.g. as a "quick jump" link elsewhere), it needs the same per-type kwarg-name fix already reflected correctly in templates/bookmark/view.html, plus either deletion (if truly dead) or a decision on where it should be called from.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-admin-user-manager-institution-filter-column.md`
+  summary: admin_user_list's UserSearchForm silently drops ALL filters (search/position/is_active/is_staff/institution) when any single field fails validation (e.g. a stale/deleted institution pk in the URL), reverting to the unfiltered list with no error shown to the admin
+  evidence: Raised by this spec's blind-hunter review layer. Pre-existing behavior of the `if form.is_valid():` gate (present before this spec touched the view) — adding the institution field just gives it one more way to be triggered. The template never renders `form.errors`/`form.non_field_errors`. Fixing this well means either per-field independent validation or surfacing form errors in the template — out of scope for this narrow feature addition.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-admin-user-manager-institution-filter-column.md`
+  summary: templates/users/admin/user_list.html's pagination links interpolate `request.GET.<field>` raw into `href` for each known filter field instead of using `{{ request.GET.urlencode }}`; the new institution param was added following that same pre-existing pattern
+  evidence: Raised by this spec's blind-hunter review layer. Pre-existing pattern used by all four original filter fields (search/position/is_active/is_staff), not introduced by this spec — switching to `urlencode` would be a template-wide refactor of all pagination links, more than this narrow feature addition warrants.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-admin-user-manager-institution-filter-column.md`
+  summary: The institution filter is a plain `<select>` listing every active Institution with no search/typeahead, and the "Showing X to Y of Z users" results summary doesn't indicate when an institution filter is currently applied
+  evidence: Raised by this spec's blind-hunter review layer as UX enhancements. Fine at current/expected institution counts (~10-20 per the PRD's Phase 2 target); worth revisiting if the institution list grows large enough to make the dropdown unwieldy.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-admin-user-manager-institution-filter-column.md`
+  summary: templates/users/admin/user_list.html's filter `<form>` uses Bootstrap 5's `row g-3` gutter class, which doesn't exist in Bootstrap 4.6 (the stack mandated by CLAUDE.md); gutter spacing between filter fields silently falls back to no gutter
+  evidence: Raised by this spec's blind-hunter review layer. Pre-existing on this exact line before this spec touched the surrounding column widths — not introduced by this change, but worth a one-line class fix (e.g. `form-row`, the Bootstrap 4 equivalent) next time this template is touched.

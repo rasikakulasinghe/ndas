@@ -1,6 +1,7 @@
 from django import forms
 from ndas.custom_codes.choice import POSSITION, SUBSCRIPTION_TYPE_CHOICES, SUBSCRIPTION_STATUS_CHOICES
 from users.models import CustomUser, Subscription
+from institution.models import Institution
 from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm, PasswordChangeForm
 from datetime import date, timedelta
 from ndas.custom_codes.sanitization import (
@@ -523,6 +524,12 @@ class UserSearchForm(forms.Form):
     is_staff = forms.ChoiceField(
         required=False,
         choices=[('', 'All Types'), ('true', 'Staff'), ('false', 'Regular Users')],
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    institution = forms.ModelChoiceField(
+        required=False,
+        queryset=Institution.objects.filter(is_active=True).order_by('name'),
+        empty_label='All Institutions',
         widget=forms.Select(attrs={'class': 'form-control'})
     )
 
