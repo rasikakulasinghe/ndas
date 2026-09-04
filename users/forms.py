@@ -1,4 +1,5 @@
 from django import forms
+from django.db.models import Q
 from ndas.custom_codes.choice import POSSITION, SUBSCRIPTION_TYPE_CHOICES, SUBSCRIPTION_STATUS_CHOICES
 from users.models import CustomUser, Subscription
 from institution.models import Institution
@@ -422,13 +423,19 @@ class AdminUserCreationForm(forms.ModelForm):
         help_text="Enter the same password as before, for verification."
     )
     
+    institution = forms.ModelChoiceField(
+        required=False,
+        queryset=Institution.objects.filter(is_active=True).order_by('name'),
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
     class Meta:
         model = CustomUser
         fields = [
             'username', 'first_name', 'last_name', 'email', 'position',
             'mobile_primary', 'mobile_secondary', 'landline_primary', 'landline_secondary',
             'home_address', 'station_address', 'profile_picture',
-            'is_active', 'is_staff', 'additional_notes'
+            'is_active', 'is_staff', 'additional_notes', 'institution'
         ]
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
@@ -446,7 +453,7 @@ class AdminUserCreationForm(forms.ModelForm):
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_staff': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
-    
+
     def clean_password2(self):
         password1 = self.cleaned_data.get("password1")
         password2 = self.cleaned_data.get("password2")
@@ -471,6 +478,12 @@ class AdminUserCreationForm(forms.ModelForm):
 class AdminUserEditForm(forms.ModelForm):
     """Admin form for editing existing users."""
 
+    institution = forms.ModelChoiceField(
+        required=False,
+        queryset=Institution.objects.filter(is_active=True).order_by('name'),
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
     class Meta:
         model = CustomUser
         fields = [
@@ -478,7 +491,7 @@ class AdminUserEditForm(forms.ModelForm):
             'mobile_primary', 'mobile_secondary', 'landline_primary', 'landline_secondary',
             'home_address', 'station_address', 'profile_picture',
             'is_active', 'is_staff', 'is_email_verified',
-            'additional_notes'
+            'additional_notes', 'institution'
         ]
         widgets = {
             'username': forms.TextInput(attrs={
@@ -500,6 +513,19 @@ class AdminUserEditForm(forms.ModelForm):
             'is_staff': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_email_verified': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Widen the institution queryset so the target user's current
+        # institution is always a valid choice, even if it has since been
+        # deactivated — otherwise an unrelated field edit would silently
+        # default the <select> to the alphabetically-first active
+        # institution and reassign the user.
+        instance = getattr(self, 'instance', None)
+        if instance is not None and instance.pk and instance.institution_id:
+            self.fields['institution'].queryset = Institution.objects.filter(
+                Q(is_active=True) | Q(pk=instance.institution_id)
+            ).order_by('name')
 
 
 class UserSearchForm(forms.Form):

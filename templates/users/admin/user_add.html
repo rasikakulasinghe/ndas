@@ -219,9 +219,22 @@
                                 </div>
                             </div>
                         </div>
+                        {% if request.user.is_superuser %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mt-3">
+                                    <label for="{{ form.institution.id_for_label }}">Institution</label>
+                                    {{ form.institution }}
+                                    {% if form.institution.errors %}
+                                        <div class="invalid-feedback d-block">{{ form.institution.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
-                
+
                 <!-- Additional Notes -->
                 <div class="card mb-3">
                     <div class="card-header bg-light">

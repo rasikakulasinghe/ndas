@@ -146,3 +146,15 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-admin-user-manager-institution-filter-column.md`
   summary: templates/users/admin/user_list.html's filter `<form>` uses Bootstrap 5's `row g-3` gutter class, which doesn't exist in Bootstrap 4.6 (the stack mandated by CLAUDE.md); gutter spacing between filter fields silently falls back to no gutter
   evidence: Raised by this spec's blind-hunter review layer. Pre-existing on this exact line before this spec touched the surrounding column widths — not introduced by this change, but worth a one-line class fix (e.g. `form-row`, the Bootstrap 4 equivalent) next time this template is touched.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-admin-user-add-edit-institution-scoping.md`
+  summary: A superuser reassigning a user's institution via admin_user_edit leaves no trace in UserActivityLog — the view's change-tracking only records is_active/is_staff transitions, unlike every other security-relevant field this spec touches
+  evidence: Raised by this spec's blind-hunter review layer (round 2). Institution reassignment is arguably the most security-relevant field added by this spec (it changes which patient records a user can reach), yet admin_user_edit's `original_data`/`changes` list was never extended to cover it. Out of scope for this narrow field-addition spec — would need its own small follow-up extending the existing change-tracking block.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-admin-user-add-edit-institution-scoping.md`
+  summary: admin_user_add's bare `except Exception as e: messages.error(request, f'Error creating user: {str(e)}')` has no server-side logger call, so a failure in the new institution-assignment branch (e.g. an FK/DB error) is only ever surfaced as an opaque flash message with nothing in the logs to diagnose it
+  evidence: Raised by this spec's blind-hunter review layer (round 2). Pre-existing gap in this exact except block before this spec touched it (it already swallowed every other creation failure the same way) — this spec's new institution-assignment code just inherits it. Worth a `logger.exception()` call next time this view's error handling is touched.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-admin-user-add-edit-institution-scoping.md`
+  summary: The `if not request.user.is_superuser: del form.fields['institution']` gating is duplicated 4x across admin_user_add (GET+POST) and admin_user_edit (GET+POST) with no shared helper, and the institution `<select>` template block is duplicated verbatim across user_add.html/user_edit.html with no shared partial
+  evidence: Raised by this spec's blind-hunter review layer (rounds 1 and 2). Both are easy to miss when a future admin view needs the same superuser-only-field pattern, or when the field's label/help-text/layout needs to change. A small shared helper (views) and template include (markup) would remove the duplication, but extracting them is a refactor beyond this narrow feature-addition spec's scope.

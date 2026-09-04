@@ -12,6 +12,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.conf import settings
 from datetime import date
 from django_ratelimit.decorators import ratelimit
 from django_ratelimit.core import is_ratelimited
@@ -555,6 +556,7 @@ def get_user_activity_api(request):
 # Admin User Management Views
 from .decorators import admin_required, superuser_required
 from .forms import AdminUserCreationForm, AdminUserEditForm, UserSearchForm
+from institution.models import Institution
 from datetime import datetime, timedelta
 
 
@@ -666,21 +668,51 @@ def admin_user_list(request):
 
 @admin_required
 def admin_user_add(request):
-    """Admin view to add new users."""
+    """Admin view to add new users.
+
+    Institution field is superuser-only (mirrors UserSearchForm/admin_user_list):
+    a non-superuser staff admin never sees or controls it — the new user's
+    institution is force-assigned to the staff admin's own institution
+    (request.institution), ignoring any forged POST value, since the field
+    isn't in form.fields for them at all.
+    """
+    is_superuser = request.user.is_superuser
+
     if request.method == 'POST':
         form = AdminUserCreationForm(request.POST, request.FILES)
+        if not is_superuser:
+            del form.fields['institution']
         if form.is_valid():
             try:
-                user = form.save()
-                
+                if is_superuser:
+                    user = form.save()
+                else:
+                    # Phase 2 (MULTI_INSTITUTION_ENABLED=True): a staff admin
+                    # with no institution assigned yet cannot create users —
+                    # bail with no state change. Phase 1
+                    # (MULTI_INSTITUTION_ENABLED=False): request.institution
+                    # is never resolved for anyone, so proceed and create the
+                    # user with institution=None, matching pre-spec behavior.
+                    if settings.MULTI_INSTITUTION_ENABLED and getattr(request, 'institution', None) is None:
+                        messages.error(
+                            request,
+                            'Your account has no institution assigned. '
+                            'Contact a superuser before adding users.'
+                        )
+                        return render(request, 'users/admin/user_add.html', {'form': form})
+
+                    user = form.save(commit=False)
+                    user.institution = getattr(request, 'institution', None)
+                    user.save()
+
                 # Log admin action
                 log_user_activity(
-                    request, 
-                    request.user, 
+                    request,
+                    request.user,
                     UserActivityLog.LOGIN_SUCCESS,
                     failed_reason=f"Admin action: Created user: {user.username}"
                 )
-                
+
                 messages.success(request, f'User "{user.username}" created successfully!')
                 return redirect('admin-user-list')
             except Exception as e:
@@ -689,7 +721,13 @@ def admin_user_add(request):
             messages.error(request, 'Please correct the errors below.')
     else:
         form = AdminUserCreationForm()
-    
+        if not is_superuser:
+            del form.fields['institution']
+        else:
+            form.fields['institution'].initial = Institution.objects.filter(
+                slug=settings.DEFAULT_INSTITUTION_SLUG, is_active=True
+            ).first()
+
     return render(request, 'users/admin/user_add.html', {'form': form})
 
 
@@ -697,9 +735,11 @@ def admin_user_add(request):
 def admin_user_edit(request, pk):
     """Admin view to edit existing users."""
     user = get_institution_scoped_user_or_404(request, pk=pk)
-    
+
     if request.method == 'POST':
         form = AdminUserEditForm(request.POST, request.FILES, instance=user)
+        if not request.user.is_superuser:
+            del form.fields['institution']
         if form.is_valid():
             try:
                 original_data = {
@@ -739,7 +779,9 @@ def admin_user_edit(request, pk):
             messages.error(request, 'Please correct the errors below.')
     else:
         form = AdminUserEditForm(instance=user)
-    
+        if not request.user.is_superuser:
+            del form.fields['institution']
+
     return render(request, 'users/admin/user_edit.html', {
         'form': form,
         'user_obj': user
