@@ -4,6 +4,7 @@ staticfiles/
 
 # Secrets - never commit
 .env
+.env_backups/
 
 # Playwright
 node_modules/

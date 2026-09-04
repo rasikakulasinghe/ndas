@@ -4,62 +4,6 @@ This guide explains how to configure NDAS for different deployment scenarios usi
 
 ## Quick Start
 
-### Switching Modes (Recommended)
-
-From the project root, run `scripts/switch_env.py` with a mode name. It backs up
-your current `.env` (timestamped, under `.env_backups/`, never silently
-discarded), then copies the matching template from `env files/` over `.env`.
-Its printed output reports the mode switched to, the template file used, and
-where the backup was written -- it does not print a value-level diff of what
-changed inside `.env`:
-
-```powershell
-# PowerShell
-python scripts\switch_env.py development
-python scripts\switch_env.py production
-python scripts\switch_env.py production-postgresql
-```
-
-```bash
-# Bash
-python scripts/switch_env.py development
-python scripts/switch_env.py production
-python scripts/switch_env.py production-postgresql
-```
-
-| CLI mode | Template used | Use Case |
-|----------|---------------|----------|
-| `development` | `.env.development.example` | Local development (SQLite, DEBUG=True) |
-| `production` | `.env.production.example` | cPanel/shared hosting (SQLite) |
-| `production-postgresql` | `.env.production.postgresql.example` | VPS/Cloud hosting (PostgreSQL) |
-
-Switching to a production mode prints a reminder to review production-specific
-values (`SECRET_KEY`, `DB_PASSWORD`, `EMAIL_HOST_PASSWORD`, `ALLOWED_HOSTS`) --
-not all of these are secrets, but the script never fills any of them in for
-you. Switching to `production-postgresql` also prints a reminder to run
-`python manage.py migrate` against the new database, since swapping `.env`
-alone does not create or update its schema. If no `.env` exists yet, the
-script skips the backup step and creates one from the template. An unknown
-mode (or no mode) prints usage and the valid mode list, exits non-zero, and
-leaves `.env` untouched.
-
-Run `python scripts/switch_env.py --help` for the full mode mapping.
-
-**Restart required:** switching `.env` while `python manage.py runserver` (or
-any other Django process) is already running has no effect on it until you
-restart that process -- Django/`python-decouple` read `.env` once at process
-start, not on each request.
-
-**Restoring a backup:** to undo a switch, copy the file you want back from
-`.env_backups/` over `.env` (e.g. `cp .env_backups\.env.<timestamp>.bak .env`).
-
-**Backup contents are plaintext:** files under `.env_backups/` are exact
-copies of whatever was in your old `.env`, including any real secrets once
-this is run against a live deployment. The folder is git-ignored but not
-otherwise protected -- secure it or clear it out periodically.
-
-### Manual Setup (Fallback)
-
 **Choose your deployment scenario:**
 
 1. **Local Development**

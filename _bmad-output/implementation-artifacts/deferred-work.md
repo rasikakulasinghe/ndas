@@ -158,3 +158,15 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-admin-user-add-edit-institution-scoping.md`
   summary: The `if not request.user.is_superuser: del form.fields['institution']` gating is duplicated 4x across admin_user_add (GET+POST) and admin_user_edit (GET+POST) with no shared helper, and the institution `<select>` template block is duplicated verbatim across user_add.html/user_edit.html with no shared partial
   evidence: Raised by this spec's blind-hunter review layer (rounds 1 and 2). Both are easy to miss when a future admin view needs the same superuser-only-field pattern, or when the field's label/help-text/layout needs to change. A small shared helper (views) and template include (markup) would remove the duplication, but extracting them is a refactor beyond this narrow feature-addition spec's scope.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-switch-env-command.md`
+  summary: scripts/switch_env.py has no restore/rollback subcommand and .env_backups/ backups are never pruned or rotated — they accumulate indefinitely with only a manual "copy the file back" recovery path
+  evidence: Raised by the blind-hunter review layer. The script's core safety guarantee (never silently discard the old `.env`) is satisfied by the backup step alone; a documented manual-restore line was added to the README as a cheap patch, but a real `switch_env.py restore <backup>` subcommand and/or a retention policy (e.g. keep last N) would need their own small design decision on UX and defaults — out of scope for the narrow "one command to switch modes" ask.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-switch-env-command.md`
+  summary: scripts/switch_env.py has no idempotency check (re-running the same mode still creates a fresh backup and rewrites .env with no "nothing changed" message) and no dry-run/preview option (no way to see which template would apply, or diff it against the current .env, before committing)
+  evidence: Raised by the blind-hunter review layer. Both are UX niceties beyond the spec's stated intent (switch + back up + document); the backup step already makes every switch safely reversible, so these aren't correctness gaps, just possible future convenience additions worth a product decision on whether they're worth the added complexity.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-switch-env-command.md`
+  summary: scripts/switch_env.py performs no confirmation prompt before switching to a production mode — a mistyped or accidental invocation immediately overwrites the working .env with template placeholder values
+  evidence: Raised by the blind-hunter review layer. The spec explicitly anticipated no "Ask First" gates for this additive tooling, and the backup step already makes the action recoverable, so this wasn't treated as a spec gap — but an interactive y/N confirmation (or a --yes flag to opt out for scripted use) is a reasonable safety addition worth a human decision on whether the added friction is wanted, especially given this script can run against a live deployment's real .env.
