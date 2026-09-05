@@ -1,4 +1,4 @@
-﻿amqp==5.3.1
+amqp==5.3.1
 asgiref==3.11.0
 autopep8==2.0.2
 billiard==4.2.1
@@ -47,7 +47,11 @@ python-dateutil==2.8.2
 python-decouple==3.8
 python-dotenv==1.1.1
 python-magic==0.4.27
-python-magic-bin==0.4.14
+# Windows/macOS-only wheel that bundles libmagic -- no Linux distribution exists,
+# so pip install -r requirements.txt aborts entirely on cPanel/Linux hosting
+# unless this is scoped to Windows. Linux relies on python-magic above talking
+# to the system libmagic instead.
+python-magic-bin==0.4.14; sys_platform == "win32"
 pytz==2022.7.1
 PyYAML==6.0.2
 reportlab==4.4.3

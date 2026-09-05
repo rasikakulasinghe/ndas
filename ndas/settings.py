@@ -129,8 +129,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Internationalization
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'Asia/Kolkata'
+LANGUAGE_CODE = config('LANGUAGE_CODE', default='en-us')
+TIME_ZONE = config('TIME_ZONE', default='Asia/Colombo')
 USE_I18N = True
 USE_TZ = True
 
@@ -210,6 +210,11 @@ ADMIN_SITE_TITLE = "NDAs"
 ADMIN_INDEX_TITLE = "Welcome to NDAs"
 
 # Logging configuration
+# LOG_LEVEL is independent of DEBUG so a public site (e.g. demo.ndas.lk) can run
+# DEBUG=False (no stack traces/source shown to visitors) while still writing
+# verbose DEBUG-level detail to logs/django.log for troubleshooting.
+LOG_LEVEL = config('LOG_LEVEL', default='DEBUG' if DEBUG else 'INFO').upper()
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -230,7 +235,7 @@ LOGGING = {
     },
     'handlers': {
         'file': {
-            'level': 'INFO' if not DEBUG else 'DEBUG',
+            'level': LOG_LEVEL,
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': BASE_DIR / 'logs' / 'django.log',
             'maxBytes': 1024*1024*15,  # 15MB
@@ -247,7 +252,7 @@ LOGGING = {
             'filters': ['require_debug_false'],
         },
         'console': {
-            'level': 'INFO',
+            'level': LOG_LEVEL,
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
@@ -255,7 +260,7 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['file', 'console'] if DEBUG else ['file'],
-            'level': 'INFO',
+            'level': LOG_LEVEL,
             'propagate': True,
         },
         'django.security': {
