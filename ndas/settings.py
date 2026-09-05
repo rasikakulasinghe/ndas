@@ -34,7 +34,6 @@ INSTALLED_APPS = [
     'video.apps.VideoConfig',
     'reports.apps.ReportsConfig',
     'problemlist.apps.ProblemlistConfig',
-    'ckeditor',
 ]
 
 MIDDLEWARE = [

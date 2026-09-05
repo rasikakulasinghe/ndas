@@ -43,6 +43,42 @@ Choose the deployment option that best fits your infrastructure:
 
 ## Option 1: cPanel/Shared Hosting (SQLite)
 
+### 1.0 Two Domains, One Hosting Account (demo.ndas.lk + ndas.lk)
+
+When both a demo and a live site share one cPanel account, give each domain
+its own **application root** (its own code checkout, its own cPanel "Python
+App", its own venv) rather than pointing both domains at one checkout:
+
+```
+/home/YOUR_CPANEL_USERNAME/
+  |-- ndas-demo/            # cPanel Python App root for demo.ndas.lk
+  |   |-- .env               (from env files/.env.production.demo.example)
+  |   |-- passenger_wsgi.py  (from passenger_wsgi.py.example)
+  |   `-- db.sqlite3
+  |-- ndas-live/            # cPanel Python App root for ndas.lk
+  |   |-- .env               (from env files/.env.production.live.example)
+  |   |-- passenger_wsgi.py  (from passenger_wsgi.py.example)
+  |   `-- db.sqlite3
+  `-- public_html/
+      |-- demo.ndas.lk/{static,media}/
+      `-- ndas.lk/{static,media}/
+```
+
+Each app root is a full copy of this repo. Inside each one:
+
+```bash
+python scripts/switch_env.py production-demo   # inside ndas-demo/
+python scripts/switch_env.py production-live   # inside ndas-live/
+```
+
+This copies the matching template (`env files/.env.production.demo.example`
+or `.env.production.live.example`) over that app root's own `.env`, backing
+up whatever was there first. Because the two app roots are separate
+directories, their `.env`, `db.sqlite3`, and `passenger_wsgi.py` never
+collide -- switching one never touches the other. Give each domain its own
+`SECRET_KEY` and email account (the templates leave these as placeholders on
+purpose; the script never fills them in).
+
 ### 1.1 Prepare Environment
 
 ```bash
@@ -134,25 +170,12 @@ chmod -R 755 logs
 
 ### 1.6 Create Passenger WSGI
 
-Create `passenger_wsgi.py` in your application root:
-
-```python
-import sys
-import os
-
-# Add application directory to path
-INTERP = os.path.join(os.environ['HOME'], 'virtualenv', 'ndas', '3.9', 'bin', 'python3')
-if sys.executable != INTERP:
-    os.execl(INTERP, INTERP, *sys.argv)
-
-# Setup paths
-sys.path.insert(0, os.path.dirname(__file__))
-os.environ['DJANGO_SETTINGS_MODULE'] = 'ndas.settings'
-
-# Import Django application
-from django.core.wsgi import get_wsgi_application
-application = get_wsgi_application()
-```
+Copy `passenger_wsgi.py.example` (repo root) to `passenger_wsgi.py` in
+**this app root**, and set `INTERP` to the venv path cPanel's "Setup Python
+App" page shows for this specific app (each domain's app root has its own
+venv path -- do not reuse another domain's). A missing `passenger_wsgi.py`,
+or one pointing at a venv path that doesn't exist, is one of the most common
+causes of a 500 error with no application-level log output on cPanel.
 
 ### 1.7 Setup SSL Certificate
 
@@ -509,6 +532,14 @@ ls -la /var/www/yourdomain.com
 # Restart service
 sudo systemctl restart ndas
 ```
+
+On cPanel Passenger hosting specifically, a 500 with nothing in
+`logs/django.log` usually means the WSGI layer never reached Django at all.
+Check, in order:
+1. `passenger_wsgi.py` exists in this app root (see [1.6](#16-create-passenger-wsgi)) and its `INTERP` path is this app's actual venv, not another app's.
+2. `.env` exists in this app root and was switched to the right profile (`python scripts/switch_env.py production-demo` or `production-live`) -- settings.py has no fallback for a missing `SECRET_KEY`.
+3. `ALLOWED_HOSTS` in `.env` exactly matches the domain being requested (`demo.ndas.lk` vs `ndas.lk` -- a mismatch here is a 400, not always a 500, but check it anyway).
+4. cPanel's "Setup Python App" page for this domain shows the app as running, and its "Application root" matches where `passenger_wsgi.py` actually lives.
 
 **Static files not loading**
 ```bash

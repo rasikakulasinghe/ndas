@@ -13,6 +13,13 @@ Modes (CLI arg uses hyphens; template filenames use dots -- mapping below):
     development            -> env files/.env.development.example
     production             -> env files/.env.production.example
     production-postgresql  -> env files/.env.production.postgresql.example
+    production-demo        -> env files/.env.production.demo.example (demo.ndas.lk)
+    production-live        -> env files/.env.production.live.example (ndas.lk)
+
+production-demo and production-live are separate profiles for two domains
+hosted under the same shared-hosting account but in SEPARATE application
+roots (separate checkouts/venvs) -- run this script from within each app
+root to switch that root's own .env.
 
 This is a plain stdlib script, not a Django management command: settings.py
 reads SECRET_KEY (and, when DB_ENGINE is set, the DB_* vars) via
@@ -38,7 +45,19 @@ MODE_TEMPLATES = {
     'development': '.env.development.example',
     'production': '.env.production.example',
     'production-postgresql': '.env.production.postgresql.example',
+    'production-demo': '.env.production.demo.example',
+    'production-live': '.env.production.live.example',
 }
+
+# Modes that point at a real production deployment (as opposed to
+# development). Used to decide when to print the production review/reminder
+# banners below -- keep in sync with MODE_TEMPLATES.
+PRODUCTION_MODES = (
+    'production',
+    'production-postgresql',
+    'production-demo',
+    'production-live',
+)
 
 # Values the templates deliberately leave as placeholders/defaults, and that
 # this script must never auto-fill. Not all of these are secrets (e.g.
@@ -64,6 +83,8 @@ def build_parser():
             '  development            -> env files/.env.development.example\n'
             '  production             -> env files/.env.production.example\n'
             '  production-postgresql  -> env files/.env.production.postgresql.example\n'
+            '  production-demo        -> env files/.env.production.demo.example (demo.ndas.lk)\n'
+            '  production-live        -> env files/.env.production.live.example (ndas.lk)\n'
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -162,7 +183,7 @@ def switch_env(mode):
     else:
         print('  No existing .env found -- created a new one (no backup needed).')
 
-    if mode in ('production', 'production-postgresql'):
+    if mode in PRODUCTION_MODES:
         print('')
         print('REMINDER: review these production values before deploying --')
         print('the template leaves them as placeholders/defaults, never auto-filled by this script:')
