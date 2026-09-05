@@ -14,7 +14,7 @@ import os
 
 # Point this at the virtualenv cPanel created for THIS app (Setup Python App
 # page shows the exact path -- it differs per domain/app root).
-INTERP = os.path.join(os.environ['HOME'], 'virtualenv', 'ndas-CHANGE-ME', '3.11', 'bin', 'python3')
+INTERP = os.path.join(os.environ['HOME'], 'virtualenv', 'www.demo.ndas.lk', '3.8', 'bin', 'python3')
 if sys.executable != INTERP:
     os.execl(INTERP, INTERP, *sys.argv)
 

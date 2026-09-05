@@ -50,7 +50,7 @@ its own **application root** (its own code checkout, its own cPanel "Python
 App", its own venv) rather than pointing both domains at one checkout:
 
 ```
-/home/YOUR_CPANEL_USERNAME/
+/home/rasikakulasinghe/
   |-- ndas-demo/            # cPanel Python App root for demo.ndas.lk
   |   |-- .env               (from env files/.env.production.demo.example)
   |   |-- passenger_wsgi.py  (from passenger_wsgi.py.example)
@@ -170,12 +170,22 @@ chmod -R 755 logs
 
 ### 1.6 Create Passenger WSGI
 
-Copy `passenger_wsgi.py.example` (repo root) to `passenger_wsgi.py` in
-**this app root**, and set `INTERP` to the venv path cPanel's "Setup Python
-App" page shows for this specific app (each domain's app root has its own
-venv path -- do not reuse another domain's). A missing `passenger_wsgi.py`,
-or one pointing at a venv path that doesn't exist, is one of the most common
-causes of a 500 error with no application-level log output on cPanel.
+Running `python scripts/switch_env.py production-demo` (or
+`production-live`) now also generates `passenger_wsgi.py` in this app root
+from `passenger_wsgi.py.example`, with `INTERP` already filled in for that
+domain's known cPanel venv (`www.demo.ndas.lk`/3.8 or `www.ndas.lk`/3.8) --
+you no longer need to hand-copy and edit the `.example` file for these two
+domains. If cPanel ever recreates the app under a different venv name or
+Python version, update `PASSENGER_WSGI_INTERP` in `scripts/switch_env.py`
+to match before re-running the switch.
+
+For any other app root (a new domain, or a different Python version),
+still copy `passenger_wsgi.py.example` to `passenger_wsgi.py` by hand and
+set `INTERP` to the venv path cPanel's "Setup Python App" page shows for
+that specific app. A missing `passenger_wsgi.py`, or one pointing at a venv
+path that doesn't exist -- or, as happened on demo.ndas.lk, a hand-edit that
+merges two statements onto one line -- is one of the most common causes of
+a 500 error with no application-level log output on cPanel.
 
 ### 1.7 Setup SSL Certificate
 
