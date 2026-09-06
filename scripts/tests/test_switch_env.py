@@ -230,7 +230,7 @@ class TestPassengerWsgiGeneration(SwitchEnvTestCase):
 
         with open(self.target_passenger) as fh:
             second_generated = fh.read()
-        self.assertIn("'www.ndas.lk', '3.8', 'bin', 'python3'", second_generated)
+        self.assertIn("'www.ndas.lk', '3.11', 'bin', 'python3'", second_generated)
 
     def test_missing_passenger_template_fails_without_undoing_env_switch(self):
         os.remove(self.passenger_template)

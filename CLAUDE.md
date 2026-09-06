@@ -12,7 +12,7 @@ For planning, proposals, or architecture changes, use the BMAD skills `bmad-spec
 
 **NDAS** - Django medical system for patient records, video-based neurodevelopmental assessments, and evaluation workflows.
 
-**Stack:** Django 6.0 | PostgreSQL/SQLite | AdminLTE 3.2 | Bootstrap 4.6 | HTMX | Video.js
+**Stack:** Django 5.2 (LTS) | PostgreSQL/SQLite | AdminLTE 3.2 | Bootstrap 4.6 | HTMX | Video.js
 
 **Apps:** `patients/` (root URL), `users/`, `video/`, `reports/`, `problemlist/`, `institution/` (Phase 2, multi-institution), `referral/` (Phase 2, cross-institution referrals)
 
@@ -21,8 +21,8 @@ For planning, proposals, or architecture changes, use the BMAD skills `bmad-spec
 ```bash
 # Environment (Windows)
 venv\Scripts\activate
-# No requirements.txt is tracked currently — dependencies are already installed in venv/.
-# To rebuild the venv from scratch: pip freeze > requirements.txt from a known-good venv first.
+# requirements.txt is tracked -- pip install -r requirements.txt installs everything.
+pip install -r requirements.txt
 
 # Database
 python manage.py makemigrations [app] && python manage.py migrate

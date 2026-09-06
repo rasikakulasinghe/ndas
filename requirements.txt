@@ -1,5 +1,8 @@
 amqp==5.3.1
-asgiref==3.11.0
+# asgiref 3.8.x is the release paired with Django 5.2 (Django 6.0 needs
+# asgiref>=3.11, which in turn needs Python >=3.12 -- not available on the
+# demo/live cPanel accounts, which top out at Python 3.11.15).
+asgiref==3.8.1
 autopep8==2.0.2
 billiard==4.2.1
 black==23.1.0
@@ -15,7 +18,11 @@ click-repl==0.3.0
 colorama==0.4.6
 cryptography==40.0.2
 decorator==4.4.2
-Django==6.0
+# Pinned to the 5.2 LTS line, not 6.0: 6.0 requires Python >=3.12, but the
+# demo.ndas.lk / ndas.lk cPanel accounts top out at Python 3.11.15 as of
+# 2026-09-06. ~=5.2.0 tracks the latest 5.2.x patch release (Python 3.10-3.13
+# compatible) without jumping to 5.3+. Revisit once the host offers 3.12+.
+Django~=5.2.0
 django-cleanup==7.0.0
 django-permissions-policy==4.20.0
 django-ratelimit==4.1.0

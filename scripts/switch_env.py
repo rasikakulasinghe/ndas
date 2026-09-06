@@ -81,14 +81,18 @@ PRODUCTION_REVIEW_ITEMS = (
 )
 
 # cPanel "Setup Python App" venv name + Python version, per mode, for the
-# modes that map to one specific known app root. Confirmed against the live
-# cPanel account -- both currently on Python 3.8. Only modes listed here get
-# passenger_wsgi.py generated; modes without a fixed, known app root
-# (development, production, production-postgresql) leave passenger_wsgi.py
-# untouched.
+# modes that map to one specific known app root. This account's Python
+# selector tops out at 3.11.15 (no 3.12+ offered), so both apps were
+# recreated on 3.11 as of 2026-09-06 -- confirmed for demo.ndas.lk; verify
+# ndas.lk's "Setup Python App" was also created under 3.11 before relying on
+# this for production-live. requirements.txt is pinned to Django~=5.2.0 to
+# match (Django 6.0 needs Python >=3.12, which this host doesn't offer).
+# Only modes listed here get passenger_wsgi.py generated; modes without a
+# fixed, known app root (development, production, production-postgresql)
+# leave passenger_wsgi.py untouched.
 PASSENGER_WSGI_INTERP = {
-    'production-demo': ('www.demo.ndas.lk', '3.8'),
-    'production-live': ('www.ndas.lk', '3.8'),
+    'production-demo': ('www.demo.ndas.lk', '3.11'),
+    'production-live': ('www.ndas.lk', '3.11'),
 }
 
 # The exact placeholder line in passenger_wsgi.py.example that INTERP

@@ -18,7 +18,7 @@ Complete deployment guide for the Neurodevelopmental Assessment System (NDAS).
 
 ### System Requirements
 
-- **Python**: 3.9 or higher
+- **Python**: 3.10 or higher (3.11 recommended). `requirements.txt` pins `Django~=5.2.0` specifically because the demo.ndas.lk/ndas.lk cPanel accounts top out at Python 3.11.15 (no 3.12+ offered as of 2026-09-06) -- Django 6.0 needs Python >=3.12 and will refuse to install on this host. If the host later adds 3.12+, Django can be upgraded and this constraint revisited.
 - **Database**: SQLite (default) or PostgreSQL 12+
 - **Memory**: Minimum 512MB RAM (2GB+ recommended)
 - **Storage**: 10GB+ (depending on video storage needs)
@@ -74,10 +74,20 @@ python scripts/switch_env.py production-live   # inside ndas-live/
 This copies the matching template (`env files/.env.production.demo.example`
 or `.env.production.live.example`) over that app root's own `.env`, backing
 up whatever was there first. Because the two app roots are separate
-directories, their `.env`, `db.sqlite3`, and `passenger_wsgi.py` never
-collide -- switching one never touches the other. Give each domain its own
+directories, their `.env` and `db.sqlite3` files never collide on disk --
+switching one never touches the other's data. Give each domain its own
 `SECRET_KEY` and email account (the templates leave these as placeholders on
 purpose; the script never fills them in).
+
+> **⚠ `db.sqlite3` is currently committed to this git repository**, which
+> undermines the "never collide" guarantee above: a `git pull` in either
+> app root pulls whatever `db.sqlite3` is in the repo's history, which can
+> conflict with or overwrite that domain's live patient data. This must be
+> fixed at the repo level (`git rm --cached db.sqlite3` and add it to
+> `.gitignore`, plus a history scrub since patient data is already
+> committed) before either app root is safely kept in sync with `git pull`.
+> `passenger_wsgi.py` has the same "tracked when it should be per-app-root
+> local state" problem -- see the warning in [1.6](#16-create-passenger-wsgi).
 
 ### 1.1 Prepare Environment
 
@@ -87,7 +97,9 @@ purpose; the script never fills them in).
 # Keep it OUTSIDE public_html for security
 
 # 2. Create virtual environment via cPanel Python App
-# - Python Version: 3.9 or higher
+# - Python Version: highest 3.10+ your cPanel account offers (3.11.x is
+#   confirmed working for demo/live -- see 1.6). Django is pinned to
+#   ~=5.2.0 to match; only move to Django 6.0 once the host offers 3.12+.
 # - Application Root: /home/username/ndas
 # - Application URL: yourdomain.com
 ```
@@ -130,8 +142,10 @@ CSRF_COOKIE_SECURE=True
 ### 1.3 Install Dependencies
 
 ```bash
-# Activate virtual environment
-source /home/username/virtualenv/ndas/3.9/bin/activate
+# Activate virtual environment (path/version come from cPanel's
+# "Setup Python App" page for this app root -- 3.11 is confirmed working
+# for demo/live on this host)
+source /home/username/virtualenv/ndas/3.11/bin/activate
 
 # Install requirements
 pip install -r requirements.txt
@@ -173,11 +187,23 @@ chmod -R 755 logs
 Running `python scripts/switch_env.py production-demo` (or
 `production-live`) now also generates `passenger_wsgi.py` in this app root
 from `passenger_wsgi.py.example`, with `INTERP` already filled in for that
-domain's known cPanel venv (`www.demo.ndas.lk`/3.8 or `www.ndas.lk`/3.8) --
-you no longer need to hand-copy and edit the `.example` file for these two
-domains. If cPanel ever recreates the app under a different venv name or
-Python version, update `PASSENGER_WSGI_INTERP` in `scripts/switch_env.py`
-to match before re-running the switch.
+domain's known cPanel venv -- you no longer need to hand-copy and edit the
+`.example` file for these two domains.
+
+> **Python version note (resolved 2026-09-06):** this cPanel account's
+> "Setup Python App" selector tops out at **3.11.15** -- no 3.12+ is
+> offered. `PASSENGER_WSGI_INTERP` in `scripts/switch_env.py` points both
+> `production-demo` (`www.demo.ndas.lk`) and `production-live`
+> (`www.ndas.lk`) at Python **3.11** venvs, and `requirements.txt` is
+> pinned to `Django~=5.2.0` (not 6.0, which needs Python >=3.12) to match.
+> The 3.11 venv for demo.ndas.lk is confirmed created; **confirm
+> ndas.lk's "Setup Python App" was also recreated under 3.11 before
+> deploying there.** If this host ever adds Python 3.12+, Django can move
+> to 6.0 and `PASSENGER_WSGI_INTERP` updated accordingly.
+
+If cPanel ever recreates the app under a different venv name or Python
+version, update `PASSENGER_WSGI_INTERP` in `scripts/switch_env.py` to match
+before re-running the switch.
 
 For any other app root (a new domain, or a different Python version),
 still copy `passenger_wsgi.py.example` to `passenger_wsgi.py` by hand and
@@ -187,6 +213,16 @@ path that doesn't exist -- or, as happened on demo.ndas.lk, a hand-edit that
 merges two statements onto one line -- is one of the most common causes of
 a 500 error with no application-level log output on cPanel.
 
+> **⚠ passenger_wsgi.py is git-tracked, not per-app-root local state.**
+> Because the generated `passenger_wsgi.py` (unlike `.env`) is committed to
+> this repository, whichever domain most recently ran `switch_env.py` is
+> whatever gets pulled into the *other* app root on its next `git pull` --
+> silently swapping in the wrong domain's `INTERP` and reintroducing the
+> exact silent-500 failure this tooling exists to prevent. **Always re-run
+> `python scripts/switch_env.py production-demo` / `production-live`
+> immediately after every `git pull` in that app root, before restarting
+> the app.**
+
 ### 1.7 Setup SSL Certificate
 
 1. Go to cPanel → SSL/TLS Status
@@ -195,18 +231,52 @@ a 500 error with no application-level log output on cPanel.
 
 ### 1.8 Configure Cron Jobs
 
-Add to cPanel Cron Jobs:
+> **⚠ `python manage.py backup_database` does not exist in this codebase** --
+> no such management command is defined anywhere in the project. A cron job
+> that calls it will fail silently every run (cron does not surface errors
+> unless mail is configured) and no backup is ever produced. Use a raw
+> SQLite `.backup` copy instead, as below. `BACKUP_PATH` in each domain's
+> `.env` is a convention for where these commands should write, not
+> something the Django app itself reads.
+
+Set this up **once per app root** (`ndas-demo/` and `ndas-live/` each need
+their own cron entries -- they do not share cPanel Cron Jobs automatically):
 
 ```bash
-# Database backup - Daily at 2 AM
-0 2 * * * cd /home/username/ndas && /home/username/virtualenv/ndas/3.9/bin/python manage.py backup_database
+# Database backup - Daily at 2 AM (adjust paths for this app root; BACKUP_PATH
+# below should match this domain's own .env BACKUP_PATH, e.g. ndas-demo/ vs ndas-live/)
+0 2 * * * sqlite3 /home/username/ndas-demo/db.sqlite3 ".backup '/home/username/backups/ndas-demo/db_$(date +\%Y\%m\%d).sqlite3'"
 
 # Clean old backups - Weekly
-0 3 * * 0 find /home/username/backups/ndas/ -name "*.sql" -mtime +30 -delete
+0 3 * * 0 find /home/username/backups/ndas-demo/ -name "*.sqlite3" -mtime +30 -delete
 
 # Clear expired sessions - Daily
-0 4 * * * cd /home/username/ndas && /home/username/virtualenv/ndas/3.9/bin/python manage.py clearsessions
+0 4 * * * cd /home/username/ndas-demo && /home/username/virtualenv/www.demo.ndas.lk/3.11/bin/python manage.py clearsessions
 ```
+
+Repeat with `ndas-live` / `www.ndas.lk` paths for the live site's own cron entries.
+
+### 1.9 Caching, Sessions, and Rate Limiting Without Redis
+
+Both `.env.production.demo.example` and `.env.production.live.example` leave
+`REDIS_URL=` empty with a comment saying this gives a "file-based cache."
+That comment is inaccurate: `ndas/settings.py` actually falls back to
+Django's **`LocMemCache`** (an in-process memory cache, not file-based) when
+`REDIS_URL` is unset. In production (`DEBUG=False`), NDAS puts both user
+sessions (`SESSION_ENGINE = 'django.contrib.sessions.backends.cache'`) and
+rate-limit counters (`RATELIMIT_USE_CACHE = 'default'`) in that same cache.
+
+If cPanel's Passenger app for a domain ever runs more than one worker
+process (common under load), `LocMemCache` is **not shared between them**:
+- A user's session created in one worker is invisible to a request handled
+  by another worker -- they get logged out at random.
+- Rate limiting is enforced per-process instead of per-site, so the
+  documented 10/min-create, 5/min-delete limits are effectively looser than
+  configured.
+
+If Redis is available on the hosting account, set `REDIS_URL` in each
+domain's `.env` to use it. If it is not, be aware of this limitation rather
+than relying on the (currently incorrect) "file-based cache" comment.
 
 ---
 
@@ -546,10 +616,11 @@ sudo systemctl restart ndas
 On cPanel Passenger hosting specifically, a 500 with nothing in
 `logs/django.log` usually means the WSGI layer never reached Django at all.
 Check, in order:
-1. `passenger_wsgi.py` exists in this app root (see [1.6](#16-create-passenger-wsgi)) and its `INTERP` path is this app's actual venv, not another app's.
-2. `.env` exists in this app root and was switched to the right profile (`python scripts/switch_env.py production-demo` or `production-live`) -- settings.py has no fallback for a missing `SECRET_KEY`.
-3. `ALLOWED_HOSTS` in `.env` exactly matches the domain being requested (`demo.ndas.lk` vs `ndas.lk` -- a mismatch here is a 400, not always a 500, but check it anyway).
-4. cPanel's "Setup Python App" page for this domain shows the app as running, and its "Application root" matches where `passenger_wsgi.py` actually lives.
+1. `passenger_wsgi.py` exists in this app root (see [1.6](#16-create-passenger-wsgi)) and its `INTERP` path is this app's actual venv, not another app's. If a `git pull` happened since the last `switch_env.py` run in this app root, re-run `switch_env.py <mode>` here first -- `passenger_wsgi.py` is git-tracked and a pull can silently overwrite it with the *other* domain's `INTERP`.
+2. The venv `INTERP` points at is actually Python 3.10+ (3.11 confirmed working on this host). `requirements.txt` pins `Django~=5.2.0` for exactly this reason -- an older venv (e.g. leftover 3.8) fails to install or import Django, which on Passenger surfaces as exactly this kind of silent 500. Don't try to install Django 6.0 here: this cPanel account doesn't offer the Python 3.12+ it requires.
+3. `.env` exists in this app root and was switched to the right profile (`python scripts/switch_env.py production-demo` or `production-live`) -- settings.py has no fallback for a missing `SECRET_KEY`.
+4. `ALLOWED_HOSTS` in `.env` exactly matches the domain being requested (`demo.ndas.lk` vs `ndas.lk` -- a mismatch here is a 400, not always a 500, but check it anyway).
+5. cPanel's "Setup Python App" page for this domain shows the app as running, and its "Application root" matches where `passenger_wsgi.py` actually lives.
 
 **Static files not loading**
 ```bash
@@ -662,6 +733,6 @@ sudo systemctl start ndas
 
 ---
 
-**Last Updated**: 2025-12-25
-**Version**: 1.1
+**Last Updated**: 2026-09-05
+**Version**: 1.2
 **Rasika Kulasinghe**
