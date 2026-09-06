@@ -68,15 +68,14 @@ class SwitchEnvTestCase(unittest.TestCase):
             with open(os.path.join(self.env_files_dir, filename), 'w') as fh:
                 fh.write(content)
 
-        # Fake passenger_wsgi.py.example, using the real placeholder line so
-        # render_passenger_wsgi()/switch_passenger_wsgi() can be exercised.
+        # Fake passenger_wsgi.py.example -- switch_passenger_wsgi() copies
+        # this verbatim, so any distinguishable content works.
+        self.passenger_template_content = (
+            'import sys\nimport os\n\n'
+            "from ndas.wsgi import application\n"
+        )
         with open(self.passenger_template, 'w') as fh:
-            fh.write(
-                'import sys\nimport os\n\n'
-                f'{switch_env.INTERP_PLACEHOLDER_LINE}\n'
-                'if sys.executable != INTERP:\n'
-                '    os.execl(INTERP, INTERP, *sys.argv)\n'
-            )
+            fh.write(self.passenger_template_content)
 
     def tearDown(self):
         switch_env.BASE_DIR = self._orig_base_dir
@@ -131,7 +130,7 @@ class TestSwitchEachMode(SwitchEnvTestCase):
                 # may have already created passenger_wsgi.py -- this run then
                 # backs that up too, on top of the .env backup.
                 expected_new_backups = 2 if (
-                    mode in switch_env.PASSENGER_WSGI_INTERP and os.path.exists(self.target_passenger)
+                    mode in switch_env.PASSENGER_WSGI_MODES and os.path.exists(self.target_passenger)
                 ) else 1
 
                 code, out, err = self._run_main([mode])
@@ -148,13 +147,11 @@ class TestSwitchEachMode(SwitchEnvTestCase):
                 with open(os.path.join(self.backup_dir, env_backup_name)) as fh:
                     self.assertEqual(fh.read(), original_content)
 
-                if mode in switch_env.PASSENGER_WSGI_INTERP:
-                    venv_name, python_version = switch_env.PASSENGER_WSGI_INTERP[mode]
+                if mode in switch_env.PASSENGER_WSGI_MODES:
                     self.assertTrue(os.path.isfile(self.target_passenger))
                     with open(self.target_passenger) as fh:
                         generated = fh.read()
-                    self.assertNotIn('ndas-CHANGE-ME', generated)
-                    self.assertIn(f"'{venv_name}', '{python_version}', 'bin', 'python3'", generated)
+                    self.assertEqual(generated, self.passenger_template_content)
                 else:
                     self.assertFalse(
                         os.path.exists(self.target_passenger),
@@ -230,7 +227,7 @@ class TestPassengerWsgiGeneration(SwitchEnvTestCase):
 
         with open(self.target_passenger) as fh:
             second_generated = fh.read()
-        self.assertIn("'www.ndas.lk', '3.11', 'bin', 'python3'", second_generated)
+        self.assertEqual(second_generated, self.passenger_template_content)
 
     def test_missing_passenger_template_fails_without_undoing_env_switch(self):
         os.remove(self.passenger_template)
@@ -242,17 +239,6 @@ class TestPassengerWsgiGeneration(SwitchEnvTestCase):
         self.assertIn('passenger_wsgi.py.example', err)
         # The .env switch itself already succeeded before the passenger step ran.
         self.assertEqual(self._read_target_env(), self.template_contents['production-demo'])
-        self.assertFalse(os.path.exists(self.target_passenger))
-
-    def test_drifted_placeholder_line_fails_loudly(self):
-        with open(self.passenger_template, 'w') as fh:
-            fh.write("INTERP = 'this template no longer matches the expected placeholder'\n")
-        self._write_target_env('MODE=previous\n')
-
-        code, out, err = self._run_main(['production-live'])
-
-        self.assertNotEqual(code, 0)
-        self.assertIn('INTERP_PLACEHOLDER_LINE', err)
         self.assertFalse(os.path.exists(self.target_passenger))
 
     def test_non_passenger_mode_leaves_existing_passenger_wsgi_untouched(self):

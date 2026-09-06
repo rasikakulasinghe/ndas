@@ -185,43 +185,36 @@ chmod -R 755 logs
 ### 1.6 Create Passenger WSGI
 
 Running `python scripts/switch_env.py production-demo` (or
-`production-live`) now also generates `passenger_wsgi.py` in this app root
-from `passenger_wsgi.py.example`, with `INTERP` already filled in for that
-domain's known cPanel venv -- you no longer need to hand-copy and edit the
-`.example` file for these two domains.
+`production-live`) now also (re)copies `passenger_wsgi.py` in this app root
+from `passenger_wsgi.py.example` verbatim -- you no longer need to
+hand-copy the `.example` file for these two domains. Both domains use the
+identical file; there is nothing domain-specific left in it (see the
+incident note below for why).
 
-> **Python version note (resolved 2026-09-06):** this cPanel account's
-> "Setup Python App" selector tops out at **3.11.15** -- no 3.12+ is
-> offered. `PASSENGER_WSGI_INTERP` in `scripts/switch_env.py` points both
-> `production-demo` (`www.demo.ndas.lk`) and `production-live`
-> (`www.ndas.lk`) at Python **3.11** venvs, and `requirements.txt` is
-> pinned to `Django~=5.2.0` (not 6.0, which needs Python >=3.12) to match.
-> The 3.11 venv for demo.ndas.lk is confirmed created; **confirm
-> ndas.lk's "Setup Python App" was also recreated under 3.11 before
-> deploying there.** If this host ever adds Python 3.12+, Django can move
-> to 6.0 and `PASSENGER_WSGI_INTERP` updated accordingly.
+> **Incident note (resolved 2026-09-06): do not re-exec a specific
+> interpreter from passenger_wsgi.py.** An earlier version of this file
+> manually pinned and re-exec'd a specific venv's Python via `os.execl()`
+> (to work around this cPanel account's "Setup Python App" selector topping
+> out at Python 3.11.15, no 3.12+ offered -- which is also why
+> `requirements.txt` is pinned to `Django~=5.2.0`, not 6.0). That re-exec
+> fought Passenger's own interpreter selection: cPanel's "Setup Python App"
+> already launches `passenger_wsgi.py` with the correct interpreter for
+> that app's configured venv, so re-exec'ing a second time from inside the
+> script broke the boot silently -- a 500 "could not be started" page, no
+> traceback in `django.log`, and nothing in the Passenger log except a
+> stray `tput: No value for $TERM and no -T specified` line for every spawn
+> attempt. Removing the `os.execl()` and simply doing
+> `from ndas.wsgi import application` fixed it. **Never add interpreter
+> selection logic back into this file** -- if cPanel ever recreates an app
+> under a different venv/Python version, that's set on the "Setup Python
+> App" page itself, not in `passenger_wsgi.py`.
 
-If cPanel ever recreates the app under a different venv name or Python
-version, update `PASSENGER_WSGI_INTERP` in `scripts/switch_env.py` to match
-before re-running the switch.
-
-For any other app root (a new domain, or a different Python version),
-still copy `passenger_wsgi.py.example` to `passenger_wsgi.py` by hand and
-set `INTERP` to the venv path cPanel's "Setup Python App" page shows for
-that specific app. A missing `passenger_wsgi.py`, or one pointing at a venv
-path that doesn't exist -- or, as happened on demo.ndas.lk, a hand-edit that
-merges two statements onto one line -- is one of the most common causes of
-a 500 error with no application-level log output on cPanel.
-
-> **⚠ passenger_wsgi.py is git-tracked, not per-app-root local state.**
-> Because the generated `passenger_wsgi.py` (unlike `.env`) is committed to
-> this repository, whichever domain most recently ran `switch_env.py` is
-> whatever gets pulled into the *other* app root on its next `git pull` --
-> silently swapping in the wrong domain's `INTERP` and reintroducing the
-> exact silent-500 failure this tooling exists to prevent. **Always re-run
-> `python scripts/switch_env.py production-demo` / `production-live`
-> immediately after every `git pull` in that app root, before restarting
-> the app.**
+For any other app root (a new domain), still copy
+`passenger_wsgi.py.example` to `passenger_wsgi.py` by hand -- no editing
+needed. A missing `passenger_wsgi.py`, or one that merges two statements
+onto one line during a hand-edit (as happened once on demo.ndas.lk), is one
+of the most common causes of a 500 error with no application-level log
+output on cPanel.
 
 ### 1.7 Setup SSL Certificate
 
@@ -616,13 +609,24 @@ sudo systemctl restart ndas
 On cPanel Passenger hosting specifically, a 500 with nothing in
 `logs/django.log` usually means the WSGI layer never reached Django at all.
 Check, in order:
-1. `passenger_wsgi.py` exists in this app root (see [1.6](#16-create-passenger-wsgi)) and its `INTERP` path is this app's actual venv, not another app's. If a `git pull` happened since the last `switch_env.py` run in this app root, re-run `switch_env.py <mode>` here first -- `passenger_wsgi.py` is git-tracked and a pull can silently overwrite it with the *other* domain's `INTERP`.
-2. The venv `INTERP` points at is actually Python 3.10+ (3.11 confirmed working on this host). `requirements.txt` pins `Django~=5.2.0` for exactly this reason -- an older venv (e.g. leftover 3.8) fails to install or import Django, which on Passenger surfaces as exactly this kind of silent 500. Don't try to install Django 6.0 here: this cPanel account doesn't offer the Python 3.12+ it requires.
+1. `passenger_wsgi.py` exists in this app root (see [1.6](#16-create-passenger-wsgi)) and matches `passenger_wsgi.py.example` verbatim -- it should contain nothing but `sys.path.insert(...)` and `from ndas.wsgi import application`. If it contains an `os.execl()`/`INTERP` re-exec, that's the 2026-09-06 incident recurring: delete it and re-copy from `passenger_wsgi.py.example` (or re-run `switch_env.py <mode>` in this app root).
+2. Check the domain's dedicated Passenger log (the path in cPanel's "Setup Python App" → "Passenger log file" field, e.g. `~/logs/passenger-demo.log` -- separate from `django.log` and from the account's general Apache error log). If every spawn attempt logs a lone `tput: No value for $TERM and no -T specified` line and nothing else (no traceback), that confirms the WSGI script is dying before Python code runs -- see point 1.
 3. `.env` exists in this app root and was switched to the right profile (`python scripts/switch_env.py production-demo` or `production-live`) -- settings.py has no fallback for a missing `SECRET_KEY`.
 4. `ALLOWED_HOSTS` in `.env` exactly matches the domain being requested (`demo.ndas.lk` vs `ndas.lk` -- a mismatch here is a 400, not always a 500, but check it anyway).
-5. cPanel's "Setup Python App" page for this domain shows the app as running, and its "Application root" matches where `passenger_wsgi.py` actually lives.
+5. cPanel's "Setup Python App" page for this domain shows the app as running, its "Application root" matches where `passenger_wsgi.py` actually lives, and its "Python version" is 3.11+ (`requirements.txt` pins `Django~=5.2.0`, which needs 3.10+; don't try to install Django 6.0 here -- it needs Python >=3.12, which this host doesn't offer).
 
 **Static files not loading**
+
+If this is a fresh app root, first confirm the project's top-level `static/`
+source folder (which holds files not owned by any single Django app --
+`static/css/login.css`, `static/js/login.js`, etc.) actually made it onto
+the server: `ls static/` in the app root. A `staticfiles.W004` warning from
+`collectstatic` about `STATICFILES_DIRS` pointing at a directory that
+doesn't exist means this folder is simply missing (e.g. never pulled/
+uploaded) -- `collectstatic` silently skips it rather than failing, so
+every *app's own* static files (found via `AppDirectoriesFinder`) still
+copy fine and only these project-level files 404. Fix: get `static/` onto
+the server (`git pull`, or upload it) and re-run `collectstatic`.
 ```bash
 # Recollect static files
 python manage.py collectstatic --clear --noinput
