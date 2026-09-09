@@ -6,8 +6,8 @@
 {% block body_class %}ndas-login-body{% endblock body_class %}
 
 {% block extra_css %}
-<!-- Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Poppins (self-hosted) -->
+<link href="{% static 'vendor/fonts/poppins/poppins.css' %}" rel="stylesheet">
 <!-- Login Page Specific Styles - Load LAST to override AdminLTE/Bootstrap -->
 <link rel="stylesheet" href="{% static 'css/login.css' %}" type="text/css">
 <style nonce="{{ request.csp_nonce }}">

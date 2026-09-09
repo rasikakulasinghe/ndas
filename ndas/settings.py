@@ -163,9 +163,16 @@ else:
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # WhiteNoise configuration for serving static files
+# CompressedManifestStaticFilesStorage requires staticfiles.json (built by
+# collectstatic) to resolve {% static %} tags. In DEBUG, fall back to plain
+# storage so styles load without needing collectstatic run first.
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        if not DEBUG
+        else "django.contrib.staticfiles.storage.StaticFilesStorage"
+    },
 }
 
 # ─── Phase 2: Multi-Institution ─────────────────────────────────────────────
@@ -292,14 +299,17 @@ SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
 CSP_INCLUDE_NONCE_IN = ['script-src']
 CSP_EXCLUDE_URL_PREFIXES = ('/admin/',)
 
+# All frontend vendor libraries (Bootstrap, AdminLTE, Font Awesome, jQuery,
+# Select2, Chart.js, Video.js, htmx, Source Sans Pro, Poppins) are self-hosted
+# under static/vendor/ - no external CDN is required to render the app.
 if DEBUG:
     SECURE_HSTS_SECONDS = 0
     CSP_DEFAULT_SRC = ("'self'",)
-    CSP_SCRIPT_SRC = ("'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://unpkg.com", "https://vjs.zencdn.net")
-    CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "https://vjs.zencdn.net")
+    CSP_SCRIPT_SRC = ("'self'",)
+    CSP_STYLE_SRC = ("'self'", "'unsafe-inline'")
     CSP_IMG_SRC = ("'self'", "data:", "blob:", "https:")
-    CSP_FONT_SRC = ("'self'", "data:", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com")
-    CSP_CONNECT_SRC = ("'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://unpkg.com", "https://vjs.zencdn.net")
+    CSP_FONT_SRC = ("'self'", "data:")
+    CSP_CONNECT_SRC = ("'self'",)
     CSP_FRAME_SRC = ("'none'",)
     CSP_OBJECT_SRC = ("'none'",)
     CSP_BASE_URI = ("'self'",)
@@ -310,11 +320,11 @@ else:
     # 'unsafe-inline' allowed for styles (templates and libraries use inline styles)
     # No 'unsafe-inline' or 'unsafe-eval' for scripts for XSS protection
     CSP_DEFAULT_SRC = ("'self'",)
-    CSP_SCRIPT_SRC = ("'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://unpkg.com", "https://vjs.zencdn.net")
-    CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "https://vjs.zencdn.net")
+    CSP_SCRIPT_SRC = ("'self'",)
+    CSP_STYLE_SRC = ("'self'", "'unsafe-inline'")
     CSP_IMG_SRC = ("'self'", "data:", "blob:", "https:")
-    CSP_FONT_SRC = ("'self'", "data:", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com")
-    CSP_CONNECT_SRC = ("'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://unpkg.com", "https://vjs.zencdn.net")
+    CSP_FONT_SRC = ("'self'", "data:")
+    CSP_CONNECT_SRC = ("'self'",)
     CSP_FRAME_SRC = ("'none'",)
     CSP_OBJECT_SRC = ("'none'",)
     CSP_BASE_URI = ("'self'",)

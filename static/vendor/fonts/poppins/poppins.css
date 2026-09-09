@@ -1,0 +1,29 @@
+/* Self-hosted Poppins (weights 400, 500, 600, 700 — latin subset) */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url(./files/poppins-latin-400-normal.woff2) format('woff2'), url(./files/poppins-latin-400-normal.woff) format('woff');
+}
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url(./files/poppins-latin-500-normal.woff2) format('woff2'), url(./files/poppins-latin-500-normal.woff) format('woff');
+}
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url(./files/poppins-latin-600-normal.woff2) format('woff2'), url(./files/poppins-latin-600-normal.woff) format('woff');
+}
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url(./files/poppins-latin-700-normal.woff2) format('woff2'), url(./files/poppins-latin-700-normal.woff) format('woff');
+}
