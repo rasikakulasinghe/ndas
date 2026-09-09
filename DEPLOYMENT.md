@@ -627,6 +627,21 @@ uploaded) -- `collectstatic` silently skips it rather than failing, so
 every *app's own* static files (found via `AppDirectoriesFinder`) still
 copy fine and only these project-level files 404. Fix: get `static/` onto
 the server (`git pull`, or upload it) and re-run `collectstatic`.
+
+If the app root is NOT fresh -- pages render (no 500s) but look unstyled and
+buttons wired up via a static JS file (e.g. the navbar logout button, which
+depends on `js/logout-modal.js`) silently do nothing -- `collectstatic` most
+likely just was never (re-)run after the last deploy or `.env` switch, or it
+ran against the wrong `STATIC_ROOT`. `{% static %}` resolves URLs from the
+`staticfiles.json` manifest independently of whether the referenced file
+physically exists at that URL, so a stale/wrong `STATIC_ROOT` produces no
+template error -- only 404s in the browser's network tab for `/static/...`.
+On cPanel (demo.ndas.lk / ndas.lk), `STATIC_ROOT` must point at THIS domain's
+own `public_html/<domain>/static/` (see `env files/.env.production.*.example`)
+-- confirm it wasn't left at the script default (`BASE_DIR/staticfiles`,
+outside `public_html`, which Apache never serves) before re-running
+`collectstatic`. `python scripts/switch_env.py production-demo` /
+`production-live` now prints a reminder for this after every switch.
 ```bash
 # Recollect static files
 python manage.py collectstatic --clear --noinput

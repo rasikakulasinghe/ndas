@@ -259,12 +259,25 @@ def switch_env(mode):
         print('the template leaves them as placeholders/defaults, never auto-filled by this script:')
         for key in PRODUCTION_REVIEW_ITEMS:
             print(f'  - {key}')
+        print('')
+        print('REMINDER: switching .env alone does not touch static files. Run, in this app root:')
+        print('  python manage.py collectstatic --noinput')
+        print('Skipping this leaves old/missing files in STATIC_ROOT, which renders as broken')
+        print('page styling and non-working buttons (their JS 404s) on the live site even though')
+        print('the page itself loads fine -- see DEPLOYMENT.md "Static files not loading".')
 
     if mode == 'production-postgresql':
         print('')
         print('REMINDER: this mode points at a different database (PostgreSQL, not SQLite).')
         print('Run `python manage.py migrate` against it before relying on it -- switching')
         print('.env alone does not create or update its schema.')
+
+    if mode in ('production-demo', 'production-live'):
+        print('')
+        print('REMINDER: confirm STATIC_ROOT and MEDIA_ROOT in .env were updated for this')
+        print('domain\'s own public_html folder (the template ships with an example cPanel')
+        print('username/path) before running collectstatic -- collectstatic silently writes to')
+        print('whatever STATIC_ROOT currently resolves to, including a wrong or default path.')
 
     if mode in PASSENGER_WSGI_MODES:
         try:
