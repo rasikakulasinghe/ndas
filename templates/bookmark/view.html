@@ -79,42 +79,42 @@
               <div class="text-center py-3">
                 {% if bookmark.bookmark_type == 'Patient' %}
                   <a href="{% url 'view-patient' bookmark.object_id %}" target="_blank"
-                     class="btn btn-outline-primary btn-lg" data-toggle="tooltip" data-placement="top" title="View Patient">
+                     class="btn btn-outline-primary" data-toggle="tooltip" data-placement="top" title="View Patient">
                     <i class="fas fa-user mr-2"></i>View Patient Record
                   </a>
                 {% elif bookmark.bookmark_type == 'Video' and bookmark.object_id %}
                   <a href="{% url 'video:view' bookmark.object_id %}" target="_blank"
-                     class="btn btn-outline-primary btn-lg" data-toggle="tooltip" data-placement="top" title="View Video">
+                     class="btn btn-outline-primary" data-toggle="tooltip" data-placement="top" title="View Video">
                     <i class="fas fa-video mr-2"></i>View Video
                   </a>
                 {% elif bookmark.bookmark_type == 'GMA' %}
                   <a href="{% url 'assessment-view' bookmark.object_id %}" target="_blank"
-                     class="btn btn-outline-primary btn-lg" data-toggle="tooltip" data-placement="top" title="View General Movement Assessment">
+                     class="btn btn-outline-primary" data-toggle="tooltip" data-placement="top" title="View General Movement Assessment">
                     <i class="fas fa-stethoscope mr-2"></i>View GMA
                   </a>
                 {% elif bookmark.bookmark_type == 'HINE' %}
                   <a href="{% url 'hine-assessment-view' bookmark.object_id %}" target="_blank"
-                     class="btn btn-outline-primary btn-lg" data-toggle="tooltip" data-placement="top" title="View HINE Assessment">
+                     class="btn btn-outline-primary" data-toggle="tooltip" data-placement="top" title="View HINE Assessment">
                     <i class="fas fa-brain mr-2"></i>View HINE Assessment
                   </a>
                 {% elif bookmark.bookmark_type == 'Attachment' %}
                   <a href="{% url 'attachment-view' bookmark.object_id %}" target="_blank"
-                     class="btn btn-outline-primary btn-lg" data-toggle="tooltip" data-placement="top" title="View Attachment">
+                     class="btn btn-outline-primary" data-toggle="tooltip" data-placement="top" title="View Attachment">
                     <i class="fas fa-paperclip mr-2"></i>View Attachment
                   </a>
                 {% elif bookmark.bookmark_type == 'DA' %}
                   <a href="{% url 'da-assessment-view' bookmark.object_id %}" target="_blank"
-                     class="btn btn-outline-primary btn-lg" data-toggle="tooltip" data-placement="top" title="View Developmental Assessment">
+                     class="btn btn-outline-primary" data-toggle="tooltip" data-placement="top" title="View Developmental Assessment">
                     <i class="fas fa-child mr-2"></i>View Dev. Assessment
                   </a>
                 {% elif bookmark.bookmark_type == 'CDICR' %}
                   <a href="{% url 'cdic-assessment-view' bookmark.object_id %}" target="_blank"
-                     class="btn btn-outline-primary btn-lg" data-toggle="tooltip" data-placement="top" title="View CDIC Record">
+                     class="btn btn-outline-primary" data-toggle="tooltip" data-placement="top" title="View CDIC Record">
                     <i class="fas fa-clipboard-list mr-2"></i>View CDIC Record
                   </a>
                 {% elif bookmark.bookmark_type == 'GPA' %}
                   <a href="{% url 'gpa-view' bookmark.object_id %}" target="_blank"
-                     class="btn btn-outline-primary btn-lg" data-toggle="tooltip" data-placement="top" title="View General Paediatric Assessment">
+                     class="btn btn-outline-primary" data-toggle="tooltip" data-placement="top" title="View General Paediatric Assessment">
                     <i class="fas fa-notes-medical mr-2"></i>View GPA Record
                   </a>
                 {% endif %}

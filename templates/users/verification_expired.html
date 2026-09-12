@@ -25,7 +25,7 @@
                     <form method="post" action="{% url 'resend-verification' %}">
                         {% csrf_token %}
                         <input type="hidden" name="email" value="{{ user_email }}">
-                        <button type="submit" class="btn btn-primary btn-lg">
+                        <button type="submit" class="btn btn-primary">
                             <i class="fas fa-envelope"></i> Send New Verification Email
                         </button>
                     </form>
