@@ -2,7 +2,7 @@
 
 Guidance for Claude Code (claude.ai/code) working in this repository.
 
-**Last Updated:** 2025-12-25
+**Last Updated:** 2026-09-12
 
 ## Planning & Proposals
 
@@ -156,7 +156,7 @@ patient.apgar_5          # NOT apgar_5_min
 **Assessments:** GPA, HINE, CDIC, Developmental
 
 **Validation Ranges:**
-- Birth weight: 300g-8000g (basic), POG-specific (enhanced)
+- Birth weight: 200g-8000g
 - APGAR scores: 0-10
 - Gestational age: 20-44 weeks + 0-6 days
 

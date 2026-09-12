@@ -644,11 +644,10 @@ class DeleteEndpointErrorSanitizationTest(TestCase):
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
 })
 class BirthWeightViewValidationTest(TestCase):
-    """Story 1.2: Verify birth weight validation threshold is 300g in patient_add view.
+    """Verify birth weight validation threshold is 200g-8000g in patient_add view.
 
-    AC #4: 250g produces form error (no 500).
-    AC #5: 300g is accepted.
-    AC #6: 200g is rejected with clear error message.
+    150g produces a form error (no 500). 200g is accepted. 199g is rejected
+    with a clear error message.
     """
 
     REQUIRED_FIELDS = {
@@ -683,45 +682,51 @@ class BirthWeightViewValidationTest(TestCase):
         data['birth_weight'] = birth_weight
         return self.client.post(self.url, data)
 
-    def test_birth_weight_250_rejected_with_form_error(self):
-        """AC #4: 250g must produce a form validation error, not a 500."""
-        response = self._post_with_birth_weight(250)
+    def test_birth_weight_150_rejected_with_form_error(self):
+        """150g is below the 200g floor and must produce a form validation error, not a 500."""
+        response = self._post_with_birth_weight(150)
         self.assertEqual(response.status_code, 200)
         form = response.context['form']
         self.assertIn(
-            'Birth weight must be between 300g and 8000g',
+            'Birth weight must be between 200g and 8000g.',
             [str(e) for e in form.errors.get('birth_weight', [])],
         )
 
-    def test_birth_weight_200_rejected_with_clear_error(self):
-        """AC #6: 200g must be rejected with a clear error message."""
-        response = self._post_with_birth_weight(200)
+    def test_birth_weight_199_rejected_with_clear_error(self):
+        """199g must be rejected with a clear error message."""
+        response = self._post_with_birth_weight(199)
         self.assertEqual(response.status_code, 200)
         form = response.context['form']
         self.assertIn(
-            'Birth weight must be between 300g and 8000g',
+            'Birth weight must be between 200g and 8000g.',
             [str(e) for e in form.errors.get('birth_weight', [])],
         )
 
-    def test_birth_weight_300_accepted(self):
-        """AC #5: 300g must be accepted (redirects to view-patient).
-
-        Uses pog_wks=20 (overriding the class default of 38) because 300g is
-        only medically plausible at the extremely-premature end of gestation
-        per BIRTH_WEIGHT_RANGES_BY_POG (min=300g at 20 weeks; min=2400g at 38
-        weeks). Since spec-fix-medical-data-correctness wired
-        validate_birth_weight_for_gestational_age() into Patient.clean(),
-        300g at 38 weeks (this class's default) is now correctly rejected as
-        implausible for a near-term baby — this test isolates the basic
-        300-8000g field-level boundary this AC targets from that POG-specific
-        check by using a gestational age where 300g is actually plausible.
-        """
+    def test_birth_weight_200_accepted(self):
+        """200g is the minimum accepted weight and must be accepted (redirects to view-patient)."""
         data = dict(self.REQUIRED_FIELDS)
-        data['pog_wks'] = 20
-        data['birth_weight'] = 300
+        data['birth_weight'] = 200
         response = self.client.post(self.url, data)
         self.assertEqual(response.status_code, 302)
         self.assertIn('view', response.url)
+
+    def test_birth_weight_8000_accepted(self):
+        """8000g is the maximum accepted weight and must be accepted (redirects to view-patient)."""
+        data = dict(self.REQUIRED_FIELDS)
+        data['birth_weight'] = 8000
+        response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('view', response.url)
+
+    def test_birth_weight_8001_rejected_with_form_error(self):
+        """8001g is above the 8000g ceiling and must produce a form validation error, not a 500."""
+        response = self._post_with_birth_weight(8001)
+        self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        self.assertIn(
+            'Birth weight must be between 200g and 8000g.',
+            [str(e) for e in form.errors.get('birth_weight', [])],
+        )
 
 
 def suite():

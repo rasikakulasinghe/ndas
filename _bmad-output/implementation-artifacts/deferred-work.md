@@ -170,3 +170,11 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-switch-env-command.md`
   summary: scripts/switch_env.py performs no confirmation prompt before switching to a production mode — a mistyped or accidental invocation immediately overwrites the working .env with template placeholder values
   evidence: Raised by the blind-hunter review layer. The spec explicitly anticipated no "Ask First" gates for this additive tooling, and the backup step already makes the action recoverable, so this wasn't treated as a spec gap — but an interactive y/N confirmation (or a --yes flag to opt out for scripted use) is a reasonable safety addition worth a human decision on whether the added friction is wanted, especially given this script can run against a live deployment's real .env.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-birth-weight-validation-range.md`
+  summary: patients/forms.py's clean_birth_weight() and ndas/custom_codes/validators.py's validate_birth_weight() independently hardcode the same 200-8000g bounds and message text instead of the form calling the model validator
+  evidence: Raised by the blind-hunter review layer. Pre-existing duplication — forms.py was already at 200g while validators.py was at 300g before this change, meaning the two had already desynced once. This change re-aligns the numbers but doesn't unify the implementations, so a future threshold change can silently update only one side again. Not caused by this change; fixing it means deciding whether the form should defer to the model validator, which is a small design choice out of scope for a numeric-range tweak.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-birth-weight-validation-range.md`
+  summary: Patient.birth_weight has no database-level CheckConstraint backing the 200-8000g bound — enforcement is Python-only (validators.py field validator + forms.py clean method), both bypassable via full_clean()-skipping paths (raw .objects.create(), data migrations, admin bulk actions)
+  evidence: Raised by the blind-hunter review layer. Pre-existing gap, not introduced by this change. Adding a CheckConstraint would need a migration and a decision on how to handle any existing out-of-range rows in production data first.
