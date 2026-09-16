@@ -5,7 +5,7 @@ Workflow guidance for AI agents. For project patterns and architecture, see `CLA
 **Last Updated:** 2025-12-25
 
 <!-- bmad:context -->
-<!-- Verified 2026-09-04 against 1b13db6. Managed by bmad-project-context; edits inside this block are replaced on refresh. Keep anything you want preserved outside the markers. -->
+<!-- Verified 2026-09-16 against c451df2. Managed by bmad-project-context; edits inside this block are replaced on refresh. Keep anything you want preserved outside the markers. -->
 
 ## NDAS
 
@@ -24,8 +24,6 @@ Django medical system for patient records, video-based neurodevelopmental assess
 
 ## Running and verifying
 
-- No `requirements.txt` is tracked (deleted, never restored) — reconstruct from the working `venv` (`pip freeze`) rather than `pip install -r requirements.txt`.
-- `python run_qa_tests.py` is a separate Playwright E2E smoke suite (needs `python manage.py runserver` already running, logs in as `testadmin`) — distinct from `python manage.py test`.
 - Test fixtures: `UserActivityMiddleware` doesn't run under the test client — set `added_by=user` manually in `Model.objects.create()` inside `setUp()`. Authenticate with `force_login(user)`, not `client.login()`. Test classes that render full templates need `@override_settings(STORAGES={"staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}})` or they fail on a staticfiles manifest error.
 
 ## Conventions that differ from defaults
