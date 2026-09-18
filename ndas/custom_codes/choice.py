@@ -236,3 +236,19 @@ class SEVERITY_CHOICES(models.TextChoices):
     MODERATE = "moderate", "Moderate"
     SEVERE = "severe", "Severe"
     LIFE_THREATENING = "life_threatening", "Life Threatening"
+
+
+# Backup/Restore job tracking (Epic 1/2 — SPEC-backup-restore)
+class BackupJobType(models.TextChoices):
+    """Job kinds tracked by BackupJob. Only BACKUP is used by Story 1.1;
+    RESTORE and PRE_RESTORE_SNAPSHOT are reserved for Epic 2."""
+    BACKUP = 'backup', 'Backup'
+    RESTORE = 'restore', 'Restore'
+    PRE_RESTORE_SNAPSHOT = 'pre_restore_snapshot', 'Pre-Restore Snapshot'
+
+
+class BackupJobStatus(models.TextChoices):
+    PENDING = 'pending', 'Pending'
+    RUNNING = 'running', 'Running'
+    COMPLETED = 'completed', 'Completed'
+    FAILED = 'failed', 'Failed'

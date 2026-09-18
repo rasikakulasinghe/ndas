@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'django_user_agents',
     'ndas',  # Core NDAS app (for template tags)
     'institution.apps.InstitutionConfig',
+    'backup.apps.BackupConfig',
     'referral.apps.ReferralConfig',
     'users.apps.UsersConfig',
     'patients.apps.PatientsConfig',
@@ -106,6 +107,16 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
             'OPTIONS': {
                 'timeout': 120,
+            },
+            # Force a real file-based test DB instead of Django's default
+            # in-memory shared-cache sqlite ('file::memory:?cache=shared').
+            # Shared-cache mode raises SQLITE_LOCKED (not SQLITE_BUSY) on
+            # concurrent writers from separate threads/connections, and the
+            # 'timeout' OPTIONS above (busy_timeout) only retries SQLITE_BUSY
+            # -- so real-thread concurrency tests (e.g. backup's atomic
+            # trigger-lock test) fail immediately regardless of timeout.
+            'TEST': {
+                'NAME': BASE_DIR / 'test_db.sqlite3',
             },
         }
     }

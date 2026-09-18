@@ -1,6 +1,8 @@
 venv
 media
 staticfiles/
+backups/
+test_db.sqlite3
 
 # Secrets - never commit
 .env
