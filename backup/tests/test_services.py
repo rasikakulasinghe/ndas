@@ -26,7 +26,7 @@ from backup.services import (
     has_sufficient_disk_space,
 )
 from institution.models import Institution
-from ndas.custom_codes.choice import BackupJobStatus, BackupJobType
+from ndas.custom_codes.choice import BackupJobScopeType, BackupJobStatus, BackupJobType
 from patients.models import Attachment, Patient
 from problemlist.models import Problem, ProblemAction
 from video.models import Video
@@ -270,3 +270,136 @@ class EstimateExportSizeAttachmentZeroTest(TestCase):
             total = estimate_export_size_bytes(self.inst)
         safe_size.assert_not_called()
         self.assertEqual(total, 0)
+
+
+@STORAGE_OVERRIDE
+class ModelExportPlanScopeTest(TestCase):
+    """
+    Story 1.2 -- `_model_export_plan`'s multi/system-wide scope shapes still
+    produce the same fixed, ordered 13-key plan as the single-institution
+    shape (Story 1.1, unmodified above).
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='svc_sa5', password='x', position='Administrator', mobile_primary='0770000105',
+        )
+        self.inst_a = Institution.objects.create(name='Scope Hosp A', slug='scope-hosp-a', created_by=self.user)
+        self.inst_b = Institution.objects.create(name='Scope Hosp B', slug='scope-hosp-b', created_by=self.user)
+
+    def test_system_wide_plan_has_same_13_keys_in_order(self):
+        plan = _model_export_plan(system_wide=True)
+        keys = [k for k, _ in plan]
+        self.assertEqual(keys, EXPECTED_KEYS_IN_ORDER)
+
+    def test_multi_plan_has_same_13_keys_in_order(self):
+        plan = _model_export_plan([self.inst_a, self.inst_b])
+        keys = [k for k, _ in plan]
+        self.assertEqual(keys, EXPECTED_KEYS_IN_ORDER)
+
+    def test_no_scope_info_raises_clear_value_error_not_typeerror(self):
+        # Calling with the bare defaults (institution_or_institutions=None,
+        # system_wide=False) used to fall through to the "multi" branch and
+        # do list(None), raising a confusing TypeError. Must raise a clear
+        # ValueError instead.
+        with self.assertRaises(ValueError):
+            _model_export_plan()
+        with self.assertRaises(ValueError):
+            estimate_export_size_bytes()
+        with self.assertRaises(ValueError):
+            has_sufficient_disk_space()
+
+
+@STORAGE_OVERRIDE
+class SystemWideExportTest(TestCase):
+    """Story 1.2 -- a system-wide job's export must include every institution's data."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='svc_sa6', password='x', position='Administrator', mobile_primary='0770000106',
+        )
+        self.inst_a = Institution.objects.create(name='System Hosp A', slug='system-hosp-a', created_by=self.user)
+        self.inst_b = Institution.objects.create(name='System Hosp B', slug='system-hosp-b', created_by=self.user)
+        self.patient_a = make_patient(self.inst_a, self.user, 'Baby SysA', 'BHT-SYS-A')
+        self.patient_b = make_patient(self.inst_b, self.user, 'Baby SysB', 'BHT-SYS-B')
+
+        self.job = BackupJob.objects.create(
+            job_type=BackupJobType.BACKUP,
+            status=BackupJobStatus.PENDING,
+            scope_type=BackupJobScopeType.SYSTEM,
+            triggered_by=self.user,
+        )
+
+    def tearDown(self):
+        shutil.rmtree(get_archive_dir(self.job), ignore_errors=True)
+
+    def test_system_wide_export_includes_every_institution(self):
+        path, skipped = create_export(self.job)
+        with zipfile.ZipFile(path) as zf:
+            data = json.loads(zf.read('db_export.json'))
+        patient_pks = [rec['pk'] for rec in data['patients.patient']]
+        self.assertIn(self.patient_a.pk, patient_pks)
+        self.assertIn(self.patient_b.pk, patient_pks)
+        self.assertEqual(len(patient_pks), 2)
+
+    def test_system_wide_export_includes_inactive_institution(self):
+        # Intentional, documented asymmetry: `multi` mode's institution-
+        # *selection* list (BackupScopeForm) only offers active
+        # institutions, but a `system`-wide export is a complete snapshot
+        # and must NOT filter on Institution.is_active -- an inactive
+        # institution's data still belongs in a full system export.
+        self.inst_b.is_active = False
+        self.inst_b.save(update_fields=['is_active'])
+
+        path, skipped = create_export(self.job)
+        with zipfile.ZipFile(path) as zf:
+            data = json.loads(zf.read('db_export.json'))
+        patient_pks = [rec['pk'] for rec in data['patients.patient']]
+        self.assertIn(self.patient_b.pk, patient_pks, "inactive institution's data was wrongly excluded")
+        self.assertEqual(len(patient_pks), 2)
+
+
+@STORAGE_OVERRIDE
+class MultiInstitutionExportTest(TestCase):
+    """Story 1.2 -- a multi-institution job's export must include only the selected set."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='svc_sa7', password='x', position='Administrator', mobile_primary='0770000107',
+        )
+        self.inst_a = Institution.objects.create(name='Multi Hosp A', slug='multi-hosp-a', created_by=self.user)
+        self.inst_b = Institution.objects.create(name='Multi Hosp B', slug='multi-hosp-b', created_by=self.user)
+        self.inst_c = Institution.objects.create(name='Multi Hosp C', slug='multi-hosp-c', created_by=self.user)
+        self.patient_a = make_patient(self.inst_a, self.user, 'Baby MultiA', 'BHT-MUL-A')
+        self.patient_b = make_patient(self.inst_b, self.user, 'Baby MultiB', 'BHT-MUL-B')
+        self.patient_c = make_patient(self.inst_c, self.user, 'Baby MultiC', 'BHT-MUL-C')
+
+        self.job = BackupJob.objects.create(
+            job_type=BackupJobType.BACKUP,
+            status=BackupJobStatus.PENDING,
+            scope_type=BackupJobScopeType.MULTI,
+            triggered_by=self.user,
+        )
+        self.job.scopes.set([self.inst_a, self.inst_b])
+
+    def tearDown(self):
+        shutil.rmtree(get_archive_dir(self.job), ignore_errors=True)
+
+    def test_multi_export_includes_only_selected_institutions_no_leakage(self):
+        path, skipped = create_export(self.job)
+        with zipfile.ZipFile(path) as zf:
+            data = json.loads(zf.read('db_export.json'))
+        patient_pks = [rec['pk'] for rec in data['patients.patient']]
+        self.assertIn(self.patient_a.pk, patient_pks)
+        self.assertIn(self.patient_b.pk, patient_pks)
+        self.assertNotIn(self.patient_c.pk, patient_pks)
+        self.assertEqual(len(patient_pks), 2)
+
+    def test_multi_scope_type_with_empty_scopes_raises(self):
+        # Guards against `scopes` being emptied after job creation (the
+        # trigger view/form never creates a multi job with an empty set) --
+        # create_export must fail loudly rather than silently exporting
+        # nothing (mirrors 1.1's scope=None guard for the single case).
+        self.job.scopes.clear()
+        with self.assertRaises(ValueError):
+            create_export(self.job)

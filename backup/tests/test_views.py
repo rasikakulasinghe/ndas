@@ -21,7 +21,7 @@ from django.urls import reverse
 from backup.models import BackupJob
 from backup.services import get_archive_dir
 from institution.models import Institution
-from ndas.custom_codes.choice import BackupJobStatus, UserType
+from ndas.custom_codes.choice import BackupJobScopeType, BackupJobStatus, UserType
 
 User = get_user_model()
 
@@ -98,6 +98,23 @@ class BackupTriggerAccessTest(BackupTriggerViewTestBase):
         client.force_login(self.admin)
         response = client.get(self.url)
         self.assertEqual(response.status_code, 200)
+
+    def test_admin_get_context_is_not_superadmin_and_has_no_scope_form(self):
+        # A non-superadmin ADMIN never gets the Story 1.2 scope selector --
+        # confirm the GET context reflects that, not just a 200 status.
+        client = Client()
+        client.force_login(self.admin)
+        response = client.get(self.url)
+        self.assertFalse(response.context['is_superadmin'])
+        self.assertIsNone(response.context['scope_form'])
+
+    def test_admin_get_response_does_not_contain_scope_mode_radios(self):
+        client = Client()
+        client.force_login(self.admin)
+        response = client.get(self.url)
+        self.assertNotContains(response, 'id="ndas_scope_system"')
+        self.assertNotContains(response, 'id="ndas_scope_multi"')
+        self.assertNotContains(response, 'id="ndas_scope_single"')
 
     def test_superadmin_with_no_institution_context_denied_gracefully(self):
         # A superadmin with no active_institution_id in session never reaches
@@ -318,3 +335,312 @@ class BackupTriggerRateLimitTest(TestCase):
 
         response = client.post(self.url)
         self.assertEqual(response.status_code, 403)
+
+
+@STATIC_OVERRIDE
+class BackupScopeViewTestBase(TestCase):
+    """
+    Story 1.2 -- super-admin system-wide / explicit multi-institution scope
+    selection, non-superadmin scope-elevation coercion, and the overlap lock.
+    """
+
+    def setUp(self):
+        self.superadmin = User.objects.create_user(
+            username='sa_scope1', password='Testpass1!', position='Administrator',
+            mobile_primary='0770000040', user_type=UserType.SUPERADMIN,
+            is_superuser=True, institution=None,
+        )
+        self.inst_a = Institution.objects.create(
+            name='Scope Hosp A', slug='scope-hosp-a', created_by=self.superadmin,
+        )
+        self.inst_b = Institution.objects.create(
+            name='Scope Hosp B', slug='scope-hosp-b', created_by=self.superadmin,
+        )
+        self.inst_c = Institution.objects.create(
+            name='Scope Hosp C', slug='scope-hosp-c', created_by=self.superadmin,
+        )
+        self.admin = User.objects.create_user(
+            username='admin_scope1', password='Testpass1!', position='Administrator',
+            mobile_primary='0770000041', user_type=UserType.ADMIN, institution=self.inst_a,
+        )
+        self.url = reverse('backup:backup-create')
+
+    def _superadmin_client(self, active_institution):
+        client = Client()
+        client.force_login(self.superadmin)
+        session = client.session
+        session['active_institution_id'] = active_institution.id
+        session.save()
+        return client
+
+    def tearDown(self):
+        for job in BackupJob.objects.all():
+            shutil.rmtree(get_archive_dir(job), ignore_errors=True)
+
+
+class BackupScopeSuperadminTriggerTest(BackupScopeViewTestBase):
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_superadmin_system_wide_trigger_creates_system_job(self, mock_disk, mock_popen):
+        client = self._superadmin_client(self.inst_a)
+        response = client.post(self.url, {'mode': 'system'})
+
+        self.assertRedirects(response, self.url, fetch_redirect_response=False)
+        job = BackupJob.objects.get()
+        self.assertEqual(job.scope_type, BackupJobScopeType.SYSTEM)
+        self.assertIsNone(job.scope)
+        self.assertEqual(job.scopes.count(), 0)
+        mock_popen.assert_called_once()
+
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_superadmin_multi_trigger_creates_multi_job_with_selected_institutions(self, mock_disk, mock_popen):
+        client = self._superadmin_client(self.inst_a)
+        response = client.post(self.url, {
+            'mode': 'multi',
+            'institutions': [self.inst_a.id, self.inst_b.id],
+        })
+
+        self.assertRedirects(response, self.url, fetch_redirect_response=False)
+        job = BackupJob.objects.get()
+        self.assertEqual(job.scope_type, BackupJobScopeType.MULTI)
+        self.assertIsNone(job.scope)
+        self.assertSetEqual(
+            set(job.scopes.values_list('id', flat=True)), {self.inst_a.id, self.inst_b.id}
+        )
+        mock_popen.assert_called_once()
+
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_superadmin_explicit_single_mode_scopes_to_own_institution(self, mock_disk, mock_popen):
+        client = self._superadmin_client(self.inst_a)
+        response = client.post(self.url, {'mode': 'single'})
+
+        job = BackupJob.objects.get()
+        self.assertEqual(job.scope_type, BackupJobScopeType.SINGLE)
+        self.assertEqual(job.scope, self.inst_a)
+
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_superadmin_multi_with_empty_selection_rerenders_form_with_errors(self, mock_disk, mock_popen):
+        # Refused before any row is created -- and, unlike a redirect, the
+        # bound invalid scope_form is re-rendered (status 200) so the
+        # template's error block is reachable and the user's picks (mode)
+        # are preserved instead of lost.
+        client = self._superadmin_client(self.inst_a)
+        response = client.post(self.url, {'mode': 'multi', 'institutions': []})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['scope_form'].errors)
+        self.assertContains(response, 'Select at least one institution')
+        self.assertEqual(BackupJob.objects.count(), 0)
+        mock_popen.assert_not_called()
+
+    def test_superadmin_get_response_contains_scope_mode_radios(self):
+        client = self._superadmin_client(self.inst_a)
+        response = client.get(self.url)
+        self.assertContains(response, 'id="ndas_scope_single"')
+        self.assertContains(response, 'id="ndas_scope_multi"')
+        self.assertContains(response, 'id="ndas_scope_system"')
+
+    def test_superadmin_recent_jobs_listing_includes_own_multi_and_system_jobs(self):
+        # scope=None for both -- filtering the GET listing on `scope=institution`
+        # alone would hide these; the view must also match on `triggered_by`.
+        system_job = BackupJob.objects.create(
+            scope_type=BackupJobScopeType.SYSTEM, status=BackupJobStatus.COMPLETED,
+            triggered_by=self.superadmin,
+        )
+        multi_job = BackupJob.objects.create(
+            scope_type=BackupJobScopeType.MULTI, status=BackupJobStatus.COMPLETED,
+            triggered_by=self.superadmin,
+        )
+        multi_job.scopes.set([self.inst_a, self.inst_b])
+
+        client = self._superadmin_client(self.inst_a)
+        response = client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        recent_ids = {job.id for job in response.context['recent_jobs']}
+        self.assertIn(system_job.id, recent_ids)
+        self.assertIn(multi_job.id, recent_ids)
+
+
+class BackupScopeCoercionTest(BackupScopeViewTestBase):
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_admin_crafted_system_scope_coerced_to_single_own_institution(self, mock_disk, mock_popen):
+        # ADMIN (non-superadmin) crafts a POST claiming system-wide scope --
+        # the trigger view must never trust it: coerced server-side to
+        # single + the requester's own institution, no 403 (I/O matrix:
+        # "Non-superadmin sends elevated scope").
+        client = Client()
+        client.force_login(self.admin)
+        response = client.post(self.url, {
+            'mode': 'system',
+            'institutions': [self.inst_b.id, self.inst_c.id],
+        })
+
+        self.assertRedirects(response, self.url, fetch_redirect_response=False)
+        job = BackupJob.objects.get()
+        self.assertEqual(job.scope_type, BackupJobScopeType.SINGLE)
+        self.assertEqual(job.scope, self.inst_a)
+        self.assertEqual(job.scopes.count(), 0)
+        mock_popen.assert_called_once()
+
+
+class BackupScopeOverlapLockTest(BackupScopeViewTestBase):
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_system_wide_pending_blocks_any_new_single_trigger(self, mock_disk, mock_popen):
+        BackupJob.objects.create(
+            scope_type=BackupJobScopeType.SYSTEM, status=BackupJobStatus.PENDING,
+            triggered_by=self.superadmin,
+        )
+        client = Client()
+        client.force_login(self.admin)
+        client.post(self.url)
+
+        self.assertEqual(BackupJob.objects.filter(scope_type=BackupJobScopeType.SINGLE).count(), 0)
+        mock_popen.assert_not_called()
+
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_new_system_wide_trigger_blocked_by_any_existing_pending_job(self, mock_disk, mock_popen):
+        # system-wide overlaps every institution -- even one unrelated
+        # single-institution pending job must block it.
+        BackupJob.objects.create(
+            scope_type=BackupJobScopeType.SINGLE, scope=self.inst_c, status=BackupJobStatus.PENDING,
+            triggered_by=self.admin,
+        )
+        client = self._superadmin_client(self.inst_a)
+        client.post(self.url, {'mode': 'system'})
+
+        self.assertEqual(BackupJob.objects.filter(scope_type=BackupJobScopeType.SYSTEM).count(), 0)
+        mock_popen.assert_not_called()
+
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_overlapping_multi_vs_multi_refused(self, mock_disk, mock_popen):
+        pending = BackupJob.objects.create(
+            scope_type=BackupJobScopeType.MULTI, status=BackupJobStatus.PENDING,
+            triggered_by=self.superadmin,
+        )
+        pending.scopes.set([self.inst_a, self.inst_b])
+
+        client = self._superadmin_client(self.inst_a)
+        client.post(self.url, {'mode': 'multi', 'institutions': [self.inst_b.id, self.inst_c.id]})
+
+        self.assertEqual(BackupJob.objects.filter(scope_type=BackupJobScopeType.MULTI).count(), 1)
+        mock_popen.assert_not_called()
+
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_non_overlapping_multi_vs_multi_both_proceed(self, mock_disk, mock_popen):
+        pending = BackupJob.objects.create(
+            scope_type=BackupJobScopeType.MULTI, status=BackupJobStatus.PENDING,
+            triggered_by=self.superadmin,
+        )
+        pending.scopes.set([self.inst_a])
+
+        inst_d = Institution.objects.create(
+            name='Scope Hosp D', slug='scope-hosp-d', created_by=self.superadmin,
+        )
+
+        client = self._superadmin_client(self.inst_a)
+        client.post(self.url, {'mode': 'multi', 'institutions': [self.inst_b.id, inst_d.id]})
+
+        self.assertEqual(BackupJob.objects.filter(scope_type=BackupJobScopeType.MULTI).count(), 2)
+        mock_popen.assert_called_once()
+
+
+class BackupScopeDiskCheckArgsTest(BackupScopeViewTestBase):
+    """
+    Every other POST test mocks `has_sufficient_disk_space` with a fixed
+    return value and never checks what arguments it was called with -- a
+    regression in `backup_create`'s `disk_check_scope` ternary (None /
+    the institutions list / a single institution for system/multi/single)
+    would ship silently. Assert the argument shape explicitly.
+    """
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_multi_post_calls_disk_check_with_full_institution_list(self, mock_disk, mock_popen):
+        client = self._superadmin_client(self.inst_a)
+        client.post(self.url, {
+            'mode': 'multi',
+            'institutions': [self.inst_a.id, self.inst_b.id],
+        })
+
+        mock_disk.assert_called_once()
+        args, kwargs = mock_disk.call_args
+        scope_arg = args[0] if args else kwargs.get('institution_or_institutions')
+        self.assertIsInstance(scope_arg, list)
+        self.assertSetEqual({inst.id for inst in scope_arg}, {self.inst_a.id, self.inst_b.id})
+        self.assertFalse(kwargs.get('system_wide', False))
+
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_system_post_calls_disk_check_with_none_and_system_wide_true(self, mock_disk, mock_popen):
+        client = self._superadmin_client(self.inst_a)
+        client.post(self.url, {'mode': 'system'})
+
+        mock_disk.assert_called_once()
+        args, kwargs = mock_disk.call_args
+        scope_arg = args[0] if args else kwargs.get('institution_or_institutions')
+        self.assertIsNone(scope_arg)
+        self.assertTrue(kwargs.get('system_wide'))
+
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_single_post_calls_disk_check_with_one_institution(self, mock_disk, mock_popen):
+        client = self._superadmin_client(self.inst_a)
+        client.post(self.url, {'mode': 'single'})
+
+        mock_disk.assert_called_once()
+        args, kwargs = mock_disk.call_args
+        scope_arg = args[0] if args else kwargs.get('institution_or_institutions')
+        self.assertEqual(scope_arg, self.inst_a)
+        self.assertFalse(kwargs.get('system_wide', False))
+
+
+class BackupScopeInsufficientDiskTest(BackupScopeViewTestBase):
+    """
+    The insufficient-disk failure path (which still creates a FAILED
+    BackupJob for audit purposes) was only tested for the non-superadmin
+    single-scope coercion case -- cover `multi` and `system` too.
+    """
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch(
+        'backup.views.has_sufficient_disk_space',
+        return_value=(False, 10 ** 12, 10 ** 12, 10),
+    )
+    def test_multi_insufficient_disk_creates_failed_job_with_scopes_populated(self, mock_disk, mock_popen):
+        client = self._superadmin_client(self.inst_a)
+        client.post(self.url, {
+            'mode': 'multi',
+            'institutions': [self.inst_a.id, self.inst_b.id],
+        })
+
+        job = BackupJob.objects.get()
+        self.assertEqual(job.status, BackupJobStatus.FAILED)
+        self.assertEqual(job.scope_type, BackupJobScopeType.MULTI)
+        self.assertIsNone(job.scope)
+        self.assertSetEqual(
+            set(job.scopes.values_list('id', flat=True)), {self.inst_a.id, self.inst_b.id}
+        )
+        mock_popen.assert_not_called()
+
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch(
+        'backup.views.has_sufficient_disk_space',
+        return_value=(False, 10 ** 12, 10 ** 12, 10),
+    )
+    def test_system_insufficient_disk_creates_failed_job_with_no_scopes(self, mock_disk, mock_popen):
+        client = self._superadmin_client(self.inst_a)
+        client.post(self.url, {'mode': 'system'})
+
+        job = BackupJob.objects.get()
+        self.assertEqual(job.status, BackupJobStatus.FAILED)
+        self.assertEqual(job.scope_type, BackupJobScopeType.SYSTEM)
+        self.assertIsNone(job.scope)
+        self.assertEqual(job.scopes.count(), 0)
+        mock_popen.assert_not_called()

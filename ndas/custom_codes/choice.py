@@ -252,3 +252,14 @@ class BackupJobStatus(models.TextChoices):
     RUNNING = 'running', 'Running'
     COMPLETED = 'completed', 'Completed'
     FAILED = 'failed', 'Failed'
+
+
+class BackupJobScopeType(models.TextChoices):
+    """
+    Institution-scoping shape for a BackupJob (Story 1.2). Only SUPERADMIN
+    may choose MULTI/SYSTEM; ADMIN (and a superadmin with no elevated
+    selection made) is always coerced server-side to SINGLE.
+    """
+    SINGLE = 'single', 'Single Institution'
+    MULTI = 'multi', 'Multiple Institutions'
+    SYSTEM = 'system', 'System-Wide'

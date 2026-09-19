@@ -3,7 +3,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from ndas.custom_codes.Custom_abstract_class import TimeStampedModel, UserTrackingMixin
-from ndas.custom_codes.choice import BackupJobType, BackupJobStatus
+from ndas.custom_codes.choice import BackupJobType, BackupJobStatus, BackupJobScopeType
 
 
 class BackupJob(TimeStampedModel, UserTrackingMixin):
@@ -69,7 +69,35 @@ class BackupJob(TimeStampedModel, UserTrackingMixin):
         blank=True,
         related_name="backup_jobs",
         verbose_name=_("Scope"),
-        help_text=_("Institution this job is scoped to. Null = system-wide (Epic 1.2)."),
+        help_text=_(
+            "Single institution this job is scoped to when scope_type=single. "
+            "Null when scope_type=multi (see `scopes` instead) or scope_type=system "
+            "(unfiltered, system-wide)."
+        ),
+    )
+
+    scope_type = models.CharField(
+        max_length=10,
+        choices=BackupJobScopeType.choices,
+        default=BackupJobScopeType.SINGLE,
+        db_index=True,
+        verbose_name=_("Scope Type"),
+        help_text=_(
+            "Story 1.2: whether this job covers a single institution (`scope`), an "
+            "explicit multi-institution subset (`scopes`), or the whole system "
+            "(both empty)."
+        ),
+    )
+
+    scopes = models.ManyToManyField(
+        "institution.Institution",
+        blank=True,
+        related_name="backup_jobs_multi",
+        verbose_name=_("Scopes"),
+        help_text=_(
+            "Explicit institution subset for scope_type=multi. Unused (empty) for "
+            "single/system jobs."
+        ),
     )
 
     class Meta:

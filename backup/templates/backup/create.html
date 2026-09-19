@@ -32,10 +32,70 @@
           </p>
           <form method="post">
             {% csrf_token %}
+            {% if is_superadmin %}
+            <div class="form-group">
+              <label>Backup Scope</label>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="mode" id="ndas_scope_single"
+                       value="single" {% if scope_form.mode.value == 'single' or not scope_form.mode.value %}checked{% endif %}
+                       onchange="ndasToggleBackupScope()">
+                <label class="form-check-label" for="ndas_scope_single">
+                  This institution only ({{ institution.name }})
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="mode" id="ndas_scope_multi"
+                       value="multi" {% if scope_form.mode.value == 'multi' %}checked{% endif %}
+                       onchange="ndasToggleBackupScope()">
+                <label class="form-check-label" for="ndas_scope_multi">
+                  Selected institutions
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="mode" id="ndas_scope_system"
+                       value="system" {% if scope_form.mode.value == 'system' %}checked{% endif %}
+                       onchange="ndasToggleBackupScope()">
+                <label class="form-check-label" for="ndas_scope_system">
+                  Entire system (all institutions)
+                </label>
+              </div>
+            </div>
+            <div class="form-group" id="ndas_scope_multi_institutions" style="display:none;">
+              <label>Institutions</label>
+              {% for checkbox in scope_form.institutions %}
+              <div class="form-check">
+                {{ checkbox.tag }}
+                <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+              </div>
+              {% endfor %}
+              {% if scope_form.errors %}
+                <div class="invalid-feedback d-block">
+                  {% for field, errors in scope_form.errors.items %}
+                    {% for error in errors %}
+                      <small class="text-danger">{{ error }}</small><br>
+                    {% endfor %}
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            {% endif %}
             <button type="submit" class="btn btn-primary btn-sm">
               <i class="fas fa-play mr-1"></i>Start Backup
             </button>
           </form>
+          {% if is_superadmin %}
+          <script>
+            function ndasToggleBackupScope() {
+              var multiSelected = document.getElementById('ndas_scope_multi').checked;
+              document.getElementById('ndas_scope_multi_institutions').style.display = multiSelected ? '' : 'none';
+            }
+            // Run once on page load (not only on the radios' onchange) so a
+            // re-rendered form (e.g. after a validation error) with
+            // mode=multi already checked shows the institutions panel
+            // immediately, without requiring a manual click first.
+            ndasToggleBackupScope();
+          </script>
+          {% endif %}
         </div>
       </div>
 
