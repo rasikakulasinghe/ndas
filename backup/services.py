@@ -10,6 +10,7 @@ module (directly, for the disk-space pre-check, and indirectly via
 this service layer directly, so permissions/rate-limiting/audit logging in
 the trigger view can't be bypassed by a second code path.
 """
+import hashlib
 import json
 import logging
 import os
@@ -20,6 +21,9 @@ from django.apps import apps
 from django.conf import settings
 from django.core import serializers
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db import connection
+from django.db.migrations.recorder import MigrationRecorder
+from django.utils import timezone
 
 from ndas.custom_codes.choice import BackupJobScopeType
 
@@ -243,51 +247,102 @@ def has_sufficient_disk_space(institution_or_institutions=None, system_wide=Fals
 def _copy_media_file(zf, file_field):
     """
     Chunked copy of one media file into the open zip — never a whole-file
-    .read(). Returns None on success, or a short human-readable description
-    of what was skipped and why (the caller aggregates these into the job's
-    error_message — see I/O matrix: 'Media file missing/unreadable during
-    export' — the job still completes, but the admin must be told).
+    .read(). Returns (skip_reason_or_None, checksum_or_None, arcname):
+
+      - `arcname` (the "media/<name>" string this file was/would be written
+        under) is always returned, computed exactly once here, so callers
+        never independently recompute it and risk drifting out of sync with
+        the name actually passed to `zf.open()`.
+      - success: (None, sha256_hexdigest, arcname) -- the hash is
+        accumulated inline during the same chunked read/write loop that
+        copies the file, so there is never a second read-through just to
+        hash it.
+      - skipped: (short human-readable description, None, arcname) -- the
+        caller aggregates these into the job's error_message (see I/O
+        matrix: 'Media file missing/unreadable during export' — the job
+        still completes, but the admin must be told) and the file is absent
+        from `manifest.json`'s `checksums` (it was never written to the
+        zip).
     """
+    arcname = f"media/{file_field.name}"
+
     try:
         source_path = file_field.path
     except (ValueError, OSError) as e:
         logger.warning("Backup export: media file has no accessible path (%r); skipping.", file_field)
-        return f"{file_field.name}: no accessible path ({e})"
+        return f"{file_field.name}: no accessible path ({e})", None, arcname
 
     if not os.path.exists(source_path):
         logger.warning("Backup export: media file missing on disk (%s); skipping.", source_path)
-        return f"{file_field.name}: file missing on disk"
+        return f"{file_field.name}: file missing on disk", None, arcname
 
-    arcname = f"media/{file_field.name}"
+    hasher = hashlib.sha256()
     try:
         with open(source_path, "rb") as src, zf.open(arcname, "w") as dest:
-            shutil.copyfileobj(src, dest, length=COPY_CHUNK_SIZE)
+            while chunk := src.read(COPY_CHUNK_SIZE):
+                hasher.update(chunk)
+                dest.write(chunk)
     except OSError as e:
         logger.exception("Backup export: failed to copy media file %s", source_path)
-        return f"{file_field.name}: copy failed ({e})"
+        return f"{file_field.name}: copy failed ({e})", None, arcname
 
-    return None
+    return None, hasher.hexdigest(), arcname
+
+
+def _compute_schema_version():
+    """
+    SHA-256 over the sorted "<app_label>.<name>" list of every currently-
+    applied migration -- a stable fingerprint of the DB schema this export
+    was taken against (Epic 2's restore-side compatibility check consumes
+    this; Story 1.3 only produces it).
+    """
+    applied = MigrationRecorder(connection).applied_migrations()
+    labels = sorted(f"{app_label}.{name}" for app_label, name in applied)
+    hasher = hashlib.sha256()
+    hasher.update("\n".join(labels).encode("utf-8"))
+    return hasher.hexdigest()
 
 
 def create_export(job, progress_callback=None):
     """
     Stream `job`'s institution-scoped export into
-    BASE_DIR/backups/<job_id>/<job_id>.zip as db_export.json + media/...
+    BASE_DIR/backups/<job_id>/<job_id>.zip as db_export.json + media/... +
+    manifest.json.
 
     One model's queryset at a time via `.iterator()`, one record at a time —
     never a full model or the whole archive buffered in memory. Media files
-    referenced by exported Video/Attachment rows are copied via chunked
-    `shutil.copyfileobj`.
+    referenced by exported Video/Attachment rows are copied via a chunked
+    read/write loop that also accumulates each file's SHA-256 inline (Story
+    1.3) during that same copy pass — no *individual file* is ever read
+    twice to hash it.
 
-    Returns (archive_path, skipped_media) — `skipped_media` is a list of
-    short descriptions for any media file that couldn't be copied (missing,
-    unreadable, etc); the export still completes even when non-empty (see
-    I/O matrix: 'Media file missing/unreadable during export' — a human
-    confirmed 'complete with a warning' over 'fail the whole job').
+    `manifest.json` (Story 1.3) is written into the same open zip as a third
+    member, after both the DB pass and the media pass have completed (its
+    `record_counts`/`checksums` values are only fully known at that point).
+    The whole-archive SHA-256 is the one deliberate exception to the
+    never-read-twice rule above: by design, it requires one full second
+    read of the finished `.zip` from disk (chunked, never a whole-file
+    read()), computed after the `zipfile.ZipFile` context manager closes —
+    there is no way to know an archive's own hash before the archive is
+    finished.
+
+    Returns (archive_path, skipped_media, archive_checksum) —
+    `skipped_media` is a list of short descriptions for any media file that
+    couldn't be copied (missing, unreadable, etc); the export still
+    completes even when non-empty (see I/O matrix: 'Media file
+    missing/unreadable during export' — a human confirmed 'complete with a
+    warning' over 'fail the whole job').
     """
+    Institution = apps.get_model('institution', 'Institution')
+
     if job.scope_type == BackupJobScopeType.SYSTEM:
         system_wide = True
         scope_arg = None
+        # System-wide is a complete point-in-time snapshot -- intentionally
+        # unfiltered by is_active, mirroring `_model_export_plan`'s "system"
+        # branch, so an archive's manifest lists every institution its data
+        # could actually contain, including since-deactivated ones.
+        institutions = list(Institution.objects.order_by('slug').values_list('slug', flat=True))
     elif job.scope_type == BackupJobScopeType.MULTI:
         system_wide = False
         scope_arg = list(job.scopes.all())
@@ -298,6 +353,7 @@ def create_export(job, progress_callback=None):
             # from `scopes` after job creation. Fail loudly rather than
             # silently exporting nothing.
             raise ValueError(f"BackupJob {job.id} has scope_type=multi but no institutions in scopes.")
+        institutions = sorted(inst.slug for inst in scope_arg)
     else:
         system_wide = False
         scope_arg = job.scope
@@ -307,6 +363,12 @@ def create_export(job, progress_callback=None):
             # after this job was created. Fail loudly rather than silently
             # exporting nothing.
             raise ValueError(f"BackupJob {job.id} has no scope institution (institution deleted?).")
+        institutions = [scope_arg.slug]
+
+    # Computed up front, before any file I/O starts: a failure querying the
+    # migrations table must fail fast, not discard an already-completed
+    # DB+media pass over a multi-GB archive.
+    schema_version = _compute_schema_version()
 
     archive_dir = get_archive_dir(job)
     archive_dir.mkdir(parents=True, exist_ok=True)
@@ -315,40 +377,96 @@ def create_export(job, progress_callback=None):
     plan = _model_export_plan(scope_arg, system_wide=system_wide)
     total_models = len(plan)
     media_sources = []
+    record_counts = {}
+    checksums = {}
 
     with zipfile.ZipFile(archive_path, mode="w", compression=zipfile.ZIP_DEFLATED, allowZip64=True) as zf:
+        db_hasher = hashlib.sha256()
         with zf.open("db_export.json", "w") as f:
-            f.write(b"{")
+            def _write(chunk_bytes):
+                db_hasher.update(chunk_bytes)
+                f.write(chunk_bytes)
+
+            _write(b"{")
             for i, (label, qs) in enumerate(plan):
                 if i:
-                    f.write(b",")
-                f.write(json.dumps(label).encode("utf-8") + b":[")
+                    _write(b",")
+                _write(json.dumps(label).encode("utf-8") + b":[")
 
+                count = 0
                 for j, obj in enumerate(qs.iterator()):
                     if j:
-                        f.write(b",")
+                        _write(b",")
                     record = serializers.serialize("python", [obj])[0]
-                    f.write(json.dumps(record, cls=DjangoJSONEncoder).encode("utf-8"))
+                    _write(json.dumps(record, cls=DjangoJSONEncoder).encode("utf-8"))
+                    count += 1
 
                     if label == VIDEO_MODEL_KEY and obj.video_file:
                         media_sources.append(obj.video_file)
                     elif label == ATTACHMENT_MODEL_KEY and obj.attachment:
                         media_sources.append(obj.attachment)
 
-                f.write(b"]")
+                _write(b"]")
+                record_counts[label] = count
                 if progress_callback:
                     # DB pass = 0-80% of overall progress.
                     progress_callback(int((i + 1) / total_models * 80))
-            f.write(b"}")
+            _write(b"}")
+
+        checksums["db_export.json"] = db_hasher.hexdigest()
 
         total_media = len(media_sources)
         skipped_media = []
         for k, file_field in enumerate(media_sources):
-            skip_reason = _copy_media_file(zf, file_field)
+            skip_reason, media_checksum, arcname = _copy_media_file(zf, file_field)
             if skip_reason:
                 skipped_media.append(skip_reason)
+            elif arcname in checksums:
+                # Two exported media files resolved to the same archive
+                # member name (e.g. a shared/reused underlying file). Both
+                # remain physically in the zip (zipfile permits duplicate
+                # member names), but the manifest must never silently drop
+                # the first file's checksum by overwriting it with the
+                # second's -- flag the second occurrence instead.
+                skipped_media.append(f"{file_field.name}: duplicate archive member, skipped")
+            else:
+                checksums[arcname] = media_checksum
             if progress_callback and total_media:
                 # Media pass = 80-100% of overall progress.
                 progress_callback(80 + int((k + 1) / total_media * 20))
 
-    return archive_path, skipped_media
+        # manifest.json is the one deliberate, bounded exception to this
+        # module's "never buffer a whole structure in memory" rule: unlike
+        # db_export.json/media (arbitrarily large), its size is bounded by
+        # the fixed model count (13) plus the number of media files in this
+        # archive, so building it as a single in-memory dict is safe.
+        manifest = {
+            "source_job_id": job.id,
+            "manifest_version": 1,  # shape of manifest.json itself -- distinct from schema_version (the DB schema fingerprint); bump if these fields change.
+            "schema_version": schema_version,
+            "checksum_algorithm": "sha256",
+            "scope_type": job.scope_type,
+            "institutions": institutions,
+            "record_counts": record_counts,
+            "checksums": checksums,
+            "generated_at": timezone.now().isoformat(),
+            "generated_by": job.triggered_by.username if job.triggered_by else "",
+            # Forward-compat stub for Story 1.4 (date-range filtering) --
+            # deliberately always this constant "unapplied" shape for now,
+            # not a half-finished feature. The key must exist today so a
+            # later Story 1.4 doesn't need a manifest schema migration.
+            "date_filter": {"applied": False, "start": None, "end": None},
+        }
+        with zf.open("manifest.json", "w") as mf:
+            mf.write(json.dumps(manifest, cls=DjangoJSONEncoder).encode("utf-8"))
+
+    # Whole-archive checksum: hashed from the finished .zip on disk, after
+    # the ZipFile context manager has closed -- never embedded inside
+    # manifest.json itself, and never a whole-file read().
+    archive_hasher = hashlib.sha256()
+    with open(archive_path, "rb") as af:
+        while chunk := af.read(COPY_CHUNK_SIZE):
+            archive_hasher.update(chunk)
+    archive_checksum = archive_hasher.hexdigest()
+
+    return archive_path, skipped_media, archive_checksum

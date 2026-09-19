@@ -61,7 +61,7 @@ class Command(BaseCommand):
                 logger.exception("BackupJob %s: failed to persist progress update.", job.id)
 
         try:
-            archive_path, skipped_media = create_export(job, progress_callback=_on_progress)
+            archive_path, skipped_media, archive_checksum = create_export(job, progress_callback=_on_progress)
         except Exception as e:
             logger.exception("BackupJob %s failed during export.", job.id)
             # Remove only the partial .zip, never the whole archive_dir --
@@ -81,13 +81,14 @@ class Command(BaseCommand):
         # policy) but the admin must see exactly what was skipped.
         job.status = BackupJobStatus.COMPLETED
         job.progress_pct = 100
+        job.archive_checksum = archive_checksum
         job.error_message = (
             "Completed with {} media file(s) skipped: {}".format(
                 len(skipped_media), "; ".join(skipped_media)
             )
             if skipped_media else ""
         )
-        job.save(update_fields=['status', 'progress_pct', 'error_message', 'updated_at'])
+        job.save(update_fields=['status', 'progress_pct', 'archive_checksum', 'error_message', 'updated_at'])
         if skipped_media:
             self.stdout.write(self.style.WARNING(
                 f"BackupJob {job.id}: completed with {len(skipped_media)} media file(s) skipped -> {archive_path}"

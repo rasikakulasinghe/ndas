@@ -55,10 +55,19 @@ class RunBackupCommandTest(TestCase):
         self.assertEqual(self.job.error_message, "")
         self.assertTrue(Path(get_archive_path(self.job)).exists())
 
+    def test_archive_checksum_persisted_on_successful_completion(self):
+        # Story 1.3: run_backup must unpack create_export's 3rd return value
+        # and persist it onto BackupJob.archive_checksum in the same final
+        # save that sets status=completed.
+        call_command('run_backup', str(self.job.id))
+        self.job.refresh_from_db()
+        self.assertEqual(self.job.status, BackupJobStatus.COMPLETED)
+        self.assertEqual(len(self.job.archive_checksum), 64)
+
     def test_completed_with_skipped_media_reflected_in_error_message(self):
         with mock.patch(
             'backup.management.commands.run_backup.create_export',
-            return_value=(get_archive_path(self.job), ["a.mp4: file missing on disk"]),
+            return_value=(get_archive_path(self.job), ["a.mp4: file missing on disk"], "a" * 64),
         ):
             get_archive_dir(self.job).mkdir(parents=True, exist_ok=True)
             with zipfile.ZipFile(get_archive_path(self.job), 'w'):
@@ -67,6 +76,7 @@ class RunBackupCommandTest(TestCase):
         self.job.refresh_from_db()
         self.assertEqual(self.job.status, BackupJobStatus.COMPLETED)
         self.assertIn('a.mp4', self.job.error_message)
+        self.assertEqual(self.job.archive_checksum, "a" * 64)
 
     def test_export_exception_marks_job_failed_and_removes_only_the_zip(self):
         archive_dir = get_archive_dir(self.job)
@@ -87,6 +97,10 @@ class RunBackupCommandTest(TestCase):
         self.assertIn('boom', self.job.error_message)
         self.assertFalse(zip_path.exists(), "the partial .zip should be removed on failure")
         self.assertTrue(log_path.exists(), "the log file must survive failure cleanup")
+        self.assertEqual(
+            self.job.archive_checksum, "",
+            "archive_checksum must stay at the model default when create_export raises",
+        )
 
     def test_nonexistent_job_raises_command_error(self):
         from django.core.management.base import CommandError

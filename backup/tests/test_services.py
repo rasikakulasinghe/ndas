@@ -19,6 +19,7 @@ from django.utils import timezone
 
 from backup.models import BackupJob
 from backup.services import (
+    _compute_schema_version,
     _model_export_plan,
     create_export,
     estimate_export_size_bytes,
@@ -135,15 +136,20 @@ class CreateExportTest(TestCase):
         shutil.rmtree(get_archive_dir(self.job), ignore_errors=True)
 
     def _export(self):
-        path, skipped = create_export(self.job)
+        path, skipped, checksum = create_export(self.job)
         return path
 
     def _export_with_skipped(self):
-        return create_export(self.job)
+        path, skipped, checksum = create_export(self.job)
+        return path, skipped
 
     def _read_db_export(self, path):
         with zipfile.ZipFile(path) as zf:
             return json.loads(zf.read('db_export.json'))
+
+    def _read_manifest(self, path):
+        with zipfile.ZipFile(path) as zf:
+            return json.loads(zf.read('manifest.json'))
 
     def test_all_13_keys_present_even_when_empty(self):
         data = self._read_db_export(self._export())
@@ -203,10 +209,45 @@ class CreateExportTest(TestCase):
         # The archive itself still completes -- everything else still got exported.
         data = self._read_db_export(path)
         self.assertEqual(len(data['video.video']), 1)
+        # manifest.json: record_counts still counts the DB row, but checksums
+        # has no entry for the skipped (never-written) media file. (Note:
+        # storage may rename a colliding filename on write, so match on
+        # directory/extension rather than the exact original filename.)
+        manifest = self._read_manifest(path)
+        self.assertEqual(manifest['record_counts']['video.video'], 1)
+        self.assertFalse(
+            any(name.startswith('media/') and name.endswith('.mp4') for name in manifest['checksums']),
+            manifest['checksums'],
+        )
+        # The attachment (not deleted) is still a real checksum entry.
+        self.assertTrue(
+            any(name.startswith('media/') and name.endswith('.txt') for name in manifest['checksums']),
+            manifest['checksums'],
+        )
 
     def test_no_skipped_media_when_everything_present(self):
         path, skipped = self._export_with_skipped()
         self.assertEqual(skipped, [])
+
+    def test_duplicate_media_arcname_does_not_silently_overwrite_checksum(self):
+        # Two exported media files that resolve to the same "media/<name>"
+        # archive member (e.g. a shared/reused underlying file) must not
+        # let the second checksum silently overwrite the first in the
+        # manifest -- the second occurrence is flagged in skipped_media
+        # instead. self.video_a and self.attachment_a give create_export
+        # exactly 2 media sources, so this mock's 2-item side_effect lines
+        # up with the 2 real calls to `_copy_media_file`.
+        with mock.patch('backup.services._copy_media_file') as copy_mock:
+            copy_mock.side_effect = [
+                (None, 'a' * 64, 'media/shared.mp4'),
+                (None, 'b' * 64, 'media/shared.mp4'),
+            ]
+            path, skipped, checksum = create_export(self.job)
+        manifest = self._read_manifest(path)
+        self.assertEqual(manifest['checksums']['media/shared.mp4'], 'a' * 64)
+        self.assertTrue(
+            any('duplicate archive member' in s for s in skipped), skipped,
+        )
 
     def test_scope_none_raises_instead_of_silently_exporting_nothing(self):
         # Story 1.1 never creates a job with scope=None itself; reaching this
@@ -216,6 +257,185 @@ class CreateExportTest(TestCase):
         self.job.save(update_fields=['scope'])
         with self.assertRaises(ValueError):
             create_export(self.job)
+
+
+@STORAGE_OVERRIDE
+class ManifestTest(TestCase):
+    """
+    Story 1.3 -- `manifest.json` is written as a third zip member covering
+    schema version, scope, per-model record counts, per-file checksums, and
+    generation metadata; `BackupJob.archive_checksum` is the whole-archive
+    SHA-256, computed after the zip is closed.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='svc_sa8', password='x', position='Administrator', mobile_primary='0770000108',
+        )
+        self.inst_a = Institution.objects.create(name='Manifest Hosp A', slug='manifest-hosp-a', created_by=self.user)
+        self.inst_b = Institution.objects.create(name='Manifest Hosp B', slug='manifest-hosp-b', created_by=self.user)
+        self.patient_a = make_patient(self.inst_a, self.user, 'Baby ManA', 'BHT-MAN-A')
+
+        self.video_a = Video.objects.create(
+            patient=self.patient_a,
+            title='VidManA',
+            recorded_on=timezone.now(),
+            video_file=SimpleUploadedFile('mana.mp4', b'video-mana-bytes', content_type='video/mp4'),
+            added_by=self.user,
+        )
+
+        self.job = BackupJob.objects.create(
+            job_type=BackupJobType.BACKUP,
+            status=BackupJobStatus.PENDING,
+            scope=self.inst_a,
+            triggered_by=self.user,
+        )
+
+    def tearDown(self):
+        shutil.rmtree(get_archive_dir(self.job), ignore_errors=True)
+
+    def _read_manifest(self, path):
+        with zipfile.ZipFile(path) as zf:
+            return json.loads(zf.read('manifest.json'))
+
+    def test_manifest_present_with_all_fields_single_scope(self):
+        path, skipped, checksum = create_export(self.job)
+        with zipfile.ZipFile(path) as zf:
+            names = zf.namelist()
+        self.assertIn('manifest.json', names)
+
+        manifest = self._read_manifest(path)
+        self.assertEqual(manifest['source_job_id'], self.job.id)
+        self.assertEqual(manifest['manifest_version'], 1)
+        self.assertEqual(manifest['checksum_algorithm'], 'sha256')
+        self.assertEqual(manifest['scope_type'], BackupJobScopeType.SINGLE)
+        self.assertEqual(manifest['institutions'], [self.inst_a.slug])
+        self.assertEqual(manifest['generated_by'], self.user.username)
+        self.assertEqual(
+            manifest['date_filter'], {"applied": False, "start": None, "end": None},
+        )
+        self.assertTrue(manifest['generated_at'])
+        self.assertEqual(len(manifest['schema_version']), 64)
+
+        for key in EXPECTED_KEYS_IN_ORDER:
+            self.assertIn(key, manifest['record_counts'])
+        self.assertEqual(manifest['record_counts']['patients.patient'], 1)
+        self.assertEqual(manifest['record_counts']['video.video'], 1)
+        self.assertEqual(manifest['record_counts']['patients.gmassessment'], 0)
+
+        self.assertIn('db_export.json', manifest['checksums'])
+        # Match on directory/extension, not the exact filename -- storage
+        # renames a colliding filename on write.
+        self.assertTrue(
+            any(name.startswith('media/') and name.endswith('.mp4') for name in manifest['checksums']),
+            manifest['checksums'],
+        )
+
+    def test_manifest_institutions_multi_scope(self):
+        job = BackupJob.objects.create(
+            job_type=BackupJobType.BACKUP,
+            status=BackupJobStatus.PENDING,
+            scope_type=BackupJobScopeType.MULTI,
+            triggered_by=self.user,
+        )
+        job.scopes.set([self.inst_a, self.inst_b])
+        try:
+            path, skipped, checksum = create_export(job)
+            manifest = self._read_manifest(path)
+            self.assertEqual(manifest['scope_type'], BackupJobScopeType.MULTI)
+            self.assertEqual(
+                sorted(manifest['institutions']), sorted([self.inst_a.slug, self.inst_b.slug]),
+            )
+        finally:
+            shutil.rmtree(get_archive_dir(job), ignore_errors=True)
+
+    def test_manifest_institutions_system_scope_includes_every_institution(self):
+        job = BackupJob.objects.create(
+            job_type=BackupJobType.BACKUP,
+            status=BackupJobStatus.PENDING,
+            scope_type=BackupJobScopeType.SYSTEM,
+            triggered_by=self.user,
+        )
+        try:
+            path, skipped, checksum = create_export(job)
+            manifest = self._read_manifest(path)
+            self.assertEqual(manifest['scope_type'], BackupJobScopeType.SYSTEM)
+            # "every institution slug at generation time" -- including any
+            # seeded/pre-existing institution (e.g. the data-migration
+            # default), not just the two created in this test's setUp.
+            expected = sorted(Institution.objects.values_list('slug', flat=True))
+            self.assertEqual(sorted(manifest['institutions']), expected)
+            self.assertIn(self.inst_a.slug, manifest['institutions'])
+            self.assertIn(self.inst_b.slug, manifest['institutions'])
+        finally:
+            shutil.rmtree(get_archive_dir(job), ignore_errors=True)
+
+    def test_empty_scope_manifest_all_counts_zero_and_only_db_export_checksum(self):
+        empty_inst = Institution.objects.create(
+            name='Empty Hosp', slug='empty-hosp', created_by=self.user,
+        )
+        job = BackupJob.objects.create(
+            job_type=BackupJobType.BACKUP,
+            status=BackupJobStatus.PENDING,
+            scope=empty_inst,
+            triggered_by=self.user,
+        )
+        try:
+            path, skipped, checksum = create_export(job)
+            manifest = self._read_manifest(path)
+            for key in EXPECTED_KEYS_IN_ORDER:
+                self.assertEqual(manifest['record_counts'][key], 0)
+            self.assertEqual(list(manifest['checksums'].keys()), ['db_export.json'])
+        finally:
+            shutil.rmtree(get_archive_dir(job), ignore_errors=True)
+
+    def test_archive_checksum_matches_independently_hashed_zip(self):
+        import hashlib
+        path, skipped, checksum = create_export(self.job)
+        self.assertEqual(len(checksum), 64)
+        hasher = hashlib.sha256()
+        with open(path, 'rb') as f:
+            while chunk := f.read(1024 * 1024):
+                hasher.update(chunk)
+        self.assertEqual(checksum, hasher.hexdigest())
+
+    def test_generated_by_empty_when_triggered_by_is_none(self):
+        # triggered_by is on_delete=SET_NULL, null=True -- the triggering
+        # user can be deleted between job creation and export running. That
+        # must not crash manifest generation; generated_by degrades to "".
+        job = BackupJob.objects.create(
+            job_type=BackupJobType.BACKUP,
+            status=BackupJobStatus.PENDING,
+            scope=self.inst_a,
+            triggered_by=None,
+        )
+        try:
+            path, skipped, checksum = create_export(job)
+            manifest = self._read_manifest(path)
+            self.assertEqual(manifest['generated_by'], "")
+        finally:
+            shutil.rmtree(get_archive_dir(job), ignore_errors=True)
+
+    def test_schema_version_reproducible_across_two_calls(self):
+        first = _compute_schema_version()
+        second = _compute_schema_version()
+        self.assertEqual(first, second)
+
+    def test_schema_version_reproducible_across_two_exports(self):
+        job2 = BackupJob.objects.create(
+            job_type=BackupJobType.BACKUP,
+            status=BackupJobStatus.PENDING,
+            scope=self.inst_a,
+            triggered_by=self.user,
+        )
+        try:
+            path1, _skipped1, _checksum1 = create_export(self.job)
+            path2, _skipped2, _checksum2 = create_export(job2)
+            manifest1 = self._read_manifest(path1)
+            manifest2 = self._read_manifest(path2)
+            self.assertEqual(manifest1['schema_version'], manifest2['schema_version'])
+        finally:
+            shutil.rmtree(get_archive_dir(job2), ignore_errors=True)
 
 
 @STORAGE_OVERRIDE
@@ -334,7 +554,7 @@ class SystemWideExportTest(TestCase):
         shutil.rmtree(get_archive_dir(self.job), ignore_errors=True)
 
     def test_system_wide_export_includes_every_institution(self):
-        path, skipped = create_export(self.job)
+        path, skipped, checksum = create_export(self.job)
         with zipfile.ZipFile(path) as zf:
             data = json.loads(zf.read('db_export.json'))
         patient_pks = [rec['pk'] for rec in data['patients.patient']]
@@ -351,7 +571,7 @@ class SystemWideExportTest(TestCase):
         self.inst_b.is_active = False
         self.inst_b.save(update_fields=['is_active'])
 
-        path, skipped = create_export(self.job)
+        path, skipped, checksum = create_export(self.job)
         with zipfile.ZipFile(path) as zf:
             data = json.loads(zf.read('db_export.json'))
         patient_pks = [rec['pk'] for rec in data['patients.patient']]
@@ -386,7 +606,7 @@ class MultiInstitutionExportTest(TestCase):
         shutil.rmtree(get_archive_dir(self.job), ignore_errors=True)
 
     def test_multi_export_includes_only_selected_institutions_no_leakage(self):
-        path, skipped = create_export(self.job)
+        path, skipped, checksum = create_export(self.job)
         with zipfile.ZipFile(path) as zf:
             data = json.loads(zf.read('db_export.json'))
         patient_pks = [rec['pk'] for rec in data['patients.patient']]

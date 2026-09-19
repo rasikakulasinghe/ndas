@@ -100,6 +100,18 @@ class BackupJob(TimeStampedModel, UserTrackingMixin):
         ),
     )
 
+    archive_checksum = models.CharField(
+        max_length=64,
+        blank=True,
+        default="",
+        db_index=True,
+        verbose_name=_("Archive Checksum"),
+        help_text=_(
+            "Story 1.3: whole-archive SHA-256, computed by hashing the finished "
+            ".zip file on disk after it is closed. Empty until the job completes."
+        ),
+    )
+
     class Meta:
         verbose_name = _("Backup Job")
         verbose_name_plural = _("Backup Jobs")
