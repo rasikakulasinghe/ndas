@@ -82,30 +82,81 @@ def _resolve_scope(institution_or_institutions, system_wide):
     return "multi", list(institution_or_institutions)
 
 
-def _model_export_plan(institution_or_institutions=None, system_wide=False):
+def _resolve_patient_qs(institution_or_institutions, system_wide, date_start=None, date_end=None):
+    """
+    Story 1.4: institution-scoped `Patient` queryset (the same three shapes
+    as `_resolve_scope`), optionally narrowed to `Patient.created_at`'s date
+    falling in `[date_start, date_end]` (either bound may be None for an
+    open-ended range; both None leaves the queryset unfiltered by date).
+
+    Returns `(mode, value, patient_qs)` — `mode`/`value` are `_resolve_scope`'s
+    own return values, handed back so callers that also need to scope
+    referral querysets (never date-narrowed -- referral models stay
+    full-scope always, per spec) don't have to re-derive the institution
+    shape a second time.
+
+    Shared by `_model_export_plan` and `estimate_export_size_bytes` so the
+    institution+date resolution logic exists in exactly one place — a small,
+    deliberate exception to this module's usual explicit-branches-over-
+    abstraction style (see `_model_export_plan`'s docstring for that style's
+    rationale elsewhere).
+    """
+    Patient = apps.get_model('patients', 'Patient')
+    mode, value = _resolve_scope(institution_or_institutions, system_wide)
+
+    if mode == "system":
+        # Intentionally unfiltered by Institution.is_active -- see
+        # `_model_export_plan`'s "system" branch for the full rationale.
+        patient_qs = Patient.objects.all_institutions()
+    elif mode == "single":
+        patient_qs = Patient.objects.for_institution(value)
+    else:  # "multi"
+        patient_qs = Patient.objects.filter(institution__in=value)
+
+    if date_start:
+        patient_qs = patient_qs.filter(created_at__date__gte=date_start)
+    if date_end:
+        patient_qs = patient_qs.filter(created_at__date__lte=date_end)
+
+    return mode, value, patient_qs
+
+
+def _model_export_plan(institution_or_institutions=None, system_wide=False, date_start=None, date_end=None):
     """
     Build the fixed, ordered 13-model export list as (json_key, queryset)
     pairs, each queryset scoped using one of the three scoping shapes
     decided in ARCHITECTURE-SPINE.md AD-3 / epic-1-context.md:
 
-      1. Patient, ReferralSent, ReferralReceived carry a scoped manager
-         (`InstitutionScopedManager`) -> `.for_institution(institution)`
-         (single) / `.filter(institution__in=...)` (multi) /
-         `.all_institutions()` (system).
-      2. ReferralMessage has NEITHER an `institution` FK NOR a scoped
+      1. Patient carries a scoped manager (`InstitutionScopedManager`) ->
+         `.for_institution(institution)` (single) /
+         `.filter(institution__in=...)` (multi) / `.all_institutions()`
+         (system) -- via `_resolve_patient_qs`, Story 1.4 also optionally
+         narrows this by `created_at`'s date (`date_start`/`date_end`).
+      2. ReferralSent/ReferralReceived carry the same scoped manager, scoped
+         the same three ways, but NEVER date-narrowed (referral models stay
+         full institution-scope always, per spec -- the date filter is a
+         `Patient`-only concept).
+      3. ReferralMessage has NEITHER an `institution` FK NOR a scoped
          manager (verified against referral/models.py — it only carries
          `sender_institution`); scoped via `.filter(sender_institution=...)`
-         / `.filter(sender_institution__in=...)` / `.all()`.
-      3. Models with a direct `patient` FK -> `.filter(patient__institution=...)`
-         / `.filter(patient__institution__in=...)` / `.all()`.
-      4. ProblemAction (only a `problem` FK) ->
-         `.filter(problem__patient__institution=...)` /
-         `.filter(problem__patient__institution__in=...)` / `.all()`.
+         / `.filter(sender_institution__in=...)` / `.all()`, also never
+         date-narrowed.
+      4. The 9 patient-linked models (Video, Attachment, GMAssessment,
+         HINEAssessment, DevelopmentalAssessment, CDICRecord,
+         GeneralPaediatricAssessment, Problem, and ProblemAction via its
+         `problem__patient` path) are all filtered relative to the already
+         institution-*and*-date-scoped `patient_qs` (`patient__in=patient_qs`
+         / `problem__patient__in=patient_qs`) rather than each re-deriving
+         its own institution filter -- this is how the date filter reaches
+         them too.
 
     `institution_or_institutions` accepts a single Institution instance
     (Story 1.1's exact single-institution call shape, reproduced byte-for-
     byte) or an iterable of Institution instances (Story 1.2's explicit
     multi-institution subset); `system_wide=True` ignores it entirely.
+    `date_start`/`date_end` (Story 1.4) are optional and independent of each
+    other (an open-ended range is allowed); both `None` reproduces Stories
+    1.1-1.3's exact unfiltered-by-date behavior.
     """
     Patient = apps.get_model('patients', 'Patient')
     ReferralSent = apps.get_model('referral', 'ReferralSent')
@@ -121,7 +172,9 @@ def _model_export_plan(institution_or_institutions=None, system_wide=False):
     Problem = apps.get_model('problemlist', 'Problem')
     ProblemAction = apps.get_model('problemlist', 'ProblemAction')
 
-    mode, value = _resolve_scope(institution_or_institutions, system_wide)
+    mode, value, patient_qs = _resolve_patient_qs(
+        institution_or_institutions, system_wide, date_start=date_start, date_end=date_end
+    )
 
     if mode == "system":
         # Intentionally unfiltered by Institution.is_active: unlike the
@@ -129,49 +182,29 @@ def _model_export_plan(institution_or_institutions=None, system_wide=False):
         # offers active institutions to choose from), a system-wide export
         # is meant to be a complete point-in-time snapshot of everything,
         # including data belonging to since-deactivated institutions.
-        patient_qs = Patient.objects.all_institutions()
         referral_sent_qs = ReferralSent.objects.all_institutions()
         referral_received_qs = ReferralReceived.objects.all_institutions()
         referral_message_qs = ReferralMessage.objects.all()
-        video_qs = Video.objects.all()
-        attachment_qs = Attachment.objects.all()
-        gm_qs = GMAssessment.objects.all()
-        hine_qs = HINEAssessment.objects.all()
-        dev_qs = DevelopmentalAssessment.objects.all()
-        cdic_qs = CDICRecord.objects.all()
-        gpa_qs = GeneralPaediatricAssessment.objects.all()
-        problem_qs = Problem.objects.all()
-        problem_action_qs = ProblemAction.objects.all()
     elif mode == "single":
         institution = value
-        patient_qs = Patient.objects.for_institution(institution)
         referral_sent_qs = ReferralSent.objects.for_institution(institution)
         referral_received_qs = ReferralReceived.objects.for_institution(institution)
         referral_message_qs = ReferralMessage.objects.filter(sender_institution=institution)
-        video_qs = Video.objects.filter(patient__institution=institution)
-        attachment_qs = Attachment.objects.filter(patient__institution=institution)
-        gm_qs = GMAssessment.objects.filter(patient__institution=institution)
-        hine_qs = HINEAssessment.objects.filter(patient__institution=institution)
-        dev_qs = DevelopmentalAssessment.objects.filter(patient__institution=institution)
-        cdic_qs = CDICRecord.objects.filter(patient__institution=institution)
-        gpa_qs = GeneralPaediatricAssessment.objects.filter(patient__institution=institution)
-        problem_qs = Problem.objects.filter(patient__institution=institution)
-        problem_action_qs = ProblemAction.objects.filter(problem__patient__institution=institution)
     else:  # "multi"
         institutions = value
-        patient_qs = Patient.objects.filter(institution__in=institutions)
         referral_sent_qs = ReferralSent.objects.filter(institution__in=institutions)
         referral_received_qs = ReferralReceived.objects.filter(institution__in=institutions)
         referral_message_qs = ReferralMessage.objects.filter(sender_institution__in=institutions)
-        video_qs = Video.objects.filter(patient__institution__in=institutions)
-        attachment_qs = Attachment.objects.filter(patient__institution__in=institutions)
-        gm_qs = GMAssessment.objects.filter(patient__institution__in=institutions)
-        hine_qs = HINEAssessment.objects.filter(patient__institution__in=institutions)
-        dev_qs = DevelopmentalAssessment.objects.filter(patient__institution__in=institutions)
-        cdic_qs = CDICRecord.objects.filter(patient__institution__in=institutions)
-        gpa_qs = GeneralPaediatricAssessment.objects.filter(patient__institution__in=institutions)
-        problem_qs = Problem.objects.filter(patient__institution__in=institutions)
-        problem_action_qs = ProblemAction.objects.filter(problem__patient__institution__in=institutions)
+
+    video_qs = Video.objects.filter(patient__in=patient_qs)
+    attachment_qs = Attachment.objects.filter(patient__in=patient_qs)
+    gm_qs = GMAssessment.objects.filter(patient__in=patient_qs)
+    hine_qs = HINEAssessment.objects.filter(patient__in=patient_qs)
+    dev_qs = DevelopmentalAssessment.objects.filter(patient__in=patient_qs)
+    cdic_qs = CDICRecord.objects.filter(patient__in=patient_qs)
+    gpa_qs = GeneralPaediatricAssessment.objects.filter(patient__in=patient_qs)
+    problem_qs = Problem.objects.filter(patient__in=patient_qs)
+    problem_action_qs = ProblemAction.objects.filter(problem__patient__in=patient_qs)
 
     return [
         (_model_key(Patient), patient_qs),
@@ -197,25 +230,24 @@ def _safe_file_size(file_field):
         return 0
 
 
-def estimate_export_size_bytes(institution_or_institutions=None, system_wide=False):
+def estimate_export_size_bytes(institution_or_institutions=None, system_wide=False, date_start=None, date_end=None):
     """
     Rough size estimate (media only — db_export.json is negligible by
     comparison). Accepts the same three scope shapes as `_model_export_plan`
-    (single Institution / iterable of Institutions / system_wide=True).
+    (single Institution / iterable of Institutions / system_wide=True), plus
+    Story 1.4's optional `date_start`/`date_end` -- resolved via the same
+    `_resolve_patient_qs` helper `_model_export_plan` uses, so the estimate
+    stays accurate (smaller) under a date filter instead of over-counting
+    media belonging to patients the filter would actually exclude.
     """
     Video = apps.get_model('video', 'Video')
     Attachment = apps.get_model('patients', 'Attachment')
 
-    mode, value = _resolve_scope(institution_or_institutions, system_wide)
-    if mode == "system":
-        video_qs = Video.objects.all()
-        attachment_qs = Attachment.objects.all()
-    elif mode == "single":
-        video_qs = Video.objects.filter(patient__institution=value)
-        attachment_qs = Attachment.objects.filter(patient__institution=value)
-    else:  # "multi"
-        video_qs = Video.objects.filter(patient__institution__in=value)
-        attachment_qs = Attachment.objects.filter(patient__institution__in=value)
+    _mode, _value, patient_qs = _resolve_patient_qs(
+        institution_or_institutions, system_wide, date_start=date_start, date_end=date_end
+    )
+    video_qs = Video.objects.filter(patient__in=patient_qs)
+    attachment_qs = Attachment.objects.filter(patient__in=patient_qs)
 
     total = 0
     for video in video_qs.iterator():
@@ -231,14 +263,17 @@ def estimate_export_size_bytes(institution_or_institutions=None, system_wide=Fal
     return total
 
 
-def has_sufficient_disk_space(institution_or_institutions=None, system_wide=False):
+def has_sufficient_disk_space(institution_or_institutions=None, system_wide=False, date_start=None, date_end=None):
     """
     Disk-capacity pre-check (I/O matrix: 'Insufficient disk'). Accepts the
-    same three scope shapes as `_model_export_plan`.
+    same three scope shapes as `_model_export_plan`, plus Story 1.4's
+    optional `date_start`/`date_end`.
 
     Returns (is_sufficient, estimated_bytes, required_free_bytes, actual_free_bytes).
     """
-    estimated = estimate_export_size_bytes(institution_or_institutions, system_wide=system_wide)
+    estimated = estimate_export_size_bytes(
+        institution_or_institutions, system_wide=system_wide, date_start=date_start, date_end=date_end
+    )
     required = int(estimated * DISK_SAFETY_MULTIPLIER) + DISK_SAFETY_MINIMUM_BYTES
     free = shutil.disk_usage(settings.BASE_DIR).free
     return free >= required, estimated, required, free
@@ -370,11 +405,17 @@ def create_export(job, progress_callback=None):
     # DB+media pass over a multi-GB archive.
     schema_version = _compute_schema_version()
 
+    # Story 1.4: the real applied date filter, recorded on the job at
+    # trigger time (null/null for every pre-1.4 job and any job triggered
+    # without a date range -- see `manifest` below).
+    date_start = job.date_filter_start
+    date_end = job.date_filter_end
+
     archive_dir = get_archive_dir(job)
     archive_dir.mkdir(parents=True, exist_ok=True)
     archive_path = get_archive_path(job)
 
-    plan = _model_export_plan(scope_arg, system_wide=system_wide)
+    plan = _model_export_plan(scope_arg, system_wide=system_wide, date_start=date_start, date_end=date_end)
     total_models = len(plan)
     media_sources = []
     record_counts = {}
@@ -451,11 +492,17 @@ def create_export(job, progress_callback=None):
             "checksums": checksums,
             "generated_at": timezone.now().isoformat(),
             "generated_by": job.triggered_by.username if job.triggered_by else "",
-            # Forward-compat stub for Story 1.4 (date-range filtering) --
-            # deliberately always this constant "unapplied" shape for now,
-            # not a half-finished feature. The key must exist today so a
-            # later Story 1.4 doesn't need a manifest schema migration.
-            "date_filter": {"applied": False, "start": None, "end": None},
+            # Story 1.4: the real applied date filter -- "applied" is True
+            # whenever either bound was set (an open-ended one-sided range
+            # still counts as applied). `date_start`/`date_end` are plain
+            # `datetime.date` objects; DjangoJSONEncoder serializes them as
+            # ISO date strings, matching the pre-1.4 stub's shape exactly
+            # when both are None.
+            "date_filter": {
+                "applied": bool(date_start or date_end),
+                "start": date_start,
+                "end": date_end,
+            },
         }
         with zf.open("manifest.json", "w") as mf:
             mf.write(json.dumps(manifest, cls=DjangoJSONEncoder).encode("utf-8"))

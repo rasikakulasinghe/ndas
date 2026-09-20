@@ -1,6 +1,7 @@
 """
 Backup trigger view — Story 1.1, extended by Story 1.2 for super-admin
-system-wide / explicit multi-institution scope selection.
+system-wide / explicit multi-institution scope selection, and by Story 1.4
+for an optional date-range filter available to every triggering user.
 
 The ONLY entry point into `backup/services.py`'s export logic: permission
 check -> scope resolution -> concurrency/overlap-lock check -> disk-space
@@ -12,6 +13,9 @@ import logging
 import os
 import subprocess
 import sys
+from dataclasses import dataclass
+from datetime import date
+from typing import List, Optional
 
 from django.conf import settings
 from django.contrib import messages
@@ -36,46 +40,109 @@ def _get_admin_institution(request):
     return getattr(request, 'institution', None) or getattr(request.user, 'institution', None)
 
 
+@dataclass
+class ResolvedScope:
+    """
+    Story 1.2's original 5-element `_resolve_scope_from_request` return
+    tuple (scope_type, institutions, system_wide, error_message, scope_form)
+    was already getting unwieldy; Story 1.4 adds two more fields (the
+    resolved date filter), so it's a dataclass instead of growing the tuple
+    further.
+
+      - `institutions` is always a list of Institution instances (one
+        element for `single`, one-or-more for `multi`, empty for `system`).
+      - `date_start`/`date_end` are the validated, optional date-range bound
+        -- resolved (and available) for every submitter, superadmin or not
+        (Story 1.4: never privilege-gated, unlike `scope_type`/`institutions`).
+      - On a validation failure (e.g. `multi` with no institutions selected,
+        or `end_date < start_date`), `scope_type` is None and
+        `error_message` is set; the caller must refuse before creating any
+        BackupJob row. `scope_form` is the bound, invalid form so the caller
+        can re-render the trigger page with field errors and the user's
+        picks preserved, instead of redirecting and losing them.
+    """
+    scope_type: Optional[str]
+    institutions: Optional[List]
+    system_wide: bool
+    error_message: Optional[str]
+    scope_form: BackupScopeForm
+    date_start: Optional[date] = None
+    date_end: Optional[date] = None
+
+
 def _resolve_scope_from_request(request, is_superadmin, own_institution):
     """
-    Resolve this POST's backup scope (Story 1.2).
+    Resolve this POST's backup scope + date filter (Story 1.2 + Story 1.4).
 
     Named `_resolve_scope_from_request` (not `_resolve_scope`) to avoid
     confusion with the unrelated `backup.services._resolve_scope`, which
     normalizes an already-decided scope into a queryset-filter descriptor
     rather than reading one out of an HTTP request.
 
-    Returns (scope_type, institutions, system_wide, error_message, scope_form):
-      - `institutions` is always a list of Institution instances (one
-        element for `single`, one-or-more for `multi`, empty for `system`).
-      - A non-superadmin's POST body is never trusted for scope_type/
-        institution selection -- coerced server-side to `single` + the
-        requester's own institution regardless of what was submitted (I/O
-        matrix: "Non-superadmin sends elevated scope"); `scope_form` is None
-        in this path since a non-superadmin never renders/uses one.
-      - On a validation failure (e.g. `multi` with no institutions
-        selected), scope_type is None and `error_message` is set; the
-        caller must refuse before creating any BackupJob row. `scope_form`
-        is the bound, invalid form so the caller can re-render the trigger
-        page with field errors and the user's picks preserved, instead of
-        redirecting and losing them.
-    """
-    if not is_superadmin:
-        return BackupJobScopeType.SINGLE, [own_institution], False, None, None
+    `BackupScopeForm` is now built and validated for *every* submitter, not
+    just superadmins -- `start_date`/`end_date` are never privilege-gated,
+    so their validation (including the "end before start" refusal) must run
+    regardless of `is_superadmin`. But `mode`/`institutions` *content* (and
+    any error `clean()` raises because of it, e.g. an empty multi-selection)
+    must stay completely inert for a non-superadmin, exactly as Story 1.2
+    established (I/O matrix: "Non-superadmin sends elevated scope") -- so a
+    non-superadmin's request must NEVER be refused because of what `mode`/
+    `institutions` contain, only because `start_date`/`end_date` are
+    genuinely invalid. This is why `form.errors` is inspected field-by-field
+    below rather than relying on a single `form.is_valid()` check: a bare
+    `is_valid()` gate would let a crafted/stale `mode=multi` with no
+    `institutions` (content that's discarded a few lines later anyway)
+    wrongly refuse a legitimate non-superadmin request before the
+    coercion branch is even reached -- exactly the regression this
+    structure avoids. Field-level `cleaned_data` entries are still
+    populated even when the form's own `clean()` raises a non-field error
+    (Django runs per-field cleaning before `clean()`), so `start_date`/
+    `end_date` are safely readable from `cleaned_data` in that case too.
 
+    Returns a `ResolvedScope`.
+    """
     form = BackupScopeForm(request.POST)
+    form.is_valid()  # populates form.errors / form.cleaned_data either way
+
+    # A field-level error on start_date/end_date itself (an unparsable
+    # date, or `clean()`'s "end before start" refusal -- attached to
+    # `end_date` specifically) is a genuine problem for EVERY submitter,
+    # superadmin or not.
+    if form.errors.get('start_date') or form.errors.get('end_date'):
+        error_message = "; ".join(
+            msg for field in ('start_date', 'end_date') for msg in form.errors.get(field, [])
+        ) or "Invalid date range."
+        return ResolvedScope(None, None, False, error_message, form)
+
+    date_start = form.cleaned_data.get('start_date')
+    date_end = form.cleaned_data.get('end_date')
+
+    if not is_superadmin:
+        # mode/institutions content -- and any error clean() raised solely
+        # because of it -- is never trusted for a non-superadmin, so it can
+        # never refuse their request either. Coerced to single + own
+        # institution regardless of what was submitted.
+        return ResolvedScope(
+            BackupJobScopeType.SINGLE, [own_institution], False, None, form, date_start, date_end,
+        )
+
+    # Superadmin: remaining errors (invalid `mode` choice, or `clean()`'s
+    # empty-multi-selection refusal) DO matter.
     if not form.is_valid():
         error_message = "; ".join(
             msg for errors in form.errors.values() for msg in errors
         ) or "Invalid backup scope selection."
-        return None, None, False, error_message, form
+        return ResolvedScope(None, None, False, error_message, form)
 
     mode = form.cleaned_data['mode']
     if mode == BackupJobScopeType.SYSTEM:
-        return BackupJobScopeType.SYSTEM, [], True, None, form
+        return ResolvedScope(BackupJobScopeType.SYSTEM, [], True, None, form, date_start, date_end)
     if mode == BackupJobScopeType.MULTI:
-        return BackupJobScopeType.MULTI, list(form.cleaned_data['institutions']), False, None, form
-    return BackupJobScopeType.SINGLE, [own_institution], False, None, form
+        return ResolvedScope(
+            BackupJobScopeType.MULTI, list(form.cleaned_data['institutions']), False, None, form,
+            date_start, date_end,
+        )
+    return ResolvedScope(BackupJobScopeType.SINGLE, [own_institution], False, None, form, date_start, date_end)
 
 
 def _scope_log_description(scope_type, scope_institutions, system_wide):
@@ -151,28 +218,37 @@ def backup_create(request):
             'institution': institution,
             'recent_jobs': _recent_jobs_for(request, institution, is_superadmin),
             'is_superadmin': is_superadmin,
-            'scope_form': BackupScopeForm() if is_superadmin else None,
+            # Story 1.4: unlike Story 1.2's mode/institutions selector (still
+            # superadmin-only in the template), the date-range fields on
+            # this same form must be available to every triggering user --
+            # so `scope_form` is no longer None for a non-superadmin.
+            'scope_form': BackupScopeForm(),
         })
 
     # ─── POST: trigger the job ──────────────────────────────────────────────
 
-    scope_type, scope_institutions, system_wide, scope_error, scope_form = _resolve_scope_from_request(
-        request, is_superadmin, institution
-    )
-    if scope_type is None:
-        # Superadmin submitted an invalid scope selection (e.g. `multi` with
-        # no institutions chosen) -- refused before any row is created (I/O
-        # matrix: "Superadmin: multi-select, empty"). Re-render the form
+    resolved = _resolve_scope_from_request(request, is_superadmin, institution)
+    if resolved.scope_type is None:
+        # Invalid scope/date-range selection (e.g. superadmin's `multi` with
+        # no institutions chosen, or anyone's `end_date < start_date`) --
+        # refused before any row is created (I/O matrix: "Superadmin:
+        # multi-select, empty" / "Invalid range"). Re-render the form
         # (status 200, not a redirect) with the bound, invalid `scope_form`
         # so the template's error block actually displays and the user's
-        # mode/institution picks are preserved instead of lost on redirect.
-        messages.error(request, scope_error)
+        # picks are preserved instead of lost on redirect.
+        messages.error(request, resolved.error_message)
         return render(request, 'backup/create.html', {
             'institution': institution,
             'recent_jobs': _recent_jobs_for(request, institution, is_superadmin),
             'is_superadmin': is_superadmin,
-            'scope_form': scope_form,
+            'scope_form': resolved.scope_form,
         }, status=200)
+
+    scope_type = resolved.scope_type
+    scope_institutions = resolved.institutions
+    system_wide = resolved.system_wide
+    date_start = resolved.date_start
+    date_end = resolved.date_end
 
     # Disk-capacity pre-check: refuse before creating any row, but record the
     # refused attempt as a failed BackupJob for visibility/audit. Guarded so
@@ -185,7 +261,7 @@ def backup_create(request):
     )
     try:
         sufficient, estimated, required, free = has_sufficient_disk_space(
-            disk_check_scope, system_wide=system_wide
+            disk_check_scope, system_wide=system_wide, date_start=date_start, date_end=date_end,
         )
     except OSError:
         logger.exception(
@@ -205,6 +281,8 @@ def backup_create(request):
             scope_type=scope_type,
             scope=scope_institutions[0] if scope_type == BackupJobScopeType.SINGLE else None,
             triggered_by=request.user,
+            date_filter_start=date_start,
+            date_filter_end=date_end,
             error_message=(
                 f"Insufficient disk space to safely complete this backup: "
                 f"{free} bytes free, {required} bytes required (estimated export size {estimated} bytes)."
@@ -256,6 +334,8 @@ def backup_create(request):
                 scope_type=scope_type,
                 scope=scope_institutions[0] if scope_type == BackupJobScopeType.SINGLE else None,
                 triggered_by=request.user,
+                date_filter_start=date_start,
+                date_filter_end=date_end,
             )
             if scope_type == BackupJobScopeType.MULTI:
                 job.scopes.set(scope_institutions)

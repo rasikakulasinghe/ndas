@@ -1,14 +1,18 @@
 """
-backup/tests/test_services.py — Story 1.1
+backup/tests/test_services.py — Story 1.1, extended by Story 1.4 for the
+optional date-range filter.
 
 Covers the export-service half of the I/O matrix: the fixed 13-model plan
 and its ordering, institution scoping (no cross-institution leakage), every
-model key present even when empty, the media layout inside the archive, and
-the disk-space pre-check.
+model key present even when empty, the media layout inside the archive, the
+disk-space pre-check, and (Story 1.4) narrowing `Patient` + its 9
+patient-linked models by `created_at`'s date while referral models stay
+full-scope.
 """
 import json
 import shutil
 import zipfile
+from datetime import date, datetime, time
 from unittest import mock
 
 from django.conf import settings
@@ -30,9 +34,23 @@ from institution.models import Institution
 from ndas.custom_codes.choice import BackupJobScopeType, BackupJobStatus, BackupJobType
 from patients.models import Attachment, Patient
 from problemlist.models import Problem, ProblemAction
+from referral.models import ReferralSent
 from video.models import Video
 
 User = get_user_model()
+
+
+def _set_created_at_date(model, pk, d):
+    """
+    Force a specific `created_at` date on an already-created row, bypassing
+    `auto_now_add` (which only fires on INSERT via `.save()`, never on
+    `.update()`) -- the same bypass-via-`.update()` pattern already used
+    below (`EstimateExportSizeAttachmentZeroTest`) for `file_size`. Noon is
+    used (not midnight) so the stored UTC-converted instant never crosses
+    into a neighboring day regardless of `TIME_ZONE`.
+    """
+    dt = timezone.make_aware(datetime.combine(d, time(12, 0)))
+    model.objects.filter(pk=pk).update(created_at=dt)
 
 EXPECTED_KEYS_IN_ORDER = [
     'patients.patient',
@@ -623,3 +641,334 @@ class MultiInstitutionExportTest(TestCase):
         self.job.scopes.clear()
         with self.assertRaises(ValueError):
             create_export(self.job)
+
+
+@STORAGE_OVERRIDE
+class DateFilterModelExportPlanTest(TestCase):
+    """
+    Story 1.4 -- `_model_export_plan`'s optional `date_start`/`date_end`
+    narrows `Patient` (and, via `patient_qs`, its 9 patient-linked models)
+    to `created_at`'s date falling in `[date_start, date_end]`; referral
+    models are never date-narrowed, always full institution-scope.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='svc_sa9', password='x', position='Administrator', mobile_primary='0770000109',
+        )
+        self.inst = Institution.objects.create(name='DateFilter Hosp', slug='datefilter-hosp', created_by=self.user)
+
+        self.patient_before = make_patient(self.inst, self.user, 'Baby Before', 'BHT-DF-BEFORE')
+        self.patient_start = make_patient(self.inst, self.user, 'Baby Start', 'BHT-DF-START')
+        self.patient_mid = make_patient(self.inst, self.user, 'Baby Mid', 'BHT-DF-MID')
+        self.patient_end = make_patient(self.inst, self.user, 'Baby End', 'BHT-DF-END')
+        self.patient_after = make_patient(self.inst, self.user, 'Baby After', 'BHT-DF-AFTER')
+
+        _set_created_at_date(Patient, self.patient_before.pk, date(2020, 6, 1))
+        _set_created_at_date(Patient, self.patient_start.pk, date(2020, 6, 10))
+        _set_created_at_date(Patient, self.patient_mid.pk, date(2020, 6, 15))
+        _set_created_at_date(Patient, self.patient_end.pk, date(2020, 6, 20))
+        _set_created_at_date(Patient, self.patient_after.pk, date(2020, 6, 30))
+
+        # A video attached to the excluded (out-of-range) patient_before --
+        # narrowing must exclude it too via patient_qs, not just Patient itself.
+        self.video_before = Video.objects.create(
+            patient=self.patient_before, title='VidBefore', recorded_on=timezone.now(),
+            video_file=SimpleUploadedFile('before.mp4', b'x'), added_by=self.user,
+        )
+        self.video_mid = Video.objects.create(
+            patient=self.patient_mid, title='VidMid', recorded_on=timezone.now(),
+            video_file=SimpleUploadedFile('mid.mp4', b'x'), added_by=self.user,
+        )
+
+        # A referral tied to the out-of-range patient_before -- must still
+        # be exported in full regardless of the date filter (spec: referral
+        # models never date-narrowed). `to_clinician`/`from_clinician` are
+        # set (not left null) because ReferralSent's post_save signal
+        # (referral/signals.py: notify_referral_received) creates a
+        # Notification with recipient=instance.to_clinician -- a null
+        # recipient trips a NOT NULL constraint inside the signal, which
+        # poisons this test's atomic transaction even though the signal
+        # itself swallows the exception.
+        self.referral_sent = ReferralSent.objects.create(
+            from_institution=self.inst, to_institution=self.inst, institution=self.inst,
+            patient=self.patient_before, initial_message='Referral msg',
+            from_clinician=self.user, to_clinician=self.user, added_by=self.user,
+        )
+
+    def _plan_dict(self, **kwargs):
+        return dict(_model_export_plan(self.inst, **kwargs))
+
+    def _patient_pks(self, plan, key='patients.patient'):
+        return set(plan[key].values_list('pk', flat=True))
+
+    def test_no_date_filter_includes_every_patient(self):
+        # Both bounds omitted -- byte-for-byte the same as pre-1.4 behavior.
+        plan = self._plan_dict()
+        self.assertEqual(
+            self._patient_pks(plan),
+            {self.patient_before.pk, self.patient_start.pk, self.patient_mid.pk,
+             self.patient_end.pk, self.patient_after.pk},
+        )
+
+    def test_full_range_inclusive_both_bounds(self):
+        plan = self._plan_dict(date_start=date(2020, 6, 10), date_end=date(2020, 6, 20))
+        self.assertEqual(
+            self._patient_pks(plan),
+            {self.patient_start.pk, self.patient_mid.pk, self.patient_end.pk},
+        )
+
+    def test_open_ended_start_only(self):
+        plan = self._plan_dict(date_start=date(2020, 6, 10), date_end=None)
+        self.assertEqual(
+            self._patient_pks(plan),
+            {self.patient_start.pk, self.patient_mid.pk, self.patient_end.pk, self.patient_after.pk},
+        )
+
+    def test_open_ended_end_only(self):
+        plan = self._plan_dict(date_start=None, date_end=date(2020, 6, 20))
+        self.assertEqual(
+            self._patient_pks(plan),
+            {self.patient_before.pk, self.patient_start.pk, self.patient_mid.pk, self.patient_end.pk},
+        )
+
+    def test_patient_linked_model_narrowed_via_shared_patient_qs(self):
+        # video_before's patient falls outside the range -- must be excluded
+        # even though Video itself carries no `created_at` date filter of
+        # its own; it's narrowed relative to the already date-scoped
+        # `patient_qs` (spec: "applied to Patient.created_at's date").
+        plan = self._plan_dict(date_start=date(2020, 6, 10), date_end=date(2020, 6, 20))
+        video_pks = set(plan['video.video'].values_list('pk', flat=True))
+        self.assertEqual(video_pks, {self.video_mid.pk})
+        self.assertNotIn(self.video_before.pk, video_pks)
+
+    def test_referral_models_unaffected_by_date_filter(self):
+        # A date range that excludes patient_before (the referral's own
+        # patient) must NOT exclude the referral itself -- referral models
+        # stay full institution-scope in every scope/date combination.
+        plan = self._plan_dict(date_start=date(2020, 6, 10), date_end=date(2020, 6, 20))
+        referral_pks = set(plan['referral.referralsent'].values_list('pk', flat=True))
+        self.assertIn(self.referral_sent.pk, referral_pks)
+
+    def test_no_date_filter_referral_plan_unchanged(self):
+        # Sanity check: referral querysets are identical with/without a date
+        # filter -- they're built from institution scope alone.
+        with_filter = self._plan_dict(date_start=date(2020, 6, 10), date_end=date(2020, 6, 20))
+        without_filter = self._plan_dict()
+        self.assertEqual(
+            set(with_filter['referral.referralsent'].values_list('pk', flat=True)),
+            set(without_filter['referral.referralsent'].values_list('pk', flat=True)),
+        )
+
+
+@STORAGE_OVERRIDE
+class DateFilterWithMultiAndSystemScopeTest(TestCase):
+    """
+    Story 1.4 -- the date filter must compose correctly with Story 1.2's
+    `multi` and `system` scope shapes, not just `single`. Both scope shapes
+    resolve `patient_qs` once (institution scope, then optional date
+    narrowing) and the 9 patient-linked models follow it via
+    `patient__in=patient_qs`, so scope and date must narrow *together*.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='svc_sa12', password='x', position='Administrator', mobile_primary='0770000112',
+        )
+        self.inst_a = Institution.objects.create(name='DF Multi A', slug='df-multi-a', created_by=self.user)
+        self.inst_b = Institution.objects.create(name='DF Multi B', slug='df-multi-b', created_by=self.user)
+        self.inst_c = Institution.objects.create(name='DF Multi C', slug='df-multi-c', created_by=self.user)
+
+        # In-range and out-of-range patient for each institution.
+        self.a_in = make_patient(self.inst_a, self.user, 'A In', 'BHT-DFM-A-IN')
+        self.a_out = make_patient(self.inst_a, self.user, 'A Out', 'BHT-DFM-A-OUT')
+        self.b_in = make_patient(self.inst_b, self.user, 'B In', 'BHT-DFM-B-IN')
+        self.b_out = make_patient(self.inst_b, self.user, 'B Out', 'BHT-DFM-B-OUT')
+        self.c_in = make_patient(self.inst_c, self.user, 'C In', 'BHT-DFM-C-IN')
+        for patient, when in (
+            (self.a_in, date(2022, 3, 10)), (self.a_out, date(2022, 5, 10)),
+            (self.b_in, date(2022, 3, 12)), (self.b_out, date(2022, 5, 12)),
+            (self.c_in, date(2022, 3, 14)),
+        ):
+            _set_created_at_date(Patient, patient.pk, when)
+
+        self.video_a_in = Video.objects.create(
+            patient=self.a_in, title='VidAIn', recorded_on=timezone.now(),
+            video_file=SimpleUploadedFile('df_a_in.mp4', b'0123456789'), added_by=self.user,
+        )
+        self.video_a_out = Video.objects.create(
+            patient=self.a_out, title='VidAOut', recorded_on=timezone.now(),
+            video_file=SimpleUploadedFile('df_a_out.mp4', b'0123456789ABCDEFGHIJ'), added_by=self.user,
+        )
+        self.video_c_in = Video.objects.create(
+            patient=self.c_in, title='VidCIn', recorded_on=timezone.now(),
+            video_file=SimpleUploadedFile('df_c_in.mp4', b'0123456789'), added_by=self.user,
+        )
+
+        self.march = dict(date_start=date(2022, 3, 1), date_end=date(2022, 3, 31))
+
+    def _pks(self, plan, key):
+        return set(plan[key].values_list('pk', flat=True))
+
+    def test_multi_scope_with_date_range_narrows_by_both(self):
+        plan = dict(_model_export_plan([self.inst_a, self.inst_b], **self.march))
+        # Only the in-range patients of the two selected institutions:
+        # not the out-of-range ones, and not institution C's in-range one.
+        self.assertEqual(self._pks(plan, 'patients.patient'), {self.a_in.pk, self.b_in.pk})
+        self.assertEqual(self._pks(plan, 'video.video'), {self.video_a_in.pk})
+
+    def test_system_scope_with_date_range_narrows_across_every_institution(self):
+        plan = dict(_model_export_plan(system_wide=True, **self.march))
+        self.assertEqual(
+            self._pks(plan, 'patients.patient'), {self.a_in.pk, self.b_in.pk, self.c_in.pk},
+        )
+        self.assertEqual(
+            self._pks(plan, 'video.video'), {self.video_a_in.pk, self.video_c_in.pk},
+        )
+
+    def test_multi_scope_without_date_filter_unchanged(self):
+        # Regression guard: no date bounds => Story 1.2's multi behavior.
+        plan = dict(_model_export_plan([self.inst_a, self.inst_b]))
+        self.assertEqual(
+            self._pks(plan, 'patients.patient'),
+            {self.a_in.pk, self.a_out.pk, self.b_in.pk, self.b_out.pk},
+        )
+
+    def test_multi_scope_estimate_excludes_out_of_range_media(self):
+        full = estimate_export_size_bytes([self.inst_a, self.inst_b])
+        narrowed = estimate_export_size_bytes([self.inst_a, self.inst_b], **self.march)
+        self.assertGreater(full, narrowed)
+        self.assertGreater(narrowed, 0)
+
+    def test_system_scope_estimate_excludes_out_of_range_media(self):
+        full = estimate_export_size_bytes(system_wide=True)
+        narrowed = estimate_export_size_bytes(system_wide=True, **self.march)
+        self.assertGreater(full, narrowed)
+        self.assertGreater(narrowed, 0)
+
+
+@STORAGE_OVERRIDE
+class DateFilterEstimateSizeTest(TestCase):
+    """
+    Story 1.4 -- `estimate_export_size_bytes`/`has_sufficient_disk_space`
+    resolve the same institution+date `patient_qs` as `_model_export_plan`,
+    so a date-filtered job's disk-space estimate excludes media belonging to
+    patients the filter would exclude.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='svc_sa10', password='x', position='Administrator', mobile_primary='0770000110',
+        )
+        self.inst = Institution.objects.create(name='Estimate Hosp', slug='estimate-hosp', created_by=self.user)
+        self.patient_in = make_patient(self.inst, self.user, 'Baby In', 'BHT-EST-IN')
+        self.patient_out = make_patient(self.inst, self.user, 'Baby Out', 'BHT-EST-OUT')
+        _set_created_at_date(Patient, self.patient_in.pk, date(2021, 1, 15))
+        _set_created_at_date(Patient, self.patient_out.pk, date(2021, 2, 15))
+
+        Video.objects.create(
+            patient=self.patient_in, title='VidIn', recorded_on=timezone.now(),
+            video_file=SimpleUploadedFile('in.mp4', b'0123456789'), added_by=self.user,
+        )
+        Video.objects.create(
+            patient=self.patient_out, title='VidOut', recorded_on=timezone.now(),
+            video_file=SimpleUploadedFile('out.mp4', b'0123456789ABCDEFGHIJ'), added_by=self.user,
+        )
+
+    def test_estimate_excludes_media_outside_date_range(self):
+        full = estimate_export_size_bytes(self.inst)
+        narrowed = estimate_export_size_bytes(
+            self.inst, date_start=date(2021, 1, 1), date_end=date(2021, 1, 31),
+        )
+        self.assertGreater(full, narrowed)
+        self.assertGreater(narrowed, 0)
+
+    def test_disk_check_uses_date_narrowed_estimate(self):
+        with mock.patch('backup.services.shutil.disk_usage') as disk_usage:
+            disk_usage.return_value = mock.Mock(free=10 * 1024 ** 4)
+            _sufficient, estimated_full, _req, _free = has_sufficient_disk_space(self.inst)
+            _sufficient2, estimated_narrowed, _req2, _free2 = has_sufficient_disk_space(
+                self.inst, date_start=date(2021, 1, 1), date_end=date(2021, 1, 31),
+            )
+        self.assertGreater(estimated_full, estimated_narrowed)
+
+
+@STORAGE_OVERRIDE
+class ManifestDateFilterTest(TestCase):
+    """
+    Story 1.4 -- `manifest.json`'s `date_filter` key reflects the real
+    applied `BackupJob.date_filter_start`/`date_filter_end` values instead
+    of Story 1.3's constant "unapplied" stub.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='svc_sa11', password='x', position='Administrator', mobile_primary='0770000111',
+        )
+        self.inst = Institution.objects.create(name='ManifestDF Hosp', slug='manifestdf-hosp', created_by=self.user)
+        self.patient = make_patient(self.inst, self.user, 'Baby MF', 'BHT-MF-1')
+        _set_created_at_date(Patient, self.patient.pk, date(2022, 3, 10))
+
+    def _read_manifest(self, path):
+        with zipfile.ZipFile(path) as zf:
+            return json.loads(zf.read('manifest.json'))
+
+    def _make_job(self, date_filter_start=None, date_filter_end=None):
+        return BackupJob.objects.create(
+            job_type=BackupJobType.BACKUP,
+            status=BackupJobStatus.PENDING,
+            scope=self.inst,
+            triggered_by=self.user,
+            date_filter_start=date_filter_start,
+            date_filter_end=date_filter_end,
+        )
+
+    def test_full_range_reflected_in_manifest(self):
+        job = self._make_job(date(2022, 3, 1), date(2022, 3, 31))
+        try:
+            path, _skipped, _checksum = create_export(job)
+            manifest = self._read_manifest(path)
+            self.assertEqual(
+                manifest['date_filter'],
+                {"applied": True, "start": "2022-03-01", "end": "2022-03-31"},
+            )
+        finally:
+            shutil.rmtree(get_archive_dir(job), ignore_errors=True)
+
+    def test_open_ended_start_only_reflected_in_manifest(self):
+        job = self._make_job(date_filter_start=date(2022, 3, 1), date_filter_end=None)
+        try:
+            path, _skipped, _checksum = create_export(job)
+            manifest = self._read_manifest(path)
+            self.assertEqual(
+                manifest['date_filter'],
+                {"applied": True, "start": "2022-03-01", "end": None},
+            )
+        finally:
+            shutil.rmtree(get_archive_dir(job), ignore_errors=True)
+
+    def test_open_ended_end_only_reflected_in_manifest(self):
+        job = self._make_job(date_filter_start=None, date_filter_end=date(2022, 3, 31))
+        try:
+            path, _skipped, _checksum = create_export(job)
+            manifest = self._read_manifest(path)
+            self.assertEqual(
+                manifest['date_filter'],
+                {"applied": True, "start": None, "end": "2022-03-31"},
+            )
+        finally:
+            shutil.rmtree(get_archive_dir(job), ignore_errors=True)
+
+    def test_no_filter_still_produces_unapplied_stub_shape(self):
+        # No date_filter_start/end set on the job (defaults to null/null,
+        # same as every pre-1.4 job) -- byte-for-byte the same shape as
+        # Story 1.3's stub.
+        job = self._make_job()
+        try:
+            path, _skipped, _checksum = create_export(job)
+            manifest = self._read_manifest(path)
+            self.assertEqual(
+                manifest['date_filter'], {"applied": False, "start": None, "end": None},
+            )
+        finally:
+            shutil.rmtree(get_archive_dir(job), ignore_errors=True)

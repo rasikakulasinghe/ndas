@@ -1,9 +1,12 @@
 """
-backup/tests/test_views.py — Story 1.1
+backup/tests/test_views.py — Story 1.1, extended by Story 1.4 for the
+optional date-range filter.
 
 Covers the trigger-view half of the I/O matrix: permission gate, happy
 path (job created + subprocess launched + response returns immediately),
-concurrency lock, disk-space refusal, and subprocess-launch failure.
+concurrency lock, disk-space refusal, subprocess-launch failure, and (Story
+1.4) the date-range filter -- available to every triggering user, refused
+before any row is created when invalid, and never part of the overlap lock.
 
 Rate limiting itself is `django_ratelimit`'s existing, separately-tested
 behavior (see tests/test_security.py) — here we only need the endpoint to
@@ -12,6 +15,7 @@ suite's convention.
 """
 import shutil
 import threading
+from datetime import date
 from unittest import mock
 
 from django.contrib.auth import get_user_model
@@ -99,14 +103,20 @@ class BackupTriggerAccessTest(BackupTriggerViewTestBase):
         response = client.get(self.url)
         self.assertEqual(response.status_code, 200)
 
-    def test_admin_get_context_is_not_superadmin_and_has_no_scope_form(self):
-        # A non-superadmin ADMIN never gets the Story 1.2 scope selector --
-        # confirm the GET context reflects that, not just a 200 status.
+    def test_admin_get_context_is_not_superadmin_but_has_scope_form_for_dates(self):
+        # A non-superadmin ADMIN never gets the Story 1.2 scope-mode
+        # selector (mode/institutions) -- confirmed separately below by
+        # `test_admin_get_response_does_not_contain_scope_mode_radios`. But
+        # Story 1.4's date-range fields live on this same `BackupScopeForm`
+        # and are never privilege-gated, so `scope_form` itself is no
+        # longer None for a non-superadmin (pre-1.4 behavior) -- the
+        # template needs it to render/re-populate the date inputs for
+        # every user.
         client = Client()
         client.force_login(self.admin)
         response = client.get(self.url)
         self.assertFalse(response.context['is_superadmin'])
-        self.assertIsNone(response.context['scope_form'])
+        self.assertIsNotNone(response.context['scope_form'])
 
     def test_admin_get_response_does_not_contain_scope_mode_radios(self):
         client = Client()
@@ -485,6 +495,30 @@ class BackupScopeCoercionTest(BackupScopeViewTestBase):
         self.assertEqual(job.scope_type, BackupJobScopeType.SINGLE)
         self.assertEqual(job.scope, self.inst_a)
         self.assertEqual(job.scopes.count(), 0)
+
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_admin_crafted_multi_with_empty_institutions_never_refused(self, mock_disk, mock_popen):
+        # Regression guard (Story 1.4): `BackupScopeForm` is now built and
+        # validated for every submitter, including non-superadmins, because
+        # start_date/end_date must be validated for everyone. But mode=multi
+        # with no institutions selected trips `clean()`'s "Select at least
+        # one institution" non-field ValidationError -- for a superadmin
+        # that's a real refusal (see BackupScopeSuperadminTriggerTest), but
+        # for a non-superadmin mode/institutions are inert content that gets
+        # coerced away a few lines later regardless, so this must NOT
+        # refuse the request. Mirrors
+        # test_admin_crafted_system_scope_coerced_to_single_own_institution
+        # above, but for the one payload shape that previously broke.
+        client = Client()
+        client.force_login(self.admin)
+        response = client.post(self.url, {'mode': 'multi', 'institutions': []})
+
+        self.assertRedirects(response, self.url, fetch_redirect_response=False)
+        job = BackupJob.objects.get()
+        self.assertEqual(job.scope_type, BackupJobScopeType.SINGLE)
+        self.assertEqual(job.scope, self.inst_a)
+        self.assertEqual(job.scopes.count(), 0)
         mock_popen.assert_called_once()
 
 
@@ -644,3 +678,140 @@ class BackupScopeInsufficientDiskTest(BackupScopeViewTestBase):
         self.assertIsNone(job.scope)
         self.assertEqual(job.scopes.count(), 0)
         mock_popen.assert_not_called()
+
+
+@STATIC_OVERRIDE
+class BackupDateFilterViewTest(BackupTriggerViewTestBase):
+    """
+    Story 1.4 -- the date-range filter is available to any user who can
+    trigger a backup (never superadmin-gated, unlike Story 1.2's scope-mode
+    selection), refused before any row is created when `end_date <
+    start_date`, and never participates in the overlap/concurrency lock.
+    """
+
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_non_admin_superadmin_date_range_persisted_on_job(self, mock_disk, mock_popen):
+        # Non-superadmin ADMIN, no mode/institutions submitted at all --
+        # date filtering must work identically to a superadmin's submission.
+        client = Client()
+        client.force_login(self.admin)
+        response = client.post(self.url, {'start_date': '2024-01-01', 'end_date': '2024-01-31'})
+
+        self.assertRedirects(response, self.url, fetch_redirect_response=False)
+        job = BackupJob.objects.get()
+        self.assertEqual(job.scope_type, BackupJobScopeType.SINGLE)
+        self.assertEqual(job.scope, self.inst)
+        self.assertEqual(str(job.date_filter_start), '2024-01-01')
+        self.assertEqual(str(job.date_filter_end), '2024-01-31')
+        mock_popen.assert_called_once()
+
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_open_ended_start_only_persisted(self, mock_disk, mock_popen):
+        client = Client()
+        client.force_login(self.admin)
+        client.post(self.url, {'start_date': '2024-05-01'})
+
+        job = BackupJob.objects.get()
+        self.assertEqual(str(job.date_filter_start), '2024-05-01')
+        self.assertIsNone(job.date_filter_end)
+
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_no_dates_submitted_leaves_job_fields_null(self, mock_disk, mock_popen):
+        # Omitting both dates must reproduce Stories 1.1-1.3's exact
+        # behavior -- both fields stay null.
+        client = Client()
+        client.force_login(self.admin)
+        client.post(self.url)
+
+        job = BackupJob.objects.get()
+        self.assertIsNone(job.date_filter_start)
+        self.assertIsNone(job.date_filter_end)
+
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_end_before_start_refused_before_any_job_row_created(self, mock_disk, mock_popen):
+        client = Client()
+        client.force_login(self.admin)
+        response = client.post(self.url, {'start_date': '2024-06-15', 'end_date': '2024-06-01'})
+
+        # Bound-form re-render (status 200), not a redirect -- the user's
+        # picks must not be lost.
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['scope_form'].errors)
+        self.assertContains(response, 'End date cannot be before start date')
+        self.assertEqual(BackupJob.objects.count(), 0)
+        mock_popen.assert_not_called()
+
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_end_before_start_preserves_submitted_values_on_rerender(self, mock_disk, mock_popen):
+        client = Client()
+        client.force_login(self.admin)
+        response = client.post(self.url, {'start_date': '2024-06-15', 'end_date': '2024-06-01'})
+
+        self.assertContains(response, '2024-06-15')
+        self.assertContains(response, '2024-06-01')
+
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_disk_check_called_with_resolved_date_bounds(self, mock_disk, mock_popen):
+        client = Client()
+        client.force_login(self.admin)
+        client.post(self.url, {'start_date': '2024-01-01', 'end_date': '2024-01-31'})
+
+        mock_disk.assert_called_once()
+        _args, kwargs = mock_disk.call_args
+        self.assertEqual(str(kwargs.get('date_start')), '2024-01-01')
+        self.assertEqual(str(kwargs.get('date_end')), '2024-01-31')
+
+
+@STATIC_OVERRIDE
+class BackupDateFilterOverlapLockTest(BackupScopeViewTestBase):
+    """
+    Story 1.4 -- the date filter never participates in Story 1.2's overlap
+    lock: two date-filtered jobs for the same/overlapping institutions still
+    conflict regardless of their date ranges (institution-scope overlap is
+    the only thing that matters).
+    """
+
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_non_overlapping_date_ranges_same_institution_still_conflict(self, mock_disk, mock_popen):
+        BackupJob.objects.create(
+            scope=self.inst_a, status=BackupJobStatus.PENDING, triggered_by=self.admin,
+            date_filter_start=date(2020, 1, 1), date_filter_end=date(2020, 1, 31),
+        )
+
+        client = Client()
+        client.force_login(self.admin)
+        client.post(self.url, {'start_date': '2024-01-01', 'end_date': '2024-01-31'})
+
+        # Same institution, wildly different (non-overlapping) date ranges --
+        # still refused. The overlap lock is institution-only.
+        self.assertEqual(BackupJob.objects.filter(scope=self.inst_a).count(), 1)
+        mock_popen.assert_not_called()
+
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_superadmin_multi_scope_combined_with_date_filter_persists_both(self, mock_disk, mock_popen):
+        # Story 1.2's scope selection (superadmin-only) and Story 1.4's date
+        # filter (never privilege-gated) are independent and compose freely.
+        client = self._superadmin_client(self.inst_a)
+        response = client.post(self.url, {
+            'mode': 'multi',
+            'institutions': [self.inst_a.id, self.inst_b.id],
+            'start_date': '2024-03-01',
+            'end_date': '2024-03-31',
+        })
+
+        self.assertRedirects(response, self.url, fetch_redirect_response=False)
+        job = BackupJob.objects.get()
+        self.assertEqual(job.scope_type, BackupJobScopeType.MULTI)
+        self.assertSetEqual(
+            set(job.scopes.values_list('id', flat=True)), {self.inst_a.id, self.inst_b.id}
+        )
+        self.assertEqual(str(job.date_filter_start), '2024-03-01')
+        self.assertEqual(str(job.date_filter_end), '2024-03-31')

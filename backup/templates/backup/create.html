@@ -32,6 +32,46 @@
           </p>
           <form method="post">
             {% csrf_token %}
+            {% if scope_form.errors %}
+            <div class="alert alert-danger">
+              {% for field, errors in scope_form.errors.items %}
+                {% for error in errors %}
+                <div>{% if field != '__all__' %}<strong>{{ scope_form|default:field }}</strong> -- {% endif %}{{ error }}</div>
+                {% endfor %}
+              {% endfor %}
+            </div>
+            {% endif %}
+            <div class="form-group">
+              <label>Date Range (optional)</label>
+              <div class="form-row">
+                <div class="col-sm-6">
+                  <label for="{{ scope_form.start_date.id_for_label }}" class="small text-muted mb-0">Start date</label>
+                  {{ scope_form.start_date }}
+                  {% if scope_form.start_date.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in scope_form.start_date.errors %}<small class="text-danger">{{ error }}</small><br>{% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+                <div class="col-sm-6">
+                  <label for="{{ scope_form.end_date.id_for_label }}" class="small text-muted mb-0">End date</label>
+                  {{ scope_form.end_date }}
+                  {% if scope_form.end_date.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in scope_form.end_date.errors %}<small class="text-danger">{{ error }}</small><br>{% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+              <small class="form-text text-muted">
+                Narrows the export to patients whose record was CREATED within this range (and
+                pulls in all of that patient's related records in full, regardless of each
+                record's own date -- a video's recording date or an assessment date can fall
+                outside this range and still be included). Leave both blank for the full
+                unfiltered export. Referral records are always exported in full regardless of
+                this range.
+              </small>
+            </div>
             {% if is_superadmin %}
             <div class="form-group">
               <label>Backup Scope</label>
@@ -68,15 +108,6 @@
                 <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
               </div>
               {% endfor %}
-              {% if scope_form.errors %}
-                <div class="invalid-feedback d-block">
-                  {% for field, errors in scope_form.errors.items %}
-                    {% for error in errors %}
-                      <small class="text-danger">{{ error }}</small><br>
-                    {% endfor %}
-                  {% endfor %}
-                </div>
-              {% endif %}
             </div>
             {% endif %}
             <button type="submit" class="btn btn-primary btn-sm">

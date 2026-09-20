@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-17-2026 19:05
-last_updated: 09-19-2026 14:00
+last_updated: 09-20-2026 12:00
 project: NDAS
 project_key: NOKEY
 tracking_system: file-system
@@ -39,7 +39,7 @@ development_status:
   1-1-trigger-a-full-scope-backup-of-my-institution-s-data: done
   1-2-super-admin-system-wide-or-selected-institutions-backup-scop: review
   1-3-integrity-manifest-on-every-backup: review
-  1-4-date-date-range-scoped-export: backlog
+  1-4-date-date-range-scoped-export: review
   1-5-progress-visibility-and-completion-notification: backlog
   epic-1-retrospective: optional
 

@@ -112,6 +112,31 @@ class BackupJob(TimeStampedModel, UserTrackingMixin):
         ),
     )
 
+    date_filter_start = models.DateField(
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name=_("Date Filter Start"),
+        help_text=_(
+            "Story 1.4: optional inclusive lower bound (on Patient.created_at's "
+            "date) this job's export was narrowed to. Null when no date filter "
+            "was applied -- including every Story 1.1-1.3 job, which predates "
+            "this field and is never backfilled."
+        ),
+    )
+
+    date_filter_end = models.DateField(
+        null=True,
+        blank=True,
+        db_index=True,
+        verbose_name=_("Date Filter End"),
+        help_text=_(
+            "Story 1.4: optional inclusive upper bound (on Patient.created_at's "
+            "date) this job's export was narrowed to. Null when no date filter "
+            "was applied."
+        ),
+    )
+
     class Meta:
         verbose_name = _("Backup Job")
         verbose_name_plural = _("Backup Jobs")
