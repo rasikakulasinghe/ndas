@@ -260,6 +260,32 @@
           </a>
         </li>
 
+        <!-- Backup — institution admins, and super admins with an active institution -->
+        {% if user_type == 'ADMIN' or is_superadmin and active_institution %}
+        <li class="nav-item">
+          <a
+            href="{% url 'backup:backup-create' %}"
+            class="nav-link {% if request.resolver_match.url_name == 'backup-create' %}active{% endif %}"
+          >
+            <i class="nav-icon fas fa-database"></i>
+            <p>Backup</p>
+          </a>
+        </li>
+        {% endif %}
+
+        <!-- Restore — super admins with an active institution only -->
+        {% if is_superadmin and active_institution %}
+        <li class="nav-item">
+          <a
+            href="{% url 'backup:restore-upload' %}"
+            class="nav-link {% if request.resolver_match.url_name == 'restore-upload' or request.resolver_match.url_name == 'restore-status' %}active{% endif %}"
+          >
+            <i class="nav-icon fas fa-upload"></i>
+            <p>Restore</p>
+          </a>
+        </li>
+        {% endif %}
+
         <!-- Reports — ADMIN and SUPERADMIN only -->
         {% if user_type == 'ADMIN' or is_superadmin %}
         <li

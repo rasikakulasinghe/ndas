@@ -20,21 +20,28 @@ from typing import List, Optional
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseForbidden
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods
 from django_ratelimit.decorators import ratelimit
 
-from ndas.custom_codes.choice import UserType, BackupJobType, BackupJobStatus, BackupJobScopeType
+from ndas.custom_codes.choice import (
+    UserType, BackupJobType, BackupJobStatus, BackupJobScopeType, RestoreUploadStatus,
+)
 from ndas.custom_codes.error_handlers import handle_view_errors
-from backup.forms import BackupScopeForm
-from backup.models import BackupJob
+from ndas.custom_codes.validators import sanitize_filename
+from backup import restore_validation
+from backup.forms import BackupScopeForm, RestoreUploadForm
+from backup.models import BackupJob, RestoreUpload
 from backup.services import has_sufficient_disk_space
 
 logger = logging.getLogger(__name__)
+# Story 2.1: denials and archive rejections log under `django.security` so
+# they reach security.log.
+security_logger = restore_validation.security_logger
 
 
 def _get_admin_institution(request):
@@ -202,6 +209,42 @@ def _resolved_institution_ids(job):
     return {job.scope_id} if job.scope_id else set()
 
 
+def _launch_detached_command(command_name, object_id, work_dir, log_name):
+    """
+    Launch `manage.py <command_name> <object_id>` as a detached process
+    (Story 1.1's launch rules, shared with Story 2.1's restore validation):
+    its own process group/session so it survives this worker's lifecycle,
+    stdout/stderr appended to `work_dir/log_name`, no stdin.
+
+    Kept in this module, calling `subprocess.Popen` through it, so tests can
+    keep patching `backup.views.subprocess.Popen`. Raises `OSError` if the
+    directory can't be created or the process can't be started -- the caller
+    owns marking its own row failed.
+    """
+    manage_py = str(settings.BASE_DIR / "manage.py")
+    log_path = work_dir / log_name
+
+    popen_kwargs = {"cwd": str(settings.BASE_DIR)}
+    if os.name == 'nt':
+        # Detached process group on Windows — survives this worker's lifecycle.
+        popen_kwargs["creationflags"] = (
+            subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS
+        )
+    else:
+        # Detached session on POSIX — survives this worker's lifecycle.
+        popen_kwargs["start_new_session"] = True
+
+    work_dir.mkdir(parents=True, exist_ok=True)
+    with open(log_path, "ab") as log_file:
+        subprocess.Popen(
+            [sys.executable, manage_py, command_name, str(object_id)],
+            stdout=log_file,
+            stderr=log_file,
+            stdin=subprocess.DEVNULL,
+            **popen_kwargs,
+        )
+
+
 @login_required(login_url="user-login")
 @require_http_methods(["GET", "POST"])
 @ratelimit(key='user_or_ip', rate='10/m')
@@ -365,33 +408,13 @@ def backup_create(request):
         )
         return redirect('backup:backup-create')
 
-    manage_py = str(settings.BASE_DIR / "manage.py")
-    archive_dir = settings.BASE_DIR / "backups" / str(job.id)
-    log_path = archive_dir / "run_backup.log"
-
-    popen_kwargs = {"cwd": str(settings.BASE_DIR)}
-    if os.name == 'nt':
-        # Detached process group on Windows — survives this worker's lifecycle.
-        popen_kwargs["creationflags"] = (
-            subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS
-        )
-    else:
-        # Detached session on POSIX — survives this worker's lifecycle.
-        popen_kwargs["start_new_session"] = True
-
     # mkdir + Popen share one guarded block: a failure at EITHER point (not
     # just Popen) must mark the job failed rather than leaving it stuck
     # pending with no explanation.
     try:
-        archive_dir.mkdir(parents=True, exist_ok=True)
-        with open(log_path, "ab") as log_file:
-            subprocess.Popen(
-                [sys.executable, manage_py, "run_backup", str(job.id)],
-                stdout=log_file,
-                stderr=log_file,
-                stdin=subprocess.DEVNULL,
-                **popen_kwargs,
-            )
+        _launch_detached_command(
+            "run_backup", job.id, settings.BASE_DIR / "backups" / str(job.id), "run_backup.log",
+        )
     except OSError as e:
         logger.exception("Failed to launch run_backup subprocess for job=%s", job.id)
         job.status = BackupJobStatus.FAILED
@@ -442,3 +465,192 @@ def backup_status(request):
         request, 'backup/status.html',
         _status_context(request, institution, user_type == UserType.SUPERADMIN),
     )
+
+
+# ─── Story 2.1: restore archive upload + validation ─────────────────────────
+
+
+def _is_superadmin(user):
+    return getattr(user, 'user_type', None) == UserType.SUPERADMIN
+
+
+def _deny_restore(request, view_name):
+    """Log a non-super-admin's attempt at a restore URL to security.log."""
+    security_logger.warning(
+        "Restore access denied: user=%s user_type=%s view=%s path=%s",
+        getattr(request.user, 'username', '?'), getattr(request.user, 'user_type', None),
+        view_name, request.path,
+    )
+
+
+def _latest_upload_for(user):
+    return RestoreUpload.objects.filter(uploaded_by=user).order_by('-created_at', '-id').first()
+
+
+@login_required(login_url="user-login")
+@require_http_methods(["GET", "POST"])
+@ratelimit(key='user_or_ip', rate='10/m')
+@handle_view_errors(redirect_url='backup:restore-upload', error_message='Failed to process the restore upload.')
+def restore_upload(request):
+    """
+    Super admin only: upload a backup archive, stage it to non-public
+    storage, and launch the detached validation command. Nothing is applied
+    to any data (that is Stories 2.2/2.3).
+
+    GET  -> the upload form (+ a link to this user's latest upload, if any).
+    POST -> form checks (nothing staged and no row on failure) -> one
+            validating upload per user check + row creation -> replace
+            earlier finished uploads -> stage (hashing as it streams) ->
+            launch -> redirect to the status page.
+    """
+    if not _is_superadmin(request.user):
+        _deny_restore(request, 'restore_upload')
+        messages.error(request, "You don't have permission to restore data.")
+        return redirect('home')
+
+    def _render_form(form):
+        return render(request, 'backup/restore.html', {
+            'form': form,
+            'max_size_bytes': settings.FILE_UPLOAD_LIMITS['RESTORE_ARCHIVE_MAX_SIZE'],
+            'latest_upload': _latest_upload_for(request.user),
+        })
+
+    if request.method == 'GET':
+        return _render_form(RestoreUploadForm())
+
+    form = RestoreUploadForm(request.POST, request.FILES)
+    if not form.is_valid():
+        security_logger.warning(
+            "Restore upload refused: user=%s errors=%s", request.user.username, form.errors.as_json(),
+        )
+        return _render_form(form)
+
+    uploaded = form.cleaned_data['archive']
+
+    # One `validating` upload per super admin. The friendly pre-check gives a
+    # clean message; the partial unique constraint on the model is what makes
+    # it hold under concurrency (select_for_update locks nothing when no row
+    # exists, and is a no-op on SQLite) -- an IntegrityError here means a
+    # concurrent request won the race.
+    upload = None
+    try:
+        with transaction.atomic():
+            busy = RestoreUpload.objects.filter(
+                uploaded_by=request.user, status=RestoreUploadStatus.VALIDATING,
+            ).exists()
+            if not busy:
+                upload = RestoreUpload.objects.create(
+                    uploaded_by=request.user,
+                    original_filename=sanitize_filename(uploaded.name, max_length=255),
+                    size_bytes=uploaded.size,
+                    allow_unverified=form.cleaned_data['allow_unverified'],
+                    status=RestoreUploadStatus.VALIDATING,
+                )
+    except IntegrityError:
+        upload = None
+    if upload is None:
+        messages.error(
+            request,
+            "You already have an upload being validated. Please wait for its result "
+            "before uploading another archive."
+        )
+        return redirect('backup:restore-upload')
+
+    # From here on the row is `validating` with no process yet: anything that
+    # raises before the launch must mark it failed (and remove its files), or
+    # the one-validating-upload rule would lock this user out.
+    try:
+        size, sha256 = restore_validation.stage_upload(upload, uploaded)
+        upload.size_bytes = size
+        upload.archive_sha256 = sha256
+        upload.save(update_fields=['size_bytes', 'archive_sha256', 'updated_at'])
+
+        # Only now that the new archive is safely staged is it safe to
+        # replace the user's earlier finished uploads.
+        restore_validation.delete_finished_uploads(request.user, keep_id=upload.id)
+
+        try:
+            _launch_detached_command(
+                "validate_restore_upload", upload.id,
+                restore_validation.get_upload_dir(upload), "validate_restore_upload.log",
+            )
+        except OSError as e:
+            logger.exception("Failed to launch validate_restore_upload subprocess for upload=%s", upload.id)
+            _mark_upload_failed(upload, f"Failed to launch the validation process: {e}", keep_dir=True)
+            messages.error(request, "Failed to start validating the archive. Please try again.")
+            return redirect('backup:restore-status', pk=upload.id)
+    except Exception as e:
+        logger.exception("Restore upload %s: failed before the validation process was launched.", upload.id)
+        _mark_upload_failed(upload, f"Failed to store or start validating the uploaded file: {e}")
+        messages.error(request, "Failed to store the uploaded file. Please try again.")
+        return redirect('backup:restore-upload')
+
+    logger.info(
+        "Super admin '%s' uploaded restore archive %r as RestoreUpload %s (%s bytes)",
+        request.user.username, upload.original_filename, upload.id, size,
+    )
+    messages.success(request, "Archive uploaded. Validation is running in the background.")
+    return redirect('backup:restore-status', pk=upload.id)
+
+
+def _mark_upload_failed(upload, message, keep_dir=False):
+    """Record a pre-launch failure on the row and remove its staged files.
+    `keep_dir` removes only the archive (the launch log stays for diagnosis)."""
+    try:
+        if keep_dir:
+            restore_validation.delete_staged_archive(upload)
+        else:
+            restore_validation.delete_upload_files(upload)
+    except OSError:
+        logger.exception("Could not remove staged files for failed RestoreUpload %s.", upload.id)
+    try:
+        upload.status = RestoreUploadStatus.FAILED
+        upload.error_message = message
+        upload.save(update_fields=['status', 'error_message', 'updated_at'])
+    except Exception:
+        logger.exception("Could not mark RestoreUpload %s as failed.", upload.id)
+
+
+def _restore_status_context(upload):
+    """Template context for the status page/fragment. The record counts are
+    handed over as a sorted list of pairs: iterating an untrusted dict with
+    `{% for k, v in d.items %}` would resolve a crafted "items" key first."""
+    summary = upload.manifest_summary or {}
+    counts = summary.get('record_counts') or {}
+    return {
+        'upload': upload,
+        'record_counts': sorted(counts.items()) if isinstance(counts, dict) else [],
+    }
+
+
+@login_required(login_url="user-login")
+@require_GET
+@ratelimit(key='user_or_ip', rate='30/m')
+def restore_status(request, pk):
+    """Super admin only: the status page for one of their own uploads."""
+    if not _is_superadmin(request.user):
+        _deny_restore(request, 'restore_status')
+        messages.error(request, "You don't have permission to restore data.")
+        return redirect('home')
+
+    upload = get_object_or_404(RestoreUpload, pk=pk, uploaded_by=request.user)
+    return render(request, 'backup/restore_status.html', _restore_status_context(upload))
+
+
+@require_GET
+@ratelimit(key='user_or_ip', rate='30/m')
+def restore_status_fragment(request, pk):
+    """
+    HTMX-polled fragment for `restore_status` (Story 1.5's pattern): same
+    gates, but a denial is an empty 403 and an anonymous poll is a 204 +
+    HX-Redirect to login, since the response is swapped into the page.
+    """
+    if not request.user.is_authenticated:
+        return HttpResponse(status=204, headers={'HX-Redirect': reverse('user-login')})
+
+    if not _is_superadmin(request.user):
+        _deny_restore(request, 'restore_status_fragment')
+        return HttpResponseForbidden()
+
+    upload = get_object_or_404(RestoreUpload, pk=pk, uploaded_by=request.user)
+    return render(request, 'backup/restore_status_partial.html', _restore_status_context(upload))

@@ -8,4 +8,8 @@ urlpatterns = [
     path('', views.backup_create, name='backup-create'),
     # Story 1.5 — HTMX-polled "Recent Backup Jobs" fragment.
     path('status/', views.backup_status, name='backup-status'),
+    # Story 2.1 - Upload and validate a restore archive (super admin only).
+    path('restore/', views.restore_upload, name='restore-upload'),
+    path('restore/<int:pk>/', views.restore_status, name='restore-status'),
+    path('restore/<int:pk>/status/', views.restore_status_fragment, name='restore-status-fragment'),
 ]

@@ -265,3 +265,44 @@ class BackupJobScopeType(models.TextChoices):
     SINGLE = 'single', 'Single Institution'
     MULTI = 'multi', 'Multiple Institutions'
     SYSTEM = 'system', 'System-Wide'
+
+
+# Restore upload validation (Epic 2, Story 2.1)
+class RestoreUploadStatus(models.TextChoices):
+    """Lifecycle of a staged restore archive upload."""
+    VALIDATING = 'validating', 'Validating'
+    VALIDATED = 'validated', 'Validated'
+    REJECTED = 'rejected', 'Rejected'
+    FAILED = 'failed', 'Failed'
+
+
+class RestoreAuthenticity(models.TextChoices):
+    """Whether the archive's origin was confirmed against a local BackupJob."""
+    VERIFIED = 'verified', 'Verified'
+    UNVERIFIED = 'unverified', 'Unverified origin'
+
+
+class RestoreRejectionCode(models.TextChoices):
+    """One value per specific reason a restore archive is rejected."""
+    # Stage 1 -- zip safety
+    NOT_A_ZIP = 'not_a_zip', 'Not a valid zip archive'
+    ENCRYPTED_MEMBER = 'encrypted_member', 'Archive contains an encrypted member'
+    DUPLICATE_MEMBER = 'duplicate_member', 'Archive contains duplicate member names'
+    UNEXPECTED_MEMBER = 'unexpected_member', 'Archive contains an unexpected member'
+    UNSAFE_MEMBER_PATH = 'unsafe_member_path', 'Archive contains an unsafe member path'
+    SYMLINK_MEMBER = 'symlink_member', 'Archive contains a symlink'
+    EXCESSIVE_EXPANSION = 'excessive_expansion', 'Archive expands implausibly'
+    # Stage 2 -- manifest
+    MANIFEST_MISSING = 'manifest_missing', 'manifest.json is missing'
+    MANIFEST_INVALID = 'manifest_invalid', 'manifest.json is invalid'
+    MANIFEST_UNSUPPORTED = 'manifest_unsupported', 'Unsupported manifest version or algorithm'
+    DB_EXPORT_MISSING = 'db_export_missing', 'db_export.json is missing'
+    # Stage 3 -- schema
+    SCHEMA_MISMATCH = 'schema_mismatch', 'Schema version mismatch'
+    # Stage 4 -- origin authenticity
+    ARCHIVE_CHECKSUM_MISMATCH = 'archive_checksum_mismatch', 'Archive checksum mismatch'
+    ORIGIN_NOT_VERIFIABLE = 'origin_not_verifiable', 'Origin cannot be verified'
+    # Stage 5 -- per-file checksums
+    FILE_MISSING = 'file_missing', 'A listed file is missing from the archive'
+    FILE_NOT_LISTED = 'file_not_listed', 'An archive file is not listed in the manifest'
+    FILE_CHECKSUM_MISMATCH = 'file_checksum_mismatch', 'File checksum mismatch'

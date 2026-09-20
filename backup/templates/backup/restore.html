@@ -1,0 +1,89 @@
+{% extends 'src/base.html' %}
+{% load static %}
+{% block title %}Restore - Upload{% endblock %}
+
+{% block content_header %}
+<div class="row mb-0">
+  <div class="col-sm-6">
+    <h1 class="m-0">Restore</h1>
+    <small class="text-muted">Upload and validate a backup archive</small>
+  </div>
+  <div class="col-sm-6">
+    <ol class="breadcrumb float-sm-right">
+      <li class="breadcrumb-item active">Restore</li>
+    </ol>
+  </div>
+</div>
+{% endblock content_header %}
+
+{% block main_content %}
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card card-primary card-outline">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-upload mr-2"></i>Upload a Backup Archive</h3>
+        </div>
+        <div class="card-body">
+          <p>
+            Upload a <code>.zip</code> archive produced by the backup feature. It is checked for
+            integrity, schema compatibility and origin in the background. <strong>Nothing is
+            restored or changed by this step.</strong>
+          </p>
+          <p class="text-muted small">
+            Maximum upload size: {{ max_size_bytes|filesizeformat }}. Large archives can take a
+            while to upload and validate.
+          </p>
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+            </div>
+            {% endif %}
+            <div class="form-group">
+              <label for="{{ form.archive.id_for_label }}">{{ form.archive.label }}</label>
+              {{ form.archive }}
+              {% if form.archive.errors %}
+              <div class="invalid-feedback d-block">
+                {% for error in form.archive.errors %}<small class="text-danger">{{ error }}</small><br>{% endfor %}
+              </div>
+              {% endif %}
+            </div>
+            <div class="form-group">
+              <div class="form-check">
+                {{ form.allow_unverified }}
+                <label class="form-check-label" for="{{ form.allow_unverified.id_for_label }}">
+                  {{ form.allow_unverified.label }}
+                </label>
+              </div>
+              <small class="form-text text-muted">{{ form.allow_unverified.help_text }}</small>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">
+              <i class="fas fa-upload mr-1"></i>Upload and Validate
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {% if latest_upload %}
+      <div class="card card-outline card-secondary">
+        <div class="card-header">
+          <h3 class="card-title">Your most recent upload</h3>
+        </div>
+        <div class="card-body">
+          <p class="mb-1">
+            <strong>{{ latest_upload.original_filename }}</strong>
+            &middot; {{ latest_upload.get_status_display }}
+            &middot; {{ latest_upload.created_at }}
+          </p>
+          <a href="{% url 'backup:restore-status' latest_upload.id %}" class="btn btn-outline-secondary btn-sm">
+            View validation result
+          </a>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

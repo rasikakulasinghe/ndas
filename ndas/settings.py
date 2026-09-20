@@ -376,6 +376,9 @@ FILE_UPLOAD_LIMITS = {
     'DOCUMENT_MAX_SIZE': 100 * 1024 * 1024,  # 100MB for documents
     'ATTACHMENT_MAX_SIZE': 100 * 1024 * 1024,  # 100MB for general attachments
     'PROFILE_PICTURE_MAX_SIZE': 5 * 1024 * 1024,  # 5MB for profile pictures
+    # Story 2.1: restore archives are whole-institution/system backups, so the
+    # ceiling is far above the per-file limits above. Overridable from .env.
+    'RESTORE_ARCHIVE_MAX_SIZE': config('RESTORE_ARCHIVE_MAX_SIZE', default=50 * 1024 ** 3, cast=int),
 }
 
 # Allowed File Extensions by Type

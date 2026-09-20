@@ -1,0 +1,38 @@
+{% extends 'src/base.html' %}
+{% load static %}
+{% block title %}Restore - Validation{% endblock %}
+
+{% block content_header %}
+<div class="row mb-0">
+  <div class="col-sm-6">
+    <h1 class="m-0">Restore</h1>
+    <small class="text-muted">Archive validation</small>
+  </div>
+  <div class="col-sm-6">
+    <ol class="breadcrumb float-sm-right">
+      <li class="breadcrumb-item"><a href="{% url 'backup:restore-upload' %}">Restore</a></li>
+      <li class="breadcrumb-item active">Validation</li>
+    </ol>
+  </div>
+</div>
+{% endblock content_header %}
+
+{% block main_content %}
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card card-primary card-outline">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-file-archive mr-2"></i>{{ upload.original_filename }}</h3>
+        </div>
+        {% include 'backup/restore_status_partial.html' %}
+        <div class="card-footer">
+          <a href="{% url 'backup:restore-upload' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left mr-1"></i>Back to upload
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

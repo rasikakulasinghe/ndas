@@ -13,11 +13,16 @@ form as a whole is now built and validated for every submission (not just
 superadmin ones); only the mode/institutions *values* are ignored for a
 non-superadmin afterward.
 """
+import os
+
 from django import forms
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
+from backup import restore_validation
 from institution.models import Institution
 from ndas.custom_codes.choice import BackupJobScopeType
+from ndas.custom_codes.validators import detect_file_mime
 
 
 class BackupScopeForm(forms.Form):
@@ -98,3 +103,73 @@ class BackupScopeForm(forms.Form):
             # see backup/views.py's `_resolve_scope_from_request`).
             self.add_error('end_date', _("End date cannot be before start date."))
         return cleaned
+
+
+# MIME types libmagic reports for a zip container.
+ZIP_MIME_TYPES = frozenset({
+    'application/zip',
+    'application/x-zip-compressed',
+    'application/x-zip',
+    'multipart/x-zip',
+})
+
+
+class RestoreUploadForm(forms.Form):
+    """
+    Story 2.1: restore archive upload. `clean_archive` is the "checked before
+    anything else" gate -- extension, size, content sniff, free disk -- so a
+    failure here means nothing is staged and no `RestoreUpload` row exists.
+
+    The content sniff reuses `detect_file_mime` with its fail-open
+    convention: a *detected* non-zip MIME rejects, an undetectable one falls
+    through (safe: the zip parse in the validation command is authoritative).
+    """
+    archive = forms.FileField(
+        label=_("Backup archive (.zip)"),
+        widget=forms.ClearableFileInput(attrs={"accept": ".zip", "class": "form-control-file"}),
+    )
+    allow_unverified = forms.BooleanField(
+        required=False,
+        label=_("Allow unverified origin"),
+        help_text=_(
+            "Tick this only if the backup was made on a different system (or its backup "
+            "record no longer exists here), so its origin cannot be verified against this "
+            "system's records. The archive is still checked for integrity and schema "
+            "compatibility."
+        ),
+    )
+
+    def clean_archive(self):
+        uploaded = self.cleaned_data['archive']
+
+        if os.path.splitext(uploaded.name or '')[1].lower() != '.zip':
+            raise forms.ValidationError(_("Only .zip backup archives can be uploaded."))
+
+        limit = settings.FILE_UPLOAD_LIMITS['RESTORE_ARCHIVE_MAX_SIZE']
+        if uploaded.size > limit:
+            raise forms.ValidationError(
+                _("The file is too large (%(size)s bytes); the limit is %(limit)s bytes."),
+                params={'size': uploaded.size, 'limit': limit},
+            )
+
+        detected = detect_file_mime(uploaded)
+        if detected is not None and detected not in ZIP_MIME_TYPES:
+            raise forms.ValidationError(
+                _("The file's content is not a zip archive (detected type: %(mime)s)."),
+                params={'mime': detected},
+            )
+
+        try:
+            sufficient, required, free = restore_validation.has_sufficient_restore_space(uploaded.size)
+        except OSError:
+            raise forms.ValidationError(
+                _("Could not verify available disk space. Please try again or contact support.")
+            )
+        if not sufficient:
+            raise forms.ValidationError(
+                _("Not enough free disk space to store this upload safely "
+                  "(%(free)s bytes free, %(required)s bytes required)."),
+                params={'free': free, 'required': required},
+            )
+
+        return uploaded

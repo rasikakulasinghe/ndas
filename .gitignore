@@ -2,6 +2,7 @@ venv
 media
 staticfiles/
 backups/
+restore_uploads/
 test_db.sqlite3
 
 # Secrets - never commit

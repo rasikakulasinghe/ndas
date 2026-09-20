@@ -1,0 +1,113 @@
+{% comment %}
+  Story 2.1 -- restore upload validation body. Included by restore_status.html
+  and returned on its own by the `backup:restore-status-fragment` endpoint. The
+  root element polls itself every 5s ONLY while the upload is validating; once
+  it reaches a verdict the re-rendered fragment carries no hx-* attributes and
+  polling ends.
+{% endcomment %}
+<div id="restore-status" class="card-body"
+     {% if upload.status == 'validating' %}
+     hx-get="{% url 'backup:restore-status-fragment' upload.id %}"
+     hx-trigger="every 5s"
+     hx-swap="outerHTML"
+     {% endif %}>
+  <p class="mb-2">
+    {% if upload.status == 'validated' %}
+      <span class="badge badge-success">{{ upload.get_status_display }}</span>
+    {% elif upload.status == 'rejected' or upload.status == 'failed' %}
+      <span class="badge badge-danger">{{ upload.get_status_display }}</span>
+    {% else %}
+      <span class="badge badge-info">{{ upload.get_status_display }}</span>
+    {% endif %}
+    <span class="text-muted small ml-2">{{ upload.size_bytes|filesizeformat }}</span>
+  </p>
+
+  <div class="progress mb-3" style="height: 1rem;">
+    <div class="progress-bar {% if upload.status == 'rejected' or upload.status == 'failed' %}bg-danger{% elif upload.status == 'validated' %}bg-success{% else %}progress-bar-striped progress-bar-animated{% endif %}"
+         role="progressbar" aria-label="Validation progress"
+         style="width: {% if upload.status == 'validated' %}100{% else %}{{ upload.progress_pct }}{% endif %}%;"
+         aria-valuenow="{{ upload.progress_pct }}" aria-valuemin="0" aria-valuemax="100">
+      {% if upload.status == 'validated' %}100{% else %}{{ upload.progress_pct }}{% endif %}%
+    </div>
+  </div>
+
+  {% if upload.status == 'validating' %}
+    <p class="text-muted small mb-0">
+      Validating the archive in the background. This page updates itself until there is a result.
+    </p>
+
+  {% elif upload.status == 'rejected' %}
+    <div class="alert alert-danger mb-0">
+      <h5><i class="icon fas fa-ban"></i> Archive rejected</h5>
+      <p class="mb-1">{{ upload.error_message }}</p>
+      <small class="text-muted">Error code: <code>{{ upload.error_code }}</code>. The uploaded file has been removed.</small>
+    </div>
+
+  {% elif upload.status == 'failed' %}
+    <div class="alert alert-danger mb-0">
+      <h5><i class="icon fas fa-exclamation-triangle"></i> Validation failed</h5>
+      <p class="mb-1">{{ upload.error_message }}</p>
+      <small class="text-muted">The uploaded file has been removed. Please upload the archive again.</small>
+    </div>
+
+  {% elif upload.status == 'validated' %}
+    {% if upload.authenticity == 'verified' %}
+    <div class="alert alert-success">
+      <i class="fas fa-check-circle mr-1"></i>
+      Archive validated. Its origin was verified against backup job {{ upload.source_job_id }} on this system.
+    </div>
+    {% else %}
+    <div class="alert alert-warning">
+      <i class="fas fa-exclamation-triangle mr-1"></i>
+      <strong>Origin unverified.</strong> This system has no completed backup record matching
+      backup job {{ upload.source_job_id }}, so the archive was accepted only because you ticked
+      "Allow unverified origin". Its checksums come from the archive itself: they detect
+      accidental corruption but <strong>not deliberate tampering</strong>. The job ID, institutions
+      and author shown below are claimed by the archive and have not been confirmed. Only continue
+      if you trust where this file came from.
+    </div>
+    {% endif %}
+
+    {% with summary=upload.manifest_summary %}
+    <table class="table table-sm">
+      <tbody>
+        <tr>
+          <th style="width: 30%;">Source backup job{% if upload.authenticity != 'verified' %} <small class="text-muted">(claimed by the archive)</small>{% endif %}</th>
+          <td>{{ summary.source_job_id }}</td>
+        </tr>
+        <tr><th>Scope</th><td>{{ summary.scope_type }}</td></tr>
+        <tr>
+          <th>Institutions{% if upload.authenticity != 'verified' %} <small class="text-muted">(claimed by the archive)</small>{% endif %}</th>
+          <td>{{ summary.institutions|join:", "|default:"(none)" }}</td>
+        </tr>
+        <tr>
+          <th>Date filter</th>
+          <td>
+            {% if summary.date_filter.applied %}
+              {{ summary.date_filter.start|default:"open" }} to {{ summary.date_filter.end|default:"open" }}
+            {% else %}
+              None (full export)
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <th>Generated{% if upload.authenticity != 'verified' %} <small class="text-muted">(claimed by the archive)</small>{% endif %}</th>
+          <td>{{ summary.generated_at }} by {{ summary.generated_by|default:"unknown" }}</td>
+        </tr>
+        <tr><th>Manifest version</th><td>{{ summary.manifest_version }}</td></tr>
+        <tr><th>Schema version</th><td><code class="small">{{ summary.schema_version }}</code></td></tr>
+        <tr><th>Archive SHA-256</th><td><code class="small">{{ upload.archive_sha256 }}</code></td></tr>
+      </tbody>
+    </table>
+
+    <h6>Record counts</h6>
+    <table class="table table-sm mb-0">
+      <tbody>
+        {% for model, count in record_counts %}
+        <tr><td>{{ model }}</td><td class="text-right">{{ count }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endwith %}
+  {% endif %}
+</div>
