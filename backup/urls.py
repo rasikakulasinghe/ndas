@@ -6,4 +6,6 @@ app_name = 'backup'
 urlpatterns = [
     # Story 1.1 — Trigger a full-scope backup of my institution's data.
     path('', views.backup_create, name='backup-create'),
+    # Story 1.5 — HTMX-polled "Recent Backup Jobs" fragment.
+    path('status/', views.backup_status, name='backup-status'),
 ]

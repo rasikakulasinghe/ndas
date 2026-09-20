@@ -815,3 +815,207 @@ class BackupDateFilterOverlapLockTest(BackupScopeViewTestBase):
         )
         self.assertEqual(str(job.date_filter_start), '2024-03-01')
         self.assertEqual(str(job.date_filter_end), '2024-03-31')
+
+
+class BackupTriggerInstitutionTest(BackupScopeViewTestBase):
+    """Story 1.5: `trigger_institution` is persisted on every job the view creates."""
+
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_admin_job_records_trigger_institution(self, mock_disk, mock_popen):
+        client = Client()
+        client.force_login(self.admin)
+        client.post(self.url)
+        self.assertEqual(BackupJob.objects.get().trigger_institution, self.inst_a)
+
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_superadmin_system_job_records_active_institution(self, mock_disk, mock_popen):
+        client = self._superadmin_client(self.inst_b)
+        client.post(self.url, {'mode': 'system'})
+        job = BackupJob.objects.get()
+        self.assertIsNone(job.scope)
+        self.assertEqual(job.trigger_institution, self.inst_b)
+
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=(False, 10, 20, 1))
+    def test_insufficient_disk_failed_row_records_trigger_institution(self, mock_disk):
+        client = Client()
+        client.force_login(self.admin)
+        client.post(self.url)
+        job = BackupJob.objects.get()
+        self.assertEqual(job.status, BackupJobStatus.FAILED)
+        self.assertEqual(job.trigger_institution, self.inst_a)
+
+
+class BackupStatusViewTest(BackupScopeViewTestBase):
+    """Story 1.5: the HTMX-polled `backup:backup-status` fragment."""
+
+    def setUp(self):
+        super().setUp()
+        self.status_url = reverse('backup:backup-status')
+        self.plain_user = User.objects.create_user(
+            username='user_status1', password='Testpass1!', position='Medical Officer',
+            mobile_primary='0770000042', user_type=UserType.USER, institution=self.inst_a,
+        )
+
+    def _job(self, status, institution=None, progress=0, **kwargs):
+        return BackupJob.objects.create(
+            job_type='backup', status=status, scope=institution or self.inst_a,
+            trigger_institution=institution or self.inst_a, triggered_by=self.admin,
+            progress_pct=progress, **kwargs,
+        )
+
+    def _get(self, user=None):
+        client = Client()
+        client.force_login(user or self.admin)
+        return client.get(self.status_url)
+
+    def test_active_job_renders_polling_trigger_and_progress(self):
+        self._job(BackupJobStatus.RUNNING, progress=42)
+        response = self._get()
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'hx-trigger="every 5s"')
+        self.assertContains(response, 'hx-swap="outerHTML"')
+        self.assertContains(response, 'hx-get="%s"' % self.status_url)
+        self.assertContains(response, 'width: 42%')
+
+    def test_pending_job_also_polls(self):
+        self._job(BackupJobStatus.PENDING)
+        self.assertContains(self._get(), 'hx-trigger="every 5s"')
+
+    def test_no_active_jobs_renders_no_polling_trigger(self):
+        self._job(BackupJobStatus.COMPLETED, progress=100)
+        self._job(BackupJobStatus.FAILED, error_message='Backup export failed: boom')
+        response = self._get()
+        self.assertNotContains(response, 'hx-trigger')
+        self.assertNotContains(response, 'hx-get')
+
+    def test_empty_state_renders_no_polling_trigger(self):
+        response = self._get()
+        self.assertContains(response, 'No backup jobs yet.')
+        self.assertNotContains(response, 'hx-trigger')
+
+    def test_running_job_at_99_shows_finalizing_label(self):
+        self._job(BackupJobStatus.RUNNING, progress=99)
+        self.assertContains(self._get(), 'Finalizing (verifying archive)')
+
+    def test_running_job_below_99_has_no_finalizing_label(self):
+        self._job(BackupJobStatus.RUNNING, progress=98)
+        self.assertNotContains(self._get(), 'Finalizing')
+
+    def test_completed_with_error_message_renders_as_warning(self):
+        self._job(BackupJobStatus.COMPLETED, progress=100,
+                  error_message='Completed with 1 media file(s) skipped: a.mp4')
+        response = self._get()
+        self.assertContains(response, 'badge-warning')
+        self.assertContains(response, 'bg-warning')
+        self.assertContains(response, 'text-dark')
+        self.assertNotContains(response, 'text-danger')
+
+    def test_failed_job_renders_error(self):
+        self._job(BackupJobStatus.FAILED, error_message='Backup export failed: boom')
+        response = self._get()
+        self.assertContains(response, 'badge-danger')
+        self.assertContains(response, 'text-danger')
+        self.assertContains(response, 'Backup export failed: boom')
+
+    def test_non_admin_gets_empty_403_with_no_job_data(self):
+        self._job(BackupJobStatus.RUNNING, progress=10)
+        response = self._get(self.plain_user)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.content, b'')
+
+    def test_unauthenticated_gets_204_with_hx_redirect_to_login(self):
+        # Not a 302: htmx would follow it and swap the whole login page into
+        # the card. HX-Redirect makes htmx navigate the full page instead.
+        response = Client().get(self.status_url)
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response['HX-Redirect'], reverse('user-login'))
+        self.assertEqual(response.content, b'')
+
+    def test_post_to_status_endpoint_is_405(self):
+        client = Client()
+        client.force_login(self.admin)
+        self.assertEqual(client.post(self.status_url).status_code, 405)
+
+    def test_admin_without_any_institution_gets_empty_403(self):
+        # A superadmin with no active institution is redirected by middleware
+        # before the view runs, so exercise the view's own `institution is
+        # None` branch directly.
+        from django.test import RequestFactory
+        from backup.views import backup_status
+
+        no_inst_admin = User.objects.create_user(
+            username='admin_noinst', password='Testpass1!', position='Administrator',
+            mobile_primary='0770000043', user_type=UserType.ADMIN, institution=None,
+        )
+        request = RequestFactory().get(self.status_url)
+        request.user = no_inst_admin
+        response = backup_status(request)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.content, b'')
+
+    def test_invalid_post_rerender_still_lists_jobs_and_polls(self):
+        job = self._job(BackupJobStatus.RUNNING, progress=37)
+        client = Client()
+        client.force_login(self.admin)
+        response = client.post(self.url, {'start_date': '2024-06-15', 'end_date': '2024-06-01'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(BackupJob.objects.count(), 1)  # refused: no new job row
+        self.assertContains(response, 'id="backup-status"')
+        self.assertContains(response, 'hx-trigger="every 5s"')
+        self.assertContains(response, 'width: %d%%' % job.progress_pct)
+
+    def test_other_institutions_jobs_never_appear_for_an_admin(self):
+        self._job(BackupJobStatus.RUNNING, institution=self.inst_b, progress=77,
+                  error_message='inst-b-secret')
+        response = self._get()
+        self.assertNotContains(response, 'inst-b-secret')
+        self.assertNotContains(response, 'hx-trigger')
+        self.assertContains(response, 'No backup jobs yet.')
+
+    def test_superadmin_sees_own_system_wide_job(self):
+        BackupJob.objects.create(
+            job_type='backup', status=BackupJobStatus.RUNNING, scope=None,
+            scope_type=BackupJobScopeType.SYSTEM, trigger_institution=self.inst_a,
+            triggered_by=self.superadmin, progress_pct=30,
+        )
+        client = self._superadmin_client(self.inst_a)
+        response = client.get(self.status_url)
+        self.assertContains(response, 'width: 30%')
+        self.assertContains(response, 'hx-trigger="every 5s"')
+
+    def test_create_page_embeds_the_partial(self):
+        self._job(BackupJobStatus.RUNNING, progress=5)
+        client = Client()
+        client.force_login(self.admin)
+        response = client.get(self.url)
+        self.assertContains(response, 'id="backup-status"')
+        self.assertContains(response, 'hx-trigger="every 5s"')
+
+
+@override_settings(MULTI_INSTITUTION_ENABLED=True, RATELIMIT_ENABLE=True, STORAGES=TEST_STORAGES)
+class BackupStatusRateLimitTest(TestCase):
+    """The status endpoint has its own 30/m limit (polled far more than 10/m)."""
+
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+        self.superadmin = User.objects.create_user(
+            username='sa_status_rl', password='Testpass1!', position='Administrator',
+            mobile_primary='0770000050', user_type=UserType.SUPERADMIN,
+            is_superuser=True, institution=None,
+        )
+        self.inst = Institution.objects.create(name='Status RL Hosp', slug='status-rl-hosp', created_by=self.superadmin)
+        self.admin = User.objects.create_user(
+            username='admin_status_rl', password='Testpass1!', position='Administrator',
+            mobile_primary='0770000051', user_type=UserType.ADMIN, institution=self.inst,
+        )
+
+    def test_thirty_polls_allowed_thirty_first_rejected(self):
+        client = Client()
+        client.force_login(self.admin)
+        url = reverse('backup:backup-status')
+        for _ in range(30):
+            self.assertEqual(client.get(url).status_code, 200)
+        self.assertEqual(client.get(url).status_code, 403)

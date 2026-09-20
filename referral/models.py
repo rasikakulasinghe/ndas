@@ -268,7 +268,9 @@ class Notification(TimeStampedModel, UserTrackingMixin):
     In-app notification for referral lifecycle events (FR38, FR67–FR69).
 
     Scoped to recipient's institution via InstitutionScopedManager.
-    Created exclusively by referral/signals.py — never directly by views (AC #5).
+    Created by two producers only, never directly by views (AC #5):
+    referral/signals.py (referral lifecycle) and backup/notifications.py
+    (backup job completion/failure, Story 1.5).
     """
     recipient = models.ForeignKey(
         settings.AUTH_USER_MODEL,

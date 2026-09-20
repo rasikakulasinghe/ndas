@@ -14,6 +14,7 @@ import logging
 from django.core.management.base import BaseCommand, CommandError
 
 from backup.models import BackupJob
+from backup.notifications import notify_job_finished
 from backup.services import create_export, get_archive_path
 from ndas.custom_codes.choice import BackupJobStatus
 
@@ -48,6 +49,8 @@ class Command(BaseCommand):
                 job.save(update_fields=['status', 'error_message', 'updated_at'])
             except Exception:
                 logger.exception("BackupJob %s: also failed to record the failure.", job.id)
+            else:
+                notify_job_finished(job)
             self.stdout.write(self.style.ERROR(f"BackupJob {job.id}: failed to start - {e}"))
             return
 
@@ -73,6 +76,7 @@ class Command(BaseCommand):
             job.progress_pct = 0
             job.error_message = f"Backup export failed: {e}"
             job.save(update_fields=['status', 'progress_pct', 'error_message', 'updated_at'])
+            notify_job_finished(job)
             self.stdout.write(self.style.ERROR(f"BackupJob {job.id}: failed - {e}"))
             return
 
@@ -89,6 +93,7 @@ class Command(BaseCommand):
             if skipped_media else ""
         )
         job.save(update_fields=['status', 'progress_pct', 'archive_checksum', 'error_message', 'updated_at'])
+        notify_job_finished(job)
         if skipped_media:
             self.stdout.write(self.style.WARNING(
                 f"BackupJob {job.id}: completed with {len(skipped_media)} media file(s) skipped -> {archive_path}"

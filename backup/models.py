@@ -76,6 +76,21 @@ class BackupJob(TimeStampedModel, UserTrackingMixin):
         ),
     )
 
+    trigger_institution = models.ForeignKey(
+        "institution.Institution",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="backup_jobs_triggered_from",
+        verbose_name=_("Trigger Institution"),
+        help_text=_(
+            "Story 1.5: the institution context the job was triggered from. Used as "
+            "the delivery institution for the completion notification (a super "
+            "admin's multi/system job has scope=null). Null on jobs that predate "
+            "this field, which are never backfilled."
+        ),
+    )
+
     scope_type = models.CharField(
         max_length=10,
         choices=BackupJobScopeType.choices,

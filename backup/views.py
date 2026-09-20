@@ -22,8 +22,10 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Q
+from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import redirect, render
-from django.views.decorators.http import require_http_methods
+from django.urls import reverse
+from django.views.decorators.http import require_GET, require_http_methods
 from django_ratelimit.decorators import ratelimit
 
 from ndas.custom_codes.choice import UserType, BackupJobType, BackupJobStatus, BackupJobScopeType
@@ -175,6 +177,19 @@ def _recent_jobs_for(request, institution, is_superadmin):
     return BackupJob.objects.filter(scope=institution).order_by('-created_at')[:10]
 
 
+def _status_context(request, institution, is_superadmin):
+    """Context for the `backup/status.html` partial (Story 1.5): the visible
+    jobs (evaluated once, so the template and `has_active_jobs` agree) plus
+    whether any is still pending/running -- which decides whether the
+    fragment keeps polling itself."""
+    jobs = list(_recent_jobs_for(request, institution, is_superadmin))
+    active = (BackupJobStatus.PENDING, BackupJobStatus.RUNNING)
+    return {
+        'recent_jobs': jobs,
+        'has_active_jobs': any(job.status in active for job in jobs),
+    }
+
+
 def _resolved_institution_ids(job):
     """The set of institution ids `job`'s data covers -- empty for a
     system-wide job (its overlap with every other job is handled by the
@@ -216,7 +231,7 @@ def backup_create(request):
     if request.method == 'GET':
         return render(request, 'backup/create.html', {
             'institution': institution,
-            'recent_jobs': _recent_jobs_for(request, institution, is_superadmin),
+            **_status_context(request, institution, is_superadmin),
             'is_superadmin': is_superadmin,
             # Story 1.4: unlike Story 1.2's mode/institutions selector (still
             # superadmin-only in the template), the date-range fields on
@@ -239,7 +254,7 @@ def backup_create(request):
         messages.error(request, resolved.error_message)
         return render(request, 'backup/create.html', {
             'institution': institution,
-            'recent_jobs': _recent_jobs_for(request, institution, is_superadmin),
+            **_status_context(request, institution, is_superadmin),
             'is_superadmin': is_superadmin,
             'scope_form': resolved.scope_form,
         }, status=200)
@@ -280,6 +295,7 @@ def backup_create(request):
             status=BackupJobStatus.FAILED,
             scope_type=scope_type,
             scope=scope_institutions[0] if scope_type == BackupJobScopeType.SINGLE else None,
+            trigger_institution=institution,
             triggered_by=request.user,
             date_filter_start=date_start,
             date_filter_end=date_end,
@@ -333,6 +349,7 @@ def backup_create(request):
                 status=BackupJobStatus.PENDING,
                 scope_type=scope_type,
                 scope=scope_institutions[0] if scope_type == BackupJobScopeType.SINGLE else None,
+                trigger_institution=institution,
                 triggered_by=request.user,
                 date_filter_start=date_start,
                 date_filter_end=date_end,
@@ -393,3 +410,35 @@ def backup_create(request):
         "check back here for status."
     )
     return redirect('backup:backup-create')
+
+
+@require_GET
+@ratelimit(key='user_or_ip', rate='30/m')
+def backup_status(request):
+    """
+    Story 1.5: HTMX-polled fragment -- the "Recent Backup Jobs" table.
+
+    Same ADMIN/SUPERADMIN gate and job visibility as `backup_create`
+    (`_recent_jobs_for`), but a failed gate returns an empty 403 instead of
+    a redirect: the response is swapped into a page fragment. Polled every 5s
+    while any listed job is pending/running, so it has its own, higher
+    rate limit than the project default.
+    """
+    if not request.user.is_authenticated:
+        # `@login_required` would 302 to the login page, which htmx follows
+        # and swaps -- whole page and all -- into the card. HX-Redirect makes
+        # htmx do a full-page navigation to the login page instead.
+        return HttpResponse(status=204, headers={'HX-Redirect': reverse('user-login')})
+
+    user_type = getattr(request.user, 'user_type', None)
+    if user_type not in (UserType.ADMIN, UserType.SUPERADMIN):
+        return HttpResponseForbidden()
+
+    institution = _get_admin_institution(request)
+    if institution is None:
+        return HttpResponseForbidden()
+
+    return render(
+        request, 'backup/status.html',
+        _status_context(request, institution, user_type == UserType.SUPERADMIN),
+    )

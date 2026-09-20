@@ -218,10 +218,12 @@ class ReferralStatus(models.TextChoices):
 
 # Notification types for referral lifecycle events (Phase 2 — Story 5.1 — FR67-FR69)
 class NotificationType(models.TextChoices):
-    """In-app notification types triggered by referral lifecycle events."""
+    """In-app notification types: referral lifecycle events and backup job outcomes."""
     REFERRAL_RECEIVED = 'REFERRAL_RECEIVED', 'Referral Received'
     REFERRAL_REPLIED  = 'REFERRAL_REPLIED',  'Referral Replied'
     REFERRAL_CLOSED   = 'REFERRAL_CLOSED',   'Referral Closed'
+    BACKUP_COMPLETED  = 'BACKUP_COMPLETED',  'Backup Completed'
+    BACKUP_FAILED     = 'BACKUP_FAILED',     'Backup Failed'
 
 
 # Problem List Choices

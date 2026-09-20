@@ -1,0 +1,63 @@
+{% comment %}
+  Story 1.5 -- "Recent Backup Jobs" body. Included by create.html and returned
+  on its own by the `backup:backup-status` endpoint. The root element polls
+  itself every 5s ONLY while a listed job is pending/running; once none are,
+  the re-rendered fragment carries no hx-* attributes and polling ends.
+{% endcomment %}
+<div id="backup-status" class="card-body p-0"
+     {% if has_active_jobs %}
+     hx-get="{% url 'backup:backup-status' %}"
+     hx-trigger="every 5s"
+     hx-swap="outerHTML"
+     {% endif %}>
+  <table class="table table-sm mb-0">
+    <thead>
+      <tr>
+        <th>Started</th>
+        <th>Status</th>
+        <th style="min-width: 160px;">Progress</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for job in recent_jobs %}
+      <tr>
+        <td>{{ job.created_at }}</td>
+        <td>
+          {% if job.status == 'completed' and job.error_message %}
+            <span class="badge badge-warning">Completed with warnings</span>
+          {% elif job.status == 'completed' %}
+            <span class="badge badge-success">{{ job.get_status_display }}</span>
+          {% elif job.status == 'failed' %}
+            <span class="badge badge-danger">{{ job.get_status_display }}</span>
+          {% elif job.status == 'running' %}
+            <span class="badge badge-info">{{ job.get_status_display }}</span>
+          {% else %}
+            <span class="badge badge-secondary">{{ job.get_status_display }}</span>
+          {% endif %}
+        </td>
+        <td>
+          <div class="progress" style="height: 1rem;">
+            <div class="progress-bar {% if job.status == 'failed' %}bg-danger{% elif job.status == 'completed' %}{% if job.error_message %}bg-warning{% else %}bg-success{% endif %}{% else %}progress-bar-striped progress-bar-animated{% endif %}"
+                 role="progressbar" aria-label="Backup progress"
+                 style="width: {{ job.progress_pct }}%;"
+                 aria-valuenow="{{ job.progress_pct }}" aria-valuemin="0" aria-valuemax="100">
+              {{ job.progress_pct }}%
+            </div>
+          </div>
+          {% if job.status == 'running' and job.progress_pct >= 99 %}
+          <small class="text-muted">Finalizing (verifying archive)&hellip;</small>
+          {% endif %}
+        </td>
+        <td class="small {% if job.status == 'failed' %}text-danger{% elif job.status == 'completed' and job.error_message %}text-dark{% endif %}">
+          {{ job.error_message }}
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="4" class="text-center text-muted">No backup jobs yet.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
