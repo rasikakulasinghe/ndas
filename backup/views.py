@@ -33,8 +33,9 @@ from ndas.custom_codes.choice import (
 )
 from ndas.custom_codes.error_handlers import handle_view_errors
 from ndas.custom_codes.validators import sanitize_filename
+from backup import restore_preview as preview_service
 from backup import restore_validation
-from backup.forms import BackupScopeForm, RestoreUploadForm
+from backup.forms import BackupScopeForm, RestoreConfirmForm, RestoreUploadForm
 from backup.models import BackupJob, RestoreUpload
 from backup.services import has_sufficient_disk_space
 
@@ -518,6 +519,16 @@ def restore_upload(request):
     if request.method == 'GET':
         return _render_form(RestoreUploadForm())
 
+    # Story 2.2: a confirmed archive is awaiting a restore and is never
+    # replaced or deleted by a new upload -- only by an explicit cancel.
+    if RestoreUpload.objects.filter(uploaded_by=request.user, status=RestoreUploadStatus.CONFIRMED).exists():
+        messages.error(
+            request,
+            "You have a confirmed restore archive that has not been applied. "
+            "Cancel it first before uploading another archive."
+        )
+        return redirect('backup:restore-upload')
+
     form = RestoreUploadForm(request.POST, request.FILES)
     if not form.is_valid():
         security_logger.warning(
@@ -620,6 +631,8 @@ def _restore_status_context(upload):
     return {
         'upload': upload,
         'record_counts': sorted(counts.items()) if isinstance(counts, dict) else [],
+        'can_cancel': preview_service.can_cancel(upload),
+        'confirmed_snapshot': upload.confirmed_snapshot if isinstance(upload.confirmed_snapshot, dict) else {},
     }
 
 
@@ -654,3 +667,112 @@ def restore_status_fragment(request, pk):
 
     upload = get_object_or_404(RestoreUpload, pk=pk, uploaded_by=request.user)
     return render(request, 'backup/restore_status_partial.html', _restore_status_context(upload))
+
+
+# --- Story 2.2: restore preview, confirmation and cancel ---------------------
+
+
+def _redirect_to_status(upload):
+    return redirect('backup:restore-status', pk=upload.id)
+
+
+def _render_preview(request, upload, form=None):
+    preview = preview_service.build_preview(upload)
+    return render(request, 'backup/restore_preview.html', {
+        'upload': upload,
+        'preview': preview,
+        'form': form or RestoreConfirmForm(),
+        'can_cancel': preview_service.can_cancel(upload),
+    })
+
+
+@login_required(login_url="user-login")
+@require_GET
+@ratelimit(key='user_or_ip', rate='30/m')
+def restore_preview(request, pk):
+    """
+    Super admin only: the read-only preview of one of their own validated
+    uploads -- what the archive holds against what this system holds now. A
+    GET writes no row and touches no file; it is built from the validated
+    manifest summary plus live counts, never by opening the zip.
+    """
+    if not _is_superadmin(request.user):
+        _deny_restore(request, 'restore_preview')
+        messages.error(request, "You don't have permission to restore data.")
+        return redirect('home')
+
+    upload = get_object_or_404(RestoreUpload, pk=pk, uploaded_by=request.user)
+    if upload.status != RestoreUploadStatus.VALIDATED:
+        messages.warning(request, "Only a validated archive can be previewed.")
+        return _redirect_to_status(upload)
+    return _render_preview(request, upload)
+
+
+@login_required(login_url="user-login")
+@require_http_methods(["POST"])
+@ratelimit(key='user_or_ip', rate='10/m')
+def restore_confirm(request, pk):
+    """
+    Super admin only: confirm a validated upload's preview. Needs the
+    acknowledgement checkbox and the preview's digest; records a snapshot of
+    what was previewed and marks the upload `confirmed`. Nothing is applied.
+    """
+    if not _is_superadmin(request.user):
+        _deny_restore(request, 'restore_confirm')
+        messages.error(request, "You don't have permission to restore data.")
+        return redirect('home')
+
+    upload = get_object_or_404(RestoreUpload, pk=pk, uploaded_by=request.user)
+    if upload.status != RestoreUploadStatus.VALIDATED:
+        security_logger.warning(
+            "Restore confirm refused (status=%s): user=%s upload=%s", upload.status, request.user.username, upload.id,
+        )
+        messages.error(request, "This upload is not awaiting confirmation.")
+        return _redirect_to_status(upload)
+
+    form = RestoreConfirmForm(request.POST)
+    if not form.is_valid():
+        security_logger.warning(
+            "Restore confirm refused (form): user=%s upload=%s errors=%s",
+            request.user.username, upload.id, form.errors.as_json(),
+        )
+        return _render_preview(request, upload, form=form)
+
+    outcome = preview_service.confirm_upload(
+        upload.id, request.user, form.cleaned_data['digest'], form.cleaned_data['acknowledge'],
+    )
+    if outcome.ok:
+        messages.success(
+            request,
+            "Restore confirmed. It has NOT been applied yet: nothing in the system was changed.",
+        )
+        return _redirect_to_status(upload)
+
+    messages.error(request, outcome.message)
+    if outcome.code == preview_service.NOT_VALIDATED:
+        return _redirect_to_status(upload)
+    return redirect('backup:restore-preview', pk=upload.id)
+
+
+@login_required(login_url="user-login")
+@require_http_methods(["POST"])
+@ratelimit(key='user_or_ip', rate='10/m')
+def restore_cancel(request, pk):
+    """
+    Super admin only: discard one of their own uploads -- its staged files and
+    its row. Allowed for a validated, confirmed, rejected or failed upload,
+    and for a validating one only when it is stale.
+    """
+    if not _is_superadmin(request.user):
+        _deny_restore(request, 'restore_cancel')
+        messages.error(request, "You don't have permission to restore data.")
+        return redirect('home')
+
+    upload = get_object_or_404(RestoreUpload, pk=pk, uploaded_by=request.user)
+    outcome = preview_service.cancel_upload(upload.id, request.user)
+    if outcome.ok:
+        messages.success(request, "The restore upload was cancelled and its staged archive removed.")
+        return redirect('backup:restore-upload')
+
+    messages.error(request, outcome.message)
+    return _redirect_to_status(upload)

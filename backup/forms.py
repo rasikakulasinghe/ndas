@@ -173,3 +173,19 @@ class RestoreUploadForm(forms.Form):
             )
 
         return uploaded
+
+
+class RestoreConfirmForm(forms.Form):
+    """
+    Story 2.2: the confirmation POST. The acknowledgement and the preview's
+    digest are both required; whether the digest still matches is decided
+    server-side by `restore_preview.confirm_upload`.
+    """
+    acknowledge = forms.BooleanField(
+        required=True,
+        error_messages={'required': "Tick the acknowledgement to confirm this restore."},
+    )
+    digest = forms.CharField(
+        max_length=64,
+        error_messages={'required': "The preview's digest is missing. Review the preview again."},
+    )

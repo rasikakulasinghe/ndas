@@ -233,6 +233,22 @@ class RestoreUpload(TimeStampedModel, UserTrackingMixin):
         null=True, blank=True, verbose_name=_("Manifest Summary"),
         help_text=_("Summary of the validated archive's manifest; set only when status=validated."),
     )
+    confirmed_by = models.ForeignKey(
+        "users.CustomUser",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="restore_uploads_confirmed",
+        verbose_name=_("Confirmed By"),
+    )
+    confirmed_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Confirmed At"))
+    confirmed_snapshot = models.JSONField(
+        null=True, blank=True, verbose_name=_("Confirmed Snapshot"),
+        help_text=_(
+            "Story 2.2: the exact facts previewed at confirmation (plus live counts and the "
+            "preview digest); the hand-off contract for the restore-apply stories."
+        ),
+    )
 
     class Meta:
         verbose_name = _("Restore Upload")

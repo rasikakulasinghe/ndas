@@ -1,0 +1,190 @@
+{% extends 'src/base.html' %}
+{% load static %}
+{% block title %}Restore - Preview{% endblock %}
+
+{% block content_header %}
+<div class="row mb-0">
+  <div class="col-sm-6">
+    <h1 class="m-0">Restore</h1>
+    <small class="text-muted">Preview and confirmation</small>
+  </div>
+  <div class="col-sm-6">
+    <ol class="breadcrumb float-sm-right">
+      <li class="breadcrumb-item"><a href="{% url 'backup:restore-upload' %}">Restore</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'backup:restore-status' upload.id %}">Validation</a></li>
+      <li class="breadcrumb-item active">Preview</li>
+    </ol>
+  </div>
+</div>
+{% endblock content_header %}
+
+{% block main_content %}
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+
+      <div class="card card-primary card-outline">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-file-archive mr-2"></i>{{ upload.original_filename }}</h3>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-info">
+            <i class="fas fa-eye mr-1"></i>
+            This is a <strong>read-only preview</strong>. Nothing has been restored, and nothing is
+            changed by viewing it.
+          </div>
+
+          {% include 'backup/restore_authenticity_alert.html' %}
+
+          <table class="table table-sm">
+            <tbody>
+              <tr>
+                <th style="width: 30%;">Source backup job{% if preview.is_unverified %} <small class="text-muted">(claimed by the archive)</small>{% endif %}</th>
+                <td>{{ preview.source_job_id }}</td>
+              </tr>
+              <tr>
+                <th>Generated{% if preview.is_unverified %} <small class="text-muted">(claimed by the archive)</small>{% endif %}</th>
+                <td>{{ preview.generated_at }} by {{ preview.generated_by|default:"unknown" }}</td>
+              </tr>
+              <tr><th>Scope</th><td>{{ preview.scope_type }}</td></tr>
+              <tr>
+                <th>Date filter</th>
+                <td>
+                  {% if preview.date_filter.applied %}
+                    {{ preview.date_filter.start|default:"open" }} to {{ preview.date_filter.end|default:"open" }}
+                    <span class="badge badge-warning ml-1">Date-scoped</span>
+                  {% else %}
+                    None (full export)
+                  {% endif %}
+                </td>
+              </tr>
+              <tr><th>Archive SHA-256</th><td><code class="small">{{ upload.archive_sha256 }}</code></td></tr>
+            </tbody>
+          </table>
+
+          <h6>Institutions{% if preview.is_unverified %} <small class="text-muted">(claimed by the archive)</small>{% endif %}</h6>
+          <table class="table table-sm">
+            <thead>
+              <tr><th>Slug</th><th>Name on this system</th><th>On this system</th></tr>
+            </thead>
+            <tbody>
+              {% for inst in preview.institutions %}
+              <tr>
+                <td><code>{{ inst.slug }}</code></td>
+                <td>{{ inst.name|default:"-" }}</td>
+                <td>
+                  {% if inst.exists %}
+                    <span class="badge badge-success">Exists</span>
+                  {% else %}
+                    <span class="badge badge-danger">Missing</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="3" class="text-muted">The archive names no institutions.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          <h6>What a restore would do, per model</h6>
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Model</th>
+                  <th class="text-right">In archive</th>
+                  <th class="text-right">Currently in this system</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in preview.models %}
+                <tr>
+                  <td>{{ row.label }} <small class="text-muted"><code>{{ row.key }}</code></small></td>
+                  <td class="text-right">{{ row.archive_count }}</td>
+                  <td class="text-right">{{ row.current_count }}</td>
+                  <td>
+                    {% if row.restored %}
+                      <span class="badge badge-primary">Replaced</span>
+                    {% else %}
+                      <span class="badge badge-secondary">Not restored</span>
+                      <small class="text-muted">existing referrals are left untouched; the archive's referral rows are ignored</small>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <p class="text-muted small mb-0">
+            "Currently in this system" counts the rows for the institutions above that exist here.
+            <code>Bookmark</code> records are never restored.
+          </p>
+        </div>
+      </div>
+
+      <div class="card card-outline {% if preview.blocked %}card-danger{% else %}card-warning{% endif %}">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-check-square mr-2"></i>Confirm</h3>
+        </div>
+        <div class="card-body">
+          {% if preview.blocked %}
+            <div class="alert alert-danger mb-3">
+              <h5><i class="icon fas fa-ban"></i> This archive cannot be confirmed</h5>
+              <ul class="mb-0">
+                {% for reason in preview.block_reasons %}
+                <li>{{ reason }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+            <button type="button" class="btn btn-warning" disabled>
+              <i class="fas fa-check mr-1"></i>Confirm restore
+            </button>
+          {% else %}
+            <p>
+              Confirming records exactly what is shown above so that it can be applied later.
+              <strong>It does not apply the restore</strong>: no data is changed by confirming.
+            </p>
+            <form method="post" action="{% url 'backup:restore-confirm' upload.id %}">
+              {% csrf_token %}
+              <input type="hidden" name="digest" value="{{ preview.digest }}">
+              {% if form.errors %}
+              <div class="alert alert-danger">
+                {% for field in form %}{% for error in field.errors %}<div>{{ error }}</div>{% endfor %}{% endfor %}
+                {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+              </div>
+              {% endif %}
+              <div class="custom-control custom-checkbox mb-3">
+                <input type="checkbox" class="custom-control-input" id="id_acknowledge" name="acknowledge">
+                <label class="custom-control-label" for="id_acknowledge">
+                  I have reviewed this preview and understand that the models marked "Replaced" would
+                  be replaced by the archive's contents when the restore is later applied.
+                </label>
+              </div>
+              <button type="submit" class="btn btn-warning">
+                <i class="fas fa-check mr-1"></i>Confirm restore
+              </button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <a href="{% url 'backup:restore-status' upload.id %}" class="btn btn-outline-secondary btn-sm">
+          <i class="fas fa-arrow-left mr-1"></i>Back
+        </a>
+        <span class="text-muted small mx-2">Leaving this page changes nothing; you can come back to it later.</span>
+        {% if can_cancel %}
+        <form method="post" action="{% url 'backup:restore-cancel' upload.id %}" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline-danger btn-sm">
+            <i class="fas fa-times mr-1"></i>Cancel and discard this upload
+          </button>
+        </form>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

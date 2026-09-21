@@ -1,0 +1,21 @@
+{% comment %}
+  Story 2.1 wording, shared by the status page and the Story 2.2 preview:
+  whether the archive's origin was verified or is only claimed by the archive.
+  Needs `upload` in the context.
+{% endcomment %}
+{% if upload.authenticity == 'verified' %}
+<div class="alert alert-success">
+  <i class="fas fa-check-circle mr-1"></i>
+  Archive validated. Its origin was verified against backup job {{ upload.source_job_id }} on this system.
+</div>
+{% else %}
+<div class="alert alert-warning">
+  <i class="fas fa-exclamation-triangle mr-1"></i>
+  <strong>Origin unverified.</strong> This system has no completed backup record matching
+  backup job {{ upload.source_job_id }}, so the archive was accepted only because you ticked
+  "Allow unverified origin". Its checksums come from the archive itself: they detect
+  accidental corruption but <strong>not deliberate tampering</strong>. The job ID, institutions
+  and author shown below are claimed by the archive and have not been confirmed. Only continue
+  if you trust where this file came from.
+</div>
+{% endif %}

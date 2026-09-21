@@ -272,6 +272,7 @@ class RestoreUploadStatus(models.TextChoices):
     """Lifecycle of a staged restore archive upload."""
     VALIDATING = 'validating', 'Validating'
     VALIDATED = 'validated', 'Validated'
+    CONFIRMED = 'confirmed', 'Confirmed'
     REJECTED = 'rejected', 'Rejected'
     FAILED = 'failed', 'Failed'
 

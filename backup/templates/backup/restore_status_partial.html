@@ -12,7 +12,7 @@
      hx-swap="outerHTML"
      {% endif %}>
   <p class="mb-2">
-    {% if upload.status == 'validated' %}
+    {% if upload.status == 'validated' or upload.status == 'confirmed' %}
       <span class="badge badge-success">{{ upload.get_status_display }}</span>
     {% elif upload.status == 'rejected' or upload.status == 'failed' %}
       <span class="badge badge-danger">{{ upload.get_status_display }}</span>
@@ -23,11 +23,11 @@
   </p>
 
   <div class="progress mb-3" style="height: 1rem;">
-    <div class="progress-bar {% if upload.status == 'rejected' or upload.status == 'failed' %}bg-danger{% elif upload.status == 'validated' %}bg-success{% else %}progress-bar-striped progress-bar-animated{% endif %}"
+    <div class="progress-bar {% if upload.status == 'rejected' or upload.status == 'failed' %}bg-danger{% elif upload.status == 'validated' or upload.status == 'confirmed' %}bg-success{% else %}progress-bar-striped progress-bar-animated{% endif %}"
          role="progressbar" aria-label="Validation progress"
-         style="width: {% if upload.status == 'validated' %}100{% else %}{{ upload.progress_pct }}{% endif %}%;"
+         style="width: {% if upload.status == 'validated' or upload.status == 'confirmed' %}100{% else %}{{ upload.progress_pct }}{% endif %}%;"
          aria-valuenow="{{ upload.progress_pct }}" aria-valuemin="0" aria-valuemax="100">
-      {% if upload.status == 'validated' %}100{% else %}{{ upload.progress_pct }}{% endif %}%
+      {% if upload.status == 'validated' or upload.status == 'confirmed' %}100{% else %}{{ upload.progress_pct }}{% endif %}%
     </div>
   </div>
 
@@ -50,21 +50,28 @@
       <small class="text-muted">The uploaded file has been removed. Please upload the archive again.</small>
     </div>
 
-  {% elif upload.status == 'validated' %}
-    {% if upload.authenticity == 'verified' %}
-    <div class="alert alert-success">
-      <i class="fas fa-check-circle mr-1"></i>
-      Archive validated. Its origin was verified against backup job {{ upload.source_job_id }} on this system.
-    </div>
+  {% elif upload.status == 'validated' or upload.status == 'confirmed' %}
+    {% include 'backup/restore_authenticity_alert.html' %}
+
+    {% if upload.status == 'validated' %}
+    <p>
+      <a href="{% url 'backup:restore-preview' upload.id %}" class="btn btn-primary">
+        <i class="fas fa-search mr-1"></i>Review restore preview
+      </a>
+      <span class="text-muted small ml-2">Nothing is changed until you review and confirm it.</span>
+    </p>
     {% else %}
-    <div class="alert alert-warning">
-      <i class="fas fa-exclamation-triangle mr-1"></i>
-      <strong>Origin unverified.</strong> This system has no completed backup record matching
-      backup job {{ upload.source_job_id }}, so the archive was accepted only because you ticked
-      "Allow unverified origin". Its checksums come from the archive itself: they detect
-      accidental corruption but <strong>not deliberate tampering</strong>. The job ID, institutions
-      and author shown below are claimed by the archive and have not been confirmed. Only continue
-      if you trust where this file came from.
+    <div class="alert alert-info">
+      <h5><i class="icon fas fa-info-circle"></i> Restore confirmed, not applied yet</h5>
+      <p class="mb-1">
+        This archive was confirmed
+        {% if upload.confirmed_at %}on {{ upload.confirmed_at|date:"Y-m-d H:i" }}{% endif %}
+        {% if upload.confirmed_by %}by {{ upload.confirmed_by.username }}{% endif %}.
+        <strong>The restore has not been applied:</strong> no data has been changed, and no restore job exists.
+      </p>
+      {% if confirmed_snapshot.digest %}
+      <small class="text-muted">Preview digest: <code>{{ confirmed_snapshot.digest }}</code></small>
+      {% endif %}
     </div>
     {% endif %}
 
@@ -109,5 +116,15 @@
       </tbody>
     </table>
     {% endwith %}
+  {% endif %}
+
+  {% if can_cancel %}
+  <form method="post" action="{% url 'backup:restore-cancel' upload.id %}" class="mt-3">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-outline-danger btn-sm">
+      <i class="fas fa-times mr-1"></i>{% if upload.status == 'validating' %}Cancel this stalled upload{% elif upload.status == 'confirmed' %}Cancel the confirmed restore{% else %}Cancel and discard this upload{% endif %}
+    </button>
+    <small class="text-muted ml-2">Removes the staged archive. No system data is affected.</small>
+  </form>
   {% endif %}
 </div>
