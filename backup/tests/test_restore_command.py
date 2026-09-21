@@ -12,7 +12,7 @@ from unittest import mock
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.core.management.base import CommandError
-from django.db import OperationalError
+from django.db import OperationalError, transaction
 from django.test import TestCase, override_settings
 
 from backup.models import BackupJob, RestoreUpload
@@ -174,6 +174,75 @@ class ValidateRestoreUploadCommandTest(IsolatedBaseDirMixin, TestCase):
         self.assertEqual(seen, [42])
         upload.refresh_from_db()
         self.assertEqual(upload.progress_pct, 0)  # terminal save resets it with the failed status
+
+    def no_rollback_poisoning(self):
+        """A save(update_fields) that matches no row raises DatabaseError; Django would also
+        mark the test's enclosing transaction for rollback, which production (autocommit)
+        never does. The DB connection itself is unaffected, so neutralise only the marking."""
+        import contextlib
+        return mock.patch.object(
+            transaction, 'mark_for_rollback_on_error', lambda using=None: contextlib.nullcontext(),
+        )
+
+    def test_progress_saves_refresh_updated_at_so_a_live_upload_is_never_stale(self):
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from backup import restore_preview
+
+        upload = self.stage()
+        RestoreUpload.objects.filter(pk=upload.pk).update(updated_at=timezone.now() - timedelta(minutes=45))
+        self.assertTrue(restore_preview.is_stale(RestoreUpload.objects.get(pk=upload.pk)))
+        seen = []
+
+        def fake_validate(path, sha, allow_unverified=False, progress_callback=None):
+            progress_callback(10)
+            seen.append(restore_preview.is_stale(RestoreUpload.objects.get(pk=upload.pk)))
+            raise RuntimeError('stop here')
+
+        with mock.patch(
+            'backup.management.commands.validate_restore_upload.validate_restore_archive',
+            side_effect=fake_validate,
+        ):
+            call_command('validate_restore_upload', str(upload.id))
+        self.assertEqual(seen, [False])
+
+    def test_row_deleted_mid_run_is_never_recreated_and_the_command_exits_cleanly(self):
+        upload = self.stage()
+
+        def fake_validate(path, sha, allow_unverified=False, progress_callback=None):
+            # A stale-cancel deletes the row while this process is still running.
+            RestoreUpload.objects.filter(pk=upload.pk).delete()
+            progress_callback(50)
+            raise RuntimeError('stop here')
+
+        with mock.patch(
+            'backup.management.commands.validate_restore_upload.validate_restore_archive',
+            side_effect=fake_validate,
+        ):
+            with self.no_rollback_poisoning():
+                call_command('validate_restore_upload', str(upload.id))  # must not raise
+        self.assertFalse(RestoreUpload.objects.filter(pk=upload.pk).exists())
+
+    def test_row_deleted_before_a_successful_result_is_not_recreated(self):
+        from backup.restore_validation import ValidationResult
+
+        upload = self.stage()
+
+        def fake_validate(path, sha, allow_unverified=False, progress_callback=None):
+            RestoreUpload.objects.filter(pk=upload.pk).delete()
+            return ValidationResult(
+                authenticity=RestoreAuthenticity.VERIFIED, summary={'source_job_id': 1},
+            )
+
+        with mock.patch(
+            'backup.management.commands.validate_restore_upload.validate_restore_archive',
+            side_effect=fake_validate,
+        ):
+            with self.no_rollback_poisoning():
+                call_command('validate_restore_upload', str(upload.id))
+        self.assertFalse(RestoreUpload.objects.filter(pk=upload.pk).exists())
 
     def test_unknown_upload_raises_command_error(self):
         with self.assertRaises(CommandError):

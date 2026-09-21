@@ -522,6 +522,9 @@ def restore_upload(request):
     # Story 2.2: a confirmed archive is awaiting a restore and is never
     # replaced or deleted by a new upload -- only by an explicit cancel.
     if RestoreUpload.objects.filter(uploaded_by=request.user, status=RestoreUploadStatus.CONFIRMED).exists():
+        security_logger.info(
+            "Restore upload refused (a confirmed upload exists): user=%s", request.user.username,
+        )
         messages.error(
             request,
             "You have a confirmed restore archive that has not been applied. "
@@ -670,6 +673,10 @@ def restore_status_fragment(request, pk):
 
 
 # --- Story 2.2: restore preview, confirmation and cancel ---------------------
+#
+# Each view does the gate and the ownership lookup itself (so a foreign or
+# unknown upload stays a 404: `handle_view_errors` would turn Http404 into a
+# redirect) and hands the rest to a `handle_view_errors`-wrapped body.
 
 
 def _redirect_to_status(upload):
@@ -702,6 +709,11 @@ def restore_preview(request, pk):
         return redirect('home')
 
     upload = get_object_or_404(RestoreUpload, pk=pk, uploaded_by=request.user)
+    return _restore_preview_body(request, upload)
+
+
+@handle_view_errors(redirect_url='backup:restore-upload', error_message='Failed to load the restore preview.')
+def _restore_preview_body(request, upload):
     if upload.status != RestoreUploadStatus.VALIDATED:
         messages.warning(request, "Only a validated archive can be previewed.")
         return _redirect_to_status(upload)
@@ -723,6 +735,11 @@ def restore_confirm(request, pk):
         return redirect('home')
 
     upload = get_object_or_404(RestoreUpload, pk=pk, uploaded_by=request.user)
+    return _restore_confirm_body(request, upload)
+
+
+@handle_view_errors(redirect_url='backup:restore-upload', error_message='Failed to confirm the restore.')
+def _restore_confirm_body(request, upload):
     if upload.status != RestoreUploadStatus.VALIDATED:
         security_logger.warning(
             "Restore confirm refused (status=%s): user=%s upload=%s", upload.status, request.user.username, upload.id,
@@ -733,7 +750,7 @@ def restore_confirm(request, pk):
     form = RestoreConfirmForm(request.POST)
     if not form.is_valid():
         security_logger.warning(
-            "Restore confirm refused (form): user=%s upload=%s errors=%s",
+            "Restore confirm refused (form): user=%s upload=%s errors=%r",
             request.user.username, upload.id, form.errors.as_json(),
         )
         return _render_preview(request, upload, form=form)
@@ -769,9 +786,19 @@ def restore_cancel(request, pk):
         return redirect('home')
 
     upload = get_object_or_404(RestoreUpload, pk=pk, uploaded_by=request.user)
+    return _restore_cancel_body(request, upload)
+
+
+@handle_view_errors(redirect_url='backup:restore-upload', error_message='Failed to cancel the restore upload.')
+def _restore_cancel_body(request, upload):
     outcome = preview_service.cancel_upload(upload.id, request.user)
     if outcome.ok:
         messages.success(request, "The restore upload was cancelled and its staged archive removed.")
+        return redirect('backup:restore-upload')
+
+    if outcome.code == preview_service.GONE:
+        # e.g. a double click: the first cancel already removed it.
+        messages.info(request, "That upload was already cancelled.")
         return redirect('backup:restore-upload')
 
     messages.error(request, outcome.message)

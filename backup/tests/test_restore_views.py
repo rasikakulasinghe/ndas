@@ -695,6 +695,44 @@ class RestoreRateLimitTest(RestoreViewTestBase):
             self.assertEqual(client.get(url).status_code, 200, f"view {i + 1}")
         self.assertEqual(client.get(url).status_code, 403)
 
+    # Story 2.2: preview 30/m, confirm and cancel 10/m.
+    def _validated_upload(self):
+        return self.make_upload(
+            status=RestoreUploadStatus.VALIDATED, size_bytes=6, archive_sha256='a' * 64,
+            authenticity=RestoreAuthenticity.VERIFIED, source_job_id=5,
+            manifest_summary={
+                'source_job_id': 5, 'manifest_version': 1, 'schema_version': 'f' * 64, 'scope_type': 'single',
+                'institutions': [self.inst.slug], 'record_counts': {},
+                'date_filter': {'applied': False, 'start': None, 'end': None},
+                'generated_at': 't', 'generated_by': 'x',
+            },
+        )
+
+    def test_thirty_first_preview_view_is_rejected(self):
+        upload = self._validated_upload()
+        client = self.client_for(self.superadmin)
+        url = reverse('backup:restore-preview', args=[upload.id])
+        for i in range(30):
+            self.assertEqual(client.get(url).status_code, 200, f"preview {i + 1}")
+        self.assertEqual(client.get(url).status_code, 403)
+
+    def test_eleventh_confirm_post_is_rejected(self):
+        upload = self._validated_upload()
+        client = self.client_for(self.superadmin)
+        url = reverse('backup:restore-confirm', args=[upload.id])
+        for i in range(10):
+            # No digest/acknowledgement: refused by the form (200) but still counted.
+            self.assertEqual(client.post(url, {}).status_code, 200, f"confirm {i + 1}")
+        self.assertEqual(client.post(url, {}).status_code, 403)
+
+    def test_eleventh_cancel_post_is_rejected(self):
+        upload = self.make_upload(status=RestoreUploadStatus.VALIDATING)  # fresh: cancel is refused (302), still counted
+        client = self.client_for(self.superadmin)
+        url = reverse('backup:restore-cancel', args=[upload.id])
+        for i in range(10):
+            self.assertEqual(client.post(url).status_code, 302, f"cancel {i + 1}")
+        self.assertEqual(client.post(url).status_code, 403)
+
 
 class DetachedLaunchKwargsTest(RestoreViewTestBase):
     """The shared `_launch_detached_command` helper: its Popen keyword

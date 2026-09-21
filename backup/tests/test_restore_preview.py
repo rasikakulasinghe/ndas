@@ -10,7 +10,7 @@ import copy
 from datetime import timedelta
 from unittest import mock
 
-from django.db import connection
+from django.db import IntegrityError, connection, transaction
 from django.test import Client
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
@@ -36,7 +36,26 @@ def make_patient(institution, user, bht='BHT-001'):
     )
 
 
+STAGED_SIZE = len(b"staged")  # what RestoreViewTestBase.make_upload writes
+
+
 class PreviewTestBase(RestoreViewTestBase):
+    def make_upload(self, *args, **kwargs):
+        # A confirmed upload always carries its confirmation time and snapshot
+        # (DB check constraint).
+        if kwargs.get('status') == RestoreUploadStatus.CONFIRMED:
+            kwargs.setdefault('confirmed_at', timezone.now())
+            kwargs.setdefault('confirmed_snapshot', {'digest': 'd' * 64})
+        return super().make_upload(*args, **kwargs)
+
+    def csrf_client(self, user):
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(user)
+        session = client.session
+        session['active_institution_id'] = self.inst.id
+        session.save()
+        return client
+
     def summary(self, **overrides):
         base = {
             'source_job_id': 5, 'manifest_version': 1, 'schema_version': 'f' * 64, 'scope_type': 'single',
@@ -51,7 +70,7 @@ class PreviewTestBase(RestoreViewTestBase):
     def validated(self, authenticity=RestoreAuthenticity.VERIFIED, user=None, summary=None, **overrides):
         return self.make_upload(
             user=user, status=RestoreUploadStatus.VALIDATED, progress_pct=100, authenticity=authenticity,
-            source_job_id=5, archive_sha256=SHA,
+            source_job_id=5, archive_sha256=SHA, size_bytes=STAGED_SIZE,
             manifest_summary=summary if summary is not None else self.summary(**overrides),
         )
 
@@ -125,7 +144,54 @@ class BuildPreviewTest(PreviewTestBase):
         self.assertIn('date-scoped', dated['block_reasons'][0])
 
         not_validated = self.make_upload(status=RestoreUploadStatus.CONFIRMED, manifest_summary=self.summary())
-        self.assertTrue(restore_preview.build_preview(not_validated)['blocked'])
+        reasons = restore_preview.build_preview(not_validated)['block_reasons']
+        self.assertEqual(len(reasons), 1)
+        self.assertIn('not validated', reasons[0])
+
+    def test_date_bound_without_applied_flag_is_date_scoped(self):
+        for date_filter in (
+            {'applied': False, 'start': '2026-01-01', 'end': None},
+            {'applied': False, 'start': None, 'end': '2026-02-01'},
+        ):
+            with self.subTest(date_filter=date_filter):
+                preview = restore_preview.build_preview(self.validated(date_filter=date_filter))
+                self.assertTrue(preview['date_filter']['applied'])
+                self.assertTrue(preview['facts']['date_filter']['applied'])
+                self.assertEqual(len(preview['block_reasons']), 1)
+                self.assertIn('date-scoped', preview['block_reasons'][0])
+        plain = restore_preview.build_preview(self.validated())
+        self.assertFalse(plain['date_filter']['applied'])
+
+    def test_archive_naming_no_institutions_is_blocked(self):
+        preview = restore_preview.build_preview(self.validated(institutions=[]))
+        self.assertIn("The archive names no institutions.", preview['block_reasons'])
+
+    def test_unknown_scope_type_is_blocked(self):
+        for scope in ('galaxy', '', None):
+            with self.subTest(scope=scope):
+                preview = restore_preview.build_preview(self.validated(scope_type=scope))
+                self.assertEqual(len(preview['block_reasons']), 1)
+                self.assertIn('scope type', preview['block_reasons'][0])
+        for scope in ('single', 'multi', 'system'):
+            self.assertFalse(restore_preview.build_preview(self.validated(scope_type=scope))['blocked'])
+
+    def test_missing_or_short_staged_archive_is_blocked(self):
+        upload = self.validated()
+        get_upload_path(upload).write_bytes(b"sta")  # shorter than the uploaded size
+        preview = restore_preview.build_preview(upload)
+        self.assertEqual(len(preview['block_reasons']), 1)
+        self.assertIn('size does not match', preview['block_reasons'][0])
+
+        get_upload_path(upload).unlink()
+        preview = restore_preview.build_preview(upload)
+        self.assertEqual(len(preview['block_reasons']), 1)
+        self.assertIn('missing', preview['block_reasons'][0])
+
+    def test_staged_archive_check_does_not_change_the_digest(self):
+        upload = self.validated()
+        before = restore_preview.build_preview(upload)['digest']
+        get_upload_path(upload).unlink()
+        self.assertEqual(restore_preview.build_preview(upload)['digest'], before)
 
     def test_malformed_summary_does_not_crash(self):
         upload = self.validated(summary={'institutions': 'nope', 'record_counts': [], 'date_filter': 3})
@@ -212,7 +278,7 @@ class ConfirmServiceTest(PreviewTestBase):
         self.assertEqual(snapshot['digest'], preview['digest'])
         self.assertEqual(snapshot['archive_sha256'], SHA)
         self.assertEqual(snapshot['archive_counts']['patients.patient'], 3)
-        self.assertEqual(snapshot['live_counts']['patients.patient'], 1)
+        self.assertEqual(snapshot['live_counts_at_confirmation']['patients.patient'], 1)
         self.assertEqual(snapshot['institutions'], [{'slug': self.inst.slug, 'exists': True}])
         self.assertEqual(snapshot['actions']['referral.referralsent'], 'not_restored')
         self.assertEqual(snapshot['source_job_id'], 5)
@@ -228,6 +294,69 @@ class ConfirmServiceTest(PreviewTestBase):
         self.assertIsNone(upload.confirmed_snapshot)
         self.assertIsNone(upload.confirmed_at)
         self.assertIsNone(upload.confirmed_by)
+
+    def test_snapshot_records_versioned_hand_off_contract(self):
+        upload = self.validated()
+        self.assertTrue(self.confirm(upload).ok)
+        upload.refresh_from_db()
+        snapshot = upload.confirmed_snapshot
+        self.assertEqual(snapshot['snapshot_version'], 1)
+        self.assertIn('live_counts_at_confirmation', snapshot)
+        self.assertNotIn('live_counts', snapshot)
+
+    def test_confirming_an_unverified_upload_works(self):
+        upload = self.validated(authenticity=RestoreAuthenticity.UNVERIFIED)
+        self.assertTrue(self.confirm(upload).ok)
+        upload.refresh_from_db()
+        self.assertEqual(upload.status, RestoreUploadStatus.CONFIRMED)
+        self.assertEqual(upload.confirmed_snapshot['authenticity'], RestoreAuthenticity.UNVERIFIED)
+
+    def test_non_ascii_digest_is_a_clean_mismatch(self):
+        upload = self.validated()
+        with self.assertLogs(SECURITY_LOGGER, level='WARNING'):
+            outcome = self.confirm(upload, digest='caf\u00e9-\u2603-' + 'x' * 40)
+        self.assertRefused(upload, outcome, restore_preview.DIGEST_MISMATCH)
+
+    def test_control_characters_in_the_digest_cannot_forge_log_lines(self):
+        upload = self.validated()
+        with self.assertLogs(SECURITY_LOGGER, level='WARNING') as logs:
+            self.confirm(upload, digest='abc\nFORGED LOG LINE')
+        for line in logs.output:
+            self.assertNotIn('\nFORGED', line)
+
+    def test_missing_staged_archive_blocks_confirm(self):
+        upload = self.validated()
+        get_upload_path(upload).unlink()
+        with self.assertLogs(SECURITY_LOGGER, level='WARNING'):
+            outcome = self.confirm(upload)
+        self.assertRefused(upload, outcome, restore_preview.BLOCKED)
+
+    def test_short_staged_archive_blocks_confirm(self):
+        upload = self.validated()
+        get_upload_path(upload).write_bytes(b"x")
+        with self.assertLogs(SECURITY_LOGGER, level='WARNING'):
+            outcome = self.confirm(upload)
+        self.assertRefused(upload, outcome, restore_preview.BLOCKED)
+
+    def test_lost_race_at_the_conditional_write_records_nothing(self):
+        upload = self.validated()
+        digest = restore_preview.build_preview(upload)['digest']
+        real_build = restore_preview.build_preview
+
+        def build_then_lose_the_row(u):
+            result = real_build(u)
+            # Another request moves the row out of `validated` before our write.
+            RestoreUpload.objects.filter(pk=u.pk).update(status=RestoreUploadStatus.REJECTED)
+            return result
+
+        with mock.patch.object(restore_preview, 'build_preview', side_effect=build_then_lose_the_row), \
+                self.assertLogs(SECURITY_LOGGER, level='WARNING'):
+            outcome = restore_preview.confirm_upload(upload.id, self.superadmin, digest, True)
+        self.assertFalse(outcome.ok)
+        self.assertEqual(outcome.code, restore_preview.NOT_VALIDATED)
+        upload.refresh_from_db()
+        self.assertEqual(upload.status, RestoreUploadStatus.REJECTED)
+        self.assertIsNone(upload.confirmed_snapshot)
 
     def test_no_acknowledgement(self):
         upload = self.validated()
@@ -345,6 +474,14 @@ class CancelServiceTest(PreviewTestBase):
         self.assertEqual(outcome.code, restore_preview.FILES_NOT_REMOVED)
         self.assertTrue(RestoreUpload.objects.filter(pk=upload.pk).exists())
 
+    def test_cancel_of_a_row_that_no_longer_exists_is_a_distinct_outcome(self):
+        upload = self.make_upload(status=RestoreUploadStatus.VALIDATED)
+        upload_id = upload.id
+        upload.delete()
+        outcome = restore_preview.cancel_upload(upload_id, self.superadmin)
+        self.assertFalse(outcome.ok)
+        self.assertEqual(outcome.code, restore_preview.GONE)
+
     def test_cannot_cancel_another_users_upload(self):
         upload = self.make_upload(user=self.other_superadmin, status=RestoreUploadStatus.VALIDATED)
         self.assertFalse(restore_preview.cancel_upload(upload.id, self.superadmin).ok)
@@ -362,6 +499,42 @@ class ConfirmedProtectionTest(PreviewTestBase):
         self.assertTrue(RestoreUpload.objects.filter(pk=confirmed.pk).exists())
         self.assertTrue(get_upload_path(confirmed).exists())
         self.assertFalse(RestoreUpload.objects.filter(pk=finished.pk).exists())
+
+    def test_a_row_that_turns_confirmed_after_listing_survives_replacement(self):
+        upload = self.make_upload(status=RestoreUploadStatus.VALIDATED)
+        real_atomic = transaction.atomic
+
+        def confirm_then_enter(*args, **kwargs):
+            RestoreUpload.objects.filter(pk=upload.pk).update(
+                status=RestoreUploadStatus.CONFIRMED, confirmed_at=timezone.now(),
+                confirmed_snapshot={'digest': 'd' * 64},
+            )
+            return real_atomic(*args, **kwargs)
+
+        with mock.patch('backup.restore_validation.transaction.atomic', side_effect=confirm_then_enter):
+            restore_validation.delete_finished_uploads(self.superadmin)
+        upload.refresh_from_db()
+        self.assertEqual(upload.status, RestoreUploadStatus.CONFIRMED)
+        self.assertTrue(get_upload_path(upload).exists())
+
+    def test_confirmed_upload_must_carry_a_snapshot_and_time(self):
+        for extra in ({}, {'confirmed_at': timezone.now()}, {'confirmed_snapshot': {'digest': 'x'}}):
+            with self.subTest(extra=extra):
+                with self.assertRaises(IntegrityError), transaction.atomic():
+                    RestoreUpload.objects.create(
+                        uploaded_by=self.superadmin, status=RestoreUploadStatus.CONFIRMED, **extra,
+                    )
+        # confirmed_by may be null (SET_NULL)
+        RestoreUpload.objects.create(
+            uploaded_by=self.superadmin, status=RestoreUploadStatus.CONFIRMED,
+            confirmed_at=timezone.now(), confirmed_snapshot={'digest': 'x'}, confirmed_by=None,
+        )
+
+    def test_refusal_is_written_to_the_security_log(self):
+        self.make_upload(status=RestoreUploadStatus.CONFIRMED)
+        with self.assertLogs(SECURITY_LOGGER, level='INFO') as logs:
+            self.client_for(self.superadmin).post(self.url, {})
+        self.assertTrue(any('confirmed upload exists' in line and 'sa_rs' in line for line in logs.output))
 
     @mock.patch('backup.views.subprocess.Popen')
     def test_new_upload_refused_while_a_confirmed_one_exists(self, mock_popen):
@@ -426,6 +599,8 @@ class PreviewViewTest(PreviewTestBase):
         client = self.client_for(self.superadmin)
         before = list(RestoreUpload.objects.values())
         files_before = sorted(p.name for p in get_upload_dir(upload).iterdir())
+        staged_before = get_upload_path(upload).read_bytes()
+        session_tables = ('django_session', 'users_usersession', 'users_useractivitylog')
 
         with CaptureQueriesContext(connection) as queries:
             response = self.get_preview(upload, client)
@@ -434,11 +609,12 @@ class PreviewViewTest(PreviewTestBase):
         writes = [
             q['sql'] for q in queries
             if not q['sql'].lstrip().upper().startswith(('SELECT', 'SAVEPOINT', 'RELEASE'))
-            and 'django_session' not in q['sql']
+            and not any(table in q['sql'] for table in session_tables)
         ]
         self.assertEqual(writes, [])
         self.assertEqual(list(RestoreUpload.objects.values()), before)
         self.assertEqual(sorted(p.name for p in get_upload_dir(upload).iterdir()), files_before)
+        self.assertEqual(get_upload_path(upload).read_bytes(), staged_before)
         self.assertEqual(BackupJob.objects.count(), 0)
 
     def test_preview_never_opens_the_archive(self):
@@ -461,10 +637,18 @@ class PreviewViewTest(PreviewTestBase):
         upload = self.validated(institutions=[self.inst.slug, 'ghost-hosp'])
         response = self.get_preview(upload)
         self.assertContains(response, 'ghost-hosp')
-        self.assertContains(response, 'Missing')
         self.assertContains(response, 'This archive cannot be confirmed')
+        self.assertContains(response, 'do not exist on this system')
         self.assertNotContains(response, self.url_for('confirm', upload))
-        self.assertContains(response, 'disabled')
+        self.assertNotContains(response, 'name="acknowledge"')
+        self.assertNotContains(response, 'name="digest"')
+
+    def test_missing_staged_archive_does_not_offer_confirm(self):
+        upload = self.validated()
+        get_upload_path(upload).unlink()
+        response = self.get_preview(upload)
+        self.assertContains(response, 'staged archive file is missing')
+        self.assertNotContains(response, self.url_for('confirm', upload))
 
     def test_date_scoped_archive_does_not_offer_confirm(self):
         upload = self.validated(date_filter={'applied': True, 'start': '2026-01-01', 'end': None})
@@ -532,12 +716,13 @@ class ConfirmViewTest(PreviewTestBase):
     def test_confirm_does_not_modify_domain_data(self):
         patient = make_patient(self.inst, self.superadmin)
         upload = self.validated()
+        institutions_before = Institution.objects.count()
         self.post_confirm(upload)
         self.assertEqual(Patient.objects.all_institutions().count(), 1)
         patient.refresh_from_db()
         self.assertEqual(patient.baby_name, 'Baby One')
         self.assertEqual(BackupJob.objects.count(), 0)
-        self.assertEqual(Institution.objects.count(), 1)
+        self.assertEqual(Institution.objects.count(), institutions_before)
 
     def test_missing_acknowledgement_shows_a_form_error_and_records_nothing(self):
         upload = self.validated()
@@ -548,6 +733,48 @@ class ConfirmViewTest(PreviewTestBase):
         upload.refresh_from_db()
         self.assertEqual(upload.status, RestoreUploadStatus.VALIDATED)
         self.assertIsNone(upload.confirmed_snapshot)
+
+    def test_confirming_an_unverified_upload_through_the_view(self):
+        upload = self.validated(authenticity=RestoreAuthenticity.UNVERIFIED)
+        response = self.post_confirm(upload)
+        self.assertEqual(response.status_code, 302)
+        upload.refresh_from_db()
+        self.assertEqual(upload.status, RestoreUploadStatus.CONFIRMED)
+
+    def test_non_ascii_digest_is_refused_cleanly_not_a_500(self):
+        upload = self.validated()
+        with self.assertLogs(SECURITY_LOGGER, level='WARNING'):
+            response = self.post_confirm(upload, digest='caf\u00e9\u2603')
+        self.assertRedirects(
+            response, reverse('backup:restore-preview', args=[upload.id]), fetch_redirect_response=False,
+        )
+        upload.refresh_from_db()
+        self.assertEqual(upload.status, RestoreUploadStatus.VALIDATED)
+
+    def test_forced_post_with_a_missing_staged_archive_is_refused(self):
+        upload = self.validated()
+        digest = restore_preview.build_preview(upload)['digest']
+        get_upload_path(upload).unlink()
+        with self.assertLogs(SECURITY_LOGGER, level='WARNING'):
+            self.post_confirm(upload, digest=digest)
+        upload.refresh_from_db()
+        self.assertEqual(upload.status, RestoreUploadStatus.VALIDATED)
+        self.assertIsNone(upload.confirmed_snapshot)
+
+    def test_form_errors_are_visible_on_a_blocked_preview(self):
+        upload = self.validated(institutions=[self.inst.slug, 'ghost'])
+        with self.assertLogs(SECURITY_LOGGER, level='WARNING'):
+            response = self.post_confirm(upload, ack=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Tick the acknowledgement')
+        self.assertContains(response, 'This archive cannot be confirmed')
+        upload.refresh_from_db()
+        self.assertEqual(upload.status, RestoreUploadStatus.VALIDATED)
+
+    def test_acknowledgement_checkbox_is_required_in_html(self):
+        upload = self.validated()
+        response = self.client_for(self.superadmin).get(reverse('backup:restore-preview', args=[upload.id]))
+        self.assertContains(response, 'name="acknowledge" required')
 
     def test_missing_digest_is_refused(self):
         upload = self.validated()
@@ -629,14 +856,13 @@ class ConfirmViewTest(PreviewTestBase):
 
     def test_csrf_is_enforced(self):
         upload = self.validated()
-        client = Client(enforce_csrf_checks=True)
-        client.force_login(self.superadmin)
+        before = list(RestoreUpload.objects.values())
+        client = self.csrf_client(self.superadmin)
         response = client.post(self.confirm_url(upload), {
             'digest': restore_preview.build_preview(upload)['digest'], 'acknowledge': 'on',
         })
         self.assertEqual(response.status_code, 403)
-        upload.refresh_from_db()
-        self.assertEqual(upload.status, RestoreUploadStatus.VALIDATED)
+        self.assertEqual(list(RestoreUpload.objects.values()), before)
 
 
 class CancelViewTest(PreviewTestBase):
@@ -705,6 +931,21 @@ class CancelViewTest(PreviewTestBase):
             response, reverse('backup:restore-status', args=[upload.id]), fetch_redirect_response=False,
         )
         self.assertTrue(RestoreUpload.objects.filter(pk=upload.pk).exists())
+
+    def test_csrf_is_enforced(self):
+        upload = self.make_upload(status=RestoreUploadStatus.VALIDATED)
+        response = self.csrf_client(self.superadmin).post(self.cancel_url(upload))
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(RestoreUpload.objects.filter(pk=upload.pk).exists())
+        self.assertTrue(get_upload_path(upload).exists())
+
+    def test_cancel_of_a_row_that_vanished_mid_request_redirects_to_the_upload_page(self):
+        upload = self.make_upload(status=RestoreUploadStatus.VALIDATED)
+        gone = restore_preview.Outcome(False, restore_preview.GONE, "This upload no longer exists.")
+        with mock.patch.object(restore_preview, 'cancel_upload', return_value=gone):
+            response = self.client_for(self.superadmin).post(self.cancel_url(upload), follow=True)
+        self.assertRedirects(response, self.url)
+        self.assertContains(response, 'already cancelled')
 
     def test_get_is_not_allowed(self):
         upload = self.make_upload(status=RestoreUploadStatus.VALIDATED)

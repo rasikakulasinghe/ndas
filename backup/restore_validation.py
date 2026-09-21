@@ -29,6 +29,7 @@ import zlib
 from dataclasses import dataclass, field
 
 from django.conf import settings
+from django.db import transaction
 
 from backup.services import (
     COPY_CHUNK_SIZE,
@@ -184,17 +185,25 @@ def delete_finished_uploads(user, keep_id=None):
     if keep_id is not None:
         stale = stale.exclude(pk=keep_id)
     for old in list(stale):
-        try:
-            shutil.rmtree(get_upload_dir(old))
-        except FileNotFoundError:
-            pass
-        except OSError:
-            logger.warning(
-                "Could not remove staged files for RestoreUpload %s; keeping its row to retry later.",
-                old.id, exc_info=True,
-            )
-            continue
-        old.delete()
+        # The list above is a snapshot: re-check under lock that the row is
+        # still finished (Story 2.2: it may have become `confirmed` since).
+        with transaction.atomic():
+            current = RestoreUpload.objects.select_for_update().filter(
+                pk=old.pk, status__in=FINISHED_STATUSES,
+            ).first()
+            if current is None:
+                continue
+            try:
+                shutil.rmtree(get_upload_dir(current))
+            except FileNotFoundError:
+                pass
+            except OSError:
+                logger.warning(
+                    "Could not remove staged files for RestoreUpload %s; keeping its row to retry later.",
+                    current.id, exc_info=True,
+                )
+                continue
+            current.delete()
 
 
 # --------------------------------------------------------------------------

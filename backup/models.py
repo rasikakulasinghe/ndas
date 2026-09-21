@@ -262,6 +262,12 @@ class RestoreUpload(TimeStampedModel, UserTrackingMixin):
                 condition=Q(status="validating"),
                 name="restore_one_validating_per_user",
             ),
+            # Story 2.2: a confirmed upload always carries its confirmation
+            # time and snapshot (`confirmed_by` may be null: SET_NULL).
+            models.CheckConstraint(
+                condition=~Q(status="confirmed") | Q(confirmed_at__isnull=False, confirmed_snapshot__isnull=False),
+                name="restore_confirmed_has_snapshot",
+            ),
         ]
 
     def __str__(self):

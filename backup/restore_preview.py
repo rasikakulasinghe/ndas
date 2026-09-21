@@ -29,7 +29,7 @@ from django.utils import timezone
 
 from backup import restore_validation
 from backup.services import _model_export_plan
-from ndas.custom_codes.choice import RestoreAuthenticity, RestoreUploadStatus
+from ndas.custom_codes.choice import BackupJobScopeType, RestoreAuthenticity, RestoreUploadStatus
 
 security_logger = restore_validation.security_logger
 logger = logging.getLogger(__name__)
@@ -79,6 +79,9 @@ BLOCKED = 'blocked'
 DIGEST_MISMATCH = 'digest_mismatch'
 LIVE_VALIDATION = 'live_validation'
 FILES_NOT_REMOVED = 'files_not_removed'
+GONE = 'gone'
+
+SNAPSHOT_VERSION = 1
 
 
 @dataclass
@@ -133,6 +136,21 @@ def is_stale(upload, now=None):
     return now - upload.updated_at >= STALE_VALIDATING_AFTER
 
 
+def _staged_archive_problem(upload):
+    """Read-only stat of the staged archive (no hashing: re-verifying its
+    SHA-256 before applying anything is the restore-apply story's job)."""
+    try:
+        size = restore_validation.get_upload_path(upload).stat().st_size
+    except OSError:
+        return "The staged archive file is missing. Cancel this upload and upload the archive again."
+    if size != upload.size_bytes:
+        return (
+            "The staged archive file's size does not match the uploaded size. "
+            "Cancel this upload and upload the archive again."
+        )
+    return None
+
+
 def build_preview(upload):
     """
     The read-only preview of a validated upload. Returns a dict:
@@ -165,8 +183,9 @@ def build_preview(upload):
 
     date_filter = summary.get('date_filter')
     date_filter = date_filter if isinstance(date_filter, dict) else {}
+    # A bound set without `applied` is still a date-scoped archive.
     date_filter = {
-        'applied': bool(date_filter.get('applied')),
+        'applied': bool(date_filter.get('applied') or date_filter.get('start') or date_filter.get('end')),
         'start': date_filter.get('start'),
         'end': date_filter.get('end'),
     }
@@ -203,6 +222,10 @@ def build_preview(upload):
         block_reasons.append("This upload is not validated, so it cannot be confirmed.")
     if not summary:
         block_reasons.append("The upload has no validated manifest summary.")
+    if not institutions:
+        block_reasons.append("The archive names no institutions.")
+    if scope_type not in BackupJobScopeType.values:
+        block_reasons.append("The archive's scope type is not one this system recognises.")
     missing = [i['slug'] for i in institutions if not i['exists']]
     if missing:
         block_reasons.append(
@@ -210,6 +233,10 @@ def build_preview(upload):
             + ", ".join(restore_validation._clip(slug, 60) for slug in missing)
             + ". A restore never creates institutions and never restores only part of an archive."
         )
+    if upload.status == RestoreUploadStatus.VALIDATED:
+        problem = _staged_archive_problem(upload)
+        if problem:
+            block_reasons.append(problem)
     if date_filter['applied']:
         block_reasons.append(
             "This archive is date-scoped. Its match/skip/import preview is not available yet, "
@@ -240,8 +267,9 @@ def _snapshot(preview):
         'source_job_id': preview['source_job_id'],
         'generated_at': preview['generated_at'],
         'generated_by': preview['generated_by'],
-        'live_counts': preview['live_counts'],
+        'live_counts_at_confirmation': preview['live_counts'],
         'digest': preview['digest'],
+        'snapshot_version': SNAPSHOT_VERSION,
     }
 
 
@@ -274,14 +302,14 @@ def confirm_upload(upload_id, user, submitted_digest, acknowledged):
 
         if preview['blocked']:
             security_logger.warning(
-                "Restore confirm blocked: user=%s upload=%s digest=%s reasons=%s",
+                "Restore confirm blocked: user=%s upload=%s digest=%s reasons=%r",
                 user.username, upload.id, preview['digest'], " | ".join(preview['block_reasons']),
             )
             return Outcome(False, BLOCKED, "This restore cannot be confirmed: " + " ".join(preview['block_reasons']))
 
-        if not hmac.compare_digest(str(submitted_digest or ''), preview['digest']):
+        if not hmac.compare_digest(str(submitted_digest or '').encode('utf-8'), preview['digest'].encode('ascii')):
             security_logger.warning(
-                "Restore confirm refused (preview changed): user=%s upload=%s submitted=%s current=%s",
+                "Restore confirm refused (preview changed): user=%s upload=%s submitted=%r current=%s",
                 user.username, upload.id, restore_validation._clip(submitted_digest or '', 80), preview['digest'],
             )
             return Outcome(False, DIGEST_MISMATCH, "The preview changed since you opened it. Review it again.")
@@ -321,7 +349,7 @@ def cancel_upload(upload_id, user):
     with transaction.atomic():
         upload = RestoreUpload.objects.select_for_update().filter(pk=upload_id, uploaded_by=user).first()
         if upload is None:
-            return Outcome(False, NOT_VALIDATED, "This upload no longer exists.")
+            return Outcome(False, GONE, "This upload no longer exists.")
 
         if not can_cancel(upload):
             security_logger.warning(
