@@ -218,12 +218,14 @@ class ReferralStatus(models.TextChoices):
 
 # Notification types for referral lifecycle events (Phase 2 — Story 5.1 — FR67-FR69)
 class NotificationType(models.TextChoices):
-    """In-app notification types: referral lifecycle events and backup job outcomes."""
+    """In-app notification types: referral lifecycle events and backup/restore job outcomes."""
     REFERRAL_RECEIVED = 'REFERRAL_RECEIVED', 'Referral Received'
     REFERRAL_REPLIED  = 'REFERRAL_REPLIED',  'Referral Replied'
     REFERRAL_CLOSED   = 'REFERRAL_CLOSED',   'Referral Closed'
     BACKUP_COMPLETED  = 'BACKUP_COMPLETED',  'Backup Completed'
     BACKUP_FAILED     = 'BACKUP_FAILED',     'Backup Failed'
+    RESTORE_COMPLETED = 'RESTORE_COMPLETED', 'Restore Completed'
+    RESTORE_FAILED    = 'RESTORE_FAILED',    'Restore Failed'
 
 
 # Problem List Choices
@@ -242,8 +244,8 @@ class SEVERITY_CHOICES(models.TextChoices):
 
 # Backup/Restore job tracking (Epic 1/2 — SPEC-backup-restore)
 class BackupJobType(models.TextChoices):
-    """Job kinds tracked by BackupJob. Only BACKUP is used by Story 1.1;
-    RESTORE and PRE_RESTORE_SNAPSHOT are reserved for Epic 2."""
+    """Job kinds tracked by BackupJob. BACKUP is Story 1.1's; RESTORE and
+    PRE_RESTORE_SNAPSHOT are Story 2.3's (a restore and the snapshot it takes first)."""
     BACKUP = 'backup', 'Backup'
     RESTORE = 'restore', 'Restore'
     PRE_RESTORE_SNAPSHOT = 'pre_restore_snapshot', 'Pre-Restore Snapshot'
@@ -273,6 +275,8 @@ class RestoreUploadStatus(models.TextChoices):
     VALIDATING = 'validating', 'Validating'
     VALIDATED = 'validated', 'Validated'
     CONFIRMED = 'confirmed', 'Confirmed'
+    APPLYING = 'applying', 'Applying'
+    APPLIED = 'applied', 'Applied'
     REJECTED = 'rejected', 'Rejected'
     FAILED = 'failed', 'Failed'
 

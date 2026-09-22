@@ -46,7 +46,7 @@ development_status:
   epic-2: in-progress
   2-1-upload-and-validate-a-restore-archive: review
   2-2-restore-preview-and-confirmation-flow: review
-  2-3-full-scope-restore-with-automatic-pre-restore-snapshot: backlog
+  2-3-full-scope-restore-with-automatic-pre-restore-snapshot: in-progress
   2-4-date-scoped-partial-restore-match-and-preview: backlog
   2-5-date-scoped-partial-restore-additive-import: backlog
   2-6-restore-audit-trail: backlog

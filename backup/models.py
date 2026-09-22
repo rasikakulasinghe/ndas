@@ -12,11 +12,13 @@ from ndas.custom_codes.choice import (
 
 class BackupJob(TimeStampedModel, UserTrackingMixin):
     """
-    Tracks a single backup (or, in Epic 2, restore/pre-restore-snapshot) job.
+    Tracks a single backup, restore or pre-restore-snapshot job.
 
-    Story 1.1 only creates `job_type=backup` rows and drives them through
-    pending -> running -> completed|failed. `restore` / `pre_restore_snapshot`
-    values are reserved for Epic 2.
+    Story 1.1 creates `job_type=backup` rows and drives them through
+    pending -> running -> completed|failed. Story 2.3 adds `restore` jobs
+    (`restore_upload` names the archive being applied) and the
+    `pre_restore_snapshot` job a restore takes first (linked back from the
+    restore's `pre_restore_snapshot`).
 
     `triggered_by` is set explicitly by the trigger view (mirrors the manual
     `added_by=request.user` pattern used elsewhere) rather than relying on
@@ -153,6 +155,29 @@ class BackupJob(TimeStampedModel, UserTrackingMixin):
             "Story 1.4: optional inclusive upper bound (on Patient.created_at's "
             "date) this job's export was narrowed to. Null when no date filter "
             "was applied."
+        ),
+    )
+
+    restore_upload = models.ForeignKey(
+        "backup.RestoreUpload",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="restore_jobs",
+        verbose_name=_("Restore Upload"),
+        help_text=_("Story 2.3: the confirmed archive a restore job applies. Null for every other job."),
+    )
+
+    pre_restore_snapshot = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="restores_using_snapshot",
+        verbose_name=_("Pre-Restore Snapshot"),
+        help_text=_(
+            "Story 2.3: the snapshot job a restore took of the current data before "
+            "changing it. Null for every other job."
         ),
     )
 

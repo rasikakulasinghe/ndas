@@ -1,5 +1,6 @@
 {% comment %}
-  Story 1.5 -- "Recent Backup Jobs" body. Included by create.html and returned
+  Story 1.5 -- "Recent Backup Jobs" body (Story 2.3: restore and pre-restore
+  snapshot jobs are labelled by type). Included by create.html and returned
   on its own by the `backup:backup-status` endpoint. The root element polls
   itself every 5s ONLY while a listed job is pending/running; once none are,
   the re-rendered fragment carries no hx-* attributes and polling ends.
@@ -22,7 +23,14 @@
     <tbody>
       {% for job in recent_jobs %}
       <tr>
-        <td>{{ job.created_at }}</td>
+        <td>
+          {{ job.created_at }}
+          {% if job.job_type == 'pre_restore_snapshot' %}
+            <br><span class="badge badge-dark">Pre-restore snapshot</span>
+          {% elif job.job_type == 'restore' %}
+            <br><span class="badge badge-dark">Restore</span>
+          {% endif %}
+        </td>
         <td>
           {% if job.status == 'completed' and job.error_message %}
             <span class="badge badge-warning">Completed with warnings</span>

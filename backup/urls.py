@@ -16,4 +16,6 @@ urlpatterns = [
     path('restore/<int:pk>/preview/', views.restore_preview, name='restore-preview'),
     path('restore/<int:pk>/confirm/', views.restore_confirm, name='restore-confirm'),
     path('restore/<int:pk>/cancel/', views.restore_cancel, name='restore-cancel'),
+    # Story 2.3 - Start applying a confirmed restore (super admin only).
+    path('restore/<int:pk>/start/', views.restore_start, name='restore-start'),
 ]

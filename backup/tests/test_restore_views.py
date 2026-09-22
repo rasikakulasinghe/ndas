@@ -19,13 +19,16 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError, OperationalError, transaction
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
-from backup import restore_validation
+from backup import restore_apply, restore_validation
 from backup.models import BackupJob, RestoreUpload
 from backup.restore_validation import get_restore_uploads_root, get_upload_dir, get_upload_path
 from backup.tests.restore_helpers import IsolatedBaseDirMixin, sha256_bytes, zip_bytes
 from institution.models import Institution
-from ndas.custom_codes.choice import RestoreAuthenticity, RestoreRejectionCode, RestoreUploadStatus, UserType
+from ndas.custom_codes.choice import (
+    BackupJobStatus, BackupJobType, RestoreAuthenticity, RestoreRejectionCode, RestoreUploadStatus, UserType,
+)
 
 User = get_user_model()
 
@@ -796,3 +799,182 @@ class DetachedLaunchKwargsTest(RestoreViewTestBase):
         call, job = self.launch_backup('nt')
         self.assertCommon(call, 'run_backup', job.id, 'run_backup.log')
         self.assertWindows(call.kwargs)
+
+
+# ---------------------------------------------------------------------------
+# Story 2.3 -- restore_start view
+# ---------------------------------------------------------------------------
+
+class RestoreStartViewTestBase(RestoreViewTestBase):
+    def make_confirmed_upload(self, **kwargs):
+        defaults = dict(
+            status=RestoreUploadStatus.CONFIRMED,
+            confirmed_at=timezone.now(),
+            confirmed_by=self.superadmin,
+            confirmed_snapshot={'snapshot_version': 1, 'digest': 'a' * 64},
+        )
+        defaults.update(kwargs)
+        return self.make_upload(**defaults)
+
+
+class RestoreStartAccessTest(RestoreStartViewTestBase):
+    def test_non_superadmin_denied(self):
+        upload = self.make_confirmed_upload()
+        client = self.client_for(self.admin)
+        with self.assertLogs(SECURITY_LOGGER, level='WARNING'):
+            response = client.post(reverse('backup:restore-start', args=[upload.id]))
+        self.assertRedirects(response, reverse('home'), fetch_redirect_response=False)
+        upload.refresh_from_db()
+        self.assertEqual(upload.status, RestoreUploadStatus.CONFIRMED)
+
+    def test_other_superadmins_upload_is_404(self):
+        upload = self.make_confirmed_upload()
+        client = self.client_for(self.other_superadmin)
+        response = client.post(reverse('backup:restore-start', args=[upload.id]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_get_is_not_allowed(self):
+        upload = self.make_confirmed_upload()
+        client = self.client_for(self.superadmin)
+        response = client.get(reverse('backup:restore-start', args=[upload.id]))
+        self.assertEqual(response.status_code, 405)
+
+    def test_unknown_upload_is_404(self):
+        client = self.client_for(self.superadmin)
+        self.assertEqual(client.post(reverse('backup:restore-start', args=[99999])).status_code, 404)
+
+
+class RestoreStartOutcomeTest(RestoreStartViewTestBase):
+    @mock.patch('backup.views.subprocess.Popen')
+    def test_success_launches_run_restore_and_redirects_to_status(self, mock_popen):
+        upload = self.make_confirmed_upload()
+        fake_job = SimpleNamespace(id=4242)
+        outcome = SimpleNamespace(ok=True, job=fake_job)
+        with mock.patch.object(restore_apply, 'start_restore', return_value=outcome):
+            client = self.client_for(self.superadmin)
+            response = client.post(reverse('backup:restore-start', args=[upload.id]))
+        self.assertRedirects(
+            response, reverse('backup:restore-status', args=[upload.id]), fetch_redirect_response=False,
+        )
+        mock_popen.assert_called_once()
+        args = mock_popen.call_args[0][0]
+        self.assertIn('run_restore', args)
+        self.assertIn('4242', args)
+        self.assertTrue((get_upload_dir(upload) / 'run_restore.log').exists())
+
+    def test_refusal_reason_is_shown_to_the_user(self):
+        upload = self.make_confirmed_upload()
+        outcome = SimpleNamespace(
+            ok=False, code='lock_conflict',
+            message="A backup or restore overlapping this scope is already pending or running.",
+        )
+        with mock.patch.object(restore_apply, 'start_restore', return_value=outcome):
+            client = self.client_for(self.superadmin)
+            response = client.post(reverse('backup:restore-start', args=[upload.id]), follow=True)
+        self.assertContains(response, 'already pending or running')
+
+    @mock.patch('backup.views.subprocess.Popen', side_effect=OSError('cannot spawn'))
+    def test_launch_failure_fails_the_job_and_reverts_the_upload(self, mock_popen):
+        upload = self.make_confirmed_upload()
+        real_job = BackupJob.objects.create(
+            job_type=BackupJobType.RESTORE, status=BackupJobStatus.PENDING, scope=self.inst,
+            restore_upload=upload, triggered_by=self.superadmin,
+        )
+        outcome = SimpleNamespace(ok=True, job=real_job)
+        with mock.patch.object(restore_apply, 'start_restore', return_value=outcome):
+            client = self.client_for(self.superadmin)
+            response = client.post(reverse('backup:restore-start', args=[upload.id]))
+        self.assertRedirects(
+            response, reverse('backup:restore-status', args=[upload.id]), fetch_redirect_response=False,
+        )
+        real_job.refresh_from_db()
+        upload.refresh_from_db()
+        self.assertEqual(real_job.status, BackupJobStatus.FAILED)
+        self.assertIn('cannot spawn', real_job.error_message)
+        self.assertEqual(upload.status, RestoreUploadStatus.CONFIRMED)
+
+    # A "does the view call the real service end to end" test is deliberately
+    # not here: building a genuinely `confirmed` upload (real manifest +
+    # matching digest) needs the full export/validate/confirm pipeline, which
+    # `test_restore_apply.py`'s `StartRestoreTest`/`RunRestoreHappyPathTest`
+    # already exercise end to end (including through this same view's
+    # `restore_apply.start_restore` call). The tests above isolate the view's
+    # own wiring (job id in the command line, redirect, message, abort-on-
+    # launch-failure) against a controlled outcome instead.
+
+
+# ---------------------------------------------------------------------------
+# Story 2.3 -- `applying` status transitions
+# ---------------------------------------------------------------------------
+
+class RestoreApplyingStateViewTest(RestoreStartViewTestBase):
+    @mock.patch('backup.views.subprocess.Popen')
+    def test_applying_upload_blocks_a_new_upload(self, mock_popen):
+        self.make_upload(status=RestoreUploadStatus.APPLYING, staged=False)
+        response = self.post_archive(self.client_for(self.superadmin))
+        self.assertRedirects(response, self.url, fetch_redirect_response=False)
+        self.assertEqual(RestoreUpload.objects.count(), 1)
+        mock_popen.assert_not_called()
+
+    def test_applying_upload_blocks_a_new_upload_with_a_specific_message(self):
+        self.make_upload(status=RestoreUploadStatus.APPLYING, staged=False)
+        client = self.client_for(self.superadmin)
+        self.post_archive(client)
+        response = client.get(self.url)
+        self.assertContains(response, 'being applied right now')
+
+    def test_applying_upload_cannot_be_cancelled(self):
+        upload = self.make_upload(status=RestoreUploadStatus.APPLYING, staged=False)
+        client = self.client_for(self.superadmin)
+        response = client.post(reverse('backup:restore-cancel', args=[upload.id]))
+        self.assertRedirects(
+            response, reverse('backup:restore-status', args=[upload.id]), fetch_redirect_response=False,
+        )
+        upload.refresh_from_db()
+        self.assertEqual(upload.status, RestoreUploadStatus.APPLYING)
+        self.assertTrue(RestoreUpload.objects.filter(pk=upload.pk).exists())
+
+    def test_applied_upload_cannot_be_cancelled(self):
+        upload = self.make_upload(status=RestoreUploadStatus.APPLIED, staged=False)
+        client = self.client_for(self.superadmin)
+        client.post(reverse('backup:restore-cancel', args=[upload.id]))
+        upload.refresh_from_db()
+        self.assertEqual(upload.status, RestoreUploadStatus.APPLIED)
+
+    def test_applying_fragment_keeps_polling(self):
+        upload = self.make_confirmed_upload(status=RestoreUploadStatus.APPLYING, staged=False)
+        BackupJob.objects.create(
+            job_type=BackupJobType.RESTORE, status=BackupJobStatus.RUNNING, progress_pct=35,
+            scope=self.inst, restore_upload=upload, triggered_by=self.superadmin,
+        )
+        client = self.client_for(self.superadmin)
+        fragment_url = reverse('backup:restore-status-fragment', args=[upload.id])
+        response = client.get(fragment_url)
+        self.assertContains(response, f'hx-get="{fragment_url}"')
+        self.assertContains(response, 'hx-trigger="every 5s"')
+        self.assertContains(response, 'Restore in progress')
+
+    def test_applied_fragment_stops_polling(self):
+        upload = self.make_upload(status=RestoreUploadStatus.APPLIED, staged=False)
+        client = self.client_for(self.superadmin)
+        fragment_url = reverse('backup:restore-status-fragment', args=[upload.id])
+        response = client.get(fragment_url)
+        self.assertNotContains(response, f'hx-get="{fragment_url}"')
+        self.assertNotContains(response, 'hx-trigger="every 5s"')
+
+    def test_failed_restore_job_shows_retry_option_and_upload_is_confirmed_again(self):
+        upload = self.make_confirmed_upload()
+        BackupJob.objects.create(
+            job_type=BackupJobType.RESTORE, status=BackupJobStatus.FAILED,
+            error_message="Applying the archive failed and was rolled back, so no data was changed: boom",
+            scope=self.inst, restore_upload=upload, triggered_by=self.superadmin,
+        )
+        response = self.client_for(self.superadmin).get(reverse('backup:restore-status', args=[upload.id]))
+        self.assertContains(response, 'last restore attempt failed')
+        self.assertContains(response, 'Start restore')
+
+    def test_confirmed_upload_status_page_shows_start_button(self):
+        upload = self.make_confirmed_upload()
+        response = self.client_for(self.superadmin).get(reverse('backup:restore-status', args=[upload.id]))
+        self.assertContains(response, reverse('backup:restore-start', args=[upload.id]))
+        self.assertContains(response, 'Start restore')

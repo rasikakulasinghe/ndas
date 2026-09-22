@@ -1,17 +1,17 @@
 {% extends 'src/base.html' %}
 {% load static %}
-{% block title %}Restore - Validation{% endblock %}
+{% block title %}Restore - Status{% endblock %}
 
 {% block content_header %}
 <div class="row mb-0">
   <div class="col-sm-6">
     <h1 class="m-0">Restore</h1>
-    <small class="text-muted">Archive validation</small>
+    <small class="text-muted">Archive validation and restore</small>
   </div>
   <div class="col-sm-6">
     <ol class="breadcrumb float-sm-right">
       <li class="breadcrumb-item"><a href="{% url 'backup:restore-upload' %}">Restore</a></li>
-      <li class="breadcrumb-item active">Validation</li>
+      <li class="breadcrumb-item active">Status</li>
     </ol>
   </div>
 </div>

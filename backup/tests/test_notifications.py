@@ -11,7 +11,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
-from backup.models import BackupJob
+from backup.models import BackupJob, RestoreUpload
 from backup.notifications import notify_job_finished
 from institution.models import Institution
 from ndas.custom_codes.choice import (
@@ -111,6 +111,95 @@ class NotifyJobFinishedTest(TestCase):
                 notify_job_finished(job)  # must not raise
         job.refresh_from_db()
         self.assertEqual(job.status, BackupJobStatus.COMPLETED)
+
+
+class NotifyRestoreJobFinishedTest(TestCase):
+    """Story 2.3: a `restore` job's finish notification uses the
+    RESTORE_COMPLETED/RESTORE_FAILED types, restore wording, and links to the
+    upload's status page (not the backup page); a `pre_restore_snapshot` job
+    never notifies at all."""
+
+    def setUp(self):
+        self.superadmin = User.objects.create_user(
+            username='sa_notif_r', password='Testpass1!', position='Administrator',
+            mobile_primary='0770000321', user_type=UserType.SUPERADMIN,
+            is_superuser=True, institution=None,
+        )
+        self.inst = Institution.objects.create(name='Notif R Hosp', slug='notif-r-hosp', created_by=self.superadmin)
+        self.upload = RestoreUpload.objects.create(uploaded_by=self.superadmin, original_filename='a.zip')
+
+    def _job(self, **kwargs):
+        defaults = dict(
+            job_type=BackupJobType.RESTORE,
+            status=BackupJobStatus.COMPLETED,
+            scope=self.inst,
+            trigger_institution=self.inst,
+            triggered_by=self.superadmin,
+            restore_upload=self.upload,
+        )
+        defaults.update(kwargs)
+        return BackupJob.objects.create(**defaults)
+
+    def test_completed_restore_creates_restore_completed_notification_linked_to_status_page(self):
+        job = self._job()
+        notify_job_finished(job)
+        notif = Notification.objects.get()
+        self.assertEqual(notif.notification_type, NotificationType.RESTORE_COMPLETED)
+        self.assertEqual(notif.title, "Restore completed")
+        self.assertEqual(notif.recipient, self.superadmin)
+        self.assertEqual(notif.link, reverse('backup:restore-status', args=[self.upload.id]))
+
+    def test_completed_with_warnings_mentions_them(self):
+        job = self._job(error_message="Restored with 1 warning(s): a.mp4: missing from the archive")
+        notify_job_finished(job)
+        notif = Notification.objects.get()
+        self.assertEqual(notif.notification_type, NotificationType.RESTORE_COMPLETED)
+        self.assertIn('warnings', notif.title)
+        self.assertIn('a.mp4', notif.body)
+
+    def test_failed_restore_creates_restore_failed_notification_with_reason(self):
+        job = self._job(status=BackupJobStatus.FAILED, error_message="Restore failed: kaboom")
+        notify_job_finished(job)
+        notif = Notification.objects.get()
+        self.assertEqual(notif.notification_type, NotificationType.RESTORE_FAILED)
+        self.assertEqual(notif.title, "Restore failed")
+        self.assertIn('kaboom', notif.body)
+        self.assertEqual(notif.link, reverse('backup:restore-status', args=[self.upload.id]))
+
+    def test_pre_restore_snapshot_job_never_notifies(self):
+        snapshot = BackupJob.objects.create(
+            job_type=BackupJobType.PRE_RESTORE_SNAPSHOT, status=BackupJobStatus.COMPLETED,
+            scope=self.inst, trigger_institution=self.inst, triggered_by=self.superadmin,
+        )
+        notify_job_finished(snapshot)
+        self.assertEqual(Notification.objects.count(), 0)
+
+    def test_failed_pre_restore_snapshot_also_never_notifies(self):
+        snapshot = BackupJob.objects.create(
+            job_type=BackupJobType.PRE_RESTORE_SNAPSHOT, status=BackupJobStatus.FAILED,
+            error_message="disk full", scope=self.inst, trigger_institution=self.inst,
+            triggered_by=self.superadmin,
+        )
+        notify_job_finished(snapshot)
+        self.assertEqual(Notification.objects.count(), 0)
+
+    def test_restore_job_with_no_upload_links_to_restore_upload_page(self):
+        # Defensive fallback: a restore job should always carry
+        # `restore_upload`, but the link helper must not crash if it doesn't.
+        job = self._job(restore_upload=None)
+        notify_job_finished(job)
+        notif = Notification.objects.get()
+        self.assertEqual(notif.link, reverse('backup:restore-upload'))
+
+    def test_ordinary_backup_notification_is_unaffected_by_the_restore_changes(self):
+        job = BackupJob.objects.create(
+            job_type=BackupJobType.BACKUP, status=BackupJobStatus.COMPLETED,
+            scope=self.inst, trigger_institution=self.inst, triggered_by=self.superadmin,
+        )
+        notify_job_finished(job)
+        notif = Notification.objects.get()
+        self.assertEqual(notif.notification_type, NotificationType.BACKUP_COMPLETED)
+        self.assertEqual(notif.link, reverse('backup:backup-create'))
 
 
 @override_settings(MULTI_INSTITUTION_ENABLED=True, RATELIMIT_ENABLE=False)

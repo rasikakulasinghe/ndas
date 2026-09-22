@@ -87,9 +87,11 @@ _ZIP_READ_ERRORS = _ZIP_ERRORS + (zlib.error, RuntimeError)
 
 # Statuses in which an upload is finished and may be replaced by a new one.
 # `confirmed` (Story 2.2) is deliberately NOT here: a confirmed archive is
-# awaiting a restore and is only ever removed by an explicit cancel.
+# awaiting a restore and is only ever removed by an explicit cancel. Neither
+# is `applying` (Story 2.3); `applied` (its restore committed) is finished.
 FINISHED_STATUSES = (
     RestoreUploadStatus.VALIDATED,
+    RestoreUploadStatus.APPLIED,
     RestoreUploadStatus.REJECTED,
     RestoreUploadStatus.FAILED,
 )

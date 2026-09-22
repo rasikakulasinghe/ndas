@@ -33,9 +33,11 @@ from ndas.custom_codes.choice import (
 )
 from ndas.custom_codes.error_handlers import handle_view_errors
 from ndas.custom_codes.validators import sanitize_filename
+from backup import restore_apply
 from backup import restore_preview as preview_service
 from backup import restore_validation
 from backup.forms import BackupScopeForm, RestoreConfirmForm, RestoreUploadForm
+from backup.job_lock import create_job_unless_overlapping
 from backup.models import BackupJob, RestoreUpload
 from backup.services import has_sufficient_disk_space
 
@@ -198,18 +200,6 @@ def _status_context(request, institution, is_superadmin):
     }
 
 
-def _resolved_institution_ids(job):
-    """The set of institution ids `job`'s data covers -- empty for a
-    system-wide job (its overlap with every other job is handled by the
-    caller checking `scope_type == SYSTEM` directly, not via this set).
-    Iterates the prefetched `.scopes.all()` cache rather than
-    `.values_list()` (which would bypass `prefetch_related` and re-hit the
-    DB per job)."""
-    if job.scope_type == BackupJobScopeType.MULTI:
-        return {inst.id for inst in job.scopes.all()}
-    return {job.scope_id} if job.scope_id else set()
-
-
 def _launch_detached_command(command_name, object_id, work_dir, log_name):
     """
     Launch `manage.py <command_name> <object_id>` as a detached process
@@ -362,44 +352,18 @@ def backup_create(request):
         )
         return redirect('backup:backup-create')
 
-    # Concurrency lock + job creation as ONE atomic unit: a naive
-    # exists()-then-create() lets two near-simultaneous requests both pass
-    # the check before either row commits, launching two subprocesses whose
-    # institution sets overlap. select_for_update() gives real row-level
-    # protection on Postgres; on SQLite (no row-level locking support) the
-    # surrounding transaction still serializes concurrent writers via
-    # SQLite's own database-level write lock.
-    #
-    # Overlap rule (Story 1.2): a `system`-scoped job (new or existing)
-    # overlaps every other job; otherwise two jobs overlap iff their
-    # resolved institution-id sets intersect.
-    resolved_ids = {inst.id for inst in scope_institutions}
-    with transaction.atomic():
-        existing_jobs = list(
-            BackupJob.objects.select_for_update()
-            .filter(status__in=[BackupJobStatus.PENDING, BackupJobStatus.RUNNING])
-            .prefetch_related('scopes')
-        )
-        conflict = any(
-            system_wide
-            or existing.scope_type == BackupJobScopeType.SYSTEM
-            or (_resolved_institution_ids(existing) & resolved_ids)
-            for existing in existing_jobs
-        )
-        job = None
-        if not conflict:
-            job = BackupJob.objects.create(
-                job_type=BackupJobType.BACKUP,
-                status=BackupJobStatus.PENDING,
-                scope_type=scope_type,
-                scope=scope_institutions[0] if scope_type == BackupJobScopeType.SINGLE else None,
-                trigger_institution=institution,
-                triggered_by=request.user,
-                date_filter_start=date_start,
-                date_filter_end=date_end,
-            )
-            if scope_type == BackupJobScopeType.MULTI:
-                job.scopes.set(scope_institutions)
+    # Concurrency lock + job creation as ONE atomic unit, shared with the
+    # restore start (`backup/job_lock.py`): refuses when an overlapping job of
+    # any type is pending or running.
+    job = create_job_unless_overlapping(
+        scope_type, scope_institutions,
+        job_type=BackupJobType.BACKUP,
+        status=BackupJobStatus.PENDING,
+        trigger_institution=institution,
+        triggered_by=request.user,
+        date_filter_start=date_start,
+        date_filter_end=date_end,
+    )
 
     if job is None:
         messages.error(
@@ -521,6 +485,16 @@ def restore_upload(request):
 
     # Story 2.2: a confirmed archive is awaiting a restore and is never
     # replaced or deleted by a new upload -- only by an explicit cancel.
+    # Story 2.3: neither is one whose restore is being applied right now.
+    if RestoreUpload.objects.filter(uploaded_by=request.user, status=RestoreUploadStatus.APPLYING).exists():
+        security_logger.info(
+            "Restore upload refused (a restore is being applied): user=%s", request.user.username,
+        )
+        messages.error(
+            request,
+            "A restore is being applied right now. Wait for it to finish before uploading another archive."
+        )
+        return redirect('backup:restore-upload')
     if RestoreUpload.objects.filter(uploaded_by=request.user, status=RestoreUploadStatus.CONFIRMED).exists():
         security_logger.info(
             "Restore upload refused (a confirmed upload exists): user=%s", request.user.username,
@@ -636,6 +610,12 @@ def _restore_status_context(upload):
         'record_counts': sorted(counts.items()) if isinstance(counts, dict) else [],
         'can_cancel': preview_service.can_cancel(upload),
         'confirmed_snapshot': upload.confirmed_snapshot if isinstance(upload.confirmed_snapshot, dict) else {},
+        # Story 2.3: the latest restore job for this upload (status/progress
+        # while `applying`, its outcome afterwards, a failed attempt's reason
+        # once the upload is back to `confirmed`).
+        'restore_job': (
+            upload.restore_jobs.select_related('pre_restore_snapshot').order_by('-created_at', '-id').first()
+        ),
     }
 
 
@@ -769,6 +749,59 @@ def _restore_confirm_body(request, upload):
     if outcome.code == preview_service.NOT_VALIDATED:
         return _redirect_to_status(upload)
     return redirect('backup:restore-preview', pk=upload.id)
+
+
+@login_required(login_url="user-login")
+@require_http_methods(["POST"])
+@ratelimit(key='user_or_ip', rate='5/m')
+def restore_start(request, pk):
+    """
+    Super admin only: start applying one of their own confirmed uploads
+    (Story 2.3). Creates the `restore` job under the job lock, flips the upload
+    to `applying` and launches the detached `run_restore` process; the status
+    page then shows its progress. Confirming (Story 2.2) stays record-only.
+    """
+    if not _is_superadmin(request.user):
+        _deny_restore(request, 'restore_start')
+        messages.error(request, "You don't have permission to restore data.")
+        return redirect('home')
+
+    upload = get_object_or_404(RestoreUpload, pk=pk, uploaded_by=request.user)
+    return _restore_start_body(request, upload)
+
+
+@handle_view_errors(redirect_url='backup:restore-upload', error_message='Failed to start the restore.')
+def _restore_start_body(request, upload):
+    institution = _get_admin_institution(request)
+    if institution is None:
+        messages.error(request, "No institution context found for this account.")
+        return redirect('home')
+
+    outcome = restore_apply.start_restore(upload, request.user, institution)
+    if not outcome.ok:
+        messages.error(request, outcome.message)
+        return _redirect_to_status(upload)
+
+    job = outcome.job
+    # The log goes in the upload's directory: the restore job has no directory
+    # of its own (its snapshot job gets one under backups/).
+    try:
+        _launch_detached_command(
+            "run_restore", job.id, restore_validation.get_upload_dir(upload), "run_restore.log",
+        )
+    except OSError as e:
+        logger.exception("Failed to launch run_restore subprocess for job=%s", job.id)
+        restore_apply.abort_start(job, upload, f"Failed to launch restore process: {e}")
+        messages.error(request, "Failed to start the restore process. The upload is confirmed again; please try again.")
+        return _redirect_to_status(upload)
+
+    logger.info("Super admin '%s' started restore job %s for RestoreUpload %s", request.user.username, job.id, upload.id)
+    messages.success(
+        request,
+        "Restore started. It first takes a snapshot of the current data, then applies the archive; "
+        "this page shows its progress."
+    )
+    return _redirect_to_status(upload)
 
 
 @login_required(login_url="user-login")

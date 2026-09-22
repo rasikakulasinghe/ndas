@@ -859,8 +859,9 @@ class BackupStatusViewTest(BackupScopeViewTestBase):
         )
 
     def _job(self, status, institution=None, progress=0, **kwargs):
+        kwargs.setdefault('job_type', 'backup')
         return BackupJob.objects.create(
-            job_type='backup', status=status, scope=institution or self.inst_a,
+            status=status, scope=institution or self.inst_a,
             trigger_institution=institution or self.inst_a, triggered_by=self.admin,
             progress_pct=progress, **kwargs,
         )
@@ -993,6 +994,26 @@ class BackupStatusViewTest(BackupScopeViewTestBase):
         self.assertContains(response, 'id="backup-status"')
         self.assertContains(response, 'hx-trigger="every 5s"')
 
+    def test_restore_job_is_labelled_in_the_history(self):
+        from ndas.custom_codes.choice import BackupJobType
+
+        self._job(BackupJobStatus.COMPLETED, progress=100, job_type=BackupJobType.RESTORE)
+        response = self._get()
+        self.assertContains(response, 'Restore')
+
+    def test_pre_restore_snapshot_job_is_labelled_in_the_history(self):
+        from ndas.custom_codes.choice import BackupJobType
+
+        self._job(BackupJobStatus.COMPLETED, progress=100, job_type=BackupJobType.PRE_RESTORE_SNAPSHOT)
+        response = self._get()
+        self.assertContains(response, 'Pre-restore snapshot')
+
+    def test_plain_backup_job_has_no_job_type_badge(self):
+        self._job(BackupJobStatus.COMPLETED, progress=100)
+        response = self._get()
+        self.assertNotContains(response, 'Pre-restore snapshot')
+        self.assertNotContains(response, '>Restore<')
+
 
 @override_settings(MULTI_INSTITUTION_ENABLED=True, RATELIMIT_ENABLE=True, STORAGES=TEST_STORAGES)
 class BackupStatusRateLimitTest(TestCase):
@@ -1019,3 +1040,58 @@ class BackupStatusRateLimitTest(TestCase):
         for _ in range(30):
             self.assertEqual(client.get(url).status_code, 200)
         self.assertEqual(client.get(url).status_code, 403)
+
+
+class BackupTriggerRestoreLockTest(BackupTriggerViewTestBase):
+    """Story 2.3: `backup_create` and `restore_start` now share one lock
+    (`backup/job_lock.py`) -- a running restore for this scope must refuse a
+    new backup exactly like a running backup would, and a disjoint-scope
+    restore must not."""
+
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_running_restore_for_this_institution_blocks_a_new_backup(self, mock_disk, mock_popen):
+        from ndas.custom_codes.choice import BackupJobType
+
+        BackupJob.objects.create(
+            job_type=BackupJobType.RESTORE, scope=self.inst,
+            status=BackupJobStatus.RUNNING, triggered_by=self.superadmin,
+        )
+        client = Client()
+        client.force_login(self.admin)
+        client.post(self.url)
+
+        self.assertEqual(BackupJob.objects.filter(job_type=BackupJobType.BACKUP).count(), 0)
+        mock_popen.assert_not_called()
+
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_running_restore_for_another_institution_does_not_block(self, mock_disk, mock_popen):
+        from ndas.custom_codes.choice import BackupJobType
+
+        BackupJob.objects.create(
+            job_type=BackupJobType.RESTORE, scope=self.other_inst,
+            status=BackupJobStatus.RUNNING, triggered_by=self.superadmin,
+        )
+        client = Client()
+        client.force_login(self.admin)
+        client.post(self.url)
+
+        self.assertEqual(BackupJob.objects.filter(job_type=BackupJobType.BACKUP, scope=self.inst).count(), 1)
+        mock_popen.assert_called_once()
+
+    @mock.patch('backup.views.subprocess.Popen')
+    @mock.patch('backup.views.has_sufficient_disk_space', return_value=SUFFICIENT_DISK)
+    def test_pending_pre_restore_snapshot_also_blocks(self, mock_disk, mock_popen):
+        from ndas.custom_codes.choice import BackupJobType
+
+        BackupJob.objects.create(
+            job_type=BackupJobType.PRE_RESTORE_SNAPSHOT, scope=self.inst,
+            status=BackupJobStatus.RUNNING, triggered_by=self.superadmin,
+        )
+        client = Client()
+        client.force_login(self.admin)
+        client.post(self.url)
+
+        self.assertEqual(BackupJob.objects.filter(job_type=BackupJobType.BACKUP).count(), 0)
+        mock_popen.assert_not_called()

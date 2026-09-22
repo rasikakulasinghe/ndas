@@ -1,18 +1,19 @@
 {% comment %}
-  Story 2.1 -- restore upload validation body. Included by restore_status.html
-  and returned on its own by the `backup:restore-status-fragment` endpoint. The
-  root element polls itself every 5s ONLY while the upload is validating; once
-  it reaches a verdict the re-rendered fragment carries no hx-* attributes and
-  polling ends.
+  Story 2.1 -- restore upload validation body, extended by Story 2.3 with the
+  restore job's progress and outcome. Included by restore_status.html and
+  returned on its own by the `backup:restore-status-fragment` endpoint. The
+  root element polls itself every 5s ONLY while the upload is validating or
+  applying; once it reaches a verdict the re-rendered fragment carries no hx-*
+  attributes and polling ends.
 {% endcomment %}
 <div id="restore-status" class="card-body"
-     {% if upload.status == 'validating' %}
+     {% if upload.status == 'validating' or upload.status == 'applying' %}
      hx-get="{% url 'backup:restore-status-fragment' upload.id %}"
      hx-trigger="every 5s"
      hx-swap="outerHTML"
      {% endif %}>
   <p class="mb-2">
-    {% if upload.status == 'validated' or upload.status == 'confirmed' %}
+    {% if upload.status == 'validated' or upload.status == 'confirmed' or upload.status == 'applied' %}
       <span class="badge badge-success">{{ upload.get_status_display }}</span>
     {% elif upload.status == 'rejected' or upload.status == 'failed' %}
       <span class="badge badge-danger">{{ upload.get_status_display }}</span>
@@ -22,6 +23,16 @@
     <span class="text-muted small ml-2">{{ upload.size_bytes|filesizeformat }}</span>
   </p>
 
+  {% if upload.status == 'applying' or upload.status == 'applied' %}
+  <div class="progress mb-3" style="height: 1rem;">
+    <div class="progress-bar {% if upload.status == 'applied' %}{% if restore_job.error_message %}bg-warning{% else %}bg-success{% endif %}{% else %}progress-bar-striped progress-bar-animated{% endif %}"
+         role="progressbar" aria-label="Restore progress"
+         style="width: {% if upload.status == 'applied' %}100{% else %}{{ restore_job.progress_pct|default:0 }}{% endif %}%;"
+         aria-valuenow="{% if upload.status == 'applied' %}100{% else %}{{ restore_job.progress_pct|default:0 }}{% endif %}" aria-valuemin="0" aria-valuemax="100">
+      {% if upload.status == 'applied' %}100{% else %}{{ restore_job.progress_pct|default:0 }}{% endif %}%
+    </div>
+  </div>
+  {% else %}
   <div class="progress mb-3" style="height: 1rem;">
     <div class="progress-bar {% if upload.status == 'rejected' or upload.status == 'failed' %}bg-danger{% elif upload.status == 'validated' or upload.status == 'confirmed' %}bg-success{% else %}progress-bar-striped progress-bar-animated{% endif %}"
          role="progressbar" aria-label="Validation progress"
@@ -30,6 +41,7 @@
       {% if upload.status == 'validated' or upload.status == 'confirmed' %}100{% else %}{{ upload.progress_pct }}{% endif %}%
     </div>
   </div>
+  {% endif %}
 
   {% if upload.status == 'validating' %}
     <p class="text-muted small mb-0">
@@ -50,7 +62,7 @@
       <small class="text-muted">The uploaded file has been removed. Please upload the archive again.</small>
     </div>
 
-  {% elif upload.status == 'validated' or upload.status == 'confirmed' %}
+  {% elif upload.status == 'validated' or upload.status == 'confirmed' or upload.status == 'applying' or upload.status == 'applied' %}
     {% include 'backup/restore_authenticity_alert.html' %}
 
     {% if upload.status == 'validated' %}
@@ -60,17 +72,74 @@
       </a>
       <span class="text-muted small ml-2">Nothing is changed until you review and confirm it.</span>
     </p>
-    {% else %}
+
+    {% elif upload.status == 'confirmed' %}
     <div class="alert alert-info">
       <h5><i class="icon fas fa-info-circle"></i> Restore confirmed, not applied yet</h5>
       <p class="mb-1">
         This archive was confirmed
         {% if upload.confirmed_at %}on {{ upload.confirmed_at|date:"Y-m-d H:i" }}{% endif %}
         {% if upload.confirmed_by %}by {{ upload.confirmed_by.username }}{% endif %}.
-        <strong>The restore has not been applied:</strong> no data has been changed, and no restore job exists.
+        <strong>The restore has not been applied:</strong> no data has been changed{% if not restore_job %}, and no restore job exists{% endif %}.
       </p>
       {% if confirmed_snapshot.digest %}
       <small class="text-muted">Preview digest: <code>{{ confirmed_snapshot.digest }}</code></small>
+      {% endif %}
+    </div>
+
+    {% if restore_job and restore_job.status == 'failed' %}
+    <div class="alert alert-danger">
+      <h5><i class="icon fas fa-exclamation-triangle"></i> The last restore attempt failed</h5>
+      <p class="mb-1">{{ restore_job.error_message }}</p>
+      <small class="text-muted">Your data is unchanged. You can start the restore again or cancel it.</small>
+    </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'backup:restore-start' upload.id %}" class="mb-3">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">
+        <i class="fas fa-play mr-1"></i>Start restore
+      </button>
+      <small class="text-muted ml-2">
+        First takes a snapshot of the current data, then replaces it with the archive's in one step.
+      </small>
+    </form>
+
+    {% elif upload.status == 'applying' %}
+    <div class="alert alert-warning">
+      <h5><i class="icon fas fa-sync-alt"></i> Restore in progress</h5>
+      <p class="mb-1">
+        {% if restore_job.status == 'pending' %}
+          The restore is queued and about to start.
+        {% elif restore_job.pre_restore_snapshot and restore_job.progress_pct < 50 %}
+          Taking a snapshot of the current data (job {{ restore_job.pre_restore_snapshot.id }}) before changing anything.
+        {% elif restore_job.progress_pct < 20 %}
+          Re-checking the archive.
+        {% elif restore_job.progress_pct < 60 %}
+          Checking the archive against this system.
+        {% elif restore_job.progress_pct < 90 %}
+          Applying the archive. This step is applied in one piece and reports its progress when it finishes.
+        {% else %}
+          Copying the archive's media files.
+        {% endif %}
+      </p>
+      <small class="text-muted">This page updates itself until the restore finishes. Do not start another backup or restore for these institutions meanwhile.</small>
+    </div>
+
+    {% else %}
+    <div class="alert {% if restore_job.error_message %}alert-warning{% else %}alert-success{% endif %}">
+      <h5><i class="icon fas fa-check-circle"></i> Restore applied{% if restore_job.error_message %} with warnings{% endif %}</h5>
+      <p class="mb-1">
+        The archive was restored{% if restore_job %} by restore job {{ restore_job.id }}{% endif %}. The staged archive file has been removed.
+      </p>
+      {% if restore_job.error_message %}
+      <p class="mb-1 small">{{ restore_job.error_message }}</p>
+      {% endif %}
+      {% if restore_job.pre_restore_snapshot %}
+      <small class="text-muted">
+        The data as it was before the restore is kept as pre-restore snapshot job {{ restore_job.pre_restore_snapshot.id }}
+        (see <a href="{% url 'backup:backup-create' %}">Backup</a>).
+      </small>
       {% endif %}
     </div>
     {% endif %}
