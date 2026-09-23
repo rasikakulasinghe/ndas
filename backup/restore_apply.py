@@ -22,6 +22,22 @@ Two halves, like `restore_validation`:
 The archive's `db_export.json` is streamed (`ExportReader`, incremental
 `json.JSONDecoder.raw_decode`): nothing loads the archive or a whole model
 into memory.
+
+**Known, accepted deviation (2026-09-22 review checkpoint).** The frozen
+spec's Never section says "nothing is read twice except the deliberate
+re-hash", but `preflight()` and `_load_records()` each independently open
+the archive zip and stream the whole of `db_export.json` -- once each, plus
+`verify_confirmed()`'s own already-deliberate whole-archive re-hash, so
+`db_export.json` is actually read three times in total across one restore.
+Raised by the three-layer adversarial review, and the user was asked and
+chose to accept and document this rather than merge preflight and load into
+one pass: `db_export.json` is JSON *record metadata*, not the archive's
+`media/` payload -- the part that can reach 50 GiB and really is never
+re-read. Re-streaming a metadata file twice is a second pass over a small
+part of the archive, not a second read of its bulk. See
+`spec-2-3-full-scope-restore-with-automatic-pre-restore-snapshot.md`'s Spec
+Change Log and `deferred-work.md` for the single-pass refactor this could
+still become if `db_export.json` sizes ever become a real cost.
 """
 import codecs
 import hashlib
@@ -75,6 +91,13 @@ PATIENT_KEY = 'patients.patient'
 PATIENT_IDENTIFIER_FIELDS = ('bht', 'nnc_no', 'ptc_no', 'pc_no', 'pin')
 # (model key, file field) of the models whose files are restored after commit.
 MEDIA_FIELDS = (('video.video', 'video_file'), ('patients.attachment', 'attachment'))
+
+# A defensive per-member ceiling on a restored media file's DECLARED
+# (uncompressed) size, checked before any disk I/O for that member. Reuses
+# `VIDEO_MAX_SIZE` -- the larger of the two restored file types' own upload
+# limits (Video, Attachment) -- as a sane cap: a genuinely oversized zip
+# entry is rejected up front instead of only after a full write-and-hash.
+MEDIA_MEMBER_SIZE_CEILING = settings.FILE_UPLOAD_LIMITS['VIDEO_MAX_SIZE']
 
 LOAD_BATCH_SIZE = 500     # records deserialized and saved per batch
 LOOKUP_BATCH_SIZE = 500   # records checked against the database per preflight query
@@ -349,14 +372,34 @@ def start_restore(upload, user, trigger_institution):
 
 def revert_upload_to_confirmed(upload):
     """Put an `applying` upload back to `confirmed` (the data is unchanged, so
-    it can be retried or cancelled). Any other status is left alone."""
+    it can be retried or cancelled). If it cannot legitimately go back to
+    `confirmed` (its `confirmed_at`/`confirmed_snapshot` are missing or
+    invalid -- should not happen, but `check_upload_ready` alone does not
+    guarantee it here), it is marked `failed` instead, mirroring
+    `views._mark_upload_failed`'s pattern: a real, user-presentable
+    `error_message` is recorded and the staged archive is deleted, since
+    `restore_status_partial.html`'s `failed` branch unconditionally states
+    that the uploaded file has been removed. Any other status is left alone."""
     try:
         upload.refresh_from_db()
         if upload.status != RestoreUploadStatus.APPLYING:
             return
-        confirmed = upload.confirmed_at is not None and isinstance(upload.confirmed_snapshot, dict)
-        upload.status = RestoreUploadStatus.CONFIRMED if confirmed else RestoreUploadStatus.FAILED
-        upload.save(update_fields=['status', 'updated_at'])
+        if upload.confirmed_at is not None and isinstance(upload.confirmed_snapshot, dict):
+            upload.status = RestoreUploadStatus.CONFIRMED
+            upload.save(update_fields=['status', 'updated_at'])
+            return
+        upload.status = RestoreUploadStatus.FAILED
+        upload.error_message = (
+            "The restore failed and this upload's confirmation record is missing or invalid, so it "
+            "could not be returned to 'confirmed' for a retry. Upload the archive again."
+        )
+        upload.save(update_fields=['status', 'error_message', 'updated_at'])
+        try:
+            restore_validation.delete_staged_archive(upload)
+        except OSError:
+            logger.exception(
+                "RestoreUpload %s: could not delete the staged archive after marking it failed.", upload.id,
+            )
     except Exception:
         logger.exception("RestoreUpload %s: could not return it to 'confirmed'.", getattr(upload, 'id', None))
 
@@ -685,6 +728,11 @@ def preflight(upload, job, progress=None):
     specific message, if the archive could not be applied safely. Reads and
     writes nothing but the archive and read-only queries. `progress` gets a
     0..1 fraction. Returns a `PreflightResult` (records per model).
+
+    NOTE -- accepted deviation: `_load_records` (step 5) streams
+    `db_export.json` again later, so this file is read twice per restore
+    (module docstring has the full explanation the user signed off on: it is
+    JSON metadata, not the archive's much larger `media/` payload).
     """
     plan = _restore_plan(job)
     target_ids, allow_null_institution = _target_institution_ids(upload, job)
@@ -949,6 +997,26 @@ def _fix_references():
     return nulled, removed
 
 
+def _check_constraints_table_names():
+    """
+    `db_table` names for `connection.check_constraints()` in `apply_restore`:
+    the ten restored models (an archive's own record could reference another
+    restored model whose row turns out to be missing) plus the two tables
+    outside the restored set that hold a foreign key into it --
+    `referral.ReferralSent.patient` and `institution.PatientMoveLog.patient`.
+    Per the Code Map's reference facts, every OTHER inbound foreign key to
+    the ten models is a non-null CASCADE *inside* the restored set, so it can
+    only ever dangle within it -- these two are the only foreign keys from
+    outside that set, and `_fix_references` already repairs them explicitly.
+    Scoping the check to just these tables (instead of a full-database scan)
+    keeps the destructive transaction's write lock shorter.
+    """
+    tables = {apps.get_model(key)._meta.db_table for key in RESTORE_MODEL_KEYS}
+    tables.add(apps.get_model('referral', 'ReferralSent')._meta.db_table)
+    tables.add(apps.get_model('institution', 'PatientMoveLog')._meta.db_table)
+    return sorted(tables)
+
+
 def _reset_sequences():
     """PostgreSQL keeps its own sequences, which explicit-pk inserts do not
     advance; SQLite's `sequence_reset_sql` is empty."""
@@ -975,7 +1043,7 @@ def apply_restore(upload, job):
             _delete_scope(plan)
             loaded = _load_records(upload)
             nulled, removed = _fix_references()
-            connection.check_constraints()
+            connection.check_constraints(table_names=_check_constraints_table_names())
             _reset_sequences()
     except RestoreError:
         raise
@@ -1014,6 +1082,11 @@ def _restore_one_media(zf, checksums, name):
     expected = checksums.get(arcname)
     if not isinstance(expected, str):
         return f"{_clip(name, 100)}: not listed in the archive's manifest"
+    if info.file_size > MEDIA_MEMBER_SIZE_CEILING:
+        return (
+            f"{_clip(name, 100)}: declared size ({info.file_size} bytes) exceeds the "
+            f"{MEDIA_MEMBER_SIZE_CEILING}-byte per-file limit"
+        )
     try:
         target = safe_join(settings.MEDIA_ROOT, name)
     except (SuspiciousFileOperation, ValueError):

@@ -24,13 +24,16 @@ Two archive-building strategies are used, chosen per scenario:
 """
 import json
 import shutil
+import struct
 import zipfile
 from pathlib import Path
 from unittest import mock
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
+from django.db import connection
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
@@ -70,6 +73,35 @@ def _to_millis(dt):
     value that round-tripped through the export/restore JSON never has its
     original microseconds back -- compare at millisecond precision."""
     return dt.replace(microsecond=(dt.microsecond // 1000) * 1000)
+
+
+def _inflate_declared_media_size(path, arcname, new_size):
+    """Patch `arcname`'s DECLARED uncompressed size, in both its local file
+    header and its central directory record, to `new_size` -- the actual
+    stored bytes and CRC are left untouched. `ZipFile.writestr` always
+    recomputes `file_size` from what was actually written (there is no
+    supported way to hand it a mismatched size), so an oversized declared
+    size can only be engineered by editing the raw header bytes afterwards
+    -- the same low-level approach `restore_helpers.corrupt_member_data`
+    uses to corrupt a member's payload, applied to the size field instead."""
+    data = bytearray(Path(path).read_bytes())
+    with zipfile.ZipFile(path) as zf:
+        info = zf.getinfo(arcname)
+    # Local file header: uncompressed size is a 4-byte field at offset +22.
+    struct.pack_into('<I', data, info.header_offset + 22, new_size)
+    # Central directory record: scan for the entry naming `arcname` and
+    # patch its uncompressed size field at offset +24.
+    target = arcname.encode('utf-8')
+    idx = 0
+    while True:
+        idx = data.index(b'PK\x01\x02', idx)
+        name_len, extra_len, comment_len = struct.unpack_from('<HHH', data, idx + 28)
+        name_start = idx + 46
+        if bytes(data[name_start:name_start + name_len]) == target:
+            struct.pack_into('<I', data, idx + 24, new_size)
+            break
+        idx = name_start + name_len + extra_len + comment_len
+    Path(path).write_bytes(bytes(data))
 
 
 EXPORT_KEYS_ORDER = (
@@ -384,6 +416,62 @@ class StartRestoreTest(RestoreApplyTestBase):
 
 
 # ---------------------------------------------------------------------------
+# revert_upload_to_confirmed: the fallback branch when the upload cannot
+# legitimately go back to `confirmed`
+# ---------------------------------------------------------------------------
+
+class RevertUploadToConfirmedFallbackTest(RestoreApplyTestBase):
+    def test_falls_back_to_failed_with_a_message_and_deletes_the_staged_file(self):
+        # An `applying` upload whose confirmed_at/confirmed_snapshot are
+        # missing (should not happen once `check_upload_ready` has run, but
+        # `revert_upload_to_confirmed` must still not silently leave a bare
+        # 'failed' row with no explanation and a staged file the
+        # restore_status_partial.html 'failed' branch claims is gone).
+        upload = RestoreUpload.objects.create(uploaded_by=self.user, status=RestoreUploadStatus.APPLYING)
+        get_upload_dir(upload).mkdir(parents=True, exist_ok=True)
+        get_upload_path(upload).write_bytes(b'staged-bytes')
+        self.assertTrue(get_upload_path(upload).exists())
+
+        restore_apply.revert_upload_to_confirmed(upload)
+
+        upload.refresh_from_db()
+        self.assertEqual(upload.status, RestoreUploadStatus.FAILED)
+        self.assertTrue(upload.error_message, "a meaningful error_message must be recorded")
+        self.assertFalse(get_upload_path(upload).exists())
+
+    def test_falls_back_to_failed_when_confirmed_snapshot_is_not_a_dict(self):
+        upload = RestoreUpload.objects.create(
+            uploaded_by=self.user, status=RestoreUploadStatus.APPLYING,
+            confirmed_at=timezone.now(), confirmed_snapshot=None,
+        )
+        get_upload_dir(upload).mkdir(parents=True, exist_ok=True)
+        get_upload_path(upload).write_bytes(b'staged-bytes')
+
+        restore_apply.revert_upload_to_confirmed(upload)
+
+        upload.refresh_from_db()
+        self.assertEqual(upload.status, RestoreUploadStatus.FAILED)
+        self.assertTrue(upload.error_message)
+        self.assertFalse(get_upload_path(upload).exists())
+
+    def test_legitimate_case_still_returns_to_confirmed(self):
+        # Unchanged behaviour: a real confirmation record goes back to
+        # 'confirmed', with no error_message and the staged file untouched.
+        upload = RestoreUpload.objects.create(
+            uploaded_by=self.user, status=RestoreUploadStatus.APPLYING,
+            confirmed_at=timezone.now(), confirmed_snapshot={'snapshot_version': 1, 'digest': 'a' * 64},
+        )
+        get_upload_dir(upload).mkdir(parents=True, exist_ok=True)
+        get_upload_path(upload).write_bytes(b'staged-bytes')
+
+        restore_apply.revert_upload_to_confirmed(upload)
+
+        upload.refresh_from_db()
+        self.assertEqual(upload.status, RestoreUploadStatus.CONFIRMED)
+        self.assertTrue(get_upload_path(upload).exists())
+
+
+# ---------------------------------------------------------------------------
 # Preflight (read-only) -- every rejection reason
 # ---------------------------------------------------------------------------
 
@@ -655,6 +743,46 @@ class ApplyRestoreTest(RestoreApplyTestBase):
 
 
 # ---------------------------------------------------------------------------
+# _reset_sequences: PostgreSQL-only behaviour, mocked (the dev/test DB is
+# SQLite, where `sequence_reset_sql` returns nothing -- see module docstring
+# of this test file's item 7 for why this is mocked rather than integration-
+# tested against a real backend).
+# ---------------------------------------------------------------------------
+
+class ResetSequencesTest(RestoreApplyTestBase):
+    def test_reset_sequences_executes_the_backends_statements_for_every_restored_model(self):
+        fake_statements = [f"-- reset statement {i}" for i in range(3)]
+        mock_cm = mock.MagicMock()
+        mock_cursor_obj = mock.MagicMock()
+        mock_cm.__enter__.return_value = mock_cursor_obj
+        mock_cm.__exit__.return_value = False
+
+        with mock.patch.object(connection, 'vendor', 'postgresql'), \
+             mock.patch.object(connection.ops, 'sequence_reset_sql', return_value=fake_statements) as mocked_sql, \
+             mock.patch.object(connection, 'cursor', return_value=mock_cm):
+            restore_apply._reset_sequences()
+
+        mocked_sql.assert_called_once()
+        called_models = mocked_sql.call_args[0][1]
+        self.assertEqual(
+            {f"{m._meta.app_label}.{m._meta.model_name}" for m in called_models},
+            set(restore_apply.RESTORE_MODEL_KEYS),
+        )
+        self.assertEqual(
+            [call_args.args[0] for call_args in mock_cursor_obj.execute.call_args_list],
+            fake_statements,
+        )
+
+    def test_reset_sequences_is_a_no_op_when_the_backend_has_nothing_to_reset(self):
+        # SQLite's real behaviour: `sequence_reset_sql` returns an empty
+        # list, so no cursor is even opened.
+        with mock.patch.object(connection.ops, 'sequence_reset_sql', return_value=[]), \
+             mock.patch.object(connection, 'cursor') as mocked_cursor:
+            restore_apply._reset_sequences()
+        mocked_cursor.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
 # Media: restored, missing member warning, existing files overwritten,
 # path traversal blocked
 # ---------------------------------------------------------------------------
@@ -690,6 +818,33 @@ class RestoreMediaTest(RestoreApplyTestBase):
         warnings = restore_apply.restore_media(upload, job)
         self.assertEqual(len(warnings), 1)
         self.assertIn('missing from the archive', warnings[0])
+
+    def test_oversized_declared_media_size_is_rejected_before_any_write(self):
+        patient = self.make_patient(self.inst, baby_name='Oversized', bht='MED-4')
+        video = self.make_video(patient, name='huge.mp4', content=b'small-actual-bytes')
+        db_export, media, _manifest = self.export_json(self.inst)
+        video_path = Path(video.video_file.path)
+        original_bytes = video_path.read_bytes()
+
+        archive_path = self.rebuild_archive(db_export, media)
+        media_name = next(n for n in media if n.startswith('media/'))
+        # The declared (uncompressed) size is patched far above the per-file
+        # ceiling; the actual stored bytes stay tiny -- the check must reject
+        # based on the zip entry's declared size alone, before opening or
+        # reading the member at all.
+        _inflate_declared_media_size(archive_path, media_name, restore_apply.MEDIA_MEMBER_SIZE_CEILING + 1)
+
+        upload = RestoreUpload.objects.create(uploaded_by=self.user, status=RestoreUploadStatus.APPLYING)
+        get_upload_dir(upload).mkdir(parents=True, exist_ok=True)
+        shutil.copy(archive_path, get_upload_path(upload))
+        job = self.make_job(self.inst)
+
+        warnings = restore_apply.restore_media(upload, job)
+
+        self.assertEqual(len(warnings), 1)
+        self.assertIn('exceeds', warnings[0])
+        # Never opened/written to: the file on disk is exactly as it was.
+        self.assertEqual(video_path.read_bytes(), original_bytes)
 
     def test_path_traversal_in_recorded_filename_is_blocked(self):
         patient = self.make_patient(self.inst, baby_name='Traversal', bht='MED-3')

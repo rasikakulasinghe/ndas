@@ -288,7 +288,14 @@ class RestoreConcurrencyAndReplacementTest(RestoreViewTestBase):
     def test_new_upload_replaces_earlier_finished_uploads(self, mock_popen):
         finished = [
             self.make_upload(status=status)
-            for status in (RestoreUploadStatus.VALIDATED, RestoreUploadStatus.REJECTED, RestoreUploadStatus.FAILED)
+            for status in (
+                RestoreUploadStatus.VALIDATED, RestoreUploadStatus.REJECTED, RestoreUploadStatus.FAILED,
+                # Story 2.3: `applied` joined FINISHED_STATUSES but was never
+                # exercised through this replacement path -- an applied
+                # restore's row and staged directory must be swept aside like
+                # any other finished upload.
+                RestoreUploadStatus.APPLIED,
+            )
         ]
         theirs = self.make_upload(user=self.other_superadmin, status=RestoreUploadStatus.VALIDATED)
         old_dirs = [get_upload_dir(u) for u in finished]
@@ -940,6 +947,24 @@ class RestoreApplyingStateViewTest(RestoreStartViewTestBase):
         client.post(reverse('backup:restore-cancel', args=[upload.id]))
         upload.refresh_from_db()
         self.assertEqual(upload.status, RestoreUploadStatus.APPLIED)
+
+    def test_applying_status_page_renders_without_a_matching_restore_job(self):
+        # Guards restore_status_partial.html's `applying` block: it reads
+        # restore_job.status/.pre_restore_snapshot/.progress_pct, so it must
+        # not assume a BackupJob row exists (e.g. a brief window right after
+        # the upload flips to 'applying' but before the job row is visible
+        # to this lookup, or any other state where the join comes back
+        # empty) -- it must render a plain fallback instead of raising.
+        upload = self.make_upload(status=RestoreUploadStatus.APPLYING, staged=False)
+        client = self.client_for(self.superadmin)
+
+        page = client.get(reverse('backup:restore-status', args=[upload.id]))
+        self.assertEqual(page.status_code, 200)
+        self.assertContains(page, 'Restore is starting.')
+
+        fragment = client.get(reverse('backup:restore-status-fragment', args=[upload.id]))
+        self.assertEqual(fragment.status_code, 200)
+        self.assertContains(fragment, 'Restore is starting.')
 
     def test_applying_fragment_keeps_polling(self):
         upload = self.make_confirmed_upload(status=RestoreUploadStatus.APPLYING, staged=False)
