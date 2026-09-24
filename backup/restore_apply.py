@@ -39,7 +39,6 @@ part of the archive, not a second read of its bulk. See
 Change Log and `deferred-work.md` for the single-pass refactor this could
 still become if `db_export.json` sizes ever become a real cost.
 """
-import codecs
 import hashlib
 import hmac
 import json
@@ -60,6 +59,7 @@ from django.db import connection, transaction
 from django.utils._os import safe_join
 
 from backup import restore_preview, restore_validation
+from backup.export_stream import START, ExportFormatError, ExportReader
 from backup.job_lock import create_job_unless_overlapping
 from backup.models import BackupJob, RestoreUpload
 from backup.restore_preview import EXPORT_MODEL_KEYS, REFERRAL_MODEL_KEYS, SNAPSHOT_VERSION
@@ -101,7 +101,6 @@ MEDIA_MEMBER_SIZE_CEILING = settings.FILE_UPLOAD_LIMITS['VIDEO_MAX_SIZE']
 
 LOAD_BATCH_SIZE = 500     # records deserialized and saved per batch
 LOOKUP_BATCH_SIZE = 500   # records checked against the database per preflight query
-MAX_RECORD_CHARS = 64 * 1024 * 1024  # a single record larger than this is not a real record
 MAX_LISTED_WARNINGS = 20  # media warnings named in the job's message
 
 # Refusal codes returned by `start_restore`.
@@ -122,10 +121,6 @@ class RestoreError(Exception):
     def __init__(self, message):
         super().__init__(message)
         self.message = message
-
-
-class ExportFormatError(RestoreError):
-    """`db_export.json` is malformed or holds records this restore refuses."""
 
 
 @dataclass
@@ -562,134 +557,10 @@ def take_snapshot(job, progress=None):
 # --------------------------------------------------------------------------
 # db_export.json streaming reader
 # --------------------------------------------------------------------------
-
-class _Start:
-    def __repr__(self):
-        return 'START'
-
-
-START = _Start()  # yielded in place of a record when a model's array begins
-
-_RAW_DECODE = json.JSONDecoder().raw_decode
-_WHITESPACE = ' \t\r\n'
-
-
-class ExportReader:
-    """
-    Streams `db_export.json` -- `{"<model key>": [<record>, ...], ...}` --
-    from a binary file-like object without ever holding more than the current
-    buffer and one record. Iterating yields `(key, START)` when a model's
-    array begins and `(key, record)` for each record in it; the records of
-    `skip_keys` are decoded and dropped (never yielded, never retained).
-    `bytes_read` is the uncompressed byte count consumed so far (for progress).
-
-    Records are decoded with `json.JSONDecoder.raw_decode` on a text buffer
-    that is refilled when a value is cut off by its end; a value that is still
-    undecodable after `MAX_RECORD_CHARS` is malformed, not just large.
-    """
-
-    def __init__(self, stream, skip_keys=()):
-        self._stream = stream
-        self._skip = frozenset(skip_keys)
-        self._decoder = codecs.getincrementaldecoder('utf-8')()
-        self._buf = ''
-        self._pos = 0
-        self._eof = False
-        self.bytes_read = 0
-
-    @staticmethod
-    def _bad(message):
-        raise ExportFormatError(f"db_export.json is malformed: {message}.")
-
-    def _fill(self, size=COPY_CHUNK_SIZE):
-        """Read and append more text (dropping what was already consumed).
-        Returns False at the end of the stream."""
-        if self._eof:
-            return False
-        try:
-            data = self._stream.read(size)
-            text = self._decoder.decode(data, final=not data)
-        except UnicodeDecodeError:
-            self._bad("it is not valid UTF-8")
-        except restore_validation._ZIP_READ_ERRORS as e:
-            raise ExportFormatError(f"db_export.json could not be read from the archive ({_clip(e, 100)}).")
-        self.bytes_read += len(data)
-        self._buf = self._buf[self._pos:] + text
-        self._pos = 0
-        if not data:
-            self._eof = True
-            return False
-        return True
-
-    def _peek(self):
-        """The next non-whitespace character ('' at the end of the stream)."""
-        while True:
-            buf, pos = self._buf, self._pos
-            while pos < len(buf) and buf[pos] in _WHITESPACE:
-                pos += 1
-            self._pos = pos
-            if pos < len(buf):
-                return buf[pos]
-            if not self._fill():
-                return ''
-
-    def _expect(self, char):
-        if self._peek() != char:
-            self._bad(f"expected '{char}' at byte {self.bytes_read}")
-        self._pos += 1
-
-    def _decode(self):
-        """One JSON value starting at the next non-whitespace character."""
-        if self._peek() == '':
-            self._bad("the file ends unexpectedly")
-        while True:
-            try:
-                value, end = _RAW_DECODE(self._buf, self._pos)
-            except RecursionError:
-                self._bad("a record is nested too deeply")
-            except json.JSONDecodeError:
-                pending = len(self._buf) - self._pos
-                if pending > MAX_RECORD_CHARS or not self._fill(max(COPY_CHUNK_SIZE, pending)):
-                    self._bad(f"invalid JSON near byte {self.bytes_read}")
-                continue
-            self._pos = end
-            return value
-
-    def __iter__(self):
-        self._expect('{')
-        if self._peek() == '}':
-            self._pos += 1
-        else:
-            while True:
-                key = self._decode()
-                if not isinstance(key, str):
-                    self._bad("a model key is not a string")
-                self._expect(':')
-                self._expect('[')
-                yield key, START
-                skipping = key in self._skip
-                if self._peek() == ']':
-                    self._pos += 1
-                else:
-                    while True:
-                        record = self._decode()
-                        if not skipping:
-                            yield key, record
-                        char = self._peek()
-                        self._pos += 1
-                        if char == ']':
-                            break
-                        if char != ',':
-                            self._bad(f"expected ',' or ']' after a record of '{_clip(key, 40)}'")
-                char = self._peek()
-                self._pos += 1
-                if char == '}':
-                    break
-                if char != ',':
-                    self._bad("expected ',' or '}' after a model's records")
-        if self._peek() != '':
-            self._bad("unexpected data after the closing '}'")
-
+# `START`, `ExportFormatError` and `ExportReader` moved to `backup/export_stream`
+# in Story 2.4 so `restore_validation`'s Stage 6 and this module import one
+# implementation. `iter_export_records` stays here as a thin wrapper keeping
+# this module's own default (referral keys skipped) for its existing callers.
 
 def iter_export_records(stream, skip_keys=REFERRAL_MODEL_KEYS):
     """`ExportReader` over `stream` (referral keys skipped by default)."""
@@ -1045,7 +916,7 @@ def apply_restore(upload, job):
             nulled, removed = _fix_references()
             connection.check_constraints(table_names=_check_constraints_table_names())
             _reset_sequences()
-    except RestoreError:
+    except (RestoreError, ExportFormatError):
         raise
     except Exception as e:
         logger.exception("RestoreUpload %s: applying the archive failed and was rolled back.", upload.id)
@@ -1165,8 +1036,10 @@ def execute_restore(job, progress_callback=None):
     """
     Run steps 1-6 for the `restore` `job` (the upload is `job.restore_upload`).
     `progress_callback(pct)` is called with a monotonic 0..99 value. Raises
-    `RestoreError` on any failure; before `apply_restore` that changes no
-    domain data, and `apply_restore` rolls back on its own. The caller writes
+    `RestoreError` (or `ExportFormatError` when `db_export.json` is malformed
+    or holds records this restore refuses) on any failure; before
+    `apply_restore` that changes no domain data, and `apply_restore` rolls
+    back on its own. The caller writes
     the terminal states. Returns a `RestoreResult`.
     """
     progress = Progress(progress_callback)

@@ -5,6 +5,7 @@ Each of the five validation stages and every rejection code, against hand-built
 corrupt/malicious archives, plus a happy path over an archive produced by the
 real `create_export`.
 """
+import json
 import stat
 import struct
 import zipfile
@@ -14,8 +15,10 @@ from unittest import mock
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
+from django.utils import timezone
 
 from backup import restore_validation
+from backup.export_stream import ExportFormatError
 from backup.models import BackupJob
 from backup.restore_validation import RestoreRejection, validate_restore_archive
 from backup.services import create_export
@@ -37,6 +40,7 @@ from ndas.custom_codes.choice import (
     RestoreAuthenticity,
     RestoreRejectionCode as Code,
 )
+from patients.models import Patient
 
 User = get_user_model()
 
@@ -614,3 +618,348 @@ class OriginJobStatusTest(RestoreValidationBase):
             with self.subTest(status=status):
                 BackupJob.objects.filter(pk=job.pk).update(status=status)
                 self.assertRejected(path, Code.ORIGIN_NOT_VERIFIABLE)
+
+
+# ---------------------------------------------------------------------------
+# Stage 6 -- date-scoped match (Story 2.4)
+# ---------------------------------------------------------------------------
+
+def _patient_records(entries):
+    """`entries`: [(pk, fields_dict), ...] -> the db_export.json bytes for a
+    `patients.patient`-only export (plus an empty `video.video` array, so the
+    shape matches a real export)."""
+    return json.dumps({
+        "patients.patient": [
+            {"model": "patients.patient", "pk": pk, "fields": fields} for pk, fields in entries
+        ],
+        "video.video": [],
+    }).encode("utf-8")
+
+
+class DateScopeMatchTest(RestoreValidationBase):
+    def make_patient(self, **overrides):
+        fields = dict(
+            baby_name='Existing', mother_name='Mother', dob_tob=timezone.now(), gender='Male',
+            pog_wks=38, pog_days=2, birth_weight=3000, ofc=33, mo_delivery='Normal vaginal delivery (NVD)',
+            tp_mobile='0711234567', institution=self.inst, added_by=self.user,
+        )
+        fields.update(overrides)
+        return Patient.objects.create(**fields)
+
+    def build(self, entries, date_filter=None, **manifest_overrides):
+        path = self.archive_path()
+        overrides = {
+            'date_filter': date_filter or {'applied': True, 'start': '2026-01-01', 'end': '2026-02-01'},
+        }
+        overrides.update(manifest_overrides)
+        build_archive(path, db_export=_patient_records(entries), manifest_overrides=overrides)
+        return path
+
+    def result_for(self, entries, date_filter=None, **manifest_overrides):
+        path = self.build(entries, date_filter=date_filter, **manifest_overrides)
+        return self.validate(path, allow_unverified=True)
+
+    def test_matches_existing_patient_by_bht_and_skips(self):
+        existing = self.make_patient(bht='BHT-1')
+        result = self.result_for([(1, {'bht': 'BHT-1'})])
+        self.assertEqual(result.match_summary['institution_slug'], 'test-hosp')
+        self.assertEqual(result.match_summary['target_institution_id'], self.inst.id)
+        self.assertEqual(result.match_summary['skip'], [
+            {
+                'archive_pk': 1, 'matched_fields': ['bht'], 'identifiers': {'bht': 'BHT-1'},
+                'existing_patient_ids': [existing.id],
+            },
+        ])
+        self.assertEqual(result.match_summary['import'], [])
+        self.assertEqual(result.match_summary['excluded'], [])
+
+    def test_no_identifiers_set_always_imports(self):
+        result = self.result_for([(1, {})])
+        self.assertEqual(
+            result.match_summary['import'], [{'archive_pk': 1, 'matched_fields': [], 'identifiers': {}}],
+        )
+        self.assertEqual(result.match_summary['skip'], [])
+        self.assertEqual(result.match_summary['excluded'], [])
+
+    def test_no_matching_existing_patient_imports(self):
+        self.make_patient(bht='SOMEONE-ELSE')
+        result = self.result_for([(1, {'bht': 'NEW-1'})])
+        self.assertEqual(
+            result.match_summary['import'],
+            [{'archive_pk': 1, 'matched_fields': [], 'identifiers': {'bht': 'NEW-1'}}],
+        )
+
+    def test_archived_patient_matching_two_distinct_existing_patients_is_excluded(self):
+        p1 = self.make_patient(bht='BHT-1')
+        p2 = self.make_patient(pin='PIN-1')
+        result = self.result_for([(1, {'bht': 'BHT-1', 'pin': 'PIN-1'})])
+        excluded = result.match_summary['excluded']
+        self.assertEqual(len(excluded), 1)
+        self.assertEqual(excluded[0]['archive_pk'], 1)
+        self.assertEqual(excluded[0]['reason'], 'ambiguous-conflict')
+        self.assertEqual(sorted(excluded[0]['matched_fields']), ['bht', 'pin'])
+        self.assertEqual(sorted(excluded[0]['existing_patient_ids']), sorted([p1.id, p2.id]))
+        self.assertEqual(result.match_summary['skip'], [])
+        self.assertEqual(result.match_summary['import'], [])
+
+    def test_two_archived_patients_matching_the_same_existing_patient_are_both_excluded(self):
+        existing = self.make_patient(bht='BHT-1', pin='PIN-1')
+        result = self.result_for([(1, {'bht': 'BHT-1'}), (2, {'pin': 'PIN-1'})])
+        excluded = {e['archive_pk']: e for e in result.match_summary['excluded']}
+        self.assertEqual(set(excluded), {1, 2})
+        for entry in excluded.values():
+            self.assertEqual(entry['reason'], 'ambiguous-conflict')
+            self.assertEqual(entry['existing_patient_ids'], [existing.id])
+        self.assertEqual(result.match_summary['skip'], [])
+        self.assertEqual(result.match_summary['import'], [])
+
+    def test_three_archived_patients_matching_the_same_existing_patient_are_all_excluded(self):
+        existing = self.make_patient(bht='BHT-1', pin='PIN-1', nnc_no='NNC-1')
+        result = self.result_for([(1, {'bht': 'BHT-1'}), (2, {'pin': 'PIN-1'}), (3, {'nnc_no': 'NNC-1'})])
+        excluded = {e['archive_pk']: e for e in result.match_summary['excluded']}
+        self.assertEqual(set(excluded), {1, 2, 3})
+        for entry in excluded.values():
+            self.assertEqual(entry['existing_patient_ids'], [existing.id])
+
+    def test_missing_institution_excludes_everyone_with_no_matching_attempted(self):
+        result = self.result_for([(1, {'bht': 'BHT-1'}), (2, {})], institutions=['ghost-hosp'])
+        self.assertIsNone(result.match_summary['target_institution_id'])
+        self.assertEqual(result.match_summary['institution_slug'], 'ghost-hosp')
+        excluded = {e['archive_pk']: e for e in result.match_summary['excluded']}
+        self.assertEqual(set(excluded), {1, 2})
+        for entry in excluded.values():
+            self.assertEqual(entry['reason'], 'missing-institution')
+            self.assertEqual(entry['matched_fields'], [])
+            self.assertEqual(entry['existing_patient_ids'], [])
+        self.assertEqual(excluded[1]['identifiers'], {'bht': 'BHT-1'})
+        self.assertEqual(excluded[2]['identifiers'], {})
+        self.assertEqual(result.match_summary['skip'], [])
+        self.assertEqual(result.match_summary['import'], [])
+
+    def test_ambiguous_institutions_list_is_treated_as_unresolvable(self):
+        # scope_type=single but the manifest names two slugs: cannot be
+        # resolved to one institution, so every patient is excluded.
+        result = self.result_for([(1, {'bht': 'BHT-1'})], institutions=['test-hosp', 'other-hosp'])
+        self.assertIsNone(result.match_summary['target_institution_id'])
+        self.assertIsNone(result.match_summary['institution_slug'])
+        self.assertEqual(result.match_summary['excluded'][0]['reason'], 'missing-institution')
+
+    def test_multi_scope_gets_no_match_summary(self):
+        result = self.result_for(
+            [(1, {'bht': 'BHT-1'})], scope_type='multi', institutions=['test-hosp', 'other-hosp'],
+        )
+        self.assertIsNone(result.match_summary)
+
+    def test_system_scope_gets_no_match_summary(self):
+        result = self.result_for([(1, {'bht': 'BHT-1'})], scope_type='system', institutions=[])
+        self.assertIsNone(result.match_summary)
+
+    def test_non_date_scoped_archive_gets_no_match_summary(self):
+        result = self.result_for(
+            [(1, {'bht': 'BHT-1'})], date_filter={'applied': False, 'start': None, 'end': None},
+        )
+        self.assertIsNone(result.match_summary)
+
+    def test_full_scope_archive_never_runs_stage_6(self):
+        path = self.archive_path()
+        build_archive(path)  # default: no date filter
+        result = self.validate(path, allow_unverified=True)
+        self.assertIsNone(result.match_summary)
+
+    def test_only_matched_fields_count_not_the_whole_record(self):
+        # bht matches, but nnc_no differs from any existing patient's -- only
+        # 'bht' should be named as a matched field.
+        existing = self.make_patient(bht='BHT-1', nnc_no='NNC-EXISTING')
+        result = self.result_for([(1, {'bht': 'BHT-1', 'nnc_no': 'NNC-ARCHIVE'})])
+        self.assertEqual(result.match_summary['skip'], [
+            {
+                'archive_pk': 1, 'matched_fields': ['bht'],
+                'identifiers': {'bht': 'BHT-1', 'nnc_no': 'NNC-ARCHIVE'},
+                'existing_patient_ids': [existing.id],
+            },
+        ])
+
+    def test_malformed_patient_record_raises_export_format_error(self):
+        path = self.archive_path()
+        db_export = json.dumps({
+            "patients.patient": [{"model": "patients.patient", "fields": {}}],  # no pk
+            "video.video": [],
+        }).encode("utf-8")
+        build_archive(path, db_export=db_export, manifest_overrides={
+            'date_filter': {'applied': True, 'start': '2026-01-01', 'end': None},
+        })
+        with self.assertRaises(ExportFormatError):
+            self.validate(path, allow_unverified=True)
+
+    # -- system-wide matching (identifiers are globally unique) -------------
+
+    def test_identifier_held_by_a_patient_in_another_institution_is_a_skip(self):
+        other = Institution.objects.create(name='Other Hosp', slug='other-hosp', created_by=self.user)
+        existing = self.make_patient(bht='BHT-1', institution=other)
+        result = self.result_for([(1, {'bht': 'BHT-1'})])
+        self.assertEqual(result.match_summary['import'], [])
+        self.assertEqual(result.match_summary['excluded'], [])
+        self.assertEqual(result.match_summary['skip'], [
+            {
+                'archive_pk': 1, 'matched_fields': ['bht'], 'identifiers': {'bht': 'BHT-1'},
+                'existing_patient_ids': [existing.id],
+            },
+        ])
+
+    def test_identifier_held_by_a_patient_with_no_institution_is_a_skip(self):
+        existing = self.make_patient(pin='PIN-9', institution=None)
+        result = self.result_for([(1, {'pin': 'PIN-9'})])
+        self.assertEqual(result.match_summary['import'], [])
+        self.assertEqual([e['existing_patient_ids'] for e in result.match_summary['skip']], [[existing.id]])
+
+    def test_matches_across_institutions_are_still_ambiguous_together(self):
+        other = Institution.objects.create(name='Other Hosp', slug='other-hosp', created_by=self.user)
+        p1 = self.make_patient(bht='BHT-1')
+        p2 = self.make_patient(pin='PIN-1', institution=other)
+        result = self.result_for([(1, {'bht': 'BHT-1', 'pin': 'PIN-1'})])
+        excluded = result.match_summary['excluded']
+        self.assertEqual([e['reason'] for e in excluded], ['ambiguous-conflict'])
+        self.assertEqual(sorted(excluded[0]['existing_patient_ids']), sorted([p1.id, p2.id]))
+        self.assertEqual(excluded[0]['identifiers'], {'bht': 'BHT-1', 'pin': 'PIN-1'})
+
+    # -- duplicates inside the archive --------------------------------------
+
+    def test_duplicate_archive_pk_is_refused(self):
+        path = self.build([(1, {'bht': 'A'}), (1, {'bht': 'B'})])
+        with self.assertRaises(ExportFormatError) as ctx:
+            self.validate(path, allow_unverified=True)
+        self.assertIn('Patient 1 appears more than once in db_export.json', ctx.exception.message)
+
+    def test_patient_key_listed_twice_is_refused(self):
+        record = '{"model": "patients.patient", "pk": %d, "fields": {}}'
+        raw = ('{"patients.patient": [%s], "patients.patient": [%s]}' % (record % 1, record % 2)).encode('utf-8')
+        path = self.archive_path()
+        build_archive(path, db_export=raw, manifest_overrides={
+            'date_filter': {'applied': True, 'start': '2026-01-01', 'end': None},
+        })
+        with self.assertRaises(ExportFormatError) as ctx:
+            self.validate(path, allow_unverified=True)
+        self.assertIn("lists 'patients.patient' more than once", ctx.exception.message)
+
+    def test_same_identifier_value_on_two_archived_patients_is_refused(self):
+        path = self.build([(1, {'bht': 'BHT-1'}), (2, {'bht': 'BHT-1'})])
+        with self.assertRaises(ExportFormatError) as ctx:
+            self.validate(path, allow_unverified=True)
+        self.assertIn("The patient identifier bht 'BHT-1' appears on more than one patient", ctx.exception.message)
+
+    def test_same_value_in_two_different_identifier_fields_is_not_a_duplicate(self):
+        result = self.result_for([(1, {'bht': 'X-1'}), (2, {'nnc_no': 'X-1'})])
+        self.assertEqual([e['archive_pk'] for e in result.match_summary['import']], [1, 2])
+
+    def test_empty_identifiers_repeated_are_not_duplicates(self):
+        result = self.result_for([(1, {'bht': '', 'pin': None}), (2, {'bht': '', 'pin': None})])
+        self.assertEqual([e['archive_pk'] for e in result.match_summary['import']], [1, 2])
+
+    # -- chunked lookups -----------------------------------------------------
+
+    def test_chunked_lookups_give_the_same_partition_as_unchunked(self):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        e1 = self.make_patient(bht='B1', pin='P1')
+        e2 = self.make_patient(bht='B2')
+        e3 = self.make_patient(bht='B3', nnc_no='N3')
+        self.make_patient(bht='B4')
+        entries = [
+            (1, {'bht': 'B1'}),                  # skip e1
+            (2, {'bht': 'B2', 'nnc_no': 'N2'}),  # skip e2
+            (3, {'bht': 'B3'}),                  # skip e3 ...
+            (4, {'nnc_no': 'N3'}),               # ... shared with 3 -> both excluded
+            (5, {'bht': 'B5'}),                  # import
+            (6, {'bht': 'B6', 'pin': 'P6'}),     # import
+            (7, {}),                             # import
+            (8, {'bht': 'B4', 'pin': 'P1'}),     # matches two existing -> excluded
+        ]
+        path = self.build(entries)
+
+        with CaptureQueriesContext(connection) as unchunked_queries:
+            unchunked = self.validate(path, allow_unverified=True).match_summary
+        with mock.patch.object(restore_validation, 'IDENTIFIER_LOOKUP_CHUNK_SIZE', 2):
+            with CaptureQueriesContext(connection) as chunked_queries:
+                chunked = self.validate(path, allow_unverified=True).match_summary
+
+        self.assertEqual(chunked, unchunked)
+        self.assertEqual([e['archive_pk'] for e in unchunked['skip']], [1, 2])
+        self.assertEqual([e['archive_pk'] for e in unchunked['excluded']], [3, 4, 8])
+        self.assertEqual([e['archive_pk'] for e in unchunked['import']], [5, 6, 7])
+        self.assertEqual(unchunked['skip'][0]['existing_patient_ids'], [e1.id])
+        self.assertEqual(unchunked['skip'][1]['existing_patient_ids'], [e2.id])
+        self.assertEqual(unchunked['excluded'][0]['existing_patient_ids'], [e3.id])
+        # ... and the tiny chunk size really did split the lookups.
+        self.assertGreater(len(chunked_queries), len(unchunked_queries))
+
+    # -- the date-scoped gate matches the preview's ------------------------------
+
+    def test_a_date_bound_without_applied_still_runs_stage_6(self):
+        existing = self.make_patient(bht='BHT-1')
+        for date_filter in (
+            {'applied': False, 'start': '2026-01-01', 'end': None},
+            {'applied': False, 'start': None, 'end': '2026-02-01'},
+        ):
+            with self.subTest(date_filter=date_filter):
+                result = self.result_for([(1, {'bht': 'BHT-1'})], date_filter=date_filter)
+                self.assertIsNotNone(result.match_summary)
+                self.assertEqual(result.match_summary['skip'][0]['existing_patient_ids'], [existing.id])
+
+    def test_is_date_scoped_normalisation(self):
+        is_date_scoped = restore_validation._is_date_scoped
+        self.assertTrue(is_date_scoped({'applied': True}))
+        self.assertTrue(is_date_scoped({'applied': False, 'start': '2026-01-01'}))
+        self.assertTrue(is_date_scoped({'applied': False, 'end': '2026-01-01'}))
+        self.assertFalse(is_date_scoped({'applied': False, 'start': None, 'end': None}))
+        self.assertFalse(is_date_scoped(None))
+
+    # -- identifier typing -----------------------------------------------------
+
+    def test_non_text_identifier_value_is_refused(self):
+        for bad in (12345, 0, True, ['A'], {'a': 1}):
+            with self.subTest(bad=bad):
+                path = self.build([(1, {'bht': bad})])
+                with self.assertRaises(ExportFormatError) as ctx:
+                    self.validate(path, allow_unverified=True)
+                self.assertIn('bht value that is not text', ctx.exception.message)
+
+    def test_null_and_empty_identifiers_are_simply_unpopulated(self):
+        result = self.result_for([(1, {'bht': None, 'nnc_no': '', 'pin': 'P-1'})])
+        self.assertEqual(result.match_summary['import'][0]['identifiers'], {'pin': 'P-1'})
+
+    # -- _extract_patient_identity failure branches ---------------------------
+
+    def test_extract_patient_identity_failure_branches(self):
+        fields = ('bht', 'nnc_no', 'ptc_no', 'pc_no', 'pin')
+        good = {'model': 'patients.patient', 'pk': 7, 'fields': {'bht': 'X'}}
+        self.assertEqual(restore_validation._extract_patient_identity(good, fields), (7, {'bht': 'X'}))
+        cases = {
+            'non-dict record': ['not', 'a', 'dict'],
+            'bool pk': {**good, 'pk': True},
+            'string pk': {**good, 'pk': '7'},
+            'missing pk': {k: v for k, v in good.items() if k != 'pk'},
+            'wrong model label': {**good, 'model': 'patients.attachment'},
+            'missing model label': {k: v for k, v in good.items() if k != 'model'},
+            'missing fields': {k: v for k, v in good.items() if k != 'fields'},
+            'non-dict fields': {**good, 'fields': ['bht']},
+        }
+        for label, record in cases.items():
+            with self.subTest(label):
+                with self.assertRaises(ExportFormatError):
+                    restore_validation._extract_patient_identity(record, fields)
+
+    # -- no patients.patient key at all -----------------------------------------
+
+    def test_export_without_a_patients_key_gives_an_empty_partition(self):
+        path = self.archive_path()
+        build_archive(
+            path, db_export=json.dumps({"video.video": []}).encode('utf-8'),
+            manifest_overrides={'date_filter': {'applied': True, 'start': '2026-01-01', 'end': None}},
+        )
+        result = self.validate(path, allow_unverified=True)
+        self.assertEqual(
+            {k: result.match_summary[k] for k in ('skip', 'import', 'excluded')},
+            {'skip': [], 'import': [], 'excluded': []},
+        )
+        self.assertEqual(result.match_summary['institution_slug'], 'test-hosp')

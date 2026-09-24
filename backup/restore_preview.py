@@ -168,6 +168,7 @@ def build_preview(upload):
     """
     Institution = apps.get_model('institution', 'Institution')
     summary = upload.manifest_summary if isinstance(upload.manifest_summary, dict) else {}
+    match_summary = upload.match_summary if isinstance(upload.match_summary, dict) else None
 
     slugs = summary.get('institutions')
     slugs = sorted({s for s in slugs if isinstance(s, str)}) if isinstance(slugs, list) else []
@@ -194,6 +195,13 @@ def build_preview(upload):
     actions = {key: action_for(key) for key in EXPORT_MODEL_KEYS}
     scope_type = summary.get('scope_type') if isinstance(summary.get('scope_type'), str) else ''
 
+    # Story 2.4: a stable hash, not the partition itself, is what feeds the
+    # digest -- exactly like every other archive-derived fact -- so a
+    # corrupted/changed match_summary invalidates confirmation the same way a
+    # changed manifest would, without bloating the digest input with the
+    # (potentially large) skip/import/excluded lists themselves.
+    match_summary_hash = _digest(match_summary) if match_summary is not None else None
+
     facts = {
         'archive_sha256': upload.archive_sha256,
         'scope_type': scope_type,
@@ -202,6 +210,7 @@ def build_preview(upload):
         'archive_counts': archive_counts,
         'actions': actions,
         'authenticity': upload.authenticity,
+        'match_summary_hash': match_summary_hash,
     }
 
     live_counts = _live_counts([existing[s] for s in slugs if s in existing])
@@ -237,11 +246,42 @@ def build_preview(upload):
         problem = _staged_archive_problem(upload)
         if problem:
             block_reasons.append(problem)
-    if date_filter['applied']:
-        block_reasons.append(
-            "This archive is date-scoped. Its match/skip/import preview is not available yet, "
-            "so it cannot be confirmed."
-        )
+    # Story 2.4: once a single-institution date-scoped archive's match has
+    # been computed, its stored partition lifts the old blanket block; a
+    # multi-/system-scoped date-scoped archive (no per-record institution can
+    # be resolved for it) or one validated before this story shipped (no
+    # match_summary yet) is still blocked, with wording that tells them apart.
+    #
+    # The block is lifted only for a fully usable match: `applied`, single
+    # scope naming exactly one institution, a well-formed partition (skip,
+    # import and excluded all lists) computed for that same institution slug.
+    # Anything else is "no usable match" and `date_scope_match` stays None.
+    match_is_usable = bool(
+        date_filter['applied']
+        and scope_type == BackupJobScopeType.SINGLE
+        and len(slugs) == 1
+        and match_summary is not None
+        and all(isinstance(match_summary.get(part), list) for part in ('skip', 'import', 'excluded'))
+        and match_summary.get('institution_slug') == slugs[0]
+    )
+    date_scope_match = match_summary if match_is_usable else None
+    if date_filter['applied'] and not match_is_usable:
+        if scope_type == BackupJobScopeType.SINGLE and len(slugs) == 1:
+            block_reasons.append(
+                "This archive is date-scoped, but it was validated before date-scoped matching existed "
+                "or has no computed match, so it cannot be confirmed. Cancel this upload and upload "
+                "the archive again."
+            )
+        elif scope_type == BackupJobScopeType.SINGLE:
+            block_reasons.append(
+                "This archive is date-scoped and single-institution, but it must name exactly one "
+                "institution, so it cannot be confirmed."
+            )
+        else:
+            block_reasons.append(
+                "This archive is date-scoped. Restoring a date-scoped archive is only supported for "
+                "a single-institution archive yet, so it cannot be confirmed."
+            )
 
     return {
         'upload': upload,
@@ -250,6 +290,7 @@ def build_preview(upload):
         'institutions': institutions,
         'models': models,
         'live_counts': live_counts,
+        'date_scope_match': date_scope_match,
         'block_reasons': block_reasons,
         'blocked': bool(block_reasons),
         'source_job_id': summary.get('source_job_id'),
@@ -268,6 +309,11 @@ def _snapshot(preview):
         'generated_at': preview['generated_at'],
         'generated_by': preview['generated_by'],
         'live_counts_at_confirmation': preview['live_counts'],
+        # Story 2.4: the locked-in skip/import/excluded partition, carried
+        # byte-for-byte so Story 2.5's apply step reads it from here -- never
+        # re-derived -- matching the AC's "this partition is final ...
+        # including during the apply step".
+        'date_scope_match': preview['date_scope_match'],
         'digest': preview['digest'],
         'snapshot_version': SNAPSHOT_VERSION,
     }

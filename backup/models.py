@@ -258,6 +258,16 @@ class RestoreUpload(TimeStampedModel, UserTrackingMixin):
         null=True, blank=True, verbose_name=_("Manifest Summary"),
         help_text=_("Summary of the validated archive's manifest; set only when status=validated."),
     )
+    match_summary = models.JSONField(
+        null=True, blank=True, verbose_name=_("Match Summary"),
+        help_text=_(
+            "Story 2.4: the final skip/import/excluded partition, computed once, for a "
+            "single-institution date-scoped archive. Set only alongside manifest_summary, in the "
+            "same terminal save, when status=validated. Null for a full-scope archive and for a "
+            "multi- or system-scoped date-scoped archive (no per-record institution can be "
+            "resolved for those yet)."
+        ),
+    )
     confirmed_by = models.ForeignKey(
         "users.CustomUser",
         on_delete=models.SET_NULL,

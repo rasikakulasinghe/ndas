@@ -354,3 +354,82 @@ class ValidateRestoreUploadCommandTest(IsolatedBaseDirMixin, TestCase):
         self.assertEqual(files, [f"restore_uploads/{upload.id}/upload.zip"])
         self.assertFalse(self.media_root.exists())
         self.assertFalse(self.static_root.exists())
+
+    # -- Story 2.4: the date-scoped match runs inside the command --------------
+
+    DATE_FILTER = {'applied': True, 'start': '2026-01-01', 'end': '2026-02-01'}
+
+    @staticmethod
+    def patient_export(entries):
+        return json.dumps({
+            "patients.patient": [
+                {"model": "patients.patient", "pk": pk, "fields": fields} for pk, fields in entries
+            ],
+            "video.video": [],
+        }).encode("utf-8")
+
+    def make_patient(self, **overrides):
+        from django.utils import timezone
+
+        from patients.models import Patient
+
+        fields = dict(
+            baby_name='Existing', mother_name='Mother', dob_tob=timezone.now(), gender='Male',
+            pog_wks=38, pog_days=2, birth_weight=3000, ofc=33, mo_delivery='Normal vaginal delivery (NVD)',
+            tp_mobile='0711234567', institution=self.inst, added_by=self.user,
+        )
+        fields.update(overrides)
+        return Patient.objects.create(**fields)
+
+    def test_date_scoped_single_institution_archive_is_validated_with_a_computed_match(self):
+        existing = self.make_patient(bht='BHT-EXISTING')
+        upload = self.stage(
+            allow_unverified=True,
+            db_export=self.patient_export([(1, {'bht': 'BHT-EXISTING'}), (2, {'bht': 'BHT-NEW'}), (3, {})]),
+            manifest_overrides={'institutions': ['cmd-hosp'], 'date_filter': self.DATE_FILTER},
+        )
+        call_command('validate_restore_upload', str(upload.id))
+        upload = RestoreUpload.objects.get(pk=upload.pk)
+        self.assertEqual(upload.status, RestoreUploadStatus.VALIDATED)
+        self.assertEqual(upload.match_summary, {
+            'institution_slug': 'cmd-hosp',
+            'target_institution_id': self.inst.id,
+            'skip': [{
+                'archive_pk': 1, 'matched_fields': ['bht'], 'identifiers': {'bht': 'BHT-EXISTING'},
+                'existing_patient_ids': [existing.id],
+            }],
+            'import': [
+                {'archive_pk': 2, 'matched_fields': [], 'identifiers': {'bht': 'BHT-NEW'}},
+                {'archive_pk': 3, 'matched_fields': [], 'identifiers': {}},
+            ],
+            'excluded': [],
+        })
+
+    def test_full_scope_archive_leaves_match_summary_none(self):
+        upload = self.stage(
+            allow_unverified=True,
+            db_export=self.patient_export([(1, {'bht': 'BHT-1'})]),
+            manifest_overrides={'institutions': ['cmd-hosp']},  # no date filter
+        )
+        call_command('validate_restore_upload', str(upload.id))
+        upload = RestoreUpload.objects.get(pk=upload.pk)
+        self.assertEqual(upload.status, RestoreUploadStatus.VALIDATED)
+        self.assertIsNone(upload.match_summary)
+
+    def test_malformed_patient_record_in_a_date_scoped_archive_ends_failed(self):
+        db_export = json.dumps({
+            "patients.patient": [{"model": "patients.patient", "fields": {}}],  # no pk
+            "video.video": [],
+        }).encode("utf-8")
+        upload = self.stage(
+            allow_unverified=True, db_export=db_export,
+            manifest_overrides={'institutions': ['cmd-hosp'], 'date_filter': self.DATE_FILTER},
+        )
+        call_command('validate_restore_upload', str(upload.id))
+        upload = RestoreUpload.objects.get(pk=upload.pk)
+        self.assertEqual(upload.status, RestoreUploadStatus.FAILED)
+        self.assertNotEqual(upload.status, RestoreUploadStatus.VALIDATED)
+        self.assertNotEqual(upload.status, RestoreUploadStatus.REJECTED)
+        self.assertIsNone(upload.match_summary)
+        self.assertIn('no integer primary key', upload.error_message)
+        self.assertFalse(get_upload_path(upload).exists())

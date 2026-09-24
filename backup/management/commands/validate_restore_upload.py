@@ -131,8 +131,10 @@ class Command(BaseCommand):
         upload.authenticity = result.authenticity
         upload.source_job_id = result.summary['source_job_id']
         upload.manifest_summary = result.summary
+        upload.match_summary = result.match_summary
         _save_terminal(upload, [
-            'status', 'progress_pct', 'authenticity', 'source_job_id', 'manifest_summary', 'updated_at',
+            'status', 'progress_pct', 'authenticity', 'source_job_id', 'manifest_summary', 'match_summary',
+            'updated_at',
         ])
         self.stdout.write(self.style.SUCCESS(
             f"RestoreUpload {upload.id}: validated (authenticity={result.authenticity})"

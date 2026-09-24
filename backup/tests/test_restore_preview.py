@@ -67,12 +67,30 @@ class PreviewTestBase(RestoreViewTestBase):
         base.update(overrides)
         return base
 
-    def validated(self, authenticity=RestoreAuthenticity.VERIFIED, user=None, summary=None, **overrides):
+    def validated(self, authenticity=RestoreAuthenticity.VERIFIED, user=None, summary=None, match_summary=None,
+                  **overrides):
         return self.make_upload(
             user=user, status=RestoreUploadStatus.VALIDATED, progress_pct=100, authenticity=authenticity,
             source_job_id=5, archive_sha256=SHA, size_bytes=STAGED_SIZE,
             manifest_summary=summary if summary is not None else self.summary(**overrides),
+            match_summary=match_summary,
         )
+
+    def match_summary(self, **overrides):
+        base = {
+            'institution_slug': self.inst.slug, 'target_institution_id': self.inst.id,
+            'skip': [{
+                'archive_pk': 1, 'matched_fields': ['bht'], 'identifiers': {'bht': 'BHT-SKIP-1'},
+                'existing_patient_ids': [999],
+            }],
+            'import': [{'archive_pk': 2, 'matched_fields': [], 'identifiers': {'nnc_no': 'NNC-IMPORT-2'}}],
+            'excluded': [
+                {'archive_pk': 3, 'matched_fields': ['pin'], 'identifiers': {'pin': 'PIN-EXCL-3'},
+                 'reason': 'ambiguous-conflict', 'existing_patient_ids': [998, 997]},
+            ],
+        }
+        base.update(overrides)
+        return base
 
     def age(self, upload, minutes):
         RestoreUpload.objects.filter(pk=upload.pk).update(updated_at=timezone.now() - timedelta(minutes=minutes))
@@ -200,6 +218,131 @@ class BuildPreviewTest(PreviewTestBase):
         self.assertEqual(set(m['archive_count'] for m in preview['models']), {0})
 
 
+class DateScopeMatchPreviewTest(PreviewTestBase):
+    def test_match_summary_present_lifts_the_date_scoped_block(self):
+        upload = self.validated(
+            date_filter={'applied': True, 'start': '2026-01-01', 'end': None},
+            match_summary=self.match_summary(),
+        )
+        preview = restore_preview.build_preview(upload)
+        self.assertEqual(preview['block_reasons'], [])
+        self.assertFalse(preview['blocked'])
+        self.assertEqual(preview['date_scope_match'], self.match_summary())
+
+    def test_multi_scope_date_scoped_without_match_summary_uses_single_institution_wording(self):
+        upload = self.validated(
+            scope_type='multi', date_filter={'applied': True, 'start': '2026-01-01', 'end': None},
+        )
+        preview = restore_preview.build_preview(upload)
+        self.assertIsNone(preview['date_scope_match'])
+        self.assertEqual(len(preview['block_reasons']), 1)
+        self.assertIn('only supported for a single-institution archive yet', preview['block_reasons'][0])
+
+    def test_system_scope_date_scoped_without_match_summary_uses_single_institution_wording(self):
+        upload = self.validated(
+            scope_type='system', date_filter={'applied': True, 'start': '2026-01-01', 'end': None},
+        )
+        preview = restore_preview.build_preview(upload)
+        self.assertIsNone(preview['date_scope_match'])
+        self.assertIn('only supported for a single-institution archive yet', preview['block_reasons'][0])
+
+    def test_single_scope_date_scoped_without_match_summary_says_to_cancel_and_upload_again(self):
+        # e.g. an archive validated before Story 2.4 shipped -- still blocked, not crashed.
+        upload = self.validated(date_filter={'applied': True, 'start': '2026-01-01', 'end': None})
+        preview = restore_preview.build_preview(upload)
+        self.assertIsNone(preview['date_scope_match'])
+        self.assertEqual(len(preview['block_reasons']), 1)
+        reason = preview['block_reasons'][0]
+        self.assertIn('validated before date-scoped matching existed', reason)
+        self.assertIn('no computed match', reason)
+        self.assertIn('Cancel this upload and upload the archive again', reason)
+        self.assertNotIn('not available yet', reason)
+        self.assertNotIn('only supported for a single-institution archive', reason)
+
+    def test_missing_institution_still_blocks_even_with_a_computed_match(self):
+        upload = self.validated(
+            institutions=['ghost'],
+            date_filter={'applied': True, 'start': '2026-01-01', 'end': None},
+            match_summary=self.match_summary(institution_slug='ghost', target_institution_id=None),
+        )
+        preview = restore_preview.build_preview(upload)
+        self.assertIsNotNone(preview['date_scope_match'])
+        self.assertTrue(preview['blocked'])
+        self.assertEqual(preview['block_reasons'], [
+            "These institutions named by the archive do not exist on this system: ghost. "
+            "A restore never creates institutions and never restores only part of an archive.",
+        ])
+
+    def test_non_date_scoped_upload_ignores_a_stray_match_summary(self):
+        upload = self.validated(match_summary=self.match_summary())
+        preview = restore_preview.build_preview(upload)
+        self.assertIsNone(preview['date_scope_match'])
+
+    def date_scoped(self, match_summary, **overrides):
+        overrides.setdefault('date_filter', {'applied': True, 'start': '2026-01-01', 'end': None})
+        return self.validated(match_summary=match_summary, **overrides)
+
+    def test_incomplete_match_summary_does_not_lift_the_block(self):
+        base = self.match_summary()
+        unusable = {
+            'empty dict': {},
+            'missing skip': {k: v for k, v in base.items() if k != 'skip'},
+            'missing import': {k: v for k, v in base.items() if k != 'import'},
+            'missing excluded': {k: v for k, v in base.items() if k != 'excluded'},
+            'skip not a list': {**base, 'skip': {'archive_pk': 1}},
+            'import is None': {**base, 'import': None},
+            'excluded is a string': {**base, 'excluded': 'none'},
+            'no institution slug': {k: v for k, v in base.items() if k != 'institution_slug'},
+        }
+        for label, match_summary in unusable.items():
+            with self.subTest(label):
+                preview = restore_preview.build_preview(self.date_scoped(match_summary))
+                self.assertIsNone(preview['date_scope_match'])
+                self.assertTrue(preview['blocked'])
+                self.assertEqual(len(preview['block_reasons']), 1)
+                self.assertIn('Cancel this upload and upload the archive again', preview['block_reasons'][0])
+                self.assertIsNone(restore_preview._snapshot(preview)['date_scope_match'])
+
+    def test_match_summary_for_a_different_institution_slug_does_not_lift_the_block(self):
+        preview = restore_preview.build_preview(
+            self.date_scoped(self.match_summary(institution_slug='some-other-hosp')),
+        )
+        self.assertIsNone(preview['date_scope_match'])
+        self.assertTrue(preview['blocked'])
+        self.assertIn('Cancel this upload and upload the archive again', preview['block_reasons'][0])
+
+    def test_stray_match_summary_on_a_multi_or_system_scope_archive_is_ignored(self):
+        for scope in ('multi', 'system'):
+            with self.subTest(scope=scope):
+                preview = restore_preview.build_preview(self.date_scoped(self.match_summary(), scope_type=scope))
+                self.assertIsNone(preview['date_scope_match'])
+                self.assertEqual(len(preview['block_reasons']), 1)
+                self.assertIn('only supported for a single-institution archive yet', preview['block_reasons'][0])
+                self.assertIsNone(restore_preview._snapshot(preview)['date_scope_match'])
+
+    def test_single_scope_naming_two_institutions_needs_exactly_one(self):
+        other = Institution.objects.create(name='Other', slug='other', created_by=self.superadmin)
+        upload = self.date_scoped(
+            self.match_summary(), scope_type='single', institutions=[self.inst.slug, other.slug],
+        )
+        preview = restore_preview.build_preview(upload)
+        self.assertIsNone(preview['date_scope_match'])
+        self.assertEqual(len(preview['block_reasons']), 1)
+        self.assertIn('must name exactly one institution', preview['block_reasons'][0])
+        self.assertTrue(preview['blocked'])
+
+    def test_malformed_match_summary_does_not_crash(self):
+        upload = self.make_upload(
+            status=RestoreUploadStatus.VALIDATED, progress_pct=100, authenticity=RestoreAuthenticity.VERIFIED,
+            source_job_id=5, archive_sha256=SHA, size_bytes=STAGED_SIZE,
+            manifest_summary=self.summary(date_filter={'applied': True, 'start': '2026-01-01', 'end': None}),
+            match_summary=['not', 'a', 'dict'],
+        )
+        preview = restore_preview.build_preview(upload)
+        self.assertIsNone(preview['date_scope_match'])
+        self.assertTrue(preview['blocked'])
+
+
 class DigestTest(PreviewTestBase):
     def digest(self, upload):
         return restore_preview.build_preview(upload)['digest']
@@ -251,6 +394,17 @@ class DigestTest(PreviewTestBase):
         Institution.objects.create(name='Ghost', slug='ghost', created_by=self.superadmin)
         self.assertNotEqual(self.digest(ghost_upload), before)
 
+    def test_sensitive_to_a_changed_match_summary(self):
+        date_filter = {'applied': True, 'start': '2026-01-01', 'end': None}
+        base_upload = self.validated(date_filter=date_filter, match_summary=self.match_summary())
+        base = self.digest(base_upload)
+
+        changed_upload = self.validated(date_filter=date_filter, match_summary=self.match_summary(skip=[]))
+        self.assertNotEqual(self.digest(changed_upload), base)
+
+        none_upload = self.validated(date_filter=date_filter)
+        self.assertNotEqual(self.digest(none_upload), base)
+
 
 # --------------------------------------------------------------------------
 # Service: confirm / cancel
@@ -294,6 +448,15 @@ class ConfirmServiceTest(PreviewTestBase):
         self.assertIsNone(upload.confirmed_snapshot)
         self.assertIsNone(upload.confirmed_at)
         self.assertIsNone(upload.confirmed_by)
+
+    def test_snapshot_carries_the_locked_in_date_scope_match_partition(self):
+        summary = self.match_summary()
+        upload = self.validated(
+            date_filter={'applied': True, 'start': '2026-01-01', 'end': None}, match_summary=summary,
+        )
+        self.assertTrue(self.confirm(upload).ok)
+        upload.refresh_from_db()
+        self.assertEqual(upload.confirmed_snapshot['date_scope_match'], summary)
 
     def test_snapshot_records_versioned_hand_off_contract(self):
         upload = self.validated()
@@ -656,6 +819,90 @@ class PreviewViewTest(PreviewTestBase):
         self.assertContains(response, '2026-01-01')
         self.assertContains(response, 'date-scoped')
         self.assertNotContains(response, self.url_for('confirm', upload))
+
+    def test_multi_scope_date_scoped_archive_shows_the_single_institution_wording(self):
+        upload = self.validated(
+            scope_type='multi', date_filter={'applied': True, 'start': '2026-01-01', 'end': None},
+        )
+        response = self.get_preview(upload)
+        self.assertContains(response, 'only supported for a single-institution archive yet')
+        self.assertNotContains(response, self.url_for('confirm', upload))
+
+    def test_date_scoped_archive_with_a_computed_match_renders_the_partition_and_offers_confirm(self):
+        upload = self.validated(
+            date_filter={'applied': True, 'start': '2026-01-01', 'end': None},
+            match_summary=self.match_summary(),
+        )
+        response = self.get_preview(upload)
+        self.assertContains(response, 'Date-scoped match preview')
+        self.assertContains(response, 'Import: 1')
+        self.assertContains(response, 'Skip: 1')
+        self.assertContains(response, 'Excluded: 1')
+        self.assertContains(response, '#1')  # skip entry
+        self.assertContains(response, '#2')  # import entry
+        self.assertContains(response, '#3')  # excluded entry
+        # identifier values for every entry
+        self.assertContains(response, 'BHT-SKIP-1')
+        self.assertContains(response, 'NNC-IMPORT-2')
+        self.assertContains(response, 'PIN-EXCL-3')
+        # readable reason text, never the raw code, and no project-management reference
+        self.assertContains(
+            response,
+            'Ambiguous: matches more than one existing patient, or another archived patient matches the same one',
+        )
+        self.assertNotContains(response, 'ambiguous-conflict')
+        self.assertNotContains(response, 'Story 2.5')
+        self.assertContains(response, 'applied in a later step')
+        self.assertContains(response, 'Confirm restore')
+        self.assertNotContains(response, 'This archive cannot be confirmed')
+        self.assertContains(response, self.url_for('confirm', upload))
+
+    def test_missing_institution_partition_shows_readable_reason(self):
+        excluded = [
+            {'archive_pk': 7, 'matched_fields': [], 'identifiers': {'bht': 'BHT-GHOST-7'},
+             'reason': 'missing-institution', 'existing_patient_ids': []},
+        ]
+        upload = self.validated(
+            institutions=['ghost-hosp'], date_filter={'applied': True, 'start': '2026-01-01', 'end': None},
+            match_summary=self.match_summary(
+                institution_slug='ghost-hosp', target_institution_id=None, skip=[], excluded=excluded,
+                **{'import': []},
+            ),
+        )
+        response = self.get_preview(upload)
+        self.assertContains(response, 'BHT-GHOST-7')
+        self.assertContains(response, "This archive's institution does not exist on this system")
+        self.assertNotContains(response, 'missing-institution')
+        self.assertNotContains(response, self.url_for('confirm', upload))
+
+    def test_long_lists_are_capped_at_200_rows_with_an_and_n_more_row(self):
+        def entries(prefix, count, **extra):
+            return [
+                {'archive_pk': 1000 + i, 'matched_fields': [], 'identifiers': {'bht': f'{prefix}-{i:04d}'}, **extra}
+                for i in range(count)
+            ]
+        upload = self.validated(
+            date_filter={'applied': True, 'start': '2026-01-01', 'end': None},
+            match_summary=self.match_summary(
+                skip=entries('SKIPPED', 205, existing_patient_ids=[1]),
+                excluded=entries('EXCLUDED', 201, reason='ambiguous-conflict', existing_patient_ids=[1, 2]),
+                **{'import': entries('IMPORTED', 200)},
+            ),
+        )
+        response = self.get_preview(upload)
+        self.assertContains(response, 'Import: 200')
+        self.assertContains(response, 'Skip: 205')
+        self.assertContains(response, 'Excluded: 201')
+        # skip: first 200 shown, the 201st (index 200) is not; "... and 5 more"
+        self.assertContains(response, 'SKIPPED-0199')
+        self.assertNotContains(response, 'SKIPPED-0200')
+        self.assertContains(response, '... and 5 more to skip')
+        self.assertContains(response, 'EXCLUDED-0199')
+        self.assertNotContains(response, 'EXCLUDED-0200')
+        self.assertContains(response, '... and 1 more excluded')
+        # exactly 200 imports: all shown, no "more" row
+        self.assertContains(response, 'IMPORTED-0199')
+        self.assertNotContains(response, 'more to import')
 
     def test_not_previewable_statuses_redirect_to_status_with_a_message(self):
         for status in (

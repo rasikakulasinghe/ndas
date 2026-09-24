@@ -27,6 +27,7 @@ import struct
 import zipfile
 import zlib
 from dataclasses import dataclass, field
+from typing import Optional
 
 from django.conf import settings
 from django.db import transaction
@@ -67,6 +68,10 @@ MAX_SHORT_TEXT = 255
 MAX_INSTITUTIONS = 1000
 MAX_RECORD_COUNT_KEYS = 100
 MAX_MODEL_LABEL_LENGTH = 100
+
+# Stage 6 (Story 2.4): identifier values per `__in` lookup, so a large archive
+# never builds one enormous query.
+IDENTIFIER_LOOKUP_CHUNK_SIZE = 500
 
 _DRIVE_LETTER_RE = re.compile(r'^[A-Za-z]:')
 _CONTROL_CHARS_RE = re.compile(r'[\x00-\x1f\x7f]')
@@ -110,6 +115,7 @@ class RestoreRejection(Exception):
 class ValidationResult:
     authenticity: str
     summary: dict = field(default_factory=dict)
+    match_summary: Optional[dict] = None
 
 
 def _clip(value, n=120):
@@ -542,6 +548,16 @@ def _verify_file_checksums(zf, manifest, progress_callback):
         _report()
 
 
+def _is_date_scoped(date_filter):
+    """Whether a manifest `date_filter` marks a date-scoped archive. A bound
+    set without `applied` still counts -- the same normalisation
+    `restore_preview.build_preview` uses, so Stage 6 and the preview always
+    agree on which archives are date-scoped."""
+    if not isinstance(date_filter, dict):
+        return False
+    return bool(date_filter.get('applied') or date_filter.get('start') or date_filter.get('end'))
+
+
 def _manifest_summary(manifest):
     date_filter = manifest['date_filter']
     return {
@@ -570,6 +586,13 @@ def validate_restore_archive(archive_path, archive_sha256, allow_unverified=Fals
 
     `progress_callback(pct)` is called with an int in 0..99 while the
     per-file stage streams the archive.
+
+    Story 2.4: for a single-institution, date-scoped archive (`applied`, or
+    either date bound set), a sixth stage
+    (`_compute_date_scope_match`) then streams the archive's `patients.patient`
+    records once and returns the computed `match_summary` alongside `summary`.
+    A multi/system-scoped or non-date-scoped archive gets no `match_summary`
+    (left `None`); nothing here applies, deletes or loads any domain data.
     """
     try:
         zf = zipfile.ZipFile(archive_path)
@@ -582,5 +605,237 @@ def validate_restore_archive(archive_path, archive_sha256, allow_unverified=Fals
         _check_schema(manifest)
         authenticity = _check_origin(manifest, archive_sha256, allow_unverified)
         _verify_file_checksums(zf, manifest, progress_callback)
+        match_summary = None
+        if _is_date_scoped(manifest['date_filter']) and manifest['scope_type'] == 'single':
+            match_summary = _compute_date_scope_match(zf, manifest)
 
-    return ValidationResult(authenticity=authenticity, summary=_manifest_summary(manifest))
+    return ValidationResult(
+        authenticity=authenticity, summary=_manifest_summary(manifest), match_summary=match_summary,
+    )
+
+
+# --------------------------------------------------------------------------
+# Stage 6 -- date-scoped match (Story 2.4)
+# --------------------------------------------------------------------------
+
+def _extract_patient_identity(record, identifier_fields):
+    """Validate one `patients.patient` record's shape and return
+    `(archive_pk, populated_identifiers)`; `populated_identifiers` maps
+    identifier field name -> value for every non-empty identifier the record
+    carries (a missing, null or empty-string identifier is simply not
+    populated). Raises `ExportFormatError` (not `RestoreRejection`: a
+    malformed record here is an unexpected failure, not a rejection) on a
+    malformed record, including a non-empty identifier that is not text -- the
+    same outcome (`failed`) as any other unexpected validation error."""
+    from backup.export_stream import ExportFormatError
+
+    if not isinstance(record, dict):
+        raise ExportFormatError("A patients.patient record in db_export.json is not an object")
+    pk = record.get('pk')
+    if isinstance(pk, bool) or not isinstance(pk, int):
+        raise ExportFormatError("A patients.patient record in db_export.json has no integer primary key")
+    if record.get('model') != 'patients.patient':
+        raise ExportFormatError(
+            f"Patient {pk} in db_export.json is labelled as model '{_clip(record.get('model'), 60)}'"
+        )
+    fields = record.get('fields')
+    if not isinstance(fields, dict):
+        raise ExportFormatError(f"Patient {pk} in db_export.json has no field values")
+    populated = {}
+    for name in identifier_fields:
+        value = fields.get(name)
+        if value is None or value == '':
+            continue
+        if not isinstance(value, str):
+            raise ExportFormatError(f"Patient {pk} in db_export.json has a {name} value that is not text")
+        populated[name] = value
+    return pk, populated
+
+
+def _check_archive_patient_uniqueness(records, identifier_fields):
+    """Refuse an archive whose patients collide with each other: the same
+    archive pk twice, or the same non-empty identifier value on two archived
+    patients (each identifier is globally unique, so such an archive could not
+    be restored anyway). Messages mirror `restore_apply.preflight`."""
+    from backup.export_stream import ExportFormatError
+
+    seen_pks = set()
+    seen_values = {name: set() for name in identifier_fields}
+    for pk, populated in records:
+        if pk in seen_pks:
+            raise ExportFormatError(f"Patient {pk} appears more than once in db_export.json.")
+        seen_pks.add(pk)
+        for name, value in populated.items():
+            if value in seen_values[name]:
+                raise ExportFormatError(
+                    f"The patient identifier {name} '{_clip(value, 40)}' appears on more than one patient in the archive."
+                )
+            seen_values[name].add(value)
+
+
+def _match_patients_against_target(records, target, identifier_fields):
+    """
+    The matching decision for every archived patient in `records` (a list of
+    `(archive_pk, populated_identifiers)`) against every patient on this
+    system, `Patient.objects.all_institutions()`. The five identifiers are
+    globally unique, so a match on ANY institution's patient (including one
+    with no institution) is an existing patient; `target` (the archive's
+    institution) does not narrow the lookup and is accepted only so the
+    caller's signature stays explicit about which institution was resolved.
+
+    For each populated identifier field, the archive's values are looked up in
+    chunks of `IDENTIFIER_LOOKUP_CHUNK_SIZE` (`__in`), so the whole pass costs
+    a handful of queries however many patients are in the archive. Per
+    archived patient: any populated field whose value equals an existing
+    patient's -> that existing patient is "matched"; more than one distinct
+    existing patient matched by the SAME archived patient -> excluded
+    (self-conflict); otherwise a single matched existing patient -> a
+    provisional skip. A second, in-memory pass then excludes every provisional
+    skip whose matched existing patient was ALSO matched by another archived
+    patient (a shared-match conflict) -- both/all of them. No fields matched
+    (including a patient with none of the five fields set) -> import.
+
+    Returns `{'skip': [...], 'import': [...], 'excluded': [...]}`; every
+    archived patient appears in exactly one of the three lists, and every
+    entry carries the archived patient's populated `identifiers`.
+    """
+    from patients.models import Patient
+
+    order = {pk: index for index, (pk, _populated) in enumerate(records)}
+    identifiers = {pk: dict(populated) for pk, populated in records}
+
+    value_to_existing_pks = {}
+    for field in identifier_fields:
+        values = sorted({populated[field] for _pk, populated in records if field in populated})
+        mapping = {}
+        for start in range(0, len(values), IDENTIFIER_LOOKUP_CHUNK_SIZE):
+            chunk = values[start:start + IDENTIFIER_LOOKUP_CHUNK_SIZE]
+            rows = Patient.objects.all_institutions().filter(
+                **{f'{field}__in': chunk},
+            ).values_list('pk', field)
+            for existing_pk, value in rows:
+                mapping.setdefault(value, set()).add(existing_pk)
+        value_to_existing_pks[field] = mapping
+
+    import_list = []
+    self_conflicted = {}   # archive_pk -> {'matched_fields': set, 'existing_pks': set}
+    provisional_skip = {}  # archive_pk -> {'matched_fields': set, 'existing_pks': {one pk}}
+
+    for pk, populated in records:
+        matched_fields = set()
+        existing_pks = set()
+        for field, value in populated.items():
+            hit = value_to_existing_pks[field].get(value)
+            if hit:
+                matched_fields.add(field)
+                existing_pks |= hit
+
+        if not existing_pks:
+            import_list.append({'archive_pk': pk, 'matched_fields': [], 'identifiers': identifiers[pk]})
+        elif len(existing_pks) > 1:
+            self_conflicted[pk] = {'matched_fields': matched_fields, 'existing_pks': existing_pks}
+        else:
+            provisional_skip[pk] = {'matched_fields': matched_fields, 'existing_pks': existing_pks}
+
+    claims = {}  # existing_pk -> [archive_pk, ...] of every provisional skip that landed on it
+    for pk, info in provisional_skip.items():
+        (existing_pk,) = info['existing_pks']
+        claims.setdefault(existing_pk, []).append(pk)
+    shared_conflict_pks = {pk for pks in claims.values() if len(pks) > 1 for pk in pks}
+
+    skip_list = []
+    excluded_list = []
+    for pk, info in self_conflicted.items():
+        excluded_list.append({
+            'archive_pk': pk, 'matched_fields': sorted(info['matched_fields']),
+            'identifiers': identifiers[pk],
+            'reason': 'ambiguous-conflict', 'existing_patient_ids': sorted(info['existing_pks']),
+        })
+    for pk, info in provisional_skip.items():
+        entry_base = {
+            'archive_pk': pk, 'matched_fields': sorted(info['matched_fields']), 'identifiers': identifiers[pk],
+        }
+        if pk in shared_conflict_pks:
+            excluded_list.append({
+                **entry_base, 'reason': 'ambiguous-conflict',
+                'existing_patient_ids': sorted(info['existing_pks']),
+            })
+        else:
+            skip_list.append({**entry_base, 'existing_patient_ids': sorted(info['existing_pks'])})
+
+    import_list.sort(key=lambda e: order[e['archive_pk']])
+    skip_list.sort(key=lambda e: order[e['archive_pk']])
+    excluded_list.sort(key=lambda e: order[e['archive_pk']])
+    return {'skip': skip_list, 'import': import_list, 'excluded': excluded_list}
+
+
+def _compute_date_scope_match(zf, manifest):
+    """
+    Stage 6 (Story 2.4). Only called for a single-institution, date-scoped
+    archive. Resolves the archive's one institution slug to a target
+    `Institution`; if it does not exist here, every archived patient is
+    excluded (`missing-institution`) with no further matching attempted.
+    Otherwise streams `patients.patient` from `db_export.json` once (the
+    shared `export_stream` reader, skipping every other model's records) and
+    matches each archived patient's populated identifier fields against every
+    existing patient on this system (identifiers are globally unique).
+
+    An archive whose `patients.patient` records collide with each other (the
+    key listed twice, a repeated pk, or one identifier value on two archived
+    patients) is refused with `ExportFormatError`.
+
+    Returns the `match_summary` dict stored on the upload:
+    `{institution_slug, target_institution_id, skip, import, excluded}`.
+    Raises on a malformed record (an unexpected error for the caller to
+    record as `failed`, per Stage 6's own contract -- never a `RestoreRejection`).
+    """
+    from django.apps import apps
+
+    from backup.export_stream import START, ExportFormatError, iter_export_records
+    from backup.restore_apply import PATIENT_IDENTIFIER_FIELDS, PATIENT_KEY
+    from backup.restore_preview import EXPORT_MODEL_KEYS
+
+    Institution = apps.get_model('institution', 'Institution')
+
+    slugs = manifest.get('institutions')
+    slugs = slugs if isinstance(slugs, list) else []
+    institution_slug = slugs[0] if len(slugs) == 1 and isinstance(slugs[0], str) else None
+    target = Institution.objects.filter(slug=institution_slug).first() if institution_slug else None
+
+    skip_keys = frozenset(EXPORT_MODEL_KEYS) - {PATIENT_KEY}
+    records = []
+    patient_key_starts = 0
+    with zf.open(zf.getinfo(DB_EXPORT_NAME)) as stream:
+        for key, record in iter_export_records(stream, skip_keys=skip_keys):
+            if key != PATIENT_KEY:
+                continue
+            if record is START:
+                patient_key_starts += 1
+                if patient_key_starts > 1:
+                    raise ExportFormatError(
+                        f"db_export.json lists '{PATIENT_KEY}' more than once; "
+                        "the models must follow the export's fixed order."
+                    )
+                continue
+            records.append(_extract_patient_identity(record, PATIENT_IDENTIFIER_FIELDS))
+    _check_archive_patient_uniqueness(records, PATIENT_IDENTIFIER_FIELDS)
+
+    if target is None:
+        partition = {
+            'skip': [], 'import': [],
+            'excluded': [
+                {
+                    'archive_pk': pk, 'matched_fields': [], 'identifiers': dict(populated),
+                    'reason': 'missing-institution', 'existing_patient_ids': [],
+                }
+                for pk, populated in records
+            ],
+        }
+    else:
+        partition = _match_patients_against_target(records, target, PATIENT_IDENTIFIER_FIELDS)
+
+    return {
+        'institution_slug': institution_slug,
+        'target_institution_id': target.id if target else None,
+        **partition,
+    }

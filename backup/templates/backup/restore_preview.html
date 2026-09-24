@@ -86,6 +86,86 @@
             </tbody>
           </table>
 
+          {% if preview.date_filter.applied and preview.date_scope_match %}
+          <h6>Date-scoped match preview</h6>
+          <p class="text-muted small mb-2">
+            Every patient in the archive's institution
+            <code>{{ preview.date_scope_match.institution_slug }}</code> was checked against every
+            existing patient on this system, in any institution, by BHT/NNC/PTC/PC/PIN. This is the
+            final partition: it will not be recomputed when the restore is later applied.
+          </p>
+          <div class="mb-2">
+            <span class="badge badge-primary">Import: {{ preview.date_scope_match.import|length }}</span>
+            <span class="badge badge-secondary ml-1">Skip: {{ preview.date_scope_match.skip|length }}</span>
+            <span class="badge badge-danger ml-1">Excluded: {{ preview.date_scope_match.excluded|length }}</span>
+          </div>
+          {% if preview.date_scope_match.import or preview.date_scope_match.skip or preview.date_scope_match.excluded %}
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Archive patient</th>
+                  <th>Outcome</th>
+                  <th>Identifier(s) in the archive</th>
+                  <th>Matched identifier(s)</th>
+                  <th>Existing patient(s) here</th>
+                  <th>Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for entry in preview.date_scope_match.import|slice:":200" %}
+                <tr>
+                  <td>#{{ entry.archive_pk }}</td>
+                  <td><span class="badge badge-primary">Import</span></td>
+                  <td>{% for name, value in entry.identifiers.items %}{{ name }}: {{ value }}{% if not forloop.last %}, {% endif %}{% empty %}none{% endfor %}</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                </tr>
+                {% endfor %}
+                {% if preview.date_scope_match.import|length > 200 %}
+                <tr><td colspan="6" class="text-muted">... and {{ preview.date_scope_match.import|length|add:"-200" }} more to import</td></tr>
+                {% endif %}
+                {% for entry in preview.date_scope_match.skip|slice:":200" %}
+                <tr>
+                  <td>#{{ entry.archive_pk }}</td>
+                  <td><span class="badge badge-secondary">Skip</span></td>
+                  <td>{% for name, value in entry.identifiers.items %}{{ name }}: {{ value }}{% if not forloop.last %}, {% endif %}{% empty %}none{% endfor %}</td>
+                  <td>{{ entry.matched_fields|join:", " }}</td>
+                  <td>{{ entry.existing_patient_ids|join:", " }}</td>
+                  <td>Already exists on this system</td>
+                </tr>
+                {% endfor %}
+                {% if preview.date_scope_match.skip|length > 200 %}
+                <tr><td colspan="6" class="text-muted">... and {{ preview.date_scope_match.skip|length|add:"-200" }} more to skip</td></tr>
+                {% endif %}
+                {% for entry in preview.date_scope_match.excluded|slice:":200" %}
+                <tr>
+                  <td>#{{ entry.archive_pk }}</td>
+                  <td><span class="badge badge-danger">Excluded</span></td>
+                  <td>{% for name, value in entry.identifiers.items %}{{ name }}: {{ value }}{% if not forloop.last %}, {% endif %}{% empty %}none{% endfor %}</td>
+                  <td>{{ entry.matched_fields|join:", "|default:"-" }}</td>
+                  <td>{{ entry.existing_patient_ids|join:", "|default:"-" }}</td>
+                  <td>
+                    {% if entry.reason == 'ambiguous-conflict' %}Ambiguous: matches more than one existing patient, or another archived patient matches the same one
+                    {% elif entry.reason == 'missing-institution' %}This archive's institution does not exist on this system
+                    {% else %}{{ entry.reason }}{% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+                {% if preview.date_scope_match.excluded|length > 200 %}
+                <tr><td colspan="6" class="text-muted">... and {{ preview.date_scope_match.excluded|length|add:"-200" }} more excluded</td></tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+          {% endif %}
+          <p class="text-muted small mb-0">
+            "Import" patients have no identifier match on this system and would be imported when the
+            restore is applied in a later step; nothing is imported by confirming.
+          </p>
+          {% endif %}
+
           <h6>What a restore would do, per model</h6>
           <div class="table-responsive">
             <table class="table table-sm">

@@ -87,7 +87,7 @@ class Command(BaseCommand):
 
         try:
             result = restore_apply.execute_restore(job, progress_callback=_on_progress)
-        except restore_apply.RestoreError as e:
+        except (restore_apply.RestoreError, restore_apply.ExportFormatError) as e:
             logger.warning("BackupJob %s: restore refused or failed: %s", job.id, e.message)
             self._fail(job, e.message)
             return

@@ -1097,3 +1097,119 @@ class ApplyingCannotBeCancelledTest(RestoreApplyTestBase):
         upload.refresh_from_db()
         self.assertEqual(upload.status, RestoreUploadStatus.APPLIED)
         self.assertFalse(restore_preview.can_cancel(upload))
+
+
+# ---------------------------------------------------------------------------
+# run_restore / apply_restore with an ExportFormatError (Story 2.4 review)
+# ---------------------------------------------------------------------------
+
+class RunRestoreExportFormatErrorTest(RestoreApplyTestBase):
+    def confirmed_upload_with_export(self, db_export, filename='bad.zip'):
+        """A genuinely validated + confirmed upload whose `db_export.json` is
+        `db_export` (validation only hashes it, so a preflight-level defect
+        survives to the run)."""
+        path = self.archive_path(filename)
+        build_archive(
+            path, db_export=json.dumps(db_export).encode('utf-8'),
+            manifest_overrides={'institutions': [self.inst.slug]},
+        )
+        return self.stage_and_confirm(path, allow_unverified=True, filename=filename)
+
+    def assert_failed_with(self, job, upload, expected_text, patient=None, baby_name=None):
+        self.assertEqual(job.status, BackupJobStatus.FAILED)
+        self.assertIn(expected_text, job.error_message)
+        self.assertNotIn('unexpected error', job.error_message)
+        upload.refresh_from_db()
+        self.assertEqual(upload.status, RestoreUploadStatus.CONFIRMED)
+        if patient is not None:
+            patient.refresh_from_db()
+            self.assertEqual(patient.baby_name, baby_name)
+
+    def test_unknown_model_key_fails_the_job_with_the_specific_message(self):
+        patient = self.make_patient(self.inst, baby_name='Untouched', bht='EF-1')
+        upload = self.confirmed_upload_with_export(self.skeleton(**{'some.bogus_model': []}))
+        job = self.run_restore_command(self.start(upload))
+        self.assert_failed_with(job, upload, 'unknown model key', patient, 'Untouched')
+
+    def test_duplicate_pk_fails_the_job_with_the_specific_message(self):
+        patient = self.make_patient(self.inst, baby_name='Untouched', bht='EF-2')
+        upload = self.confirmed_upload_with_export(self.skeleton(**{
+            'patients.patient': [self.patient_record(1, self.inst.id), self.patient_record(1, self.inst.id)],
+        }))
+        job = self.run_restore_command(self.start(upload))
+        self.assert_failed_with(job, upload, 'Patient 1 appears more than once in db_export.json', patient, 'Untouched')
+
+    def test_export_format_error_during_apply_fails_the_job_with_its_message(self):
+        patient = self.make_patient(self.inst, baby_name='Untouched', bht='EF-3')
+        upload = self.build_and_confirm(self.inst)
+        job = self.start(upload)
+        with mock.patch(
+            'backup.restore_apply.apply_restore', side_effect=ExportFormatError('a record was refused at load time'),
+        ):
+            job = self.run_restore_command(job)
+        self.assert_failed_with(job, upload, 'a record was refused at load time', patient, 'Untouched')
+
+    def test_apply_restore_reraises_an_export_format_error_unwrapped(self):
+        upload = self.build_and_confirm(self.inst)
+        job = self.make_job(self.inst)
+        with mock.patch(
+            'backup.restore_apply._load_records', side_effect=ExportFormatError('record refused'),
+        ):
+            with self.assertRaises(ExportFormatError) as cm:
+                restore_apply.apply_restore(upload, job)
+        self.assertEqual(cm.exception.message, 'record refused')
+
+
+# ---------------------------------------------------------------------------
+# A date-scoped upload WITH a match_summary is still not appliable (Story 2.4)
+# ---------------------------------------------------------------------------
+
+class DateScopedWithMatchSummaryStillRefusedTest(RestoreApplyTestBase):
+    def confirmed_date_scoped_upload(self):
+        self.make_patient(self.inst, baby_name='Dated', bht='DS-1')
+        db_export, media, _manifest = self.export_json(self.inst)
+        path = self.rebuild_archive(db_export, media, manifest_overrides={
+            'institutions': [self.inst.slug],
+            'date_filter': {'applied': True, 'start': '2026-01-01', 'end': None},
+        }, filename='dated.zip')
+        sha = sha256_file(path)
+        upload = RestoreUpload.objects.create(
+            uploaded_by=self.user, original_filename='dated.zip', status=RestoreUploadStatus.VALIDATING,
+        )
+        get_upload_dir(upload).mkdir(parents=True, exist_ok=True)
+        shutil.copy(path, get_upload_path(upload))
+        result = restore_validation.validate_restore_archive(get_upload_path(upload), sha, allow_unverified=True)
+        self.assertIsNotNone(result.match_summary)
+        upload.archive_sha256 = sha
+        upload.size_bytes = get_upload_path(upload).stat().st_size
+        upload.status = RestoreUploadStatus.VALIDATED
+        upload.authenticity = result.authenticity
+        upload.source_job_id = result.summary.get('source_job_id')
+        upload.manifest_summary = result.summary
+        upload.match_summary = result.match_summary
+        upload.save()
+
+        preview = restore_preview.build_preview(upload)
+        self.assertFalse(preview['blocked'], preview['block_reasons'])
+        self.assertIsNotNone(preview['date_scope_match'])
+        outcome = restore_preview.confirm_upload(upload.id, self.user, preview['digest'], True)
+        self.assertTrue(outcome.ok, outcome.message)
+        upload.refresh_from_db()
+        self.assertEqual(upload.status, RestoreUploadStatus.CONFIRMED)
+        self.assertIsNotNone(upload.confirmed_snapshot['date_scope_match'])
+        return upload
+
+    def test_start_restore_still_refuses_a_confirmed_date_scoped_upload(self):
+        upload = self.confirmed_date_scoped_upload()
+        outcome = restore_apply.start_restore(upload, self.user, self.inst)
+        self.assertFalse(outcome.ok)
+        self.assertEqual(outcome.code, restore_apply.DATE_SCOPED)
+        upload.refresh_from_db()
+        self.assertEqual(upload.status, RestoreUploadStatus.CONFIRMED)
+        self.assertEqual(BackupJob.objects.filter(job_type=BackupJobType.RESTORE).count(), 0)
+
+    def test_verify_confirmed_still_refuses_a_confirmed_date_scoped_upload(self):
+        upload = self.confirmed_date_scoped_upload()
+        with self.assertRaises(RestoreError) as cm:
+            restore_apply.verify_confirmed(upload)
+        self.assertIn('date-scoped', str(cm.exception))
