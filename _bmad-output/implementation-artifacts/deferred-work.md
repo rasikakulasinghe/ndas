@@ -262,3 +262,19 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-2-4-date-scoped-partial-restore-match-and-preview.md`
   summary: The match partition is deliberately not re-checked between validation and confirm/apply, so a patient added or removed on this system in between is not reflected in the skip/import/excluded lists.
   evidence: Accepted by the spec (Design Notes, "Immutability over live re-matching"; matches the epic's "this partition is final ... including during the apply step"). A patient created after validation whose identifier equals an "import" archived patient would fail Story 2.5's unique constraint at apply time; a patient deleted after validation leaves a stale "skip". Mitigations if this bites: a maximum partition age (re-validate an upload older than N hours) or a cheap re-check at confirm time that refuses when the world moved.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-5-date-scoped-partial-restore-additive-import.md`
+  summary: Stale `running` restore jobs are still not recovered: a process killed mid-import leaves the job `running` and the upload `applying`, and only a re-upload re-classifies the patients that had already committed.
+  evidence: Spec Design Notes (deferred since Story 1.1). `run_restore` writes the terminal state only at the end of `execute_import`; nothing sweeps a `running` restore job whose process died, so its upload cannot be cancelled while `applying`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-5-date-scoped-partial-restore-additive-import.md`
+  summary: Media files already copied for a patient whose later media step failed (or whose process was killed after the patient's commit) are not tracked or cleaned up; a partially copied patient keeps whatever files landed.
+  evidence: `restore_import._import_all` copies each patient's media after its commit and only appends warnings; a missing member or failed copy leaves the imported row pointing at the archived name, and that name may belong to an existing patient's file when the copy was skipped because the target already existed and no fresh name could be found.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-5-date-scoped-partial-restore-additive-import.md`
+  summary: Progress granularity is per patient only: the spool step reports by bytes read and the import step by patients done, so one patient with very large media shows no movement while its files copy.
+  evidence: `restore_import._import_all` calls `report_import(done / total)` once per patient, after that patient's media copy; there is no per-file progress inside a patient.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-5-date-scoped-partial-restore-additive-import.md`
+  summary: An imported patient's media file name can equal a name a LATER upload (or a later backup restore) also wants; the never-overwrite rule then repoints the later row to a fresh name, so imported names are not stable across re-uploads.
+  evidence: `restore_import._place_media` writes under `_fresh_name` when `os.path.lexists(target)`; the rule is per file at copy time, with no reservation of names between uploads. Also: `connection.check_constraints(table_names=...)` runs per patient inside its transaction, which on SQLite scans the whole restored tables each time (O(patients x rows)); PostgreSQL only checks the transaction's deferred constraints.

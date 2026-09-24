@@ -7,7 +7,10 @@ Invoked exclusively by `backup/views.py` as a detached OS subprocess:
 
 Drives a `restore` `BackupJob` through running -> completed|failed by calling
 `backup.restore_apply.execute_restore` (re-verify the staged archive, take the
-pre-restore snapshot, preflight, apply in one transaction, restore media). It
+pre-restore snapshot, preflight, apply in one transaction, restore media) or,
+for a date-scoped archive (Story 2.5, chosen from the confirmed snapshot's
+`date_filter.applied`), `backup.restore_import.execute_import` (the additive,
+per-patient import). It
 is the only writer of the job's status after launch and writes its terminal
 state (status + progress) in a single save, then notifies. The job's upload
 becomes `applied` on completion; on any failure it returns to `confirmed`
@@ -18,7 +21,7 @@ import logging
 
 from django.core.management.base import BaseCommand, CommandError
 
-from backup import restore_apply
+from backup import restore_apply, restore_import
 from backup.models import BackupJob
 from backup.notifications import notify_job_finished
 from backup.restore_validation import _clip
@@ -85,8 +88,15 @@ class Command(BaseCommand):
             except Exception:
                 logger.exception("BackupJob %s: failed to persist progress update.", job.id)
 
+        # The branch is chosen solely by the confirmed snapshot's date filter.
+        date_scoped = job.restore_upload is not None and restore_apply.is_date_scoped(
+            job.restore_upload.confirmed_snapshot
+        )
         try:
-            result = restore_apply.execute_restore(job, progress_callback=_on_progress)
+            if date_scoped:
+                result = restore_import.execute_import(job, progress_callback=_on_progress)
+            else:
+                result = restore_apply.execute_restore(job, progress_callback=_on_progress)
         except (restore_apply.RestoreError, restore_apply.ExportFormatError) as e:
             logger.warning("BackupJob %s: restore refused or failed: %s", job.id, e.message)
             self._fail(job, e.message)
@@ -99,9 +109,16 @@ class Command(BaseCommand):
         # Terminal success state written as one save (status + progress_pct together).
         job.status = BackupJobStatus.COMPLETED
         job.progress_pct = 100
-        job.error_message = restore_apply.format_media_warnings(result.warnings) if result.warnings else ""
+        update_fields = ['status', 'progress_pct', 'error_message', 'updated_at']
+        if date_scoped:
+            # Story 2.5: the per-run record the status page and audit trail read.
+            job.error_message = result.message
+            job.restore_result = result.summary
+            update_fields.append('restore_result')
+        else:
+            job.error_message = restore_apply.format_media_warnings(result.warnings) if result.warnings else ""
         try:
-            job.save(update_fields=['status', 'progress_pct', 'error_message', 'updated_at'])
+            job.save(update_fields=update_fields)
         except Exception:
             logger.exception("BackupJob %s: restore committed but its terminal state could not be saved.", job.id)
         if job.restore_upload is not None:

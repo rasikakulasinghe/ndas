@@ -181,6 +181,17 @@ class BackupJob(TimeStampedModel, UserTrackingMixin):
         ),
     )
 
+    restore_result = models.JSONField(
+        null=True,
+        blank=True,
+        verbose_name=_("Restore Result"),
+        help_text=_(
+            "Story 2.5: the per-run record of a date-scoped (additive) restore -- "
+            "{mode, imported, failed: [{archive_pk, reason}], skipped, excluded, media_warnings}. "
+            "Null for every other job, including a full-scope restore."
+        ),
+    )
+
     class Meta:
         verbose_name = _("Backup Job")
         verbose_name_plural = _("Backup Jobs")

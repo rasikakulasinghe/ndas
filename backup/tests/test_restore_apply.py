@@ -232,6 +232,7 @@ class RestoreApplyTestBase(IsolatedBaseDirMixin, TestCase):
         upload.authenticity = result.authenticity
         upload.source_job_id = result.summary.get('source_job_id')
         upload.manifest_summary = result.summary
+        upload.match_summary = result.match_summary  # Story 2.4: None for a full-scope archive
         upload.save()
         preview = restore_preview.build_preview(upload)
         assert not preview['blocked'], preview['block_reasons']
@@ -1161,10 +1162,11 @@ class RunRestoreExportFormatErrorTest(RestoreApplyTestBase):
 
 
 # ---------------------------------------------------------------------------
-# A date-scoped upload WITH a match_summary is still not appliable (Story 2.4)
+# Story 2.5: a date-scoped upload with a usable match now starts and verifies;
+# one without still refuses (supersedes Story 2.4's "still refused" tests)
 # ---------------------------------------------------------------------------
 
-class DateScopedWithMatchSummaryStillRefusedTest(RestoreApplyTestBase):
+class DateScopedStartAndVerifyTest(RestoreApplyTestBase):
     def confirmed_date_scoped_upload(self):
         self.make_patient(self.inst, baby_name='Dated', bht='DS-1')
         db_export, media, _manifest = self.export_json(self.inst)
@@ -1172,44 +1174,59 @@ class DateScopedWithMatchSummaryStillRefusedTest(RestoreApplyTestBase):
             'institutions': [self.inst.slug],
             'date_filter': {'applied': True, 'start': '2026-01-01', 'end': None},
         }, filename='dated.zip')
-        sha = sha256_file(path)
-        upload = RestoreUpload.objects.create(
-            uploaded_by=self.user, original_filename='dated.zip', status=RestoreUploadStatus.VALIDATING,
-        )
-        get_upload_dir(upload).mkdir(parents=True, exist_ok=True)
-        shutil.copy(path, get_upload_path(upload))
-        result = restore_validation.validate_restore_archive(get_upload_path(upload), sha, allow_unverified=True)
-        self.assertIsNotNone(result.match_summary)
-        upload.archive_sha256 = sha
-        upload.size_bytes = get_upload_path(upload).stat().st_size
-        upload.status = RestoreUploadStatus.VALIDATED
-        upload.authenticity = result.authenticity
-        upload.source_job_id = result.summary.get('source_job_id')
-        upload.manifest_summary = result.summary
-        upload.match_summary = result.match_summary
-        upload.save()
-
-        preview = restore_preview.build_preview(upload)
-        self.assertFalse(preview['blocked'], preview['block_reasons'])
-        self.assertIsNotNone(preview['date_scope_match'])
-        outcome = restore_preview.confirm_upload(upload.id, self.user, preview['digest'], True)
-        self.assertTrue(outcome.ok, outcome.message)
-        upload.refresh_from_db()
-        self.assertEqual(upload.status, RestoreUploadStatus.CONFIRMED)
+        upload = self.stage_and_confirm(path, allow_unverified=True, filename='dated.zip')
         self.assertIsNotNone(upload.confirmed_snapshot['date_scope_match'])
         return upload
 
-    def test_start_restore_still_refuses_a_confirmed_date_scoped_upload(self):
+    def test_start_restore_starts_a_confirmed_date_scoped_upload_with_a_usable_match(self):
         upload = self.confirmed_date_scoped_upload()
+        outcome = restore_apply.start_restore(upload, self.user, self.inst)
+        self.assertTrue(outcome.ok, outcome.message)
+        upload.refresh_from_db()
+        self.assertEqual(upload.status, RestoreUploadStatus.APPLYING)
+        self.assertEqual(BackupJob.objects.filter(job_type=BackupJobType.RESTORE).count(), 1)
+
+    def test_verify_confirmed_accepts_a_date_scoped_upload_with_a_usable_match(self):
+        upload = self.confirmed_date_scoped_upload()
+        upload.status = RestoreUploadStatus.APPLYING
+        upload.save()
+        restore_apply.verify_confirmed(upload)  # must not raise
+
+    def test_start_restore_still_refuses_a_date_scoped_upload_without_a_usable_match(self):
+        upload = self.confirmed_date_scoped_upload()
+        RestoreUpload.objects.filter(pk=upload.pk).update(match_summary=None)
+        upload.refresh_from_db()
         outcome = restore_apply.start_restore(upload, self.user, self.inst)
         self.assertFalse(outcome.ok)
         self.assertEqual(outcome.code, restore_apply.DATE_SCOPED)
+        self.assertIn('no usable computed match', outcome.message)
         upload.refresh_from_db()
         self.assertEqual(upload.status, RestoreUploadStatus.CONFIRMED)
         self.assertEqual(BackupJob.objects.filter(job_type=BackupJobType.RESTORE).count(), 0)
 
-    def test_verify_confirmed_still_refuses_a_confirmed_date_scoped_upload(self):
+    def test_start_restore_refuses_when_the_confirmation_record_holds_no_match(self):
         upload = self.confirmed_date_scoped_upload()
+        snapshot = dict(upload.confirmed_snapshot)
+        snapshot['date_scope_match'] = None
+        RestoreUpload.objects.filter(pk=upload.pk).update(confirmed_snapshot=snapshot)
+        upload.refresh_from_db()
+        outcome = restore_apply.start_restore(upload, self.user, self.inst)
+        self.assertFalse(outcome.ok)
+        self.assertEqual(outcome.code, restore_apply.DATE_SCOPED)
+        self.assertIn('no match to apply', outcome.message)
+
+    def test_verify_confirmed_refuses_a_date_scoped_upload_without_a_usable_match(self):
+        upload = self.confirmed_date_scoped_upload()
+        RestoreUpload.objects.filter(pk=upload.pk).update(match_summary=None, status=RestoreUploadStatus.APPLYING)
+        upload.refresh_from_db()
         with self.assertRaises(RestoreError) as cm:
             restore_apply.verify_confirmed(upload)
+        self.assertIn('no usable computed match', str(cm.exception))
+
+    def test_full_scope_restore_path_refuses_a_date_scoped_upload(self):
+        upload = self.confirmed_date_scoped_upload()
+        job = self.start(upload)
+        with self.assertRaises(RestoreError) as cm:
+            restore_apply.execute_restore(job)
         self.assertIn('date-scoped', str(cm.exception))
+        self.assertEqual(BackupJob.objects.filter(job_type=BackupJobType.PRE_RESTORE_SNAPSHOT).count(), 0)

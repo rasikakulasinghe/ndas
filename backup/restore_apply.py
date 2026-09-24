@@ -244,6 +244,34 @@ def has_sufficient_restore_disk(scope_arg, system_wide, archive_size):
     return free >= required, estimated, required, free
 
 
+def is_date_scoped(snapshot):
+    """Whether the confirmed snapshot `snapshot` records a date-scoped archive.
+    `run_restore` chooses its branch from this alone."""
+    date_filter = snapshot.get('date_filter') if isinstance(snapshot, dict) else None
+    return bool(isinstance(date_filter, dict) and date_filter.get('applied'))
+
+
+def _date_scoped_problem(preview, snapshot):
+    """Story 2.5: why a date-scoped archive cannot be restored, or None.
+    A full-scope archive is never a problem here. A date-scoped one can be
+    restored only with Story 2.4's usable match, both in the rebuilt preview
+    and carried in the confirmed snapshot (the partition is read from there)."""
+    if not preview['date_filter']['applied']:
+        return None
+    if preview['date_scope_match'] is None:
+        return (
+            "This archive is date-scoped, but it has no usable computed match (only a single-institution "
+            "date-scoped archive whose match was computed can be restored). Cancel this upload and "
+            "upload the archive again."
+        )
+    if not isinstance(snapshot, dict) or not isinstance(snapshot.get('date_scope_match'), dict):
+        return (
+            "This archive is date-scoped, but its confirmation record holds no match to apply. "
+            "Cancel this upload and upload the archive again."
+        )
+    return None
+
+
 def _refuse(user, upload_id, code, message, log_detail=''):
     security_logger.warning(
         "Restore start refused (%s): user=%s upload=%s %s", code, user.username, upload_id, log_detail,
@@ -256,8 +284,9 @@ def start_restore(upload, user, trigger_institution):
     Start `upload`'s restore (the caller has already established that `user`
     owns it). Refused, changing nothing, unless the upload is `confirmed`, its
     facts still hash to the confirmed digest, every institution it names still
-    exists, it is not date-scoped, its staged file is intact, the disk has
-    room and no overlapping job is pending or running.
+    exists, it is either full-scope or date-scoped with a usable match
+    (Story 2.5), its staged file is intact, the disk has room and no
+    overlapping job is pending or running.
 
     On success the `restore` `BackupJob` (pending) is created inside the lock's
     atomic block together with the upload's flip to `applying`, and returned in
@@ -289,11 +318,9 @@ def start_restore(upload, user, trigger_institution):
             "These institutions named by the archive no longer exist on this system: "
             + ", ".join(_clip(slug, 60) for slug in missing) + ". A restore never creates institutions.",
         )
-    if preview['date_filter']['applied']:
-        return _refuse(
-            user, upload.id, DATE_SCOPED,
-            "This archive is date-scoped; only full-scope archives can be restored yet.",
-        )
+    date_scoped_problem = _date_scoped_problem(preview, snapshot)
+    if date_scoped_problem:
+        return _refuse(user, upload.id, DATE_SCOPED, date_scoped_problem)
     if not hmac.compare_digest(str(snapshot['digest']).encode('utf-8'), preview['digest'].encode('ascii')):
         return _refuse(
             user, upload.id, DIGEST_CHANGED,
@@ -480,8 +507,9 @@ def verify_confirmed(upload, progress=None):
             "These institutions named by the archive no longer exist on this system: "
             + ", ".join(_clip(slug, 60) for slug in missing) + "."
         )
-    if preview['date_filter']['applied']:
-        raise RestoreError("This archive is date-scoped; only full-scope archives can be restored yet.")
+    date_scoped_problem = _date_scoped_problem(preview, upload.confirmed_snapshot)
+    if date_scoped_problem:
+        raise RestoreError(date_scoped_problem)
     if not hmac.compare_digest(
         str(upload.confirmed_snapshot['digest']).encode('utf-8'), preview['digest'].encode('ascii'),
     ):
@@ -1048,6 +1076,12 @@ def execute_restore(job, progress_callback=None):
         raise RestoreError("The restore job's upload no longer exists.")
 
     check_upload_ready(upload)
+    if is_date_scoped(upload.confirmed_snapshot):
+        # Story 2.5: `verify_confirmed` now accepts a date-scoped upload, and this
+        # path REPLACES the scope's rows: it must never be reached for one.
+        raise RestoreError(
+            "This archive is date-scoped and must be applied by the additive import, not a full-scope restore."
+        )
     verify_confirmed(upload, progress.span(*REHASH_RANGE))
     progress.report(REHASH_RANGE[1])
 

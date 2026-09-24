@@ -32,6 +32,25 @@ def _summarize(text, limit=_BODY_SUMMARY_MAX):
 
 def _build_restore_content(job):
     """Return (notification_type, title, body) for a terminal restore `job`."""
+    result = job.restore_result if isinstance(job.restore_result, dict) else None
+    if job.status == BackupJobStatus.COMPLETED and result and result.get('mode') == 'date_scoped':
+        # Story 2.5: a date-scoped restore reports its counts.
+        failed = result.get('failed')
+        media = result.get('media_warnings')
+        failed_count = len(failed) if isinstance(failed, list) else 0
+        media_count = len(media) if isinstance(media, list) else 0
+        body = (
+            f"Imported {result.get('imported', 0)}, skipped {result.get('skipped', 0)}, "
+            f"excluded {result.get('excluded', 0)}, failed {failed_count}."
+        )
+        if media_count:
+            body += f" {media_count} media warning(s)."
+        with_warnings = bool(job.error_message or failed_count or media_count)
+        return (
+            NotificationType.RESTORE_COMPLETED,
+            "Restore completed with warnings" if with_warnings else "Restore completed",
+            _summarize(body),
+        )
     if job.status == BackupJobStatus.COMPLETED:
         if job.error_message:
             return (
