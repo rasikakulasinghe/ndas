@@ -310,3 +310,31 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-2-5-date-scoped-partial-restore-additive-import.md`
   summary: String constants such as the `'date_scoped'` mode are duplicated across `restore_import`, `notifications` and `restore_status_partial.html` instead of living in `ndas/custom_codes/choice.py`.
   evidence: `restore_import.MODE_DATE_SCOPED`, the literal `'date_scoped'` in `backup/notifications.py` and in the status template's `restore_result.mode == 'date_scoped'` check must be kept in step by hand; the project rule is that shared choices live in `choice.py`.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-6-restore-audit-trail.md`
+  summary: There is no page or admin list for reviewing restore audits; review is by reading `BackupJob.restore_audit`.
+  evidence: The spec forbids a review page (Epic 3's history lists own that). `BackupJob.restore_audit` and the `django.security.restore` log are the only places the record is visible.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-6-restore-audit-trail.md`
+  summary: A restore job killed mid-run (process killed, machine restart) never gets a `restore_audit` and stays `running`; there is still no stale-job recovery.
+  evidence: `restore_audit.record_and_log` runs only in `run_restore`'s two terminal saves, so a job that never reaches them has neither the record nor the log line.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-6-restore-audit-trail.md`
+  summary: The `security_file` log handler writes only when `DEBUG` is off, so restore denials and audit lines are not written to `logs/security.log` in development.
+  evidence: The handler is skipped when `DEBUG` is on; the tests assert through `assertLogs('django.security.restore')` instead of the file.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-6-restore-audit-trail.md`
+  summary: Epic 3's manual delete and retention pruning must never remove `restore` jobs, or their audit record goes with them.
+  evidence: `restore_audit` lives on the `BackupJob` row (no separate audit table), so deleting a `job_type=restore` job deletes its audit. Cross-story constraint for Stories 3.x.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-6-restore-audit-trail.md`
+  summary: The audit's `patients` map resolves the Story 2.5 pk-mapping item for patients only; the new primary keys of imported child records (videos, assessments, problems) are still not recorded.
+  evidence: `restore_import._import_patient` returns `(new patient pk, media)`; its per-patient `id_maps` for videos and problems are still discarded after the transaction.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-6-restore-audit-trail.md`
+  summary: The audit's `patients` list is unbounded (one pair per imported patient), so an archive with tens of thousands of patients stores a large JSON on the job row.
+  evidence: `restore_audit._counts` copies `ImportResult.patients` whole into `counts['patients']`. Consider a cap plus a total count if such archives are expected.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-6-restore-audit-trail.md`
+  summary: A failed restore's audit carries zero counts even when some were known (a date-scoped run's skipped/excluded counts sit in the confirmed snapshot).
+  evidence: `restore_audit._counts` reads counts only from a finished run's result; `run_restore._fail` passes none.

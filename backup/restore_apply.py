@@ -118,9 +118,12 @@ LOCK_CONFLICT = 'lock_conflict'
 class RestoreError(Exception):
     """A specific, user-presentable reason the restore cannot proceed."""
 
-    def __init__(self, message):
+    def __init__(self, message, audit_message=None):
         super().__init__(message)
         self.message = message
+        # Story 2.6: a value-free variant for the audit record, when `message`
+        # quotes data or a raw exception.
+        self.audit_message = audit_message
 
 
 @dataclass
@@ -145,6 +148,9 @@ class RestoreResult:
     snapshot: object
     warnings: list
     counts: dict
+    # Story 2.6: what `apply_restore` already returned, kept for the audit record.
+    referral_links_cleared: int = 0
+    move_logs_removed: int = 0
 
 
 # --------------------------------------------------------------------------
@@ -568,7 +574,10 @@ def take_snapshot(job, progress=None):
         snapshot.error_message = f"Snapshot export failed: {e}"
         snapshot.save(update_fields=['status', 'progress_pct', 'error_message', 'updated_at'])
         raise RestoreError(
-            f"The pre-restore snapshot (job {snapshot.id}) failed, so nothing was changed: {_clip(e, 200)}"
+            f"The pre-restore snapshot (job {snapshot.id}) failed, so nothing was changed: {_clip(e, 200)}",
+            audit_message=(
+                f"The pre-restore snapshot (job {snapshot.id}) failed, so nothing was changed ({type(e).__name__})."
+            ),
         )
 
     snapshot.status = BackupJobStatus.COMPLETED
@@ -713,7 +722,8 @@ def _check_patient_record(record, target_ids, allow_null_institution, identifier
         if isinstance(value, str) and value:
             if value in seen:
                 raise ExportFormatError(
-                    f"The patient identifier {name} '{_clip(value, 40)}' appears on more than one patient in the archive."
+                    f"The patient identifier {name} '{_clip(value, 40)}' appears on more than one patient in the archive.",
+                    audit_message=f"The patient identifier {name} appears on more than one patient in the archive.",
                 )
             seen.add(value)
 
@@ -754,7 +764,11 @@ def _check_batch(key, batch, plan, m2m_fields, known_refs):
             if clash is not None:
                 raise ExportFormatError(
                     f"The patient identifier {name} '{_clip(clash, 40)}' in the archive already belongs to a "
-                    "patient on this system outside the scope being restored."
+                    "patient on this system outside the scope being restored.",
+                    audit_message=(
+                        f"A patient identifier ({name}) in the archive already belongs to a "
+                        "patient on this system outside the scope being restored."
+                    ),
                 )
 
     for name, related in m2m_fields[key]:
@@ -949,7 +963,10 @@ def apply_restore(upload, job):
     except Exception as e:
         logger.exception("RestoreUpload %s: applying the archive failed and was rolled back.", upload.id)
         raise RestoreError(
-            f"Applying the archive failed and was rolled back, so no data was changed: {_clip(e, 200)}"
+            f"Applying the archive failed and was rolled back, so no data was changed: {_clip(e, 200)}",
+            audit_message=(
+                f"Applying the archive failed and was rolled back, so no data was changed ({type(e).__name__})."
+            ),
         )
     return loaded, nulled, removed
 
@@ -1104,4 +1121,7 @@ def execute_restore(job, progress_callback=None):
         warnings.append(
             f"the pre-restore snapshot (job {snapshot.id}) skipped {len(snapshot_skipped)} media file(s)"
         )
-    return RestoreResult(snapshot=snapshot, warnings=warnings, counts=counts)
+    return RestoreResult(
+        snapshot=snapshot, warnings=warnings, counts=counts,
+        referral_links_cleared=nulled, move_logs_removed=removed,
+    )

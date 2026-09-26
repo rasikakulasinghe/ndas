@@ -125,6 +125,7 @@ class ImportResult:
     summary: dict                                # the job's `restore_result`
     warnings: list = field(default_factory=list)  # user-presentable, for the job message
     message: str = ''                             # '' when nothing needs the user's attention
+    patients: list = field(default_factory=list)  # Story 2.6: [[archive pk, new pk], ...] per committed patient
 
 
 # --------------------------------------------------------------------------
@@ -368,8 +369,8 @@ def _mapped(id_map, value, what):
 
 def _import_patient(archive_pk, records, ctx):
     """Insert one archive patient and its children in ONE transaction, each row
-    with a fresh primary key. Returns the media to copy after the commit:
-    `[(model key, file field, new pk, archived file name)]`. Raises
+    with a fresh primary key. Returns `(new patient pk, media)`, the media to
+    copy after the commit being `[(model key, file field, new pk, archived file name)]`. Raises
     `ImportFailure` (the transaction rolled back) when this patient's DATA is
     the problem; any other exception (an environment error) propagates after
     the same rollback."""
@@ -433,7 +434,7 @@ def _import_patient(archive_pk, records, ctx):
         raise ImportFailure(_failure_reason(e), detail=f"{type(e).__name__}: {_clip(e, 300)}")
     # Anything else (OperationalError, InterfaceError, OSError, MemoryError...)
     # is about the environment, not this patient: it propagates and aborts the run.
-    return media
+    return new_patient_pk, media
 
 
 # --------------------------------------------------------------------------
@@ -654,6 +655,7 @@ class _Outcome:
     processed: int = 0
     failed: list = field(default_factory=list)
     media_warnings: list = field(default_factory=list)
+    patients: list = field(default_factory=list)   # [archive pk, new pk] per committed patient
     aborted: bool = False
     not_attempted: int = 0
 
@@ -698,7 +700,7 @@ def _import_all(upload, job, target, import_pks, progress, identifiers=None):
             checksums = restore_apply._manifest_checksums(zf)
             for archive_pk in import_pks:
                 try:
-                    media = _import_patient(archive_pk, spool.records_for(archive_pk), ctx)
+                    patient_pk, media = _import_patient(archive_pk, spool.records_for(archive_pk), ctx)
                 except ImportFailure as e:
                     entry = {
                         'archive_pk': archive_pk,
@@ -712,6 +714,7 @@ def _import_all(upload, job, target, import_pks, progress, identifiers=None):
                     )
                 else:
                     outcome.imported += 1
+                    outcome.patients.append([archive_pk, patient_pk])
                     for key, file_field, new_pk, name in media:
                         warning = _place_media(zf, checksums, key, file_field, new_pk, name)
                         if warning:
@@ -768,7 +771,9 @@ def execute_import(job, progress_callback=None):
     if outcome.failed and not outcome.imported:
         raise RestoreError(
             f"None of the {len(outcome.failed)} patient(s) could be imported, so nothing was changed. "
-            + _listed(outcome.failed, format_failure) + "."
+            + _listed(outcome.failed, format_failure) + ".",
+            # The message names the failed patients' identifiers; the audit record must not.
+            audit_message=f"None of the {len(outcome.failed)} patient(s) could be imported, so nothing was changed.",
         )
 
     media_warnings = outcome.media_warnings
@@ -789,7 +794,10 @@ def execute_import(job, progress_callback=None):
         summary['not_attempted'] = outcome.not_attempted
     warnings = [format_failure(entry) for entry in outcome.failed] + list(media_warnings)
     _log_summary(upload, job, summary, aborted=outcome.aborted)
-    return ImportResult(snapshot=snapshot, summary=summary, warnings=warnings, message=format_import_message(summary))
+    return ImportResult(
+        snapshot=snapshot, summary=summary, warnings=warnings, message=format_import_message(summary),
+        patients=outcome.patients,
+    )
 
 
 def _log_summary(upload, job, summary, aborted):

@@ -20,8 +20,9 @@ cancelled.
 import logging
 
 from django.core.management.base import BaseCommand, CommandError
+from django.utils import timezone
 
-from backup import restore_apply, restore_import
+from backup import restore_apply, restore_audit, restore_import
 from backup.models import BackupJob
 from backup.notifications import notify_job_finished
 from backup.restore_validation import _clip
@@ -36,16 +37,26 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('job_id', type=int, help='Primary key of the restore BackupJob to run.')
 
-    def _fail(self, job, message):
-        """Terminal failure: one save, the upload back to `confirmed`, then notify."""
+    def _fail(self, job, message, audit_message=None, date_scoped=False, started_at=None):
+        """Terminal failure: one save, the upload back to `confirmed`, then notify.
+        `audit_message` is the value-free variant of `message` for the audit
+        record (Story 2.6), used when `message` quotes data."""
         snapshot_note = (
             f" The pre-restore snapshot is job {job.pre_restore_snapshot_id}."
             if job.pre_restore_snapshot_id else ""
         )
         job.status = BackupJobStatus.FAILED
         job.error_message = f"Restore failed: {message}{snapshot_note}"
+        update_fields = ['status', 'error_message', 'updated_at']
+        audit = restore_audit.record_and_log(
+            job, outcome=restore_audit.OUTCOME_FAILED,
+            error=f"Restore failed: {audit_message or message}{snapshot_note}",
+            date_scoped=date_scoped, started_at=started_at,
+        )
+        if audit is not None:
+            update_fields.append('restore_audit')
         try:
-            job.save(update_fields=['status', 'error_message', 'updated_at'])
+            job.save(update_fields=update_fields)
         except Exception:
             logger.exception("BackupJob %s: failed to record its failure.", job.id)
         upload = job.restore_upload
@@ -68,6 +79,11 @@ class Command(BaseCommand):
             ))
             return
 
+        started_at = timezone.now()
+        # The branch is chosen solely by the confirmed snapshot's date filter.
+        date_scoped = job.restore_upload is not None and restore_apply.is_date_scoped(
+            job.restore_upload.confirmed_snapshot
+        )
         try:
             job.status = BackupJobStatus.RUNNING
             job.progress_pct = 0
@@ -76,7 +92,11 @@ class Command(BaseCommand):
             # A failure here must not leave the job stuck at 'pending' (and the
             # upload stuck at 'applying') with no explanation.
             logger.exception("BackupJob %s: failed to transition to running.", job.id)
-            self._fail(job, f"could not start the restore job ({_clip(e, 200)})")
+            self._fail(
+                job, f"could not start the restore job ({_clip(e, 200)})",
+                audit_message=f"could not start the restore job ({type(e).__name__})",
+                date_scoped=date_scoped, started_at=started_at,
+            )
             return
 
         self.stdout.write(f"BackupJob {job.id}: restoring upload {job.restore_upload_id} (scope={job.scope_type})")
@@ -88,10 +108,6 @@ class Command(BaseCommand):
             except Exception:
                 logger.exception("BackupJob %s: failed to persist progress update.", job.id)
 
-        # The branch is chosen solely by the confirmed snapshot's date filter.
-        date_scoped = job.restore_upload is not None and restore_apply.is_date_scoped(
-            job.restore_upload.confirmed_snapshot
-        )
         try:
             if date_scoped:
                 result = restore_import.execute_import(job, progress_callback=_on_progress)
@@ -99,13 +115,19 @@ class Command(BaseCommand):
                 result = restore_apply.execute_restore(job, progress_callback=_on_progress)
         except (restore_apply.RestoreError, restore_apply.ExportFormatError) as e:
             logger.warning("BackupJob %s: restore refused or failed: %s", job.id, e.message)
-            self._fail(job, e.message)
+            self._fail(
+                job, e.message, audit_message=e.audit_message, date_scoped=date_scoped, started_at=started_at,
+            )
             return
         except Exception as e:
             logger.exception("BackupJob %s failed during the restore.", job.id)
             # A date-scoped run never puts raw exception text (it can quote
             # patient values) in the job message; the log has it in full.
-            self._fail(job, f"unexpected error ({type(e).__name__ if date_scoped else _clip(e, 200)})")
+            self._fail(
+                job, f"unexpected error ({type(e).__name__ if date_scoped else _clip(e, 200)})",
+                audit_message=f"unexpected error ({type(e).__name__})",
+                date_scoped=date_scoped, started_at=started_at,
+            )
             return
 
         # Terminal success state written as one save (status + progress_pct together).
@@ -119,6 +141,12 @@ class Command(BaseCommand):
             update_fields.append('restore_result')
         else:
             job.error_message = restore_apply.format_media_warnings(result.warnings) if result.warnings else ""
+        # Story 2.6: the audit record joins the same terminal save (best-effort).
+        if restore_audit.record_and_log(
+            job, outcome=restore_audit.success_outcome(result), result=result,
+            date_scoped=date_scoped, started_at=started_at,
+        ) is not None:
+            update_fields.append('restore_audit')
         try:
             job.save(update_fields=update_fields)
         except Exception:

@@ -25,9 +25,12 @@ MAX_RECORD_CHARS = 64 * 1024 * 1024
 class ExportFormatError(Exception):
     """`db_export.json` is malformed or holds records this restore refuses."""
 
-    def __init__(self, message):
+    def __init__(self, message, audit_message=None):
         super().__init__(message)
         self.message = message
+        # Story 2.6: a value-free variant for the audit record, when `message`
+        # quotes archive data (e.g. a patient identifier).
+        self.audit_message = audit_message
 
 
 class _Start:

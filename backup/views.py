@@ -22,7 +22,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError, transaction
 from django.db.models import Q
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import Http404, HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods
@@ -33,7 +33,7 @@ from ndas.custom_codes.choice import (
 )
 from ndas.custom_codes.error_handlers import handle_view_errors
 from ndas.custom_codes.validators import sanitize_filename
-from backup import restore_apply
+from backup import restore_apply, restore_audit
 from backup import restore_preview as preview_service
 from backup import restore_validation
 from backup.forms import BackupScopeForm, RestoreConfirmForm, RestoreUploadForm
@@ -448,6 +448,17 @@ def _deny_restore(request, view_name):
     )
 
 
+def _own_upload_or_404(request, view_name, pk):
+    """The requesting super admin's own upload, else a 404 -- and, for the
+    audit trail (Story 2.6), a security-log line saying the upload was unknown
+    or someone else's."""
+    try:
+        return get_object_or_404(RestoreUpload, pk=pk, uploaded_by=request.user)
+    except Http404:
+        restore_audit.log_unknown_upload(request, view_name, pk)
+        raise
+
+
 def _latest_upload_for(user):
     return RestoreUpload.objects.filter(uploaded_by=user).order_by('-created_at', '-id').first()
 
@@ -629,7 +640,7 @@ def restore_status(request, pk):
         messages.error(request, "You don't have permission to restore data.")
         return redirect('home')
 
-    upload = get_object_or_404(RestoreUpload, pk=pk, uploaded_by=request.user)
+    upload = _own_upload_or_404(request, 'restore_status', pk)
     return render(request, 'backup/restore_status.html', _restore_status_context(upload))
 
 
@@ -648,7 +659,7 @@ def restore_status_fragment(request, pk):
         _deny_restore(request, 'restore_status_fragment')
         return HttpResponseForbidden()
 
-    upload = get_object_or_404(RestoreUpload, pk=pk, uploaded_by=request.user)
+    upload = _own_upload_or_404(request, 'restore_status_fragment', pk)
     return render(request, 'backup/restore_status_partial.html', _restore_status_context(upload))
 
 
@@ -688,7 +699,7 @@ def restore_preview(request, pk):
         messages.error(request, "You don't have permission to restore data.")
         return redirect('home')
 
-    upload = get_object_or_404(RestoreUpload, pk=pk, uploaded_by=request.user)
+    upload = _own_upload_or_404(request, 'restore_preview', pk)
     return _restore_preview_body(request, upload)
 
 
@@ -714,7 +725,7 @@ def restore_confirm(request, pk):
         messages.error(request, "You don't have permission to restore data.")
         return redirect('home')
 
-    upload = get_object_or_404(RestoreUpload, pk=pk, uploaded_by=request.user)
+    upload = _own_upload_or_404(request, 'restore_confirm', pk)
     return _restore_confirm_body(request, upload)
 
 
@@ -766,7 +777,7 @@ def restore_start(request, pk):
         messages.error(request, "You don't have permission to restore data.")
         return redirect('home')
 
-    upload = get_object_or_404(RestoreUpload, pk=pk, uploaded_by=request.user)
+    upload = _own_upload_or_404(request, 'restore_start', pk)
     return _restore_start_body(request, upload)
 
 
@@ -818,7 +829,7 @@ def restore_cancel(request, pk):
         messages.error(request, "You don't have permission to restore data.")
         return redirect('home')
 
-    upload = get_object_or_404(RestoreUpload, pk=pk, uploaded_by=request.user)
+    upload = _own_upload_or_404(request, 'restore_cancel', pk)
     return _restore_cancel_body(request, upload)
 
 

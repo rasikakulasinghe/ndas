@@ -192,6 +192,18 @@ class BackupJob(TimeStampedModel, UserTrackingMixin):
         ),
     )
 
+    restore_audit = models.JSONField(
+        null=True,
+        blank=True,
+        verbose_name=_("Restore Audit"),
+        help_text=_(
+            "Story 2.6: the self-contained, PHI-free audit record of a finished restore job "
+            "(actor, archive, scope, outcome, timestamps, counts, snapshot). Written in the "
+            "job's terminal save, for completed and failed restores alike. Null for every "
+            "other job and for a restore that never finished."
+        ),
+    )
+
     class Meta:
         verbose_name = _("Backup Job")
         verbose_name_plural = _("Backup Jobs")
