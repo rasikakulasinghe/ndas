@@ -163,6 +163,8 @@
           <p class="text-muted small mb-0">
             "Import" patients have no identifier match on this system and would be imported when the
             restore is applied in a later step; nothing is imported by confirming.
+            Existing patients are never changed. If some patients fail to import, the others are still
+            imported, and the archive must be uploaded again to retry the failed ones.
           </p>
           {% endif %}
 

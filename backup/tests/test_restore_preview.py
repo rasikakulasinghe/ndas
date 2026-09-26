@@ -853,6 +853,9 @@ class PreviewViewTest(PreviewTestBase):
         self.assertNotContains(response, 'ambiguous-conflict')
         self.assertNotContains(response, 'Story 2.5')
         self.assertContains(response, 'applied in a later step')
+        # Story 2.5: what a partial failure means, before the user confirms.
+        self.assertContains(response, 'Existing patients are never changed')
+        self.assertContains(response, 'uploaded again to retry the failed ones')
         self.assertContains(response, 'Confirm restore')
         self.assertNotContains(response, 'This archive cannot be confirmed')
         self.assertContains(response, self.url_for('confirm', upload))

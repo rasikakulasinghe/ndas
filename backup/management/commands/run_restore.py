@@ -103,7 +103,9 @@ class Command(BaseCommand):
             return
         except Exception as e:
             logger.exception("BackupJob %s failed during the restore.", job.id)
-            self._fail(job, f"unexpected error ({_clip(e, 200)})")
+            # A date-scoped run never puts raw exception text (it can quote
+            # patient values) in the job message; the log has it in full.
+            self._fail(job, f"unexpected error ({type(e).__name__ if date_scoped else _clip(e, 200)})")
             return
 
         # Terminal success state written as one save (status + progress_pct together).

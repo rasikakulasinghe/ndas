@@ -278,3 +278,35 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-2-5-date-scoped-partial-restore-additive-import.md`
   summary: An imported patient's media file name can equal a name a LATER upload (or a later backup restore) also wants; the never-overwrite rule then repoints the later row to a fresh name, so imported names are not stable across re-uploads.
   evidence: `restore_import._place_media` writes under `_fresh_name` when `os.path.lexists(target)`; the rule is per file at copy time, with no reservation of names between uploads. Also: `connection.check_constraints(table_names=...)` runs per patient inside its transaction, which on SQLite scans the whole restored tables each time (O(patients x rows)); PostgreSQL only checks the transaction's deferred constraints.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-5-date-scoped-partial-restore-additive-import.md`
+  summary: The import spool holds the import-set's patient records unencrypted on disk for the duration of the run, and a killed process leaves it behind; there is no stale-spool sweeper.
+  evidence: `restore_import._Spool` writes `import-spool-<job id>/spool.sqlite3` under the upload's directory with `journal_mode = OFF` and removes it only in `_import_all`'s `finally`. A process killed mid-import (the case stale-job recovery would also have to handle) leaves the directory with full patient records until the upload is cancelled or replaced.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-5-date-scoped-partial-restore-additive-import.md`
+  summary: An import-set child record whose owner is null or not an integer is dropped silently while spooling and is counted nowhere.
+  evidence: `restore_import._spool_import_set` computes `owner` from the record's `patient` (or a ProblemAction's problem) and `continue`s when it is None or not in the import-set; a corrupt child of an import-set patient looks the same as a skip-set record, so the patient is imported without it and nothing is reported.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-5-date-scoped-partial-restore-additive-import.md`
+  summary: `restore_result` keeps the full failed list, which is unbounded for an archive with thousands of failing patients (only the status page and message cap what they show).
+  evidence: `restore_import.execute_import` stores `outcome.failed` whole in `BackupJob.restore_result`; each entry carries the archive pk, identifiers and a reason. Consider storing the first N entries plus a total count once such archives are expected.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-5-date-scoped-partial-restore-additive-import.md`
+  summary: Media-only failures cannot be retried, and a byte-identical existing file is not reused.
+  evidence: A patient whose rows committed but whose media failed is imported, so a re-upload classifies it as skip-set and its files are never re-copied. Separately, `restore_import._place_media` never overwrites, so when the file already at the archived name is byte-identical (for example an earlier partial import) a fresh-named duplicate is written instead of reusing it.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-5-date-scoped-partial-restore-additive-import.md`
+  summary: The archive-pk to new-pk mapping of imported patients (and children) is not recorded anywhere; Story 2.6's audit trail needs it.
+  evidence: `restore_import._import_patient` builds per-patient `id_maps` and discards them after the transaction; `restore_result` holds only counts and failures, so an audit record cannot say which new patient came from which archived one.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-5-date-scoped-partial-restore-additive-import.md`
+  summary: User foreign keys are kept by primary key when a user with that pk exists here, so an archive from another system can attribute records to a different person.
+  evidence: `restore_apply._UserResolver.null_missing` only checks that the pk exists. This is the epic's fixed rule (keep when present, else NULL); a username cross-check against the archive would mitigate it but the archive carries no usernames.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-5-date-scoped-partial-restore-additive-import.md`
+  summary: `DeserializedObject.save(raw=True)` still sends the model signals with `raw=True`; receivers were not audited.
+  evidence: `restore_import._import_patient` saves through `serializers.deserialize('python', ...)` to bypass custom `save()` overrides; no signal receiver on the ten restorable models exists today, but a future receiver that ignores `raw` would run during a restore.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-5-date-scoped-partial-restore-additive-import.md`
+  summary: String constants such as the `'date_scoped'` mode are duplicated across `restore_import`, `notifications` and `restore_status_partial.html` instead of living in `ndas/custom_codes/choice.py`.
+  evidence: `restore_import.MODE_DATE_SCOPED`, the literal `'date_scoped'` in `backup/notifications.py` and in the status template's `restore_result.mode == 'date_scoped'` check must be kept in step by hand; the project rule is that shared choices live in `choice.py`.

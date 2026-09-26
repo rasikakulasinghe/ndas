@@ -2,7 +2,7 @@
 title: 'Story 2.5: Date-scoped (partial) restore -- additive import'
 type: 'feature'
 created: '2026-09-24'
-status: 'in-progress'
+status: 'done'
 review_loop_iteration: 0
 context: []
 baseline_commit: '17e5d0f8647dee333b775ab6b79c42efcb5f83d1'
@@ -72,16 +72,26 @@ baseline_commit: '17e5d0f8647dee333b775ab6b79c42efcb5f83d1'
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] Model field + migration (`restore_result`); relax the two date-scoped refusals; branch in `run_restore`.
-- [ ] `restore_import.py`: partition read and institution check, bounded grouping, per-patient transaction with FK remap and constraint check, post-commit media with the never-overwrite rule, result summary, outcome states.
-- [ ] Notification and status-page changes; rewrite the superseded 2.4 refusal test.
-- [ ] Tests for every matrix row, migrations check, full `backup` suite (background).
+- [x] Model field + migration (`restore_result`); relax the two date-scoped refusals; branch in `run_restore`.
+- [x] `restore_import.py`: partition read and institution check, bounded grouping, per-patient transaction with FK remap and constraint check, post-commit media with the never-overwrite rule, result summary, outcome states.
+- [x] Notification and status-page changes; rewrite the superseded 2.4 refusal test.
+- [x] Tests for every matrix row, migrations check, full `backup` suite (background).
 
 **Acceptance Criteria:** the epic's five Given/When/Then blocks for Story 2.5 (per-patient transaction with fresh keys and partial-failure isolation; FK remap, institution and user handling; skip-set and excluded untouched; media only after commit and only for imported patients; retry re-classifies imported patients as skip-set).
 
 ## Spec Change Log
 
-_None yet — pre-review._
+**Review pass 1 (three layers: blind-hunter, edge-case-hunter, verification-gap).** Triage produced no `intent_gap` and no `bad_spec` finding, so the frozen block was not changed and no loopback was needed. `review_loop_iteration` stays 0. All `patch` findings were fixed in one patch pass:
+
+- P1: after any patient has committed, a failure no longer returns the upload to `confirmed` (which would re-run a stale partition and re-import committed patients). Nothing committed → `RestoreError`, upload back to `confirmed`; one or more committed → job completes with warnings and the upload ends `applied`.
+- P2–P9: partition validation rejects malformed or overlapping partitions; the target institution is re-resolved by slug and must equal both the snapshot's `target_institution_id` and `job.scope_id`; only `DATA_ERRORS` become a per-patient `ImportFailure` (environment errors propagate); failure text is PHI-free (no record contents); media placement is an atomic no-overwrite `os.link`, and if a foreign file already sits at the target path the row's file field is blanked; an empty import-set skips both the pre-restore snapshot and the archive read; the status/preview/notification wording and the `|default:0` template guards were corrected; test coverage was added for each of these.
+- Deviations by the patch agent, accepted: `DataError` added to `DATA_ERRORS`; class names (not messages) appear in media warnings and the date-scoped "unexpected error" text; an empty import-set notification reads "Restore completed with warnings".
+- Deferred (see `deferred-work.md`): unencrypted spool and no stale-spool sweeper; child records with a null owner silently dropped; unbounded `restore_result.failed`; media-only failures not retryable and no identical-file reuse; no archive-pk → new-pk mapping recorded (Story 2.6 needs it); cross-system user attribution; raw-save signals not audited; duplicated `'date_scoped'` constants.
+- Rejected as noise or already covered by the frozen design: none affecting behavior.
+
+**Process notes.** Session rate limits interrupted the review and patch agents; they were re-run or resumed. One patch agent stalled and was resumed with context. The user committed the pre-patch implementation as `71ce531` mid-workflow, so this patch pass is an uncommitted delta on top of it.
+
+**Verification status (stated plainly).** The patch agent reported the full `backup` suite green (604 tests, ~856 s) and `makemigrations --check --dry-run backup` clean. My own independent full run was killed by Claude Code for low system memory and was not restarted. What I did verify myself: all touched files are valid UTF-8 with LF endings, and a read of `_Outcome`, `_stop_early`, `_import_all` and `execute_import` matches the design note. **The independent re-run is outstanding.**
 
 ## Design Notes
 

@@ -116,14 +116,23 @@
         {% if restore_job %}
           {% if restore_job.status == 'pending' %}
             The restore is queued and about to start.
+          {% elif confirmed_snapshot.date_filter.applied %}
+            {# Date-scoped: 0-20 re-hash, 20-50 pre-restore snapshot, 50-60 reading the archive, 60+ importing. #}
+            {% if restore_job.progress_pct < 20 %}
+              Re-checking the archive.
+            {% elif restore_job.progress_pct < 50 %}
+              Taking a snapshot of the current data{% if restore_job.pre_restore_snapshot %} (job {{ restore_job.pre_restore_snapshot.id }}){% endif %} before changing anything.
+            {% elif restore_job.progress_pct < 60 %}
+              Reading the archive's new patients.
+            {% else %}
+              Importing the archive's new patients one at a time and copying their media files.
+            {% endif %}
           {% elif restore_job.pre_restore_snapshot and restore_job.progress_pct < 50 %}
             Taking a snapshot of the current data (job {{ restore_job.pre_restore_snapshot.id }}) before changing anything.
           {% elif restore_job.progress_pct < 20 %}
             Re-checking the archive.
           {% elif restore_job.progress_pct < 60 %}
-            {% if confirmed_snapshot.date_filter.applied %}Reading the archive's new patients.{% else %}Checking the archive against this system.{% endif %}
-          {% elif confirmed_snapshot.date_filter.applied %}
-            Importing the archive's new patients one at a time and copying their media files.
+            Checking the archive against this system.
           {% elif restore_job.progress_pct < 90 %}
             Applying the archive. This step is applied in one piece and reports its progress when it finishes.
           {% else %}
@@ -144,18 +153,23 @@
         The archive's new patients were imported{% if restore_job %} by restore job {{ restore_job.id }}{% endif %}. Existing patients were not changed. The staged archive file has been removed.
       </p>
       <p class="mb-1">
-        <span class="badge badge-success">Imported: {{ restore_job.restore_result.imported }}</span>
-        <span class="badge badge-secondary ml-1">Skipped: {{ restore_job.restore_result.skipped }}</span>
-        <span class="badge badge-danger ml-1">Excluded: {{ restore_job.restore_result.excluded }}</span>
-        <span class="badge {% if restore_job.restore_result.failed %}badge-warning{% else %}badge-light{% endif %} ml-1">Failed: {{ restore_job.restore_result.failed|length }}</span>
+        <span class="badge badge-success">Imported: {{ restore_job.restore_result.imported|default:0 }}</span>
+        <span class="badge badge-secondary ml-1">Skipped: {{ restore_job.restore_result.skipped|default:0 }}</span>
+        <span class="badge badge-danger ml-1">Excluded: {{ restore_job.restore_result.excluded|default:0 }}</span>
+        <span class="badge {% if restore_job.restore_result.failed %}badge-warning{% else %}badge-light{% endif %} ml-1">Failed: {% if restore_job.restore_result.aborted %}{{ restore_job.restore_result.failed|length|add:"-1" }}{% else %}{{ restore_job.restore_result.failed|length }}{% endif %}</span>
       </p>
+      {% if restore_job.restore_result.aborted %}
+      <p class="mb-1 small text-danger">
+        The import stopped early because of an unexpected error: {{ restore_job.restore_result.not_attempted|default:0 }} patient(s) were not imported. The patients above that were imported are kept; to import the rest, upload the archive again.
+      </p>
+      {% endif %}
       {% if restore_job.restore_result.failed %}
       <p class="mb-1 small">
         These archive patients could not be imported (nothing of them was kept). To retry them, upload the archive again: the imported patients will then be skipped.
       </p>
       <ul class="small mb-1">
         {% for entry in restore_job.restore_result.failed|slice:":20" %}
-        <li>Archive patient {{ entry.archive_pk }}: {{ entry.reason }}</li>
+        <li>{% if entry.archive_pk is None %}{{ entry.reason }}{% else %}Archive patient {{ entry.archive_pk }}{% if entry.identifiers %} ({% for name, value in entry.identifiers.items %}{{ name }}: {{ value }}{% if not forloop.last %}, {% endif %}{% endfor %}){% endif %}: {{ entry.reason }}{% endif %}</li>
         {% endfor %}
         {% if restore_job.restore_result.failed|length > 20 %}
         <li>... and {{ restore_job.restore_result.failed|length|add:"-20" }} more</li>

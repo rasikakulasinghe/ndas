@@ -191,6 +191,44 @@ class NotifyRestoreJobFinishedTest(TestCase):
         notif = Notification.objects.get()
         self.assertEqual(notif.link, reverse('backup:restore-upload'))
 
+    # ---- Story 2.5: date-scoped runs report their counts ----
+
+    def _date_scoped(self, **overrides):
+        result = {
+            'mode': 'date_scoped', 'imported': 2, 'failed': [], 'skipped': 1, 'excluded': 0, 'media_warnings': [],
+        }
+        result.update(overrides)
+        return self._job(restore_result=result)
+
+    def test_clean_date_scoped_completion_reports_the_counts(self):
+        notify_job_finished(self._date_scoped())
+        notif = Notification.objects.get()
+        self.assertEqual(notif.title, "Restore completed")
+        self.assertEqual(notif.body, "Imported 2, skipped 1, excluded 0, failed 0.")
+
+    def test_date_scoped_media_warnings_make_it_a_warning_and_are_counted_in_the_body(self):
+        notify_job_finished(self._date_scoped(media_warnings=['archive patient 1: a.mp4: missing from the archive', 'x']))
+        notif = Notification.objects.get()
+        self.assertEqual(notif.notification_type, NotificationType.RESTORE_COMPLETED)
+        self.assertEqual(notif.title, "Restore completed with warnings")
+        self.assertEqual(notif.body, "Imported 2, skipped 1, excluded 0, failed 0. 2 media warning(s).")
+
+    def test_date_scoped_failed_patients_and_media_warnings_are_both_counted(self):
+        failed = [{'archive_pk': 4, 'identifiers': {'bht': 'B-4'}, 'reason': 'x'}]
+        notify_job_finished(self._date_scoped(failed=failed, media_warnings=['w']))
+        notif = Notification.objects.get()
+        self.assertEqual(notif.title, "Restore completed with warnings")
+        self.assertEqual(notif.body, "Imported 2, skipped 1, excluded 0, failed 1. 1 media warning(s).")
+
+    def test_an_early_stop_is_a_warning_and_is_not_counted_as_a_failed_patient(self):
+        abort = {'archive_pk': None, 'identifiers': {}, 'reason': 'the import stopped early: RuntimeError; 3 patient(s) were not imported'}
+        notify_job_finished(self._date_scoped(imported=1, failed=[abort], aborted=True, not_attempted=3))
+        notif = Notification.objects.get()
+        self.assertEqual(notif.title, "Restore completed with warnings")
+        self.assertEqual(
+            notif.body, "Imported 1, skipped 1, excluded 0, failed 0. The import stopped early: 3 patient(s) were not imported.",
+        )
+
     def test_ordinary_backup_notification_is_unaffected_by_the_restore_changes(self):
         job = BackupJob.objects.create(
             job_type=BackupJobType.BACKUP, status=BackupJobStatus.COMPLETED,

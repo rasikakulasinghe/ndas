@@ -323,22 +323,27 @@ class StartRestoreTest(RestoreApplyTestBase):
         upload.refresh_from_db()
         self.assertEqual(upload.status, RestoreUploadStatus.CONFIRMED)
 
-    def test_date_scoped_archive_is_refused(self):
+    def test_date_scoped_archive_without_a_usable_match_is_refused(self):
+        # A full-scope archive whose manifest is re-labelled date-scoped has no
+        # computed match (Story 2.4 computes one only for a single-institution
+        # date-scoped archive at validation time). Since Story 2.5 a date-scoped
+        # archive is refused for exactly that reason -- no usable match -- and
+        # the refusal happens BEFORE the digest check (the digest also differs
+        # now that the date filter changed): DATE_SCOPED, not DIGEST_CHANGED.
         upload = self.build_and_confirm(self.inst)
-        summary = {**upload.manifest_summary, 'date_filter': {'applied': True, 'start': '2026-01-01', 'end': None}}
-        snapshot = restore_preview._snapshot({**restore_preview.build_preview(upload), 'facts': {
-            **restore_preview.build_preview(upload)['facts'], 'date_filter': summary['date_filter'],
-        }})
-        RestoreUpload.objects.filter(pk=upload.pk).update(manifest_summary=summary, confirmed_snapshot={
-            **upload.confirmed_snapshot, 'date_filter': summary['date_filter'],
-        })
+        date_filter = {'applied': True, 'start': '2026-01-01', 'end': None}
+        RestoreUpload.objects.filter(pk=upload.pk).update(
+            manifest_summary={**upload.manifest_summary, 'date_filter': date_filter},
+            confirmed_snapshot={**upload.confirmed_snapshot, 'date_filter': date_filter},
+        )
         upload.refresh_from_db()
-        # digest now legitimately differs from what start_restore recomputes
-        # (date_filter changed) -- but date-scoped must be refused BEFORE the
-        # digest check runs, so DATE_SCOPED, not DIGEST_CHANGED, is reported.
+        self.assertIsNone(upload.match_summary)
         outcome = restore_apply.start_restore(upload, self.user, self.inst)
         self.assertFalse(outcome.ok)
         self.assertEqual(outcome.code, restore_apply.DATE_SCOPED)
+        self.assertIn('no usable computed match', outcome.message)
+        upload.refresh_from_db()
+        self.assertEqual(upload.status, RestoreUploadStatus.CONFIRMED)
 
     def test_digest_changed_is_refused(self):
         upload = self.build_and_confirm(self.inst)

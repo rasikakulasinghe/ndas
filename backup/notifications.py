@@ -37,15 +37,21 @@ def _build_restore_content(job):
         # Story 2.5: a date-scoped restore reports its counts.
         failed = result.get('failed')
         media = result.get('media_warnings')
-        failed_count = len(failed) if isinstance(failed, list) else 0
+        # The early-stop entry (no `archive_pk`) is not a failed patient.
+        failed_count = (
+            len([e for e in failed if isinstance(e, dict) and e.get('archive_pk') is not None])
+            if isinstance(failed, list) else 0
+        )
         media_count = len(media) if isinstance(media, list) else 0
         body = (
             f"Imported {result.get('imported', 0)}, skipped {result.get('skipped', 0)}, "
             f"excluded {result.get('excluded', 0)}, failed {failed_count}."
         )
+        if result.get('aborted'):
+            body += f" The import stopped early: {result.get('not_attempted', 0)} patient(s) were not imported."
         if media_count:
             body += f" {media_count} media warning(s)."
-        with_warnings = bool(job.error_message or failed_count or media_count)
+        with_warnings = bool(job.error_message or failed_count or media_count or result.get('aborted'))
         return (
             NotificationType.RESTORE_COMPLETED,
             "Restore completed with warnings" if with_warnings else "Restore completed",
