@@ -338,3 +338,15 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-2-6-restore-audit-trail.md`
   summary: A failed restore's audit carries zero counts even when some were known (a date-scoped run's skipped/excluded counts sit in the confirmed snapshot).
   evidence: `restore_audit._counts` reads counts only from a finished run's result; `run_restore._fail` passes none.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-6-restore-audit-trail.md`
+  summary: Partial progress is not carried when an unexpected exception follows a committed full-scope apply (the media stage), so a failed audit can show zero counts although data changed.
+  evidence: `run_restore` reaches `_fail` with no `RestoreResult` when `execute_restore` raises after `apply_restore` committed; `restore_audit._counts` then falls back to zeros and the record carries only the value-free error text.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-6-restore-audit-trail.md`
+  summary: `archive.filename` in the audit record is the user-supplied upload name and can carry PHI; the SHA-256 is the reliable identifier.
+  evidence: `restore_audit.build_audit` copies `RestoreUpload.original_filename` (clipped to 255 characters) into `archive.filename`; nothing checks its content.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-2-6-restore-audit-trail.md`
+  summary: A restore job killed mid-run gets no audit, and the unknown-upload warning has no per-poll throttling (the views' rate limits are the only bound).
+  evidence: `record_and_log` runs only in `run_restore`'s terminal saves; `restore_audit.log_unknown_upload` writes one warning per request, including every HTMX status-fragment poll of a foreign or unknown upload id.

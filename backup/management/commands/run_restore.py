@@ -37,6 +37,22 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('job_id', type=int, help='Primary key of the restore BackupJob to run.')
 
+    def _save_terminal(self, job, update_fields, failure_message):
+        """The terminal save. If it raises and it carried the audit record, retry
+        once without it, so an unstorable audit cannot leave the job 'running'."""
+        try:
+            job.save(update_fields=update_fields)
+            return
+        except Exception:
+            logger.exception(failure_message, job.id)
+        if 'restore_audit' not in update_fields:
+            return
+        job.restore_audit = None
+        try:
+            job.save(update_fields=[name for name in update_fields if name != 'restore_audit'])
+        except Exception:
+            logger.exception("BackupJob %s: the terminal save failed again without the audit record.", job.id)
+
     def _fail(self, job, message, audit_message=None, date_scoped=False, started_at=None):
         """Terminal failure: one save, the upload back to `confirmed`, then notify.
         `audit_message` is the value-free variant of `message` for the audit
@@ -55,10 +71,7 @@ class Command(BaseCommand):
         )
         if audit is not None:
             update_fields.append('restore_audit')
-        try:
-            job.save(update_fields=update_fields)
-        except Exception:
-            logger.exception("BackupJob %s: failed to record its failure.", job.id)
+        self._save_terminal(job, update_fields, "BackupJob %s: failed to record its failure.")
         upload = job.restore_upload
         if upload is not None:
             restore_apply.revert_upload_to_confirmed(upload)
@@ -115,8 +128,12 @@ class Command(BaseCommand):
                 result = restore_apply.execute_restore(job, progress_callback=_on_progress)
         except (restore_apply.RestoreError, restore_apply.ExportFormatError) as e:
             logger.warning("BackupJob %s: restore refused or failed: %s", job.id, e.message)
+            audit_message = e.audit_message
+            if not audit_message and isinstance(e, restore_apply.ExportFormatError):
+                # Its message can quote archive data: default to a fixed text.
+                audit_message = restore_audit.EXPORT_FORMAT_GENERIC
             self._fail(
-                job, e.message, audit_message=e.audit_message, date_scoped=date_scoped, started_at=started_at,
+                job, e.message, audit_message=audit_message, date_scoped=date_scoped, started_at=started_at,
             )
             return
         except Exception as e:
@@ -147,10 +164,9 @@ class Command(BaseCommand):
             date_scoped=date_scoped, started_at=started_at,
         ) is not None:
             update_fields.append('restore_audit')
-        try:
-            job.save(update_fields=update_fields)
-        except Exception:
-            logger.exception("BackupJob %s: restore committed but its terminal state could not be saved.", job.id)
+        self._save_terminal(
+            job, update_fields, "BackupJob %s: restore committed but its terminal state could not be saved.",
+        )
         if job.restore_upload is not None:
             restore_apply.mark_applied(job.restore_upload)
         notify_job_finished(job)

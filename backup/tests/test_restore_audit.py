@@ -7,15 +7,19 @@ included), best-effort behaviour, and the unknown/foreign-upload denial line
 from every restore view.
 """
 import json
+import shutil
+from datetime import datetime, timedelta, timezone as dt_timezone
 from unittest import mock
 
 from django.contrib.auth import get_user_model
+from django.db import OperationalError
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from backup import restore_audit
 from backup.models import BackupJob, RestoreUpload
-from backup.restore_apply import RESTORE_MODEL_KEYS
+from backup.restore_apply import RESTORE_MODEL_KEYS, ExportFormatError
+from backup.restore_validation import get_upload_path
 from backup.tests.restore_helpers import IsolatedBaseDirMixin
 from backup.tests.test_restore_apply import STORAGE_OVERRIDE
 from backup.tests.test_restore_import import ImportTestBase
@@ -29,6 +33,7 @@ from ndas.custom_codes.choice import (
     UserType,
 )
 from patients.models import Patient
+from video.models import Video
 from referral.models import Notification
 
 User = get_user_model()
@@ -183,6 +188,7 @@ class DateScopedAuditTest(AuditAssertions, ImportTestBase):
         new_b = Patient._base_manager.get(bht='DS-B').pk
         self.assertEqual(audit['counts'], {
             'imported': 2, 'skipped': 0, 'excluded': 0, 'failed': 0, 'media_warnings': 0,
+            'aborted': False, 'not_attempted': 0,
             'patients': audit['counts']['patients'],
         })
         self.assertCountEqual(audit['counts']['patients'], [[a.pk, new_a], [b.pk, new_b]])
@@ -235,6 +241,8 @@ class DateScopedAuditTest(AuditAssertions, ImportTestBase):
         self.assertEqual(audit['outcome'], 'completed_with_warnings')
         self.assertEqual(audit['counts']['imported'], 1)
         self.assertEqual(audit['counts']['failed'], 0)
+        self.assertIs(audit['counts']['aborted'], True)
+        self.assertEqual(audit['counts']['not_attempted'], 1)
 
     def test_every_patient_failing_is_a_failed_audit_without_identifiers(self):
         a = self.make_full_patient('Zelda Quixote', 'AF-A')
@@ -270,6 +278,34 @@ class DateScopedAuditTest(AuditAssertions, ImportTestBase):
         self.assertIn('RuntimeError', audit['error'])
         self.assertPhiFree(audit, logs, 'Zelda Quixote')
 
+    def test_excluded_patient_and_media_warning_are_counted(self):
+        new_one = self.make_full_patient('Newcomer Person', 'MW-N')
+        conflicted = self.make_full_patient('Conflicted Person', 'MW-C')
+        e1 = self.make_patient(self.inst, baby_name='E1', bht='EX-1')
+        e2 = self.make_patient(self.inst, baby_name='E2', nnc_no='EX-NNC')
+        db_export, media, _ = self.export_json(self.inst)
+        for record in db_export['patients.patient']:
+            if record['pk'] == conflicted.pk:
+                record['fields']['bht'] = 'EX-1'
+                record['fields']['nnc_no'] = 'EX-NNC'
+        db_export['patients.patient'] = [r for r in db_export['patients.patient'] if r['pk'] not in (e1.pk, e2.pk)]
+        video_name = Video.objects.get(patient=new_one).video_file.name
+        media = {k: v for k, v in media.items() if k != f'media/{video_name}'}
+        self.delete_patients(new_one, conflicted)
+        self.wipe_media()
+        _path, upload = self.dated_upload(db_export, media)
+        job = self.start(upload)
+        with self.assertLogs(SECURITY_LOGGER, level='INFO') as logs:
+            job = self.run_restore_command(job)
+
+        self.assertEqual(job.status, BackupJobStatus.COMPLETED, job.error_message)
+        audit = job.restore_audit
+        self.assertEqual(audit['outcome'], 'completed_with_warnings')
+        self.assertEqual(audit['counts']['excluded'], 1)
+        self.assertEqual(audit['counts']['imported'], 1)
+        self.assertEqual(audit['counts']['media_warnings'], 1)
+        self.assertPhiFree(audit, logs, 'Newcomer Person', 'Conflicted Person', 'MW-N', 'MW-C')
+
     def test_empty_import_set_is_completed_with_zero_imported(self):
         self.make_full_patient('Keeper Person', 'EM-1')
         db_export, media, _ = self.export_json(self.inst)
@@ -279,7 +315,8 @@ class DateScopedAuditTest(AuditAssertions, ImportTestBase):
         audit = job.restore_audit
         self.assertEqual(audit['outcome'], 'completed')
         self.assertEqual(audit['counts'], {
-            'imported': 0, 'skipped': 1, 'excluded': 0, 'failed': 0, 'media_warnings': 0, 'patients': [],
+            'imported': 0, 'skipped': 1, 'excluded': 0, 'failed': 0, 'media_warnings': 0,
+            'aborted': False, 'not_attempted': 0, 'patients': [],
         })
         self.assertIsNone(audit['snapshot_job_id'])
 
@@ -348,6 +385,125 @@ class AuditRobustnessTest(AuditAssertions, ImportTestBase):
         self.assertTrue(any('Restore finished' in line and 'outcome=completed' in line for line in logs.output))
         upload.refresh_from_db()
         self.assertEqual(upload.status, RestoreUploadStatus.APPLIED)
+        # The save is retried without the audit, so the job does not stay 'running'.
+        job.refresh_from_db()
+        self.assertEqual(job.status, BackupJobStatus.COMPLETED)
+        self.assertIsNone(job.restore_audit)
+
+    def test_a_failed_restore_whose_terminal_save_carries_an_unstorable_audit_still_ends_failed(self):
+        upload, job = self.completed_full_job()
+        real_save = BackupJob.save
+
+        def save(instance, *args, **kwargs):
+            if 'restore_audit' in (kwargs.get('update_fields') or ()):
+                raise RuntimeError('save failed')
+            return real_save(instance, *args, **kwargs)
+
+        with mock.patch('backup.restore_apply.create_export', side_effect=RuntimeError('disk')):
+            with mock.patch.object(BackupJob, 'save', save):
+                with self.assertLogs(SECURITY_LOGGER, level='INFO') as logs:
+                    with self.assertLogs('backup.management.commands.run_restore', level='ERROR'):
+                        self.run_restore_command(job)
+        self.assertTrue(any('Restore finished' in line and 'outcome=failed' in line for line in logs.output))
+        job.refresh_from_db()
+        self.assertEqual(job.status, BackupJobStatus.FAILED)
+        self.assertIsNone(job.restore_audit)
+        upload.refresh_from_db()
+        self.assertEqual(upload.status, RestoreUploadStatus.CONFIRMED)
+
+    def test_could_not_start_the_job_is_a_failed_audit_without_raw_exception_text(self):
+        upload, job = self.completed_full_job()
+        real_save = BackupJob.save
+
+        def save(instance, *args, **kwargs):
+            if 'progress_pct' in (kwargs.get('update_fields') or ()) and instance.status == BackupJobStatus.RUNNING:
+                raise OperationalError('secret raw db text')
+            return real_save(instance, *args, **kwargs)
+
+        with mock.patch.object(BackupJob, 'save', save):
+            with self.assertLogs(SECURITY_LOGGER, level='INFO') as logs:
+                with self.assertLogs('backup.management.commands.run_restore', level='ERROR'):
+                    job = self.run_restore_command(job)
+        self.assertEqual(job.status, BackupJobStatus.FAILED)
+        audit = job.restore_audit
+        self.assertEqual(audit['outcome'], 'failed')
+        self.assertEqual(audit['error'], 'Restore failed: could not start the restore job (OperationalError)')
+        self.assertPhiFree(audit, logs, 'secret raw db text')
+        self.assertIn(
+            'reason=Restore failed: could not start the restore job (OperationalError)', "\n".join(logs.output),
+        )
+        upload.refresh_from_db()
+        self.assertEqual(upload.status, RestoreUploadStatus.CONFIRMED)
+
+    # ---- started_at wiring ----
+
+    def test_started_at_is_the_commands_start_time_on_the_success_branch(self):
+        upload, job = self.completed_full_job()
+        started = datetime(2026, 1, 1, 12, 0, tzinfo=dt_timezone.utc)
+        with mock.patch('backup.management.commands.run_restore.timezone') as fake_tz, \
+                mock.patch.object(restore_audit, '_now_iso', return_value='2026-01-01T12:10:00+00:00'):
+            fake_tz.now.return_value = started
+            job = self.run_restore_command(job)
+        audit = job.restore_audit
+        self.assertEqual(audit['outcome'], 'completed')
+        self.assertEqual(datetime.fromisoformat(audit['started_at']), started)
+        self.assertEqual(
+            datetime.fromisoformat(audit['finished_at']) - datetime.fromisoformat(audit['started_at']),
+            timedelta(minutes=10),
+        )
+
+    def test_started_at_is_the_commands_start_time_on_the_fail_branch(self):
+        upload, job = self.completed_full_job()
+        started = datetime(2026, 1, 1, 12, 0, tzinfo=dt_timezone.utc)
+        with mock.patch('backup.management.commands.run_restore.timezone') as fake_tz, \
+                mock.patch.object(restore_audit, '_now_iso', return_value='2026-01-01T12:10:00+00:00'), \
+                mock.patch('backup.restore_apply.create_export', side_effect=RuntimeError('disk')):
+            fake_tz.now.return_value = started
+            job = self.run_restore_command(job)
+        audit = job.restore_audit
+        self.assertEqual(audit['outcome'], 'failed')
+        self.assertEqual(datetime.fromisoformat(audit['started_at']), started)
+        self.assertEqual(
+            datetime.fromisoformat(audit['finished_at']) - datetime.fromisoformat(audit['started_at']),
+            timedelta(minutes=10),
+        )
+
+    # ---- PHI-free defaults ----
+
+    def swap_in_duplicate_identifier_archive(self, upload):
+        """Replace the staged archive with one where two patients share a bht
+        (validation would have rejected it, so the re-verification is bypassed
+        to reach the preflight). Done after `start`, which checks the file size."""
+        db_export, media, _manifest = self.export_json(self.inst)
+        for record in db_export['patients.patient']:
+            record['fields']['bht'] = 'DUP-IDENT-9'
+        path = self.rebuild_archive(db_export, media, filename='dup.zip')
+        shutil.copy(path, get_upload_path(upload))
+
+    def test_two_patients_sharing_an_identifier_never_reach_the_audit_or_the_log_line(self):
+        self.make_patient(self.inst, baby_name='Dup One', bht='DUP-IDENT-9')
+        self.make_patient(self.inst, baby_name='Dup Two', bht='DUP-OTHER')
+        upload = self.build_and_confirm(self.inst)
+        job = self.start(upload)
+        self.swap_in_duplicate_identifier_archive(upload)
+        with mock.patch('backup.restore_apply.verify_confirmed'):
+            with self.assertLogs(SECURITY_LOGGER, level='INFO') as logs:
+                job = self.run_restore_command(job)
+        self.assertEqual(job.status, BackupJobStatus.FAILED)
+        self.assertIn('DUP-IDENT-9', job.error_message)   # the job message is unchanged
+        audit = job.restore_audit
+        self.assertEqual(audit['outcome'], 'failed')
+        self.assertIn('appears on more than one patient', audit['error'])
+        self.assertPhiFree(audit, logs, 'DUP-IDENT-9', 'Dup One', 'Dup Two')
+
+    def test_an_export_format_error_without_an_audit_message_gets_the_generic_text(self):
+        upload, job = self.completed_full_job()
+        with mock.patch('backup.restore_apply.preflight', side_effect=ExportFormatError('quotes SECRET-IDENT-7')):
+            with self.assertLogs(SECURITY_LOGGER, level='INFO') as logs:
+                job = self.run_restore_command(job)
+        audit = job.restore_audit
+        self.assertIn(restore_audit.EXPORT_FORMAT_GENERIC, audit['error'])
+        self.assertPhiFree(audit, logs, 'SECRET-IDENT-7')
 
 
 class BuildAuditUnitTest(AuditAssertions, ImportTestBase):
@@ -358,6 +514,18 @@ class BuildAuditUnitTest(AuditAssertions, ImportTestBase):
             sorted(i['slug'] for i in audit['scope']['institutions']), ['ra-hosp', 'ra-hosp-2'],
         )
         self.assertEqual(audit['scope']['scope_type'], 'multi')
+        ids = [i['id'] for i in audit['scope']['institutions']]
+        self.assertEqual(ids, sorted(ids))
+
+    def test_full_scope_media_warnings_count_only_the_restores_own_warnings(self):
+        result = mock.Mock(
+            counts={}, warnings=['a.mp4: missing', 'the pre-restore snapshot (job 3) skipped 2 media file(s)'],
+            referral_links_cleared=0, move_logs_removed=0, media_warning_count=1,
+        )
+        job = self.make_job(self.inst)
+        audit = restore_audit.build_audit(job, outcome=restore_audit.success_outcome(result), result=result)
+        self.assertEqual(audit['outcome'], 'completed_with_warnings')
+        self.assertEqual(audit['counts']['media_warnings'], 1)
 
     def test_system_scope_takes_the_manifests_slugs(self):
         upload = RestoreUpload.objects.create(
@@ -430,7 +598,8 @@ class UnknownUploadLoggingTest(IsolatedBaseDirMixin, TestCase):
                     self.assertEqual(response.status_code, 404)
                     lines = [line for line in logs.output if 'unknown or foreign upload' in line]
                     self.assertEqual(len(lines), 1)
-                    for part in ('Restore access denied', 'user=sa_au', f'view={view_name}', f'upload={pk}'):
+                    for part in ('Restore access denied', 'user=sa_au', f'view={view_name}', f'upload={pk}',
+                                 f'exists={pk == self.foreign.pk}'):
                         self.assertIn(part, lines[0])
         self.foreign.refresh_from_db()
         self.assertEqual(self.foreign.status, RestoreUploadStatus.VALIDATED)

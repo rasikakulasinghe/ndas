@@ -26,6 +26,7 @@ from datetime import datetime, timezone
 from django.apps import apps
 
 from backup import restore_validation
+from backup.models import RestoreUpload
 from backup.restore_apply import RESTORE_MODEL_KEYS
 from ndas.custom_codes.choice import BackupJobScopeType
 
@@ -42,6 +43,11 @@ OUTCOME_FAILED = 'failed'
 
 ERROR_MAX = 1000
 FILENAME_MAX = 255
+REASON_MAX = 300   # characters of the failure reason on the security-log line
+
+# The audit text for an `ExportFormatError` that carries no value-free
+# `audit_message` of its own: its message can quote archive data.
+EXPORT_FORMAT_GENERIC = "the archive's database export is malformed or holds records this restore refuses"
 
 
 def _now_iso():
@@ -90,7 +96,7 @@ def _scope_institutions(job, upload):
             for slug in slugs
         ]
     if job.scope_type == BackupJobScopeType.MULTI:
-        return [_institution(i) for i in job.scopes.all()]
+        return [_institution(i) for i in job.scopes.order_by('id')]
     return [_institution(job.scope)] if job.scope is not None else []
 
 
@@ -121,6 +127,8 @@ def _counts(result, date_scoped):
             # The early-stop entry (archive_pk None) is not a failed patient.
             'failed': sum(1 for entry in failed if isinstance(entry, dict) and entry.get('archive_pk') is not None),
             'media_warnings': len(summary.get('media_warnings') or []),
+            'aborted': bool(summary.get('aborted')),
+            'not_attempted': _int_or_none(summary.get('not_attempted')) or 0,
             'patients': patients,
         }
     records = {key: 0 for key in RESTORE_MODEL_KEYS}
@@ -131,7 +139,9 @@ def _counts(result, date_scoped):
         'records_loaded': sum(records.values()),
         'referral_links_cleared': _int_or_none(getattr(result, 'referral_links_cleared', 0)) or 0,
         'move_logs_removed': _int_or_none(getattr(result, 'move_logs_removed', 0)) or 0,
-        'media_warnings': len(result.warnings or []) if result is not None else 0,
+        # The restore's own media warnings; `result.warnings` also carries the
+        # pre-restore snapshot's skipped-media note.
+        'media_warnings': _int_or_none(getattr(result, 'media_warning_count', 0)) or 0,
     }
 
 
@@ -180,12 +190,17 @@ def _log_line(job, audit):
         counts['patients'] = len(audit['counts']['patients'])
     actor = audit['actor']
     log = security_logger.info if audit['outcome'] == OUTCOME_COMPLETED else security_logger.warning
-    log(
-        "Restore finished: actor=%s (id=%s) upload=%s job=%s mode=%s scope=%s outcome=%s counts=%s snapshot=%s",
+    message = "Restore finished: actor=%s (id=%s) upload=%s job=%s mode=%s scope=%s outcome=%s counts=%s snapshot=%s"
+    args = [
         actor['username'], actor['id'], audit['upload_id'], job.id, audit['scope']['mode'],
         ",".join(i['slug'] for i in audit['scope']['institutions']) or '-', audit['outcome'],
         json.dumps(counts, sort_keys=True), audit['snapshot_job_id'],
-    )
+    ]
+    if audit['outcome'] == OUTCOME_FAILED:
+        # The audit `error` only: it is the value-free text, never the raw message.
+        message += " reason=%s"
+        args.append(_clip(audit.get('error', ''), REASON_MAX))
+    log(message, *args)
 
 
 def record_and_log(job, *, outcome, error='', result=None, date_scoped=False, started_at=None):
@@ -212,8 +227,14 @@ def record_and_log(job, *, outcome, error='', result=None, date_scoped=False, st
 
 def log_unknown_upload(request, view_name, pk):
     """A super admin named an upload that is not theirs or does not exist: the
-    view still answers 404; this leaves the audit line."""
+    view still answers 404; this leaves the audit line. `exists` says whether
+    any upload has that id, so a typo can be told from reaching another
+    admin's upload (the response is the same 404 either way)."""
+    try:
+        exists = RestoreUpload.objects.filter(pk=pk).exists()
+    except Exception:
+        exists = False
     security_logger.warning(
-        "Restore access denied (unknown or foreign upload): user=%s view=%s upload=%s",
-        _clip(getattr(request.user, 'username', '?'), 150), view_name, _clip(pk, 40),
+        "Restore access denied (unknown or foreign upload): user=%s view=%s upload=%s exists=%s",
+        _clip(getattr(request.user, 'username', '?'), 150), view_name, _clip(pk, 40), exists,
     )

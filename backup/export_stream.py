@@ -68,8 +68,8 @@ class ExportReader:
         self.bytes_read = 0
 
     @staticmethod
-    def _bad(message):
-        raise ExportFormatError(f"db_export.json is malformed: {message}.")
+    def _bad(message, audit_message=None):
+        raise ExportFormatError(f"db_export.json is malformed: {message}.", audit_message=audit_message)
 
     def _fill(self, size=COPY_CHUNK_SIZE):
         """Read and append more text (dropping what was already consumed).
@@ -82,7 +82,10 @@ class ExportReader:
         except UnicodeDecodeError:
             self._bad("it is not valid UTF-8")
         except restore_validation._ZIP_READ_ERRORS as e:
-            raise ExportFormatError(f"db_export.json could not be read from the archive ({_clip(e, 100)}).")
+            raise ExportFormatError(
+                f"db_export.json could not be read from the archive ({_clip(e, 100)}).",
+                audit_message="db_export.json could not be read from the archive.",
+            )
         self.bytes_read += len(data)
         self._buf = self._buf[self._pos:] + text
         self._pos = 0
@@ -150,7 +153,10 @@ class ExportReader:
                         if char == ']':
                             break
                         if char != ',':
-                            self._bad(f"expected ',' or ']' after a record of '{_clip(key, 40)}'")
+                            self._bad(
+                                f"expected ',' or ']' after a record of '{_clip(key, 40)}'",
+                                audit_message="db_export.json is malformed: expected ',' or ']' after a record.",
+                            )
                 char = self._peek()
                 self._pos += 1
                 if char == '}':

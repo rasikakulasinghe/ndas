@@ -151,6 +151,9 @@ class RestoreResult:
     # Story 2.6: what `apply_restore` already returned, kept for the audit record.
     referral_links_cleared: int = 0
     move_logs_removed: int = 0
+    # Story 2.6: the number of `restore_media` warnings alone (`warnings` also
+    # carries the pre-restore snapshot's skipped-media note).
+    media_warning_count: int = 0
 
 
 # --------------------------------------------------------------------------
@@ -499,7 +502,10 @@ def verify_confirmed(upload, progress=None):
     try:
         actual = _hash_file(path, progress)
     except OSError as e:
-        raise RestoreError(f"The staged archive could not be read ({_clip(e, 200)}).")
+        raise RestoreError(
+            f"The staged archive could not be read ({_clip(e, 200)}).",
+            audit_message="The staged archive could not be read.",
+        )
     if actual != upload.archive_sha256.lower():
         raise RestoreError(
             "The staged archive no longer matches the file that was validated (its SHA-256 changed). "
@@ -620,7 +626,8 @@ def _check_record_shape(key, record):
         raise ExportFormatError(f"A {label} record in db_export.json has no integer primary key.")
     if record.get('model') != key:
         raise ExportFormatError(
-            f"{label} {pk} in db_export.json is labelled as model '{_clip(record.get('model'), 60)}'."
+            f"{label} {pk} in db_export.json is labelled as model '{_clip(record.get('model'), 60)}'.",
+            audit_message=f"{label} {pk} in db_export.json is labelled as a different model.",
         )
     if not isinstance(record.get('fields'), dict):
         raise ExportFormatError(f"{label} {pk} in db_export.json has no field values.")
@@ -669,7 +676,10 @@ def preflight(upload, job, progress=None):
                 if record is START:
                     _flush()
                     if key not in EXPORT_MODEL_KEYS:
-                        raise ExportFormatError(f"db_export.json has an unknown model key ('{_clip(key, 60)}').")
+                        raise ExportFormatError(
+                            f"db_export.json has an unknown model key ('{_clip(key, 60)}').",
+                            audit_message="db_export.json has an unknown model key.",
+                        )
                     index = EXPORT_MODEL_KEYS.index(key)
                     if index <= last_index:
                         raise ExportFormatError(
@@ -715,7 +725,11 @@ def _check_patient_record(record, target_ids, allow_null_institution, identifier
         raise ExportFormatError(
             f"Patient {pk} in the archive belongs to institution id {_clip(institution_id, 20)}, which is not one "
             "of the institutions being restored. Archives made on a different system (with different "
-            "institution ids) cannot be restored yet."
+            "institution ids) cannot be restored yet.",
+            audit_message=(
+                f"Patient {pk} in the archive belongs to an institution that is not one of the institutions "
+                "being restored."
+            ),
         )
     for name, seen in identifiers_seen.items():
         value = record['fields'].get(name)
@@ -1117,11 +1131,12 @@ def execute_restore(job, progress_callback=None):
     )
 
     warnings = restore_media(upload, job, progress.span(*MEDIA_RANGE))
+    media_warning_count = len(warnings)
     if snapshot_skipped:
         warnings.append(
             f"the pre-restore snapshot (job {snapshot.id}) skipped {len(snapshot_skipped)} media file(s)"
         )
     return RestoreResult(
         snapshot=snapshot, warnings=warnings, counts=counts,
-        referral_links_cleared=nulled, move_logs_removed=removed,
+        referral_links_cleared=nulled, move_logs_removed=removed, media_warning_count=media_warning_count,
     )

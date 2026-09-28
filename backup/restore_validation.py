@@ -636,7 +636,8 @@ def _extract_patient_identity(record, identifier_fields):
         raise ExportFormatError("A patients.patient record in db_export.json has no integer primary key")
     if record.get('model') != 'patients.patient':
         raise ExportFormatError(
-            f"Patient {pk} in db_export.json is labelled as model '{_clip(record.get('model'), 60)}'"
+            f"Patient {pk} in db_export.json is labelled as model '{_clip(record.get('model'), 60)}'",
+            audit_message=f"Patient {pk} in db_export.json is labelled as a different model",
         )
     fields = record.get('fields')
     if not isinstance(fields, dict):
@@ -668,7 +669,8 @@ def _check_archive_patient_uniqueness(records, identifier_fields):
         for name, value in populated.items():
             if value in seen_values[name]:
                 raise ExportFormatError(
-                    f"The patient identifier {name} '{_clip(value, 40)}' appears on more than one patient in the archive."
+                    f"The patient identifier {name} '{_clip(value, 40)}' appears on more than one patient in the archive.",
+                    audit_message=f"The patient identifier {name} appears on more than one patient in the archive.",
                 )
             seen_values[name].add(value)
 

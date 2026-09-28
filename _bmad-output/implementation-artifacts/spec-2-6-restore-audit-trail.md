@@ -2,7 +2,7 @@
 title: 'Story 2.6: Restore audit trail'
 type: 'feature'
 created: '2026-09-26'
-status: 'in-review'
+status: 'done'
 review_loop_iteration: 0
 context: []
 baseline_commit: '2dc57b67f5cf05fe0555b0d2fb7fd596cc747d9e'
@@ -64,12 +64,12 @@ baseline_commit: '2dc57b67f5cf05fe0555b0d2fb7fd596cc747d9e'
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `backup/models.py`, migration `0016` -- add `restore_audit`; `makemigrations --check` clean.
-- [ ] `backup/restore_audit.py` -- build the record and the log line in one place; best-effort wrapper; the unknown-upload log helper.
-- [ ] `backup/restore_apply.py`, `backup/restore_import.py` -- return the counts, `referral_links_cleared`, `move_logs_removed` and the committed-patient pk map; no behaviour change.
-- [ ] `backup/management/commands/run_restore.py` -- write and log the audit in both terminal saves.
-- [ ] `backup/views.py` -- log foreign/unknown upload lookups in the restore views.
-- [ ] Tests for every matrix row (record shape, PHI-free assertion against seeded identifiers, deleted actor/institution, audit failure is harmless, regression of each existing denial log), migrations check, full `backup` suite (background).
+- [x] `backup/models.py`, migration `0016` -- add `restore_audit`; `makemigrations --check` clean.
+- [x] `backup/restore_audit.py` -- build the record and the log line in one place; best-effort wrapper; the unknown-upload log helper.
+- [x] `backup/restore_apply.py`, `backup/restore_import.py` -- return the counts, `referral_links_cleared`, `move_logs_removed` and the committed-patient pk map; no behaviour change.
+- [x] `backup/management/commands/run_restore.py` -- write and log the audit in both terminal saves.
+- [x] `backup/views.py` -- log foreign/unknown upload lookups in the restore views.
+- [x] Tests for every matrix row (record shape, PHI-free assertion against seeded identifiers, deleted actor/institution, audit failure is harmless, regression of each existing denial log), migrations check, full `backup` suite (background).
 
 **Acceptance Criteria:**
 - Given a completed restore (either scope), when its job is reviewed, then `restore_audit` shows the acting super admin, timestamps, scope (mode, institutions, date range) and, for a date-scoped run, patients skipped/imported/excluded.
@@ -77,6 +77,17 @@ baseline_commit: '2dc57b67f5cf05fe0555b0d2fb7fd596cc747d9e'
 - Given a failed restore, when reviewed, then it shows the failure outcome with the actor and scope, without changing the failure handling of Stories 2.3 and 2.5.
 
 ## Spec Change Log
+
+**Review pass 1 (three layers: blind-hunter, edge-case-hunter, verification-gap).** Triage produced no `intent_gap` and no `bad_spec` finding, so the frozen block was not changed and no loopback was needed; `review_loop_iteration` stays 0. One reviewer layer (edge-case-hunter) was re-run once after an API overload. Patch findings, fixed in one pass:
+
+- P1: **PHI-free by default.** The spec assumed the job's failure text was already PHI-free; some raise sites quote identifiers, user strings or raw OS/exception text. `RestoreError`/`ExportFormatError` gained an optional `audit_message` (value-free variant, used only for the audit and log line; the job's message and notification are unchanged), added at every data-quoting raise site reachable from `run_restore`; an `ExportFormatError` with none records a fixed generic text. Tests run a duplicate-identifier archive through `run_restore`.
+- P2: date-scoped `counts` also carry `aborted` and `not_attempted`. P3: full-scope `counts.media_warnings` counts only the restore's own media warnings (`RestoreResult.media_warning_count`), not the snapshot note. P4: a failed "Restore finished" line ends with the value-free `reason=`. P5: the unknown/foreign-upload warning carries `exists=True|False` (still a uniform 404). P6: multi-scope institutions are ordered by id. P7: if the terminal save carrying `restore_audit` raises it is retried once without it, so the job cannot stay `running` because of the audit field (the log line is still written before the save).
+- P8: added tests for the could-not-start path, date-scoped excluded and media-warning counts, and `started_at` wiring.
+- Deviations from the spec text, accepted: the `audit_message` plumbing above (the spec's "Never" list allowed only returning counts and the pk map); the full-scope `completed_with_warnings` outcome on any media warning; a failed job carries zero counts.
+- Rejected as decided by the spec or already covered: log written before the save (the spec requires the line even if the save fails); unbounded `patients` list; audit lost if the job row is deleted (cross-story constraint recorded); no review page or separate audit table; mode passed by the caller; the migration header and "Story 2.6" help text (repo convention); refusal/denial-log regression tests (already present in the Story 2.1-2.3 view, preview and validation tests).
+- Deferred (see `deferred-work.md`): partial progress not carried when an unexpected error follows a committed full-scope apply; `archive.filename` is user-supplied and can carry PHI; no audit for jobs killed mid-run; no per-poll throttle on the unknown-upload warning; plus the patients-only pk map and unbounded `patients` list.
+
+**Process notes.** An API overload interrupted the patch agent once (resumed). The user committed the pre-patch implementation as `d4ed474` mid-workflow, so the patch pass is an uncommitted delta on top of it.
 
 ## Design Notes
 
@@ -89,5 +100,5 @@ baseline_commit: '2dc57b67f5cf05fe0555b0d2fb7fd596cc747d9e'
 ## Verification
 
 **Commands:**
-- `venv/Scripts/python.exe manage.py makemigrations --check --dry-run backup` -- no changes after `0016`.
-- `venv/Scripts/python.exe manage.py test backup --noinput` (background; one run at a time) -- all pass.
+- `venv/Scripts/python.exe manage.py makemigrations --check --dry-run backup` -- no changes after `0016`. Confirmed independently.
+- `venv/Scripts/python.exe manage.py test backup --noinput` (background; one run at a time) -- all pass. Confirmed independently: 633 tests, OK, 848s (matches the patch agent's own run).

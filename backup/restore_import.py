@@ -279,7 +279,10 @@ def _spool_import_set(upload, import_set, spool, progress=None):
             for key, record in reader:
                 if record is START:
                     if key not in EXPORT_MODEL_KEYS:
-                        raise ExportFormatError(f"db_export.json has an unknown model key ('{_clip(key, 60)}').")
+                        raise ExportFormatError(
+                            f"db_export.json has an unknown model key ('{_clip(key, 60)}').",
+                            audit_message="db_export.json has an unknown model key.",
+                        )
                     index = EXPORT_MODEL_KEYS.index(key)
                     if index <= last_index:
                         raise ExportFormatError(
