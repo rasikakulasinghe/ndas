@@ -20,8 +20,9 @@ from typing import List, Optional
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from django.http import Http404, HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -39,7 +40,8 @@ from backup import restore_validation
 from backup.forms import BackupScopeForm, RestoreConfirmForm, RestoreUploadForm
 from backup.job_lock import create_job_unless_overlapping
 from backup.models import BackupJob, RestoreUpload
-from backup.services import has_sufficient_disk_space
+from backup.services import get_archive_path, has_sufficient_disk_space
+from institution.models import Institution
 
 logger = logging.getLogger(__name__)
 # Story 2.1: denials and archive rejections log under `django.security` so
@@ -185,6 +187,48 @@ def _recent_jobs_for(request, institution, is_superadmin):
             Q(scope=institution) | Q(triggered_by=request.user)
         ).order_by('-created_at').distinct()[:10]
     return BackupJob.objects.filter(scope=institution).order_by('-created_at')[:10]
+
+
+def _history_jobs_for(institution, is_superadmin):
+    """
+    Story 3.1: the full, correctly-scoped backup history -- every visible
+    `backup`/`pre_restore_snapshot` job, newest first, unpaginated (the
+    caller paginates). Deliberately separate from `_recent_jobs_for` above
+    (read as precedent only, per Code Map -- not reused): that helper's
+    10-row cap and `scope=institution OR triggered_by=user` superadmin
+    shortcut under-scopes a multi-institution job for an institutional admin
+    and over-restricts a superadmin to only their own triggered jobs.
+
+    `job_type` never includes `restore` for either branch below -- a
+    `restore` job has no archive of its own to list (Boundary: covered by
+    Story 2.6's audit trail instead).
+
+    Superadmin: every matching job, system-wide, completely unfiltered by
+    scope -- `job_type` in {backup, pre_restore_snapshot}, including every
+    `pre_restore_snapshot` row (AD-14).
+
+    Institutional admin: `job_type` restricted to `backup` only (a
+    `pre_restore_snapshot` row is never shown -- AD-14: super-admin-only,
+    regardless of scope match, so that job_type is excluded outright for
+    this branch rather than merely left unmatched by the scope filter
+    below) -- and only jobs whose scope covers `institution`:
+    scope_type=single with scope=institution, OR scope_type=multi with
+    institution in scopes, OR scope_type=system (covers every institution).
+    """
+    scopes_ordered = Prefetch('scopes', queryset=Institution.objects.order_by('name'))
+
+    if is_superadmin:
+        qs = BackupJob.objects.filter(
+            job_type__in=(BackupJobType.BACKUP, BackupJobType.PRE_RESTORE_SNAPSHOT)
+        )
+    else:
+        qs = BackupJob.objects.filter(job_type=BackupJobType.BACKUP).filter(
+            Q(scope_type=BackupJobScopeType.SINGLE, scope=institution)
+            | Q(scope_type=BackupJobScopeType.MULTI, scopes=institution)
+            | Q(scope_type=BackupJobScopeType.SYSTEM)
+        ).distinct()
+
+    return qs.select_related('triggered_by', 'scope').prefetch_related(scopes_ordered).order_by('-created_at', '-id')
 
 
 def _status_context(request, institution, is_superadmin):
@@ -430,6 +474,64 @@ def backup_status(request):
         request, 'backup/status.html',
         _status_context(request, institution, user_type == UserType.SUPERADMIN),
     )
+
+
+@login_required(login_url="user-login")
+@require_GET
+@ratelimit(key='user_or_ip', rate='30/m')
+@handle_view_errors(redirect_url='home', error_message='Failed to load backup history.')
+def backup_history(request):
+    """
+    Story 3.1: the dedicated, paginated backup-history page -- every
+    `backup`/`pre_restore_snapshot` job visible to this admin (see
+    `_history_jobs_for`), 25 per page, newest first. A separate page from
+    Story 1.5's "Recent Backup Jobs" widget (`backup_status`/
+    `_recent_jobs_for`), which this view does not touch: that fragment stays
+    the trigger page's own capped, actively-polled glance.
+
+    Same ADMIN/SUPERADMIN gate as `backup_create` -- a non-admin (or an
+    admin with no resolved institution context) is redirected home, no data
+    rendered.
+    """
+    user_type = getattr(request.user, 'user_type', None)
+    if user_type not in (UserType.ADMIN, UserType.SUPERADMIN):
+        messages.error(request, "You don't have permission to view backup history.")
+        return redirect('home')
+
+    institution = _get_admin_institution(request)
+    if institution is None:
+        messages.error(request, "No institution context found for this account.")
+        return redirect('home')
+
+    is_superadmin = user_type == UserType.SUPERADMIN
+    jobs = _history_jobs_for(institution, is_superadmin)
+
+    paginator = Paginator(jobs, 25)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    # Size-from-disk (Boundary: no `size_bytes` field on BackupJob -- read
+    # once per completed row, at render time, from the archive that
+    # `run_backup` writes to `get_archive_path`). Set as a plain attribute on
+    # each row object (not a separate id-keyed dict) so the template can read
+    # `job.archive_size_bytes` directly instead of needing a dynamic-key
+    # dict lookup, which the Django template language doesn't support.
+    for job in page_obj:
+        if job.status == BackupJobStatus.COMPLETED:
+            try:
+                job.archive_size_bytes = os.path.getsize(get_archive_path(job))
+            except OSError:
+                # Archive pruned/missing since the list was last loaded (I/O
+                # matrix: 'Job completed, archive file missing from disk' --
+                # the row shows "unavailable" instead of a size).
+                job.archive_size_bytes = None
+        else:
+            job.archive_size_bytes = None
+
+    return render(request, 'backup/manager.html', {
+        'institution': institution,
+        'is_superadmin': is_superadmin,
+        'page_obj': page_obj,
+    })
 
 
 # ─── Story 2.1: restore archive upload + validation ─────────────────────────

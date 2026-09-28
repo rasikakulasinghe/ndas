@@ -103,6 +103,15 @@ class BackupTriggerAccessTest(BackupTriggerViewTestBase):
         response = client.get(self.url)
         self.assertEqual(response.status_code, 200)
 
+    def test_admin_get_response_contains_full_history_link(self):
+        # Story 3.1 review patch pass (P8): `backup:backup-history` is only
+        # reachable via this one link in the "Recent Backup Jobs" card
+        # header -- confirm it's actually rendered on the trigger page.
+        client = Client()
+        client.force_login(self.admin)
+        response = client.get(self.url)
+        self.assertContains(response, reverse('backup:backup-history'))
+
     def test_admin_get_context_is_not_superadmin_but_has_scope_form_for_dates(self):
         # A non-superadmin ADMIN never gets the Story 1.2 scope-mode
         # selector (mode/institutions) -- confirmed separately below by

@@ -1,0 +1,171 @@
+{% extends 'src/base.html' %}
+{% load static %}
+{% block title %}Backup - History{% endblock %}
+
+{% block content_header %}
+<div class="row mb-0">
+  <div class="col-sm-6">
+    <h1 class="m-0">Backup History</h1>
+    <small class="text-muted">
+      {% if is_superadmin %}System-wide{% else %}{{ institution.name }}{% endif %}
+    </small>
+  </div>
+  <div class="col-sm-6">
+    <ol class="breadcrumb float-sm-right">
+      <li class="breadcrumb-item"><a href="{% url 'backup:backup-create' %}">Backup</a></li>
+      <li class="breadcrumb-item active">History</li>
+    </ol>
+  </div>
+</div>
+{% endblock content_header %}
+
+{% block main_content %}
+<div class="container-fluid">
+  <div class="card card-primary card-outline">
+    <div class="card-header">
+      <h3 class="card-title"><i class="fas fa-history mr-2"></i>Backup History</h3>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="bg-light">
+            <tr>
+              <th scope="col">Triggered By</th>
+              <th scope="col">When</th>
+              <th scope="col">Type</th>
+              <th scope="col">Status</th>
+              <th scope="col" style="min-width: 140px;">Progress</th>
+              <th scope="col">Size</th>
+              <th scope="col">Scope</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for job in page_obj %}
+            <tr>
+              <td>{% if job.triggered_by %}{{ job.triggered_by.username }}{% else %}System{% endif %}</td>
+              <td>{{ job.created_at|date:"M d, Y, g:i A" }}</td>
+              <td>
+                {% if job.job_type == 'pre_restore_snapshot' %}
+                  <span class="badge badge-dark">Pre-restore snapshot</span>
+                {% else %}
+                  <span class="badge badge-light border">Backup</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if job.status == 'completed' and job.error_message %}
+                  <span class="badge badge-warning">Completed with warnings</span>
+                {% elif job.status == 'completed' %}
+                  <span class="badge badge-success">{{ job.get_status_display }}</span>
+                {% elif job.status == 'failed' %}
+                  <span class="badge badge-danger">{{ job.get_status_display }}</span>
+                {% elif job.status == 'running' %}
+                  <span class="badge badge-info">{{ job.get_status_display }}</span>
+                {% else %}
+                  <span class="badge badge-secondary">{{ job.get_status_display }}</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if job.status == 'pending' or job.status == 'running' %}
+                <div class="progress" style="height: 1rem;">
+                  <div class="progress-bar progress-bar-striped progress-bar-animated"
+                       role="progressbar" aria-label="Backup progress"
+                       style="width: {{ job.progress_pct }}%;"
+                       aria-valuenow="{{ job.progress_pct }}" aria-valuemin="0" aria-valuemax="100">
+                    {{ job.progress_pct }}%
+                  </div>
+                </div>
+                {% else %}
+                <span class="text-muted">&mdash;</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if job.status == 'completed' %}
+                  {% if job.archive_size_bytes is not None %}
+                    {{ job.archive_size_bytes|filesizeformat }}
+                  {% else %}
+                    <span class="text-muted" data-toggle="tooltip"
+                          title="The archive file is no longer on disk.">unavailable</span>
+                  {% endif %}
+                {% elif job.status == 'pending' or job.status == 'running' %}
+                  <span class="text-muted" data-toggle="tooltip"
+                        title="Not downloadable until the backup finishes.">
+                    <i class="fas fa-ban mr-1"></i>Not downloadable
+                  </span>
+                {% else %}
+                  <span class="text-muted">&mdash;</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if job.scope_type == 'system' %}
+                  System-wide
+                {% elif job.scope_type == 'multi' %}
+                  {% for inst in job.scopes.all %}{{ inst.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                {% elif job.scope %}
+                  {{ job.scope.name }}
+                {% else %}
+                  <span class="text-muted">&mdash;</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" class="text-center text-muted">No backup jobs yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if page_obj.paginator.num_pages > 1 %}
+      <div class="card-footer">
+        <div class="d-flex justify-content-between align-items-center">
+          <small class="text-muted">
+            Showing <strong>{{ page_obj.start_index }}-{{ page_obj.end_index }}</strong>
+            of <strong>{{ page_obj.paginator.count }}</strong> jobs
+          </small>
+          <nav aria-label="Backup history pagination">
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                {% if page_obj.has_previous %}
+                <a class="page-link px-2" href="?page={{ page_obj.previous_page_number }}" title="Previous">
+                  <i class="fas fa-chevron-left"></i>
+                </a>
+                {% else %}
+                <span class="page-link px-2 text-muted"><i class="fas fa-chevron-left"></i></span>
+                {% endif %}
+              </li>
+              {% for page_num in page_obj.paginator.page_range %}
+                {% if page_num == page_obj.number %}
+                <li class="page-item active" aria-current="page">
+                  <span class="page-link px-2">{{ page_num }}</span>
+                </li>
+                {% elif page_num > page_obj.number|add:'-3' and page_num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                  <a class="page-link px-2" href="?page={{ page_num }}">{{ page_num }}</a>
+                </li>
+                {% elif page_num == 1 or page_num == page_obj.paginator.num_pages %}
+                <li class="page-item">
+                  <a class="page-link px-2" href="?page={{ page_num }}">{{ page_num }}</a>
+                </li>
+                {% elif page_num == page_obj.number|add:'-3' or page_num == page_obj.number|add:'3' %}
+                <li class="page-item disabled"><span class="page-link px-2">&hellip;</span></li>
+                {% endif %}
+              {% endfor %}
+              <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                {% if page_obj.has_next %}
+                <a class="page-link px-2" href="?page={{ page_obj.next_page_number }}" title="Next">
+                  <i class="fas fa-chevron-right"></i>
+                </a>
+                {% else %}
+                <span class="page-link px-2 text-muted"><i class="fas fa-chevron-right"></i></span>
+                {% endif %}
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock main_content %}

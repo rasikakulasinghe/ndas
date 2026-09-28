@@ -133,6 +133,11 @@
       <div class="card card-outline card-secondary">
         <div class="card-header">
           <h3 class="card-title">Recent Backup Jobs</h3>
+          <div class="card-tools">
+            <a href="{% url 'backup:backup-history' %}" class="btn btn-tool" data-toggle="tooltip" title="View full backup history">
+              <i class="fas fa-history mr-1"></i>Full History
+            </a>
+          </div>
         </div>
         {% include 'backup/status.html' %}
       </div>

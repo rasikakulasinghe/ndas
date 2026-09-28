@@ -350,3 +350,15 @@
 - source_spec: `_bmad-output/implementation-artifacts/spec-2-6-restore-audit-trail.md`
   summary: A restore job killed mid-run gets no audit, and the unknown-upload warning has no per-poll throttling (the views' rate limits are the only bound).
   evidence: `record_and_log` runs only in `run_restore`'s terminal saves; `restore_audit.log_unknown_upload` writes one warning per request, including every HTMX status-fragment poll of a foreign or unknown upload id.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-1-view-backup-history-scoped-to-my-permissions.md`
+  summary: The history page shows only a status badge, not the failure/warning message text that status.html already shows for the same jobs -- a super admin diagnosing a failure must leave this page to find out why.
+  evidence: `backup/templates/backup/manager.html` renders `job.get_status_display`/the completed-with-warnings badge but never `job.error_message`, unlike `backup/templates/backup/status.html`'s "Details" column for the same underlying jobs. Out of scope for this story's Tasks (columns list: who/when/size/scope), but a real usability gap once this page is the primary place admins look.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-1-view-backup-history-scoped-to-my-permissions.md`
+  summary: The only path to `backup:backup-history` is the one link added to `backup/templates/backup/create.html`'s "Recent Backup Jobs" card header -- no sidebar/menu entry exists.
+  evidence: Neither the spec's Tasks nor its Code Map name a sidebar/menu change, and CLAUDE.md's sidebar entries are out of this story's scope; a user who doesn't notice that one card-header link has no other way to discover the page.
+
+- source_spec: `_bmad-output/implementation-artifacts/spec-3-1-view-backup-history-scoped-to-my-permissions.md`
+  summary: No query-count regression test around `_history_jobs_for`'s `select_related`/`prefetch_related`, and no end-to-end test of the exact multi-scope column text or the page's header/subtitle wording.
+  evidence: `backup/tests/test_history_views.py` asserts which jobs appear/don't appear and the size/status/empty-state text, but never asserts a bounded `assertNumQueries` for a 25-row page (so a future edit could silently reintroduce N+1s on `triggered_by`/`scope`/`scopes`), and never asserts the rendered multi-institution scope string (e.g. "Hosp A, Hosp B") or the page's own title/subtitle text.
