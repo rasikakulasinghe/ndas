@@ -23,7 +23,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
 from django.db.models import Prefetch, Q
-from django.http import Http404, HttpResponse, HttpResponseForbidden
+from django.http import FileResponse, Http404, HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods
@@ -533,6 +533,128 @@ def backup_history(request):
         'page_obj': page_obj,
     })
 
+
+def _backup_download_filename(job):
+    """Server-constructed download filename -- built from the job's own id,
+    type and created date only, never from user input (Design Notes: no
+    scope-name/institution-slug, unlike the Excel export's institution-slug
+    naming -- there is no scope-label helper for BackupJob and building one
+    is unrelated surface area for this story)."""
+    kind = 'pre_restore_snapshot' if job.job_type == BackupJobType.PRE_RESTORE_SNAPSHOT else 'backup'
+    return f"ndas_{kind}_{job.id}_{job.created_at:%Y%m%d}.zip"
+
+
+def _log_backup_download_refused(request, pk):
+    """A download was refused because the job id is unknown, not completed, or
+    out of this admin's scope -- the response is a plain 404 either way (AD-7:
+    no hint which). Mirrors `restore_audit.log_unknown_upload`'s
+    audit-without-leaking pattern: `exists` is recorded server-side only (in
+    the log, never in the response) so an unknown pk can be told from another
+    admin's job when this line is read later.
+
+    Review patch (P4): the existence check itself can fail (e.g. a DB error)
+    independently of whether the job exists -- that failure is logged as
+    `exists=unknown` rather than silently folded into `exists=False`, so an
+    operator reading the log later can tell "no such job" from "couldn't
+    check"."""
+    try:
+        exists = BackupJob.objects.filter(pk=pk).exists()
+    except Exception:
+        logger.exception("Backup download refusal: could not check whether job=%s exists.", pk)
+        exists = 'unknown'
+    security_logger.warning(
+        "Backup download refused (unknown, not completed, or out of scope): user=%s job=%s exists=%s",
+        getattr(request.user, 'username', '?'), pk, exists,
+    )
+
+
+@login_required(login_url="user-login")
+@require_GET
+@ratelimit(key='user_or_ip', rate='30/m')
+def backup_download(request, pk):
+    """
+    Story 3.2: stream a completed backup's `.zip` archive to an admin whose
+    scope covers it -- exactly Story 3.1's `_history_jobs_for` scoping,
+    filtered to `status=completed`.
+
+    Deliberately undecorated by `handle_view_errors` at this level (mirrors
+    the restore views' own-upload-lookup pattern, e.g. `restore_status`/
+    `_own_upload_or_404`): `get_object_or_404` raises a plain `Http404` for a
+    wrong-status/out-of-scope/unknown pk, and `handle_view_errors`'s generic
+    `except Exception` clause would otherwise catch that `Http404` and turn
+    it into a redirect -- exactly the information leak AD-7's one-shot 404
+    is meant to avoid. The vanished-archive case is different (the row
+    itself confirms the backup is real and completed) and gets its own
+    friendly refusal below, per Design Notes.
+    """
+    user_type = getattr(request.user, 'user_type', None)
+    if user_type not in (UserType.ADMIN, UserType.SUPERADMIN):
+        security_logger.warning(
+            "Backup download denied (not an admin): user=%s user_type=%s job=%s",
+            request.user.username, user_type, pk,
+        )
+        messages.error(request, "You don't have permission to download backups.")
+        return redirect('home')
+
+    institution = _get_admin_institution(request)
+    if institution is None:
+        security_logger.warning(
+            "Backup download denied (no institution context): user=%s job=%s",
+            request.user.username, pk,
+        )
+        messages.error(request, "No institution context found for this account.")
+        return redirect('home')
+
+    is_superadmin = user_type == UserType.SUPERADMIN
+    try:
+        job = get_object_or_404(
+            _history_jobs_for(institution, is_superadmin), pk=pk, status=BackupJobStatus.COMPLETED,
+        )
+    except Http404:
+        _log_backup_download_refused(request, pk)
+        raise
+
+    return _backup_download_body(request, job)
+
+
+@handle_view_errors(redirect_url='backup:backup-history', error_message='Failed to download the backup.')
+def _backup_download_body(request, job):
+    """Open and stream the archive, or refuse cleanly if it has vanished from
+    disk. `open()`/`os.fstat()` are wrapped together so a missing or
+    unreadable archive is caught before any bytes reach the client -- never a
+    raw exception, never a partial/corrupt stream. Nothing on disk is
+    modified.
+
+    Review patch (P1): `archive_file` is tracked outside the `try` so that if
+    `open()` succeeds but the subsequent `os.fstat()` raises (rare, but
+    possible -- e.g. the file vanishes between the two calls), the already-open
+    handle is explicitly closed before refusing, instead of leaking the fd."""
+    archive_path = get_archive_path(job)
+    archive_file = None
+    try:
+        archive_file = open(archive_path, 'rb')
+        archive_size = os.fstat(archive_file.fileno()).st_size
+    except OSError:
+        if archive_file is not None:
+            archive_file.close()
+        security_logger.warning(
+            "Backup download refused (archive missing from disk): user=%s job=%s",
+            request.user.username, job.id,
+        )
+        messages.error(request, "This backup's archive file is no longer available.")
+        return redirect('backup:backup-history')
+
+    filename = _backup_download_filename(job)
+    security_logger.info(
+        "Backup download: user=%s job=%s size=%s filename=%s",
+        request.user.username, job.id, archive_size, filename,
+    )
+    response = FileResponse(archive_file, content_type='application/zip')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    # Review patch (P3): a full institution backup archive must never be
+    # cached by an intermediary or the browser.
+    response['Cache-Control'] = 'no-store, private'
+    return response
 
 # ─── Story 2.1: restore archive upload + validation ─────────────────────────
 

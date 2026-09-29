@@ -259,6 +259,33 @@ class BackupHistoryColumnsTest(BackupHistoryViewTestBase):
         self.assertIsNone(job.archive_size_bytes)
         self.assertContains(response, 'unavailable')
 
+    def test_completed_job_with_archive_shows_download_link(self):
+        """Story 3.2 review patch (P2): the Download link is gated on
+        `job.status == 'completed' and job.archive_size_bytes is not None`
+        -- Story 3.1's own missing-archive signal."""
+        job = self._make_job(status=BackupJobStatus.COMPLETED)
+        archive_path = get_archive_path(job)
+        archive_path.parent.mkdir(parents=True, exist_ok=True)
+        archive_path.write_bytes(b'zip-bytes')
+
+        client = self._admin_client()
+        response = client.get(self.url)
+        self.assertContains(response, reverse('backup:backup-download', args=[job.pk]))
+
+    def test_completed_job_missing_archive_hides_download_link(self):
+        job = self._make_job(status=BackupJobStatus.COMPLETED)  # no archive written to disk
+        client = self._admin_client()
+        response = client.get(self.url)
+        self.assertNotContains(response, reverse('backup:backup-download', args=[job.pk]))
+
+    def test_pending_running_failed_jobs_hide_download_link(self):
+        client = self._admin_client()
+        for status in (BackupJobStatus.PENDING, BackupJobStatus.RUNNING, BackupJobStatus.FAILED):
+            with self.subTest(status=status):
+                job = self._make_job(status=status)
+                response = client.get(self.url)
+                self.assertNotContains(response, reverse('backup:backup-download', args=[job.pk]))
+
     def test_deleted_triggered_by_shows_system(self):
         self._make_job(triggered_by=None)
         client = self._admin_client()

@@ -37,6 +37,7 @@
               <th scope="col" style="min-width: 140px;">Progress</th>
               <th scope="col">Size</th>
               <th scope="col">Scope</th>
+              <th scope="col">Download</th>
             </tr>
           </thead>
           <tbody>
@@ -106,10 +107,20 @@
                   <span class="text-muted">&mdash;</span>
                 {% endif %}
               </td>
+              <td>
+                {% if job.status == 'completed' and job.archive_size_bytes is not None %}
+                  <a class="btn btn-sm btn-outline-primary" href="{% url 'backup:backup-download' job.id %}"
+                     title="Download this backup's archive">
+                    <i class="fas fa-download mr-1"></i>Download
+                  </a>
+                {% else %}
+                  <span class="text-muted">&mdash;</span>
+                {% endif %}
+              </td>
             </tr>
             {% empty %}
             <tr>
-              <td colspan="7" class="text-center text-muted">No backup jobs yet.</td>
+              <td colspan="8" class="text-center text-muted">No backup jobs yet.</td>
             </tr>
             {% endfor %}
           </tbody>
