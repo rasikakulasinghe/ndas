@@ -101,6 +101,7 @@ def delete_modal(entity, modal_id=None):
         'Problem': f'/problems/delete/{entity_id}/',
         'CustomUser': f'/users/admin/users/{entity_id}/delete/',
         'User': f'/users/admin/users/{entity_id}/delete/',
+        'BackupJob': f'/backup/history/{entity_id}/delete/',
     }
 
     delete_url = url_map.get(entity_type, f'/{entity_type.lower()}/delete/{entity_id}/')

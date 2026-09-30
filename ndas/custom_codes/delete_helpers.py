@@ -173,6 +173,12 @@ def get_redirect_url(entity_type: str, patient_id: int = None) -> str:
         'Bookmark': '/manager/patient/',
         'CustomUser': '/users/admin/users/',
         'User': '/users/admin/users/',
+        # Story 3.3 (backup app): back to the backup-history page -- reused
+        # institution scoping (`_deletable_jobs_for`), not `added_by`/staff
+        # ownership, governs whether a given BackupJob was even reachable
+        # here, so this endpoint deliberately has no `has_delete_permission`/
+        # `validate_can_delete` branch either (see backup/views.py).
+        'BackupJob': '/backup/history/',
     }
 
     # Handle Problem type with patient_id
@@ -245,6 +251,15 @@ def get_entity_warning_items(entity: Any) -> list:
         warnings.append("User will not be able to log in")
         warnings.append("Historical records will be preserved for audit trail")
 
+    elif entity_type == 'BackupJob':
+        warnings.append("The backup archive (.zip) will be permanently deleted from disk")
+        warnings.append("This history record will be permanently removed")
+        if entity.job_type == 'pre_restore_snapshot':
+            warnings.append(
+                "This is a pre-restore snapshot -- it cannot be deleted while it is still "
+                "backing an active restore"
+            )
+
     # Default warning if no specific warnings
     if not warnings:
         warnings.append("This record will be permanently deleted")
@@ -304,5 +319,29 @@ def get_entity_detail_items(entity: Any) -> Dict[str, str]:
         details['Username'] = entity.username
         details['Email'] = entity.email or 'N/A'
         details['Full Name'] = entity.get_full_name() if hasattr(entity, 'get_full_name') else 'N/A'
+
+    elif entity_type == 'BackupJob':
+        details['Type'] = entity.get_job_type_display() if hasattr(entity, 'get_job_type_display') else entity.job_type
+        details['Status'] = entity.get_status_display() if hasattr(entity, 'get_status_display') else entity.status
+        # Mirrors backup/templates/backup/manager.html's own Scope column
+        # rendering exactly (system/multi/single/none), including the
+        # `scope_type == 'multi'` case (missed on the first implementation
+        # pass -- a multi-institution backup's delete modal silently showed
+        # no Scope line).
+        if entity.scope_type == 'system':
+            details['Scope'] = 'System-wide'
+        elif entity.scope_type == 'multi':
+            details['Scope'] = ', '.join(inst.name for inst in entity.scopes.all())
+        elif entity.scope:
+            details['Scope'] = entity.scope.name
+        else:
+            # scope_type == 'single' but entity.scope is None -- the
+            # institution was deleted (FK is SET_NULL). Mirrors
+            # backup/templates/backup/manager.html's own Scope column
+            # fallback for this exact state instead of silently omitting
+            # the line.
+            details['Scope'] = '—'
+        if entity.created_at:
+            details['Created'] = entity.created_at.strftime('%Y-%m-%d %H:%M')
 
     return details

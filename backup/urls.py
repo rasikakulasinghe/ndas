@@ -12,6 +12,8 @@ urlpatterns = [
     path('history/', views.backup_history, name='backup-history'),
     # Story 3.2 — Download a completed backup's archive.
     path('history/<int:pk>/download/', views.backup_download, name='backup-download'),
+    # Story 3.3 — Delete an individual backup (or pre-restore snapshot).
+    path('history/<int:pk>/delete/', views.backup_delete, name='backup-delete'),
     # Story 2.1 - Upload and validate a restore archive (super admin only).
     path('restore/', views.restore_upload, name='restore-upload'),
     path('restore/<int:pk>/', views.restore_status, name='restore-status'),

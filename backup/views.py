@@ -9,8 +9,10 @@ check -> create `BackupJob` -> launch a detached subprocess running
 `manage.py run_backup <job_id>` -> redirect immediately. The export itself
 never runs synchronously in this request.
 """
+import json
 import logging
 import os
+import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -23,7 +25,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
 from django.db.models import Prefetch, Q
-from django.http import FileResponse, Http404, HttpResponse, HttpResponseForbidden
+from django.http import FileResponse, Http404, HttpResponse, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods
@@ -40,8 +42,9 @@ from backup import restore_validation
 from backup.forms import BackupScopeForm, RestoreConfirmForm, RestoreUploadForm
 from backup.job_lock import create_job_unless_overlapping
 from backup.models import BackupJob, RestoreUpload
-from backup.services import get_archive_path, has_sufficient_disk_space
+from backup.services import get_archive_dir, get_archive_path, has_sufficient_disk_space
 from institution.models import Institution
+from ndas.custom_codes.delete_helpers import get_entity_display_name, get_redirect_url
 
 logger = logging.getLogger(__name__)
 # Story 2.1: denials and archive rejections log under `django.security` so
@@ -526,6 +529,14 @@ def backup_history(request):
                 job.archive_size_bytes = None
         else:
             job.archive_size_bytes = None
+        # Story 3.3: whether this row shows a delete affordance at all --
+        # `job_type != restore` is always true here already (`_history_jobs_for`
+        # never returns a restore-type row), kept anyway so this stays
+        # correct even if that upstream filtering ever changes.
+        job.is_deletable = (
+            job.status in (BackupJobStatus.COMPLETED, BackupJobStatus.FAILED)
+            and job.job_type != BackupJobType.RESTORE
+        )
 
     return render(request, 'backup/manager.html', {
         'institution': institution,
@@ -655,6 +666,247 @@ def _backup_download_body(request, job):
     # cached by an intermediary or the browser.
     response['Cache-Control'] = 'no-store, private'
     return response
+
+
+def _deletable_jobs_for(institution, is_superadmin):
+    """
+    Story 3.3: the scoped lookup for `backup_delete` -- the same
+    institution-scope rule as `_history_jobs_for` (AD-15: an institutional
+    admin may act only on their own institution's jobs; a super admin, any),
+    but deliberately *without* `_history_jobs_for`'s `job_type` restriction.
+
+    `_history_jobs_for` never returns a `job_type=restore` row at all (it has
+    no archive of its own to list on the history page) -- reusing it verbatim
+    here would make a `restore`-type job's pk indistinguishable from an
+    unknown/out-of-scope one (both 404), but the spec requires a
+    `restore`-type job to be told apart with its own 400 ("Cannot delete")
+    refusal (Boundaries: "Job-type scope") so Story 2.6's audit trail is
+    protected by an explicit, logged guard rather than by happening to be
+    unreachable. So this queryset applies only the institution-scope half of
+    `_history_jobs_for`'s filtering; the `job_type`/`status` guards run
+    explicitly in `backup_delete` after the row is found -- including AD-14's
+    super-admin-only rule for `pre_restore_snapshot` rows, which this
+    queryset does NOT enforce (a non-superadmin's scoped result can still
+    include a `pre_restore_snapshot` row scoped to their own institution;
+    `backup_delete` refuses it explicitly rather than relying on this
+    queryset to filter it out).
+    """
+    if is_superadmin:
+        return BackupJob.objects.all()
+    return BackupJob.objects.filter(
+        Q(scope_type=BackupJobScopeType.SINGLE, scope=institution)
+        | Q(scope_type=BackupJobScopeType.MULTI, scopes=institution)
+        | Q(scope_type=BackupJobScopeType.SYSTEM)
+    ).distinct()
+
+
+def _log_backup_delete_refused(request, pk):
+    """Mirrors `_log_backup_download_refused`: an unknown pk and an
+    out-of-scope one both produce the same plain 404 response (AD-7: no
+    hint which); the distinction is recorded server-side only, in
+    security.log."""
+    try:
+        exists = BackupJob.objects.filter(pk=pk).exists()
+    except Exception:
+        logger.exception("Backup delete refusal: could not check whether job=%s exists.", pk)
+        exists = 'unknown'
+    security_logger.warning(
+        "Backup delete refused (unknown or out of scope): user=%s job=%s exists=%s",
+        getattr(request.user, 'username', '?'), pk, exists,
+    )
+
+
+@handle_view_errors(redirect_url='backup:backup-history', error_message='Failed to delete the backup.')
+@ratelimit(key='user', rate='5/m', method='DELETE')
+@ratelimit(key='ip', rate='10/m', method='DELETE')
+@login_required(login_url="user-login")
+@require_http_methods(["DELETE"])
+def backup_delete(request, pk):
+    """
+    Story 3.3: delete an individual backup (or `pre_restore_snapshot`) row --
+    both its archive directory (`get_archive_dir`) and its `BackupJob` row.
+
+    Mirrors `patient_delete`'s exact contract (decorator stack, `{password}`
+    JSON body, `check_password`, JSON response shape, status codes): every
+    refusal this view decides for itself is a `JsonResponse`, never a
+    rendered page. Only a rate-limit breach or a genuinely unexpected error
+    reaching `handle_view_errors` is turned into a redirect -- the same
+    accepted behavior `patient_delete` already relies on, not an all-JSON
+    guarantee for every possible outcome.
+
+    Scoped via `_deletable_jobs_for` (institution-only -- see its docstring
+    for why this isn't `_history_jobs_for` verbatim): an out-of-scope or
+    unknown pk is a plain 404. Deletable only when `status` is
+    `completed`/`failed` and `job_type` is `backup`/`pre_restore_snapshot` --
+    never `pending`/`running` (a background `run_backup`/`run_restore`
+    process may still be writing/reading it) and never `restore` (Story 2.6's
+    audit trail). The job-type check is an allowlist (`backup`/
+    `pre_restore_snapshot` only), and a `pre_restore_snapshot` additionally
+    requires `is_superadmin` (AD-14: super-admin-only regardless of scope,
+    in-use or not). A `pre_restore_snapshot` still backing a `pending`/
+    `running` restore is refused, re-checked atomically immediately before
+    the delete itself -- this narrows the TOCTOU window but does not fully
+    close it, since `select_for_update()` is not used here and would be a
+    no-op on SQLite (this project's primary DB) regardless.
+    """
+    user_type = getattr(request.user, 'user_type', None)
+    if user_type not in (UserType.ADMIN, UserType.SUPERADMIN):
+        security_logger.warning(
+            "Backup delete denied (not an admin): user=%s user_type=%s job=%s",
+            request.user.username, user_type, pk,
+        )
+        return JsonResponse({
+            "success": False,
+            "error": "Permission denied",
+            "message": "You don't have permission to delete backups.",
+        }, status=403)
+
+    institution = _get_admin_institution(request)
+    if institution is None:
+        security_logger.warning(
+            "Backup delete denied (no institution context): user=%s job=%s",
+            request.user.username, pk,
+        )
+        return JsonResponse({
+            "success": False,
+            "error": "Permission denied",
+            "message": "No institution context found for this account.",
+        }, status=403)
+
+    is_superadmin = user_type == UserType.SUPERADMIN
+    try:
+        job = get_object_or_404(_deletable_jobs_for(institution, is_superadmin), pk=pk)
+    except Http404:
+        _log_backup_delete_refused(request, pk)
+        return JsonResponse({
+            "success": False,
+            "error": "Not found",
+            "message": "Backup job not found.",
+        }, status=404)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({
+            "success": False,
+            "error": "Invalid request",
+            "message": "Invalid request format.",
+        }, status=400)
+
+    if not isinstance(data, dict):
+        return JsonResponse({
+            "success": False,
+            "error": "Invalid request",
+            "message": "Invalid request format.",
+        }, status=400)
+
+    password = data.get('password', '')
+    if not password:
+        return JsonResponse({
+            "success": False,
+            "error": "Password required",
+            "message": "Password is required to confirm deletion.",
+        }, status=400)
+
+    if not request.user.check_password(password):
+        security_logger.warning(
+            "Backup delete refused (invalid password): user=%s job=%s", request.user.username, pk,
+        )
+        return JsonResponse({
+            "success": False,
+            "error": "Invalid password",
+            "message": "Incorrect password. Please try again.",
+        }, status=401)
+
+    if job.status not in (BackupJobStatus.COMPLETED, BackupJobStatus.FAILED):
+        security_logger.warning(
+            "Backup delete refused (status=%s): user=%s job=%s", job.status, request.user.username, pk,
+        )
+        return JsonResponse({
+            "success": False,
+            "error": "Cannot delete",
+            "message": "Only a completed or failed backup can be deleted.",
+        }, status=400)
+
+    # Job-type guard is an allowlist, not a denylist: only `backup`/
+    # `pre_restore_snapshot` may proceed past this point at all. A
+    # `restore`-type job -- even completed/failed -- is refused the same
+    # way regardless of who is asking (protects Story 2.6's audit trail).
+    if job.job_type not in (BackupJobType.BACKUP, BackupJobType.PRE_RESTORE_SNAPSHOT):
+        security_logger.warning(
+            "Backup delete refused (restore-type job): user=%s job=%s", request.user.username, pk,
+        )
+        return JsonResponse({
+            "success": False,
+            "error": "Cannot delete",
+            "message": "Restore jobs cannot be deleted from the backup history.",
+        }, status=400)
+
+    # AD-14: a `pre_restore_snapshot` row is super-admin-only regardless of
+    # scope -- a non-superadmin must never delete one, in-use or not.
+    # `_deletable_jobs_for` deliberately does not enforce this (see its own
+    # docstring), so it must be enforced explicitly here.
+    if job.job_type == BackupJobType.PRE_RESTORE_SNAPSHOT and not is_superadmin:
+        security_logger.warning(
+            "Backup delete denied (snapshot, not a superadmin): user=%s user_type=%s job=%s",
+            request.user.username, user_type, pk,
+        )
+        return JsonResponse({
+            "success": False,
+            "error": "Permission denied",
+            "message": "Only a super admin can delete a pre-restore snapshot.",
+        }, status=403)
+
+    job_id = job.id
+    job_display = get_entity_display_name(job)
+    archive_dir = get_archive_dir(job)
+
+    try:
+        with transaction.atomic():
+            # Re-checked here, inside the same atomic block as the delete
+            # itself (review patch: TOCTOU fix), not earlier -- a restore
+            # could otherwise attach to this snapshot between an earlier
+            # check and the delete.
+            if job.job_type == BackupJobType.PRE_RESTORE_SNAPSHOT and job.restores_using_snapshot.filter(
+                status__in=(BackupJobStatus.PENDING, BackupJobStatus.RUNNING)
+            ).exists():
+                security_logger.warning(
+                    "Backup delete refused (snapshot in use): user=%s job=%s", request.user.username, job_id,
+                )
+                return JsonResponse({
+                    "success": False,
+                    "error": "Cannot delete",
+                    "message": "This snapshot is still backing an active restore and cannot be deleted.",
+                }, status=400)
+
+            try:
+                shutil.rmtree(archive_dir)
+            except FileNotFoundError:
+                # Already gone (e.g. pruned/moved outside the app) -- not a
+                # delete failure; the now-orphaned row is still removed.
+                pass
+
+            job.delete()
+    except OSError:
+        logger.exception("Backup delete: failed to remove archive directory for job=%s", job_id)
+        security_logger.error(
+            "Backup delete refused (archive removal failed): user=%s job=%s", request.user.username, job_id,
+        )
+        return JsonResponse({
+            "success": False,
+            "error": "Deletion failed",
+            "message": "Could not remove the backup archive from disk. Please try again or contact support.",
+        }, status=500)
+
+    security_logger.info(
+        "Backup delete: user=%s job=%s job_type=%s", request.user.username, job_id, job.job_type,
+    )
+    return JsonResponse({
+        "success": True,
+        "message": f"{job_display} has been deleted successfully.",
+        "redirect_url": get_redirect_url('BackupJob'),
+    })
+
 
 # ─── Story 2.1: restore archive upload + validation ─────────────────────────
 

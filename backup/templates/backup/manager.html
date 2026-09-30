@@ -1,5 +1,6 @@
 {% extends 'src/base.html' %}
 {% load static %}
+{% load delete_modal_tags %}
 {% block title %}Backup - History{% endblock %}
 
 {% block content_header %}
@@ -38,6 +39,7 @@
               <th scope="col">Size</th>
               <th scope="col">Scope</th>
               <th scope="col">Download</th>
+              <th scope="col">Delete</th>
             </tr>
           </thead>
           <tbody>
@@ -117,10 +119,23 @@
                   <span class="text-muted">&mdash;</span>
                 {% endif %}
               </td>
+              <td>
+                {% if job.is_deletable %}
+                  {% delete_modal_id 'BackupJob' job.id as job_delete_modal_id %}
+                  <button type="button" class="btn btn-sm btn-outline-danger delete-trigger-btn"
+                          data-modal-target="{{ job_delete_modal_id }}"
+                          title="Delete this backup">
+                    <i class="fas fa-trash-alt mr-1"></i>Delete
+                  </button>
+                  {% delete_modal job modal_id=job_delete_modal_id %}
+                {% else %}
+                  <span class="text-muted">&mdash;</span>
+                {% endif %}
+              </td>
             </tr>
             {% empty %}
             <tr>
-              <td colspan="8" class="text-center text-muted">No backup jobs yet.</td>
+              <td colspan="9" class="text-center text-muted">No backup jobs yet.</td>
             </tr>
             {% endfor %}
           </tbody>
