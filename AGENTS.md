@@ -5,7 +5,7 @@ Workflow guidance for AI agents. For project patterns and architecture, see `CLA
 **Last Updated:** 2025-12-25
 
 <!-- bmad:context -->
-<!-- Verified 2026-09-16 against c451df2. Managed by bmad-project-context; edits inside this block are replaced on refresh. Keep anything you want preserved outside the markers. -->
+<!-- Verified 2026-10-01 against df95663. Managed by bmad-project-context; edits inside this block are replaced on refresh. Keep anything you want preserved outside the markers. -->
 
 ## NDAS
 
@@ -20,7 +20,6 @@ Django medical system for patient records, video-based neurodevelopmental assess
 
 - Proposals / architecture changes: use the BMAD skills `bmad-spec` and `bmad-architecture` — OpenSpec was removed from this repo (old pointers are dead).
 - Security test suites `video/tests/test_security.py`, `users/tests/test_security.py`, `reports/tests/test_security.py` cover ownership/isolation/rate-limit checks — run them when touching views or permissions in those apps.
-- Known-but-not-yet-fixed issues (scoped, evidenced, deliberately deferred): `_bmad-output/implementation-artifacts/deferred-work.md` — check it before assuming a rough edge you hit is unknown.
 
 ## Running and verifying
 

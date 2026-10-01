@@ -14,7 +14,7 @@ For planning, proposals, or architecture changes, use the BMAD skills `bmad-spec
 
 **Stack:** Django 5.2 (LTS) | PostgreSQL/SQLite | AdminLTE 3.2 | Bootstrap 4.6 | HTMX | Video.js
 
-**Apps:** `patients/` (root URL), `users/`, `video/`, `reports/`, `problemlist/`, `institution/` (Phase 2, multi-institution), `referral/` (Phase 2, cross-institution referrals)
+**Apps:** `patients/` (root URL), `users/`, `video/`, `reports/`, `problemlist/`, `backup/` (backup & restore), `institution/` (Phase 2, multi-institution), `referral/` (Phase 2, cross-institution referrals)
 
 ## Quick Commands
 
