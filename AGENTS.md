@@ -5,7 +5,7 @@ Workflow guidance for AI agents. For project patterns and architecture, see `CLA
 **Last Updated:** 2025-12-25
 
 <!-- bmad:context -->
-<!-- Verified 2026-10-01 against d1f5883. Managed by bmad-project-context; edits inside this block are replaced on refresh. Keep anything you want preserved outside the markers. -->
+<!-- Verified 2026-10-01 against 55b0f59. Managed by bmad-project-context; edits inside this block are replaced on refresh. Keep anything you want preserved outside the markers. -->
 
 ## NDAS
 
@@ -15,10 +15,12 @@ Django medical system for patient records, video-based neurodevelopmental assess
 
 - Never commit `.env` — real config (including `SECRET_KEY`) was committed here before; it's gitignored now, don't re-add it.
 - Never set `MULTI_INSTITUTION_ENABLED=True` in production until `institution/tests/test_isolation.py` passes on staging — any cross-institution data leak is a blocking defect.
+- Never commit `db.sqlite3` or `passenger_wsgi.py` — both are tracked in git today (a pre-existing gap, not yet remediated) and `db.sqlite3` may hold patient data; don't re-add either once they're removed from tracking.
 
 ## Where things are
 
 - Proposals / architecture changes: use the BMAD skills `bmad-spec` and `bmad-architecture` — OpenSpec was removed from this repo (old pointers are dead).
+- System-wide architecture invariants (AD-1..AD-15): `_bmad-output/planning-artifacts/architecture/architecture-NDAS-2026-10-01/ARCHITECTURE-SPINE.md`
 - Security test suites `video/tests/test_security.py`, `users/tests/test_security.py`, `reports/tests/test_security.py` cover ownership/isolation/rate-limit checks — run them when touching views or permissions in those apps.
 
 ## Running and verifying
@@ -43,5 +45,7 @@ Django medical system for patient records, video-based neurodevelopmental assess
 - Any new report-download endpoint must verify the `report_owner_{file_id}_{session_key}` cache key set by `report_builder` before serving the file — a UUID/file_id alone is not access control.
 - Any view that changes a user's own password must call `update_session_auth_hash(request, user)` right after `form.save()` — Django invalidates the session's auth hash on password change, so skipping this silently logs the user out on their very next request (`userChangePassword` shipped without it once).
 - Superuser bypass checks use `request.user.is_superuser` everywhere except `institution/middleware.py`'s context resolution, which keys off `user_type == UserType.SUPERADMIN` instead — nothing enforces these two stay in sync on an account, so don't assume one implies the other.
+- `requirements.txt` carries Celery's own dependency chain (`amqp`, `billiard`, `kombu`, `vine`) with no `celery` package and no task-queue code anywhere — don't assume a background task queue exists here.
+- No `psycopg`/`psycopg2` or `redis`/`django-redis` driver is pinned in `requirements.txt`, despite `settings.py` having full Postgres and Redis branches — pin the driver explicitly before a VPS or Redis-enabled deploy; it isn't already covered.
 
 <!-- /bmad:context -->
