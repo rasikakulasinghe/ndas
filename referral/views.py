@@ -131,14 +131,27 @@ def referral_initiate(request, patient_id):
 
 @login_required(login_url="user-login")
 @require_GET
-def get_institution_clinicians(request, institution_id):
+def get_institution_clinicians(request):
     """
     HTMX endpoint: Return <option> tags for active clinicians at a given institution.
     Used by referral initiate form to populate the to_clinician dropdown dynamically.
+
+    The target institution is read from `request.GET['to_institution']` (via
+    hx-include on the institution <select>) rather than from the URL path, so
+    the dropdown reflects whichever institution the clinician just selected.
     """
     from django.http import HttpResponse
     from users.models import CustomUser
     from ndas.custom_codes.choice import UserType
+
+    raw_institution_id = request.GET.get('to_institution')
+    if not raw_institution_id:
+        return HttpResponse('<option value="">— Select institution first —</option>')
+
+    try:
+        institution_id = int(raw_institution_id)
+    except (TypeError, ValueError):
+        return HttpResponse('<option value="">— Select institution first —</option>')
 
     institution = getattr(request, 'institution', None)
 

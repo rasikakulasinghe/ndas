@@ -258,7 +258,10 @@
         </div>
         <div class="card-body">
           {% if problem.status != 'resolved' %}
-          <form method="POST" action="{% url 'problem-status-change' problem.pk %}" class="mb-2">
+          <form method="POST" action="{% url 'problem-status-change' problem.pk %}" class="mb-2"
+                hx-post="{% url 'problem-status-change' problem.pk %}"
+                hx-target="#problem-status-swap-target"
+                hx-swap="innerHTML">
             {% csrf_token %}
             <input type="hidden" name="status" value="resolved">
             <button type="submit" class="btn btn-sm btn-success btn-block"
@@ -269,7 +272,10 @@
           {% endif %}
 
           {% if problem.status == 'active' %}
-          <form method="POST" action="{% url 'problem-status-change' problem.pk %}" class="mb-2">
+          <form method="POST" action="{% url 'problem-status-change' problem.pk %}" class="mb-2"
+                hx-post="{% url 'problem-status-change' problem.pk %}"
+                hx-target="#problem-status-swap-target"
+                hx-swap="innerHTML">
             {% csrf_token %}
             <input type="hidden" name="status" value="chronic">
             <button type="submit" class="btn btn-sm btn-info btn-block"
@@ -280,7 +286,10 @@
           {% endif %}
 
           {% if problem.status in 'resolved,inactive' %}
-          <form method="POST" action="{% url 'problem-status-change' problem.pk %}">
+          <form method="POST" action="{% url 'problem-status-change' problem.pk %}"
+                hx-post="{% url 'problem-status-change' problem.pk %}"
+                hx-target="#problem-status-swap-target"
+                hx-swap="innerHTML">
             {% csrf_token %}
             <input type="hidden" name="status" value="active">
             <button type="submit" class="btn btn-sm btn-warning btn-block"
@@ -289,6 +298,13 @@
             </button>
           </form>
           {% endif %}
+
+          <!-- HTMX swap target for the row fragment returned by problem_status_change.
+               Hidden here (this page shows a detail card, not a table row) — the
+               fragment is a <tr>, so it must land inside a <table>/<tbody> to stay
+               valid HTML; this keeps the quick-action POST inside the app shell
+               instead of navigating to the bare fragment. -->
+          <table class="d-none" aria-hidden="true"><tbody id="problem-status-swap-target"></tbody></table>
         </div>
       </div>
 

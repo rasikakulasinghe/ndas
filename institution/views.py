@@ -936,8 +936,12 @@ def protected_media_view(request, path):
     parts = path.split('/')
     if len(parts) >= 2 and parts[1].lower() in ('videos', 'attachments', 'logo'):
         path_slug = parts[0]
-        # SUPERADMIN can access all institution files
-        if user_type != UserType.SUPERADMIN:
+        # 'pending' is the bucket used for files uploaded before an
+        # institution is assigned (see get_institution_video_path /
+        # get_institution_attachment_path) — it has no owning institution,
+        # so any authenticated user may access it.
+        if path_slug != 'pending' and user_type != UserType.SUPERADMIN:
+            # SUPERADMIN can access all institution files
             # Block if institution context not set or slug mismatch
             if _inst is None or _inst.slug != path_slug:
                 return HttpResponseForbidden(

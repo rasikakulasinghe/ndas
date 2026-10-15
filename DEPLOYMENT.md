@@ -23,8 +23,19 @@ Complete deployment guide for the Neurodevelopmental Assessment System (NDAS).
 - **Memory**: Minimum 512MB RAM (2GB+ recommended)
 - **Storage**: 10GB+ (depending on video storage needs)
 - **External Dependencies**:
-  - FFmpeg (for video processing)
-  - Redis (optional, for caching)
+  - FFmpeg: optional fallback only. `ndas/custom_codes/custom_methods.py`'s
+    `extract_video_metadata()` tries `moviepy` first, which resolves its own
+    ffmpeg binary via `imageio-ffmpeg` (already pinned in `requirements.txt` --
+    no system install needed for this path). It only shells out to a system
+    `ffprobe` if `moviepy` fails, logging a warning if that binary isn't
+    found. Install system FFmpeg only if you want that fallback to work too.
+  - Redis (optional, for caching) -- **the Python client is not installed**.
+    `requirements.txt` has no `redis` or `django-redis` package, and neither
+    is importable in this project's venv as of 2026-10-14. `ndas/settings.py`
+    builds `CACHES['default']` with `django.core.cache.backends.redis.RedisCache`
+    and `OPTIONS.CLIENT_CLASS = 'django_redis.client.DefaultClient'` whenever
+    `REDIS_URL` is set -- setting it without first adding both packages will
+    raise `ModuleNotFoundError` at process start. See [1.9](#19-caching-sessions-and-rate-limiting-without-redis).
 
 ### Required Packages
 
@@ -79,15 +90,17 @@ switching one never touches the other's data. Give each domain its own
 `SECRET_KEY` and email account (the templates leave these as placeholders on
 purpose; the script never fills them in).
 
-> **⚠ `db.sqlite3` is currently committed to this git repository**, which
-> undermines the "never collide" guarantee above: a `git pull` in either
-> app root pulls whatever `db.sqlite3` is in the repo's history, which can
-> conflict with or overwrite that domain's live patient data. This must be
-> fixed at the repo level (`git rm --cached db.sqlite3` and add it to
-> `.gitignore`, plus a history scrub since patient data is already
-> committed) before either app root is safely kept in sync with `git pull`.
-> `passenger_wsgi.py` has the same "tracked when it should be per-app-root
-> local state" problem -- see the warning in [1.6](#16-create-passenger-wsgi).
+> **⚠ `db.sqlite3` is currently committed to this git repository** (confirmed
+> still tracked as of 2026-10-14, along with a second copy at
+> `db backup/db.sqlite3`), which undermines the "never collide" guarantee
+> above: a `git pull` in either app root pulls whatever `db.sqlite3` is in
+> the repo's history, which can conflict with or overwrite that domain's
+> live patient data. This must be fixed at the repo level (`git rm --cached
+> db.sqlite3 "db backup/db.sqlite3"` and add both to `.gitignore`, plus a
+> history scrub since patient data is already committed) before either app
+> root is safely kept in sync with `git pull`. `passenger_wsgi.py` has the
+> same "tracked when it should be per-app-root local state" problem -- see
+> the warning in [1.6](#16-create-passenger-wsgi).
 
 ### 1.1 Prepare Environment
 
@@ -216,6 +229,44 @@ onto one line during a hand-edit (as happened once on demo.ndas.lk), is one
 of the most common causes of a 500 error with no application-level log
 output on cPanel.
 
+### 1.6.1 ⚠ Media File Serving Needs Verification on This Host (Apache/LiteSpeed vs. Nginx)
+
+**This has not been verified against the actual demo.ndas.lk/ndas.lk hosting
+stack and should be checked before going live with patient video/image
+uploads.** `ndas/urls.py` routes every `/media/<path>` request -- in *both*
+`DEBUG=True` and `DEBUG=False` -- through
+`institution.views.protected_media_view`, which enforces per-institution
+access control. In production (`DEBUG=False`) that view does not serve the
+bytes itself: it returns an empty body with an `X-Accel-Redirect` response
+header, which only **Nginx** knows how to act on (see
+[2.6](#26-configure-nginx) for the matching `/x-accel-media/` internal
+location). This repo's own cPanel troubleshooting section further down
+refers to "the account's general **Apache** error log," and cPanel's
+"Setup Python App" (Passenger) is conventionally fronted by Apache or
+LiteSpeed, not Nginx.
+
+If demo.ndas.lk/ndas.lk's cPanel account is fronted by stock Apache (no
+`mod_xsendfile`-equivalent `X-Accel-Redirect` support), this header is
+simply ignored and **every patient video/image/document request returns an
+empty 200 response** in production -- with no error anywhere, since
+`protected_media_view`'s authorization check still passes. (LiteSpeed Web
+Server, which many cPanel hosts use instead of stock Apache, does
+understand `X-Accel-Redirect` for Nginx-compatibility, so this may already
+be fine -- but that has not been confirmed for this account.) Before
+relying on cPanel Option 1 in production:
+
+1. Confirm which web server actually fronts the Passenger app for each
+   domain (check cPanel's server info, or `curl -I` the `Server:` header).
+2. If it is Nginx or LiteSpeed, the existing `/x-accel-media/` approach
+   should work the same way it does under [Option 2](#26-configure-nginx)
+   -- but confirm with an actual authenticated request for a known video,
+   not just a 200/404 check.
+3. If it is stock Apache with no equivalent internal-redirect support,
+   `protected_media_view` needs an Apache-compatible path (e.g. streaming
+   the file through Django directly in production too, accepting the
+   performance/Range-request cost, or an `mod_xsendfile`-based header)
+   before this app root can serve media correctly.
+
 ### 1.7 Setup SSL Certificate
 
 1. Go to cPanel → SSL/TLS Status
@@ -249,6 +300,32 @@ their own cron entries -- they do not share cPanel Cron Jobs automatically):
 
 Repeat with `ndas-live` / `www.ndas.lk` paths for the live site's own cron entries.
 
+### 1.8.1 In-App Backup & Restore (the `backup` app)
+
+Separately from the raw `sqlite3 .backup` cron job above, NDAS now ships a
+web-UI-driven backup/restore feature (`backup/` app, added after this guide's
+2026-09-05 baseline): institutional admins and superadmins can trigger an
+export from the app itself, scoped to their own institution, an explicit set
+of institutions, or (superadmin only) the whole system, optionally filtered
+by date range. This does **not** replace the cron job above -- it's a
+different tool for a different failure mode:
+
+- The cron `.backup` job is infrastructure-level disaster recovery: it runs
+  unattended, needs no running Django process, and is the only thing that
+  can save you if the database itself is corrupted or the app won't boot.
+- The in-app feature is self-service data export/restore for admins, and
+  only works while the app is up and someone with the right role triggers
+  it through the browser. `python manage.py run_backup <job_id>` and
+  `run_restore <job_id>` exist, but **do not call them directly or from
+  cron** -- per their own docstrings, they are invoked exclusively as a
+  detached subprocess by `backup/views.py` against a `BackupJob` row that
+  view already created; calling them with an arbitrary/nonexistent
+  `job_id` just raises `CommandError`.
+- Exports land at `<app root>/backups/<job_id>/<job_id>.zip` (inside
+  `BASE_DIR`, already covered by this repo's `.gitignore`). Nothing in the
+  codebase currently prunes old job directories here, so this app root's
+  own disk usage should be watched over time the same way `logs/` is.
+
 ### 1.9 Caching, Sessions, and Rate Limiting Without Redis
 
 Both `.env.production.demo.example` and `.env.production.live.example` leave
@@ -267,9 +344,19 @@ process (common under load), `LocMemCache` is **not shared between them**:
   documented 10/min-create, 5/min-delete limits are effectively looser than
   configured.
 
-If Redis is available on the hosting account, set `REDIS_URL` in each
-domain's `.env` to use it. If it is not, be aware of this limitation rather
-than relying on the (currently incorrect) "file-based cache" comment.
+If Redis is available on the hosting account, you cannot just set
+`REDIS_URL` in each domain's `.env` -- as of 2026-10-14, **`requirements.txt`
+pins neither `redis` nor `django-redis`, and neither package is installed**.
+`ndas/settings.py` configures `CACHES['default']` with
+`BACKEND = 'django.core.cache.backends.redis.RedisCache'` and
+`OPTIONS.CLIENT_CLASS = 'django_redis.client.DefaultClient'` whenever
+`REDIS_URL` is set, so simply setting the env var and restarting will raise
+`ModuleNotFoundError` on every request. Add both packages to
+`requirements.txt`, `pip install` them, and smoke-test login/rate-limiting
+end to end before relying on `REDIS_URL` in production. If Redis is not
+available, be aware of the per-worker `LocMemCache` limitation above rather
+than relying on the (currently incorrect) "file-based cache" comment in the
+`.env` templates.
 
 ---
 
@@ -745,13 +832,13 @@ sudo systemctl start ndas
 
 ## Additional Resources
 
-- **Django Deployment Checklist**: https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
+- **Django Deployment Checklist**: https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/ (updated from the 4.2 link -- `requirements.txt` pins `Django~=5.2.0`)
 - **Security Best Practices**: Review CLAUDE.md in project root
 - **Monitoring Tools**: Consider Sentry, New Relic, or Datadog
 - **Support**: Check project documentation or contact system administrator
 
 ---
 
-**Last Updated**: 2026-09-05
-**Version**: 1.2
+**Last Updated**: 2026-10-14
+**Version**: 1.3
 **Rasika Kulasinghe**

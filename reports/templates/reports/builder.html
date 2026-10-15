@@ -490,7 +490,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ request.csp_nonce }}">
 // Toggle field selection visibility
 function toggleFieldSelection() {
     const fieldSelection = document.getElementById('patient_field_selection');

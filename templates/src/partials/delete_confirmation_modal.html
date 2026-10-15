@@ -8,7 +8,7 @@
       <!-- Header with entity type -->
       <div class="modal-header bg-danger text-white">
         <h5 class="modal-title" id="{{ modal_id }}Label">
-          <i class="fas fa-exclamation-triangle"></i> Confirm {{ entity_type }} Deletion
+          <i class="fas fa-exclamation-triangle"></i> Confirm {{ entity_label|default:entity_type }} Deletion
         </h5>
         <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
@@ -65,7 +65,7 @@
                 data-redirect-url="{{ redirect_url }}"
                 data-modal-id="{{ modal_id }}">
           <span class="spinner-border spinner-border-sm" style="display: none;"></span>
-          <i class="fas fa-trash-alt"></i> Delete {{ entity_type }}
+          <i class="fas fa-trash-alt"></i> Delete {{ entity_label|default:entity_type }}
         </button>
       </div>
     </div>

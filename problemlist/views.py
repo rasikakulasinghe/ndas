@@ -80,6 +80,8 @@ def problem_add(request, pid):
         if form.is_valid():
             problem = form.save(commit=False)
             problem.patient = patient
+            problem.added_by = request.user
+            problem.last_edit_by = request.user
             problem.save()
             messages.success(
                 request,
@@ -144,7 +146,9 @@ def problem_edit(request, pk):
     if request.method == "POST":
         form = ProblemForm(request.POST, instance=problem)
         if form.is_valid():
-            form.save()
+            updated_problem = form.save(commit=False)
+            updated_problem.last_edit_by = request.user
+            updated_problem.save()
             messages.success(
                 request,
                 f"Problem '{problem.name}' updated successfully."

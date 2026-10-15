@@ -35,7 +35,7 @@
             <div class="form-group">
               <label class="font-weight-bold">Receiving Institution <span class="text-danger">*</span></label>
               <select name="to_institution" id="id_to_institution" class="form-control"
-                hx-get="{% url 'referral:get-institution-clinicians' 0 %}"
+                hx-get="{% url 'referral:get-institution-clinicians' %}"
                 hx-target="#clinician-select-wrapper"
                 hx-swap="innerHTML"
                 hx-trigger="change"

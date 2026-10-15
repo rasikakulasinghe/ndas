@@ -41,6 +41,8 @@ def video_add(request, patient_id):
             try:
                 video = form.save(commit=False)
                 video.patient = patient
+                video.added_by = request.user
+                video.last_edit_by = request.user
 
                 # Additional validation now that patient is assigned
                 if video.recorded_on and hasattr(patient, 'dob_tob') and patient.dob_tob:
@@ -167,6 +169,7 @@ def video_edit(request, video_id):
         if form.is_valid():
             try:
                 updated_video = form.save(commit=False)
+                updated_video.last_edit_by = request.user
 
                 # Additional validation for recording date with patient
                 if updated_video.recorded_on and hasattr(video.patient, 'dob_tob') and video.patient.dob_tob:

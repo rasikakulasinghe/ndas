@@ -82,6 +82,23 @@ def delete_modal(entity, modal_id=None):
     entity_type = entity.__class__.__name__
     entity_id = entity.pk
 
+    # Friendly display label (e.g. "User", "GM Assessment") — falls back to the
+    # raw class name when the model has no Meta.verbose_name override.
+    # entity_type itself stays the internal lookup key (url_map, etc.) below.
+    #
+    # Deviation from spec wording ("verbose_name.title()"): Meta.verbose_name
+    # values in this codebase are already correctly cased (e.g. "GM Assessment",
+    # "CDIC Record", "HINE Assessment"). str.title() lowercases every letter
+    # but the first of each word, which would mangle those acronyms to
+    # "Gm Assessment" / "Cdic Record" / "Hine Assessment" — contradicting this
+    # spec's own Acceptance Criteria ("GM Assessment", not "Gm Assessment").
+    # Using verbose_name as-is satisfies the Acceptance Criteria; logged here
+    # per Spec Change Log.
+    try:
+        entity_label = str(entity._meta.verbose_name)
+    except AttributeError:
+        entity_label = entity_type
+
     # Auto-generate modal ID if not provided
     if not modal_id:
         modal_id = delete_modal_id(entity_type, entity_id)
@@ -115,6 +132,7 @@ def delete_modal(entity, modal_id=None):
     return {
         'modal_id': modal_id,
         'entity_type': entity_type,
+        'entity_label': entity_label,
         'entity_name': get_entity_display_name(entity),
         'delete_url': delete_url,
         'redirect_url': get_redirect_url(entity_type, patient_id=patient_id),

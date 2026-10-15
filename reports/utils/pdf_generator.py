@@ -395,7 +395,7 @@ class GMAssessmentPDFGenerator(BasePDFGenerator):
             story.append(Paragraph("Diagnosis Details", self.styles['CustomHeading']))
             if diagnosis_list:
                 for dx in diagnosis_list:
-                    story.append(Paragraph(f"• {dx.name}", self.styles['Normal']))
+                    story.append(Paragraph(f"• {dx.title}", self.styles['Normal']))
             if assessment.diagnosis_other:
                 story.append(Paragraph(f"Other: {assessment.diagnosis_other}", self.styles['Normal']))
             story.append(Spacer(1, 0.2 * inch))

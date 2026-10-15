@@ -6,7 +6,7 @@ app_name = 'referral'
 urlpatterns = [
     # Story 4.2: Referral initiation
     path('initiate/<int:patient_id>/', views.referral_initiate, name='referral-initiate'),
-    path('clinicians/<int:institution_id>/', views.get_institution_clinicians, name='get-institution-clinicians'),
+    path('clinicians/', views.get_institution_clinicians, name='get-institution-clinicians'),
 
     # Story 4.3: Referral Inbox (stub view implemented in 4.2 for redirect target)
     path('inbox/', views.referral_inbox, name='referral-inbox'),

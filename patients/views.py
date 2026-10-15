@@ -290,6 +290,8 @@ def patient_add(request):
                 with transaction.atomic():
                     var_pt_add = data_form.save(commit=False)
                     var_pt_add.institution = getattr(request, 'institution', None)
+                    var_pt_add.added_by = request.user
+                    var_pt_add.last_edit_by = request.user
                     var_pt_add.save()
 
                     # Save many-to-many relationships (including GMA indicators)
@@ -604,6 +606,7 @@ def patient_edit(request, pk):
             try:
                 # Save the form data
                 patient = data_form_modified.save(commit=False)
+                patient.last_edit_by = request.user
                 patient.save()
 
                 # Save many-to-many relationships
@@ -883,6 +886,8 @@ def assessment_add(request, ptid, fid):
                 assessment = assessment_form.save(commit=False)
                 assessment.patient = patient
                 assessment.video_file = video_file
+                assessment.added_by = request.user
+                assessment.last_edit_by = request.user
 
                 # Additional validation
                 if assessment.next_assessment_date and assessment.date_of_assessment:
@@ -1057,7 +1062,10 @@ def assessment_edit(request, pk):
     if request.method == "POST":
         assessment_form_data = GMAssessmentForm(request.POST, instance=assmnt)
         if assessment_form_data.is_valid():
-            assessment_form_data.save()
+            updated_assmnt = assessment_form_data.save(commit=False)
+            updated_assmnt.last_edit_by = request.user
+            updated_assmnt.save()
+            assessment_form_data.save_m2m()
             messages.success(request, "Assessment details are updated succesfully...")
             return redirect("assessment-view", pk=assmnt.id)
         else:
@@ -1082,7 +1090,10 @@ def assessment_edit_by_fileid(request, pk):
     if request.method == "POST":
         assessment_form_data = GMAssessmentForm(request.POST, instance=assmnt)
         if assessment_form_data.is_valid():
-            assessment_form_data.save()
+            updated_assmnt = assessment_form_data.save(commit=False)
+            updated_assmnt.last_edit_by = request.user
+            updated_assmnt.save()
+            assessment_form_data.save_m2m()
             messages.success(request, "Assessment details are updated succesfully...")
             return redirect("assessment-view", pk=assmnt.id)
         else:

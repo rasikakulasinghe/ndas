@@ -286,7 +286,7 @@ def get_entity_detail_items(entity: Any) -> Dict[str, str]:
         details['Gender'] = entity.get_gender_display() if hasattr(entity, 'get_gender_display') else entity.gender
 
     elif entity_type == 'Video':
-        details['File Name'] = entity.file.name if hasattr(entity, 'file') else 'Unknown'
+        details['File Name'] = entity.video_file.name if hasattr(entity, 'video_file') else 'Unknown'
         if hasattr(entity, 'patient'):
             details['Patient'] = str(entity.patient)
 
