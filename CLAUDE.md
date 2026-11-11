@@ -40,8 +40,11 @@ python manage.py test [app_name]
 from ndas.custom_codes.Custom_abstract_class import TimeStampedModel, UserTrackingMixin
 
 class MyModel(TimeStampedModel, UserTrackingMixin):
-    # Auto-provides: created_at, updated_at, added_by, last_edit_by
-    # User tracking auto-populated by UserActivityMiddleware
+    # Auto-provides created_at/updated_at (auto_now_add/auto_now).
+    # added_by/last_edit_by are plain nullable FKs with NO auto-population —
+    # every create/edit view must set them explicitly before save():
+    #   obj.added_by = request.user       # on create
+    #   obj.last_edit_by = request.user   # on create and on every edit
     pass
 ```
 

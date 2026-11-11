@@ -5,7 +5,7 @@ Workflow guidance for AI agents. For project patterns and architecture, see `CLA
 **Last Updated:** 2025-12-25
 
 <!-- bmad:context -->
-<!-- Verified 2026-10-01 against 55b0f59. Managed by bmad-project-context; edits inside this block are replaced on refresh. Keep anything you want preserved outside the markers. -->
+<!-- Verified 2026-11-11 against 7ad2d0b. Managed by bmad-project-context; edits inside this block are replaced on refresh. Keep anything you want preserved outside the markers. -->
 
 ## NDAS
 
@@ -22,10 +22,11 @@ Django medical system for patient records, video-based neurodevelopmental assess
 - Proposals / architecture changes: use the BMAD skills `bmad-spec` and `bmad-architecture` — OpenSpec was removed from this repo (old pointers are dead).
 - System-wide architecture invariants (AD-1..AD-15): `_bmad-output/planning-artifacts/architecture/architecture-NDAS-2026-10-01/ARCHITECTURE-SPINE.md`
 - Security test suites `video/tests/test_security.py`, `users/tests/test_security.py`, `reports/tests/test_security.py` cover ownership/isolation/rate-limit checks — run them when touching views or permissions in those apps.
+- Live production QA findings (confirmed CRUD/security/CSP/perf defects, with code references): `docs/QA_LIVE_TEST_REPORT_2026-10-23.md` — read before touching media serving, bookmarks, CSP nonces, or assessment add/edit views.
 
 ## Running and verifying
 
-- Test fixtures: `UserActivityMiddleware` doesn't run under the test client — set `added_by=user` manually in `Model.objects.create()` inside `setUp()`. Authenticate with `force_login(user)`, not `client.login()`. Test classes that render full templates need `@override_settings(STORAGES={"staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}})` or they fail on a staticfiles manifest error.
+- Test fixtures: `Model.objects.create()` in `setUp()` never goes through a view, so nothing sets `added_by`/`last_edit_by` (see Known pitfalls) — set them manually. Authenticate with `force_login(user)`, not `client.login()`. Test classes that render full templates need `@override_settings(STORAGES={"staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}})` or they fail on a staticfiles manifest error.
 
 ## Conventions that differ from defaults
 
@@ -37,9 +38,10 @@ Django medical system for patient records, video-based neurodevelopmental assess
 
 ## Known pitfalls
 
+- `added_by`/`last_edit_by` (`UserTrackingMixin`) are plain nullable FKs — nothing auto-populates them: not `UserActivityMiddleware` (it only throttles session-activity timestamps), no signal, no `save()` override. Every create/edit view must set `obj.added_by = request.user` (create) and `obj.last_edit_by = request.user` (create and edit) before `.save()`, or `has_delete_permission()` silently denies the creating staff user and timelines show "Unknown". Confirmed still missing today in `cdic_assessment_add/edit`, `hine_assessment_add/edit`, `da_assessment_add/edit`, `gpa_add/edit`, `bookmark_edit` (`patients/views.py`) and `problem_status_change`, `problem_action_add` (`problemlist/views.py`) — a 2026-10-16 fix (commit `7ad2d0b`) covered only `patient_add/edit`, the GMA `assessment_*` views, and `video_add/edit`.
+- `protected_media_view` (`institution/views.py`) hands production media delivery to `X-Accel-Redirect`, written for Nginx — but production (`demo.ndas.lk`) actually runs Phusion Passenger fronted by LiteSpeed/Apache, not Nginx. Confirmed live 2026-10-23 that `X-Accel-Redirect` is not honored there, so every `/media/` video, attachment, and logo 404s in production even though the institution-isolation check above it passes. Don't assume media serving works; see `DEPLOYMENT.md` §1.6.1/§2.6 before changing this view, and confirm the actual front-end server before relying on `X-Accel-Redirect` anywhere else.
 - Inline `<script>` tags need `nonce="{{ request.csp_nonce }}"` in DEBUG too, not just production — `unsafe-inline`/`unsafe-eval` are removed from `CSP_SCRIPT_SRC` in both; a script without a nonce silently fails everywhere.
 - `institution_scope()` (`ndas/custom_codes/custom_methods.py`) raises `PermissionDenied` when a non-superuser has `institution_id` set but `request.institution` is `None` — that signals a middleware misconfiguration; never swallow it.
-- `protected_media_view` (`institution/views.py`) is routed through Django in *both* DEBUG and production now — Nginx must `proxy_pass /media/` to it, never `alias` straight to disk; aliasing bypasses the institution-isolation check entirely (see `DEPLOYMENT.md` §2.6). This was a real gap until 2026-09.
 - Staff may only edit/delete videos they personally uploaded (`video.added_by == request.user`); a bare `is_staff` bypass was a real security defect here once — gate unrestricted access on `is_superuser`, not `is_staff`.
 - `InstitutionScopedManager.for_institution(None)` returns ALL records — intentional Phase 1-compatibility fallback, not a bug. Don't "fix" it.
 - Any new report-download endpoint must verify the `report_owner_{file_id}_{session_key}` cache key set by `report_builder` before serving the file — a UUID/file_id alone is not access control.
