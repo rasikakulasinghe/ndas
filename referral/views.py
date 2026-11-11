@@ -60,7 +60,7 @@ def referral_initiate(request, patient_id):
     institution = getattr(request, 'institution', None) or getattr(request.user, 'institution', None)
 
     patient = get_object_or_404(
-        Patient.objects.for_institution(institution) if institution else Patient.objects.none(),
+        Patient.objects.for_institution_or_none(institution),
         id=patient_id,
     )
 
@@ -187,19 +187,19 @@ def referral_inbox(request):
 
     sent_referrals = (
         ReferralSent.objects
-        .for_institution(institution)
+        .for_institution_or_none(institution)
         .filter(from_clinician=request.user)
         .select_related('to_institution', 'to_clinician', 'patient')
         .order_by('-created_at')
-    ) if institution else ReferralSent.objects.none()
+    )
 
     received_referrals = (
         ReferralReceived.objects
-        .for_institution(institution)
+        .for_institution_or_none(institution)
         .filter(to_clinician=request.user)
         .select_related('from_institution', 'to_clinician')
         .order_by('-created_at')
-    ) if institution else ReferralReceived.objects.none()
+    )
 
     threads = []
     for ref in sent_referrals:
@@ -481,7 +481,7 @@ def patient_referrals_tab(request, patient_id):
     institution = getattr(request, 'institution', None) or getattr(request.user, 'institution', None)
 
     patient = get_object_or_404(
-        Patient.objects.for_institution(institution) if institution else Patient.objects.none(),
+        Patient.objects.for_institution_or_none(institution),
         id=patient_id,
     )
 

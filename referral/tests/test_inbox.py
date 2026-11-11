@@ -103,6 +103,37 @@ class InboxEmptyStateTest(InboxTestBase):
 
 
 @STATIC_OVERRIDE
+class InboxNoInstitutionContextTest(InboxTestBase):
+    def test_no_institution_context_returns_empty_inbox_not_500(self):
+        """
+        Security regression: a user with no resolvable institution context
+        (request.institution is None) must get a safe empty inbox via
+        for_institution_or_none() — never an unfiltered queryset or a crash —
+        even when they are a referral participant.
+        """
+        no_inst_user = User.objects.create_user(
+            username='no_inst_inbox', password='Testpass1!',
+            first_name='No', last_name='Institution',
+            position='Medical Officer', mobile_primary='0771221004',
+            user_type=UserType.USER, institution=None,
+        )
+        shared_uuid = uuid.uuid4()
+        ReferralSent.objects.create(
+            from_institution=self.inst_a, to_institution=self.inst_b,
+            institution=self.inst_a, patient=None,
+            from_clinician=no_inst_user, to_clinician=self.clinician_b,
+            referral_uuid=shared_uuid, initial_message='Test referral.',
+            snapshot_data={'schema_version': 1, 'demographics': {'baby_name': 'Inbox Test Patient'}},
+            added_by=no_inst_user, last_edit_by=no_inst_user,
+        )
+        client = Client()
+        client.force_login(no_inst_user)
+        response = client.get(self.inbox_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['thread_count'], 0)
+
+
+@STATIC_OVERRIDE
 class InboxThreadListTest(InboxTestBase):
     def test_sent_referral_appears_in_thread_list(self):
         """AC #2: Sent referral appears with direction='sent' in clinician A's inbox."""

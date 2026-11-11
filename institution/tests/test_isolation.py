@@ -125,6 +125,24 @@ class InstitutionPatientIsolationTest(TestCase):
         qs = Patient.objects.all_institutions()
         self.assertEqual(qs.count(), 2)
 
+    def test_for_institution_or_none_returns_only_own_patients(self):
+        """for_institution_or_none(A) returns only A's patients, never B's."""
+        qs = Patient.objects.for_institution_or_none(self.institution_a)
+        self.assertIn(self.patient_a, qs)
+        self.assertNotIn(self.patient_b, qs)
+
+    def test_for_institution_or_none_with_none_returns_empty(self):
+        """
+        for_institution_or_none(None) returns an EMPTY queryset — unlike
+        for_institution(None), which is unfiltered for Phase 1 backward
+        compatibility. Call sites that must never leak data when institution
+        context is absent should use this helper instead of the ad hoc
+        `for_institution(institution) if institution else X.objects.none()`
+        pattern.
+        """
+        qs = Patient.objects.for_institution_or_none(None)
+        self.assertEqual(qs.count(), 0)
+
     def test_cross_institution_patient_detail_raises_404(self):
         """AC #3: Clinician A gets Http404 when accessing Institution B patient via RequestFactory."""
         factory = RequestFactory()

@@ -1707,6 +1707,7 @@ def bookmark_delete(request, pk):
 
 
 @login_required(login_url="user-login")
+@ratelimit(key='user_or_ip', rate='10/m', block=True)
 def bookmark_manager_user(request, username):
     if request.user.username != username and not request.user.is_superuser:
         logger.warning(
@@ -1724,7 +1725,10 @@ def bookmark_manager_user(request, username):
     )
 
 
+@ratelimit(key='user', rate='10/m', method='POST')
+@ratelimit(key='ip', rate='20/m', method='POST')
 @login_required(login_url="user-login")
+@require_http_methods(["GET", "POST"])
 def bookmark_edit(request, pk):
     try:
         selected_bm = Bookmark.objects.select_related('owner', 'added_by', 'last_edit_by').get(id=pk)

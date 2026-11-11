@@ -2367,33 +2367,6 @@ class Bookmark(TimeStampedModel, UserTrackingMixin):
 
         return reverse("bookmark-view", kwargs={"pk": self.pk})
 
-    def get_bookmarked_object_url(self):
-        """Get the URL to view the bookmarked object"""
-        from django.urls import reverse, NoReverseMatch
-
-        url_mapping = {
-            "Patient": "view-patient",
-            "Video": "file-view",
-            "GMA": "assessment-view",
-            "HINE": "hine-assessment-view",
-            "Attachment": "attachment-view",
-            "DA": "da-assessment-view",
-            "CDICR": "cdic-assessment-view",
-            "GPA": "gpa-view",
-        }
-
-        if self.bookmark_type in url_mapping:
-            try:
-                return reverse(
-                    url_mapping[self.bookmark_type], kwargs={"pk": self.object_id}
-                )
-            except NoReverseMatch as e:
-                logger.warning(
-                    f"URL reverse failed for bookmark {self.pk} "
-                    f"(type={self.bookmark_type}): {e}"
-                )
-        return None
-
     # Class methods for efficient queries
     @classmethod
     def get_by_user(cls, user, bookmark_type=None):
