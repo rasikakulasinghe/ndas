@@ -296,6 +296,9 @@ their own cron entries -- they do not share cPanel Cron Jobs automatically):
 
 # Clear expired sessions - Daily
 0 4 * * * cd /home/username/ndas-demo && /home/username/virtualenv/www.demo.ndas.lk/3.11/bin/python manage.py clearsessions
+
+# Recover stalled in-app backup/restore jobs - Every 15 minutes (see section 1.8.1 below)
+*/15 * * * * cd /home/username/ndas-demo && /home/username/virtualenv/www.demo.ndas.lk/3.11/bin/python manage.py sweep_stale_jobs
 ```
 
 Repeat with `ndas-live` / `www.ndas.lk` paths for the live site's own cron entries.
@@ -325,6 +328,16 @@ different tool for a different failure mode:
   `BASE_DIR`, already covered by this repo's `.gitignore`). Nothing in the
   codebase currently prunes old job directories here, so this app root's
   own disk usage should be watched over time the same way `logs/` is.
+- `python manage.py sweep_stale_jobs` is the one exception to the rule
+  above: unlike `run_backup`/`run_restore`, it **is** meant to run from
+  cron (every 15 minutes, as set up above). `run_backup`/`run_restore`
+  write their own terminal state when they finish; if that subprocess dies
+  first (killed, OOM, server restart) the `BackupJob` row is left
+  `pending`/`running` forever, which blocks the Story 1.2 overlap lock for
+  its scope and, for a restore, leaves its `RestoreUpload` stuck `applying`.
+  `sweep_stale_jobs` recovers both after 30 minutes of no progress --
+  marking the job `failed` and returning any stuck restore upload to
+  `confirmed` so it can be retried or cancelled.
 
 ### 1.9 Caching, Sessions, and Rate Limiting Without Redis
 
