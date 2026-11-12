@@ -503,7 +503,7 @@ def verify_confirmed(upload, progress=None):
         actual = _hash_file(path, progress)
     except OSError as e:
         raise RestoreError(
-            f"The staged archive could not be read ({_clip(e, 200)}).",
+            f"The staged archive could not be read ({type(e).__name__}).",
             audit_message="The staged archive could not be read.",
         )
     if actual != upload.archive_sha256.lower():
@@ -577,10 +577,10 @@ def take_snapshot(job, progress=None):
         get_archive_path(snapshot).unlink(missing_ok=True)
         snapshot.status = BackupJobStatus.FAILED
         snapshot.progress_pct = 0
-        snapshot.error_message = f"Snapshot export failed: {e}"
+        snapshot.error_message = f"Snapshot export failed: {type(e).__name__}"
         snapshot.save(update_fields=['status', 'progress_pct', 'error_message', 'updated_at'])
         raise RestoreError(
-            f"The pre-restore snapshot (job {snapshot.id}) failed, so nothing was changed: {_clip(e, 200)}",
+            f"The pre-restore snapshot (job {snapshot.id}) failed, so nothing was changed: {type(e).__name__}",
             audit_message=(
                 f"The pre-restore snapshot (job {snapshot.id}) failed, so nothing was changed ({type(e).__name__})."
             ),
@@ -977,7 +977,7 @@ def apply_restore(upload, job):
     except Exception as e:
         logger.exception("RestoreUpload %s: applying the archive failed and was rolled back.", upload.id)
         raise RestoreError(
-            f"Applying the archive failed and was rolled back, so no data was changed: {_clip(e, 200)}",
+            f"Applying the archive failed and was rolled back, so no data was changed ({type(e).__name__}).",
             audit_message=(
                 f"Applying the archive failed and was rolled back, so no data was changed ({type(e).__name__})."
             ),
@@ -1037,7 +1037,7 @@ def _restore_one_media(zf, checksums, name):
         os.replace(temp_path, target)
         temp_path = None
     except (OSError, ValueError, *restore_validation._ZIP_READ_ERRORS) as e:
-        return f"{_clip(name, 100)}: could not be written ({_clip(e, 80)})"
+        return f"{_clip(name, 100)}: could not be written ({type(e).__name__})"
     finally:
         if temp_path:
             try:
@@ -1076,7 +1076,7 @@ def restore_media(upload, job, progress=None):
                         progress(done / total)
     except Exception as e:
         logger.exception("RestoreUpload %s: media restore stopped early.", upload.id)
-        warnings.append(f"the media restore stopped early ({_clip(e, 100)})")
+        warnings.append(f"the media restore stopped early ({type(e).__name__})")
     return warnings
 
 

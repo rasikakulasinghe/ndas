@@ -294,7 +294,8 @@ class BackupTriggerLaunchFailureTest(BackupTriggerViewTestBase):
 
         job = BackupJob.objects.get()
         self.assertEqual(job.status, BackupJobStatus.FAILED)
-        self.assertIn('boom', job.error_message)
+        self.assertIn('OSError', job.error_message)
+        self.assertNotIn('boom', job.error_message)
 
 
 @override_settings(

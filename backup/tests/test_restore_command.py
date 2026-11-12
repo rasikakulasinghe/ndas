@@ -147,7 +147,8 @@ class ValidateRestoreUploadCommandTest(IsolatedBaseDirMixin, TestCase):
             call_command('validate_restore_upload', str(upload.id))
         upload.refresh_from_db()
         self.assertEqual(upload.status, RestoreUploadStatus.FAILED)
-        self.assertIn('kaboom', upload.error_message)
+        self.assertIn('RuntimeError', upload.error_message)
+        self.assertNotIn('kaboom', upload.error_message)
         self.assertFalse(get_upload_path(upload).exists())
 
     def test_missing_staged_file_becomes_failed(self):
@@ -298,6 +299,8 @@ class ValidateRestoreUploadCommandTest(IsolatedBaseDirMixin, TestCase):
         upload.refresh_from_db()
         self.assertEqual(upload.status, RestoreUploadStatus.FAILED)
         self.assertIn('could not be recorded', upload.error_message)
+        self.assertIn('OperationalError', upload.error_message)
+        self.assertNotIn('database is locked', upload.error_message)
         self.assertFalse(get_upload_path(upload).exists())
 
     def test_unverified_acceptance_is_logged_as_a_warning(self):
@@ -431,7 +434,8 @@ class ValidateRestoreUploadCommandTest(IsolatedBaseDirMixin, TestCase):
         self.assertNotEqual(upload.status, RestoreUploadStatus.VALIDATED)
         self.assertNotEqual(upload.status, RestoreUploadStatus.REJECTED)
         self.assertIsNone(upload.match_summary)
-        self.assertIn('no integer primary key', upload.error_message)
+        self.assertIn('ExportFormatError', upload.error_message)
+        self.assertNotIn('no integer primary key', upload.error_message)
         self.assertFalse(get_upload_path(upload).exists())
 
 
@@ -467,4 +471,5 @@ class RunRestoreFailResetsProgressTest(TestCase):
         self.job.refresh_from_db()
         self.assertEqual(self.job.status, BackupJobStatus.FAILED)
         self.assertEqual(self.job.progress_pct, 0)
-        self.assertIn('kaboom', self.job.error_message)
+        self.assertIn('RuntimeError', self.job.error_message)
+        self.assertNotIn('kaboom', self.job.error_message)

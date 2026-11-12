@@ -59,7 +59,7 @@ class Command(BaseCommand):
             logger.exception("BackupJob %s: failed to transition to running.", job.id)
             try:
                 job.status = BackupJobStatus.FAILED
-                job.error_message = f"Failed to start backup job: {e}"
+                job.error_message = f"Failed to start backup job: {type(e).__name__}"
                 job.save(update_fields=['status', 'error_message', 'updated_at'])
             except Exception:
                 logger.exception("BackupJob %s: also failed to record the failure.", job.id)
@@ -90,7 +90,7 @@ class Command(BaseCommand):
                 get_archive_path(job).unlink(missing_ok=True)
             except OSError:
                 logger.exception("BackupJob %s: failed to remove the partial archive.", job.id)
-            if self._record_failure(job, f"Backup export failed: {e}"):
+            if self._record_failure(job, f"Backup export failed: {type(e).__name__}"):
                 notify_job_finished(job)
             self.stdout.write(self.style.ERROR(f"BackupJob {job.id}: failed - {e}"))
             return

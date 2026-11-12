@@ -52,7 +52,9 @@ def _save_terminal(upload, update_fields):
     try:
         upload.status = RestoreUploadStatus.FAILED
         upload.progress_pct = 0
-        upload.error_message = f"Validation finished but its result could not be recorded: {_clip(failure, 200)}"
+        upload.error_message = (
+            f"Validation finished but its result could not be recorded: {type(failure).__name__}"
+        )
         upload.save(update_fields=['status', 'progress_pct', 'error_message', 'updated_at'])
     except Exception:
         logger.exception("RestoreUpload %s: fallback save to 'failed' also failed.", upload.id)
@@ -114,7 +116,7 @@ class Command(BaseCommand):
             _safe_delete_staged_archive(upload)
             upload.status = RestoreUploadStatus.FAILED
             upload.progress_pct = 0
-            upload.error_message = f"Validation failed unexpectedly: {_clip(e, 200)}"
+            upload.error_message = f"Validation failed unexpectedly: {type(e).__name__}"
             _save_terminal(upload, ['status', 'progress_pct', 'error_message', 'updated_at'])
             self.stdout.write(self.style.ERROR(f"RestoreUpload {upload.id}: failed - {e}"))
             return

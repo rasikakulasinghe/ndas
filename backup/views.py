@@ -442,7 +442,7 @@ def backup_create(request):
     except OSError as e:
         logger.exception("Failed to launch run_backup subprocess for job=%s", job.id)
         job.status = BackupJobStatus.FAILED
-        job.error_message = f"Failed to launch backup process: {e}"
+        job.error_message = f"Failed to launch backup process: {type(e).__name__}"
         job.save(update_fields=['status', 'error_message', 'updated_at'])
         messages.error(request, "Failed to start the backup process. Please try again.")
         return redirect('backup:backup-create')
@@ -1065,12 +1065,16 @@ def restore_upload(request):
             )
         except OSError as e:
             logger.exception("Failed to launch validate_restore_upload subprocess for upload=%s", upload.id)
-            _mark_upload_failed(upload, f"Failed to launch the validation process: {e}", keep_dir=True)
+            _mark_upload_failed(
+                upload, f"Failed to launch the validation process: {type(e).__name__}", keep_dir=True,
+            )
             messages.error(request, "Failed to start validating the archive. Please try again.")
             return redirect('backup:restore-status', pk=upload.id)
     except Exception as e:
         logger.exception("Restore upload %s: failed before the validation process was launched.", upload.id)
-        _mark_upload_failed(upload, f"Failed to store or start validating the uploaded file: {e}")
+        _mark_upload_failed(
+            upload, f"Failed to store or start validating the uploaded file: {type(e).__name__}",
+        )
         messages.error(request, "Failed to store the uploaded file. Please try again.")
         return redirect('backup:restore-upload')
 
@@ -1292,7 +1296,7 @@ def _restore_start_body(request, upload):
         )
     except OSError as e:
         logger.exception("Failed to launch run_restore subprocess for job=%s", job.id)
-        restore_apply.abort_start(job, upload, f"Failed to launch restore process: {e}")
+        restore_apply.abort_start(job, upload, f"Failed to launch restore process: {type(e).__name__}")
         messages.error(request, "Failed to start the restore process. The upload is confirmed again; please try again.")
         return _redirect_to_status(upload)
 

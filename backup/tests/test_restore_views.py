@@ -321,7 +321,8 @@ class RestoreFailureTest(RestoreViewTestBase):
             response, reverse('backup:restore-status', args=[upload.id]), fetch_redirect_response=False,
         )
         self.assertEqual(upload.status, RestoreUploadStatus.FAILED)
-        self.assertIn('cannot spawn', upload.error_message)
+        self.assertIn('OSError', upload.error_message)
+        self.assertNotIn('cannot spawn', upload.error_message)
         self.assertFalse(get_upload_path(upload).exists())
 
     @mock.patch('backup.views.subprocess.Popen')
@@ -331,7 +332,8 @@ class RestoreFailureTest(RestoreViewTestBase):
         self.assertRedirects(response, self.url, fetch_redirect_response=False)
         upload = RestoreUpload.objects.get()
         self.assertEqual(upload.status, RestoreUploadStatus.FAILED)
-        self.assertIn('disk gone', upload.error_message)
+        self.assertIn('OSError', upload.error_message)
+        self.assertNotIn('disk gone', upload.error_message)
         self.assertNothingStaged()
         mock_popen.assert_not_called()
 
@@ -516,7 +518,8 @@ class RestorePreLaunchFailureTest(RestoreViewTestBase):
         self.assertRedirects(response, self.url, fetch_redirect_response=False)
         upload = RestoreUpload.objects.get()
         self.assertEqual(upload.status, RestoreUploadStatus.FAILED)
-        self.assertIn('boom', upload.error_message)
+        self.assertIn('RuntimeError', upload.error_message)
+        self.assertNotIn('boom', upload.error_message)
         self.assertFalse(get_upload_dir(upload).exists())
         mock_popen.assert_not_called()
 
@@ -901,7 +904,8 @@ class RestoreStartOutcomeTest(RestoreStartViewTestBase):
         real_job.refresh_from_db()
         upload.refresh_from_db()
         self.assertEqual(real_job.status, BackupJobStatus.FAILED)
-        self.assertIn('cannot spawn', real_job.error_message)
+        self.assertIn('OSError', real_job.error_message)
+        self.assertNotIn('cannot spawn', real_job.error_message)
         self.assertEqual(upload.status, RestoreUploadStatus.CONFIRMED)
 
     # A "does the view call the real service end to end" test is deliberately

@@ -653,12 +653,18 @@ class ApplyRestoreTest(RestoreApplyTestBase):
         db_export['video.video'] = [{'model': 'video.video', 'pk': 999, 'fields': {'not_a_real_field': 1}}]
         upload, job = self._upload_and_job(db_export, media)
 
-        with self.assertRaises(RestoreError):
+        with self.assertRaises(RestoreError) as cm:
             restore_apply.apply_restore(upload, job)
 
         patient.refresh_from_db()
         self.assertEqual(patient.baby_name, 'Original')
         self.assertEqual(patient.updated_at, original_updated_at)
+        # The raised message (which becomes `job.error_message`) must carry
+        # only the exception's type name, never its raw text, and must match
+        # the value-free `audit_message`.
+        err = cm.exception
+        self.assertNotIn('not_a_real_field', err.message)
+        self.assertEqual(err.message, err.audit_message)
 
     def test_missing_user_fk_is_nulled_and_restore_proceeds(self):
         patient = self.make_patient(self.inst, baby_name='HasUser', bht='USR-1')
@@ -876,6 +882,44 @@ class RestoreMediaTest(RestoreApplyTestBase):
         self.assertEqual(len(warnings), 1)
         self.assertIn('outside the media folder', warnings[0])
 
+    def test_per_file_write_failure_warning_has_no_raw_exception_text(self):
+        patient = self.make_patient(self.inst, baby_name='WriteFail', bht='MED-5')
+        self.make_video(patient, name='fails.mp4', content=b'x')
+        db_export, media, _manifest = self.export_json(self.inst)
+
+        upload = RestoreUpload.objects.create(uploaded_by=self.user, status=RestoreUploadStatus.APPLYING)
+        get_upload_dir(upload).mkdir(parents=True, exist_ok=True)
+        shutil.copy(self.rebuild_archive(db_export, media), get_upload_path(upload))
+        job = self.make_job(self.inst)
+
+        with mock.patch('backup.restore_apply.os.replace', side_effect=OSError('/secret/disk/path full')):
+            warnings = restore_apply.restore_media(upload, job)
+
+        self.assertEqual(len(warnings), 1)
+        self.assertIn('could not be written', warnings[0])
+        self.assertIn('OSError', warnings[0])
+        self.assertNotIn('/secret/disk/path', warnings[0])
+
+    def test_media_restore_stopped_early_warning_has_no_raw_exception_text(self):
+        patient = self.make_patient(self.inst, baby_name='StopEarly', bht='MED-6')
+        self.make_video(patient, name='x.mp4', content=b'x')
+        db_export, media, _manifest = self.export_json(self.inst)
+
+        upload = RestoreUpload.objects.create(uploaded_by=self.user, status=RestoreUploadStatus.APPLYING)
+        get_upload_dir(upload).mkdir(parents=True, exist_ok=True)
+        shutil.copy(self.rebuild_archive(db_export, media), get_upload_path(upload))
+        job = self.make_job(self.inst)
+
+        with mock.patch(
+            'backup.restore_apply._manifest_checksums', side_effect=RuntimeError('secret manifest detail'),
+        ):
+            warnings = restore_apply.restore_media(upload, job)
+
+        self.assertEqual(len(warnings), 1)
+        self.assertIn('the media restore stopped early', warnings[0])
+        self.assertIn('RuntimeError', warnings[0])
+        self.assertNotIn('secret manifest detail', warnings[0])
+
 
 # ---------------------------------------------------------------------------
 # verify_confirmed (step 2)
@@ -1009,7 +1053,8 @@ class RunRestoreHappyPathTest(RestoreApplyTestBase):
             job = self.run_restore_command(job)
 
         self.assertEqual(job.status, BackupJobStatus.FAILED)
-        self.assertIn('disk exploded', job.error_message)
+        self.assertIn('RuntimeError', job.error_message)
+        self.assertNotIn('disk exploded', job.error_message)
         snapshot = BackupJob.objects.get(job_type=BackupJobType.PRE_RESTORE_SNAPSHOT)
         self.assertEqual(snapshot.status, BackupJobStatus.FAILED)
         self.assertEqual(job.pre_restore_snapshot_id, snapshot.id)

@@ -25,7 +25,6 @@ from django.utils import timezone
 from backup import restore_apply, restore_audit, restore_import
 from backup.models import BackupJob
 from backup.notifications import notify_job_finished
-from backup.restore_validation import _clip
 from ndas.custom_codes.choice import BackupJobStatus, BackupJobType
 
 logger = logging.getLogger(__name__)
@@ -107,7 +106,7 @@ class Command(BaseCommand):
             # upload stuck at 'applying') with no explanation.
             logger.exception("BackupJob %s: failed to transition to running.", job.id)
             self._fail(
-                job, f"could not start the restore job ({_clip(e, 200)})",
+                job, f"could not start the restore job ({type(e).__name__})",
                 audit_message=f"could not start the restore job ({type(e).__name__})",
                 date_scoped=date_scoped, started_at=started_at,
             )
@@ -139,10 +138,11 @@ class Command(BaseCommand):
             return
         except Exception as e:
             logger.exception("BackupJob %s failed during the restore.", job.id)
-            # A date-scoped run never puts raw exception text (it can quote
-            # patient values) in the job message; the log has it in full.
+            # The job message never puts raw exception text (it can quote
+            # patient values or filesystem/DB driver text) in front of an
+            # admin; the log has it in full.
             self._fail(
-                job, f"unexpected error ({type(e).__name__ if date_scoped else _clip(e, 200)})",
+                job, f"unexpected error ({type(e).__name__})",
                 audit_message=f"unexpected error ({type(e).__name__})",
                 date_scoped=date_scoped, started_at=started_at,
             )

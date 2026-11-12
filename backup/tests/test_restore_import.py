@@ -1153,7 +1153,8 @@ class PreImportFailureTest(ImportTestBase):
             job = self.run_restore_command(job)
         upload.refresh_from_db()
         self.assert_untouched_and_confirmed(job, upload)
-        self.assertIn('disk exploded', job.error_message)
+        self.assertIn('RuntimeError', job.error_message)
+        self.assertNotIn('disk exploded', job.error_message)
         self.assertIsNotNone(job.pre_restore_snapshot_id)
 
     def test_a_malformed_export_fails_after_the_snapshot_and_before_any_patient(self):

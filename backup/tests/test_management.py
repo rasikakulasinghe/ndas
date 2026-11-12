@@ -97,7 +97,8 @@ class RunBackupCommandTest(TestCase):
 
         self.job.refresh_from_db()
         self.assertEqual(self.job.status, BackupJobStatus.FAILED)
-        self.assertIn('boom', self.job.error_message)
+        self.assertIn('RuntimeError', self.job.error_message)
+        self.assertNotIn('boom', self.job.error_message)
         self.assertFalse(zip_path.exists(), "the partial .zip should be removed on failure")
         self.assertTrue(log_path.exists(), "the log file must survive failure cleanup")
         self.assertEqual(
@@ -125,7 +126,8 @@ class RunBackupCommandTest(TestCase):
 
         self.job.refresh_from_db()
         self.assertEqual(self.job.status, BackupJobStatus.FAILED)
-        self.assertIn('transient db error', self.job.error_message)
+        self.assertIn('RuntimeError', self.job.error_message)
+        self.assertNotIn('transient db error', self.job.error_message)
 
     # --- Story 1.5: terminal-state notifications ---
 
@@ -154,7 +156,8 @@ class RunBackupCommandTest(TestCase):
             call_command('run_backup', str(self.job.id))
         notif = Notification.objects.get()
         self.assertEqual(notif.notification_type, NotificationType.BACKUP_FAILED)
-        self.assertIn('boom', notif.body)
+        self.assertIn('RuntimeError', notif.body)
+        self.assertNotIn('boom', notif.body)
 
     def _fail_when_marking_running(self):
         """A `BackupJob.save` replacement that raises only on the save that
@@ -190,7 +193,8 @@ class RunBackupCommandTest(TestCase):
             call_command('run_backup', str(self.job.id))
         notif = Notification.objects.get()
         self.assertEqual(notif.notification_type, NotificationType.BACKUP_FAILED)
-        self.assertIn('transient db error', notif.body)
+        self.assertIn('RuntimeError', notif.body)
+        self.assertNotIn('transient db error', notif.body)
 
     def test_notification_created_only_after_terminal_save_on_success(self):
         seen = self._db_state_when_notified()
@@ -258,7 +262,8 @@ class RunBackupCommandTest(TestCase):
         self.job.refresh_from_db()
         self.assertEqual(self.job.status, BackupJobStatus.FAILED)
         self.assertEqual(self.job.progress_pct, 0)
-        self.assertIn('boom', self.job.error_message)
+        self.assertIn('RuntimeError', self.job.error_message)
+        self.assertNotIn('boom', self.job.error_message)
         notif = Notification.objects.get()
         self.assertEqual(notif.notification_type, NotificationType.BACKUP_FAILED)
 

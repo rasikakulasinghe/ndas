@@ -428,6 +428,8 @@ class AuditRobustnessTest(AuditAssertions, ImportTestBase):
         audit = job.restore_audit
         self.assertEqual(audit['outcome'], 'failed')
         self.assertEqual(audit['error'], 'Restore failed: could not start the restore job (OperationalError)')
+        self.assertEqual(job.error_message, 'Restore failed: could not start the restore job (OperationalError)')
+        self.assertNotIn('secret raw db text', job.error_message)
         self.assertPhiFree(audit, logs, 'secret raw db text')
         self.assertIn(
             'reason=Restore failed: could not start the restore job (OperationalError)', "\n".join(logs.output),
