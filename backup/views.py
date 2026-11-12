@@ -9,6 +9,7 @@ check -> create `BackupJob` -> launch a detached subprocess running
 `manage.py run_backup <job_id>` -> redirect immediately. The export itself
 never runs synchronously in this request.
 """
+import hashlib
 import json
 import logging
 import os
@@ -42,7 +43,7 @@ from backup import restore_validation
 from backup.forms import BackupScopeForm, RestoreConfirmForm, RestoreUploadForm
 from backup.job_lock import create_job_unless_overlapping
 from backup.models import BackupJob, RestoreUpload
-from backup.services import get_archive_dir, get_archive_path, has_sufficient_disk_space
+from backup.services import COPY_CHUNK_SIZE, get_archive_dir, get_archive_path, has_sufficient_disk_space
 from institution.models import Institution
 from ndas.custom_codes.delete_helpers import get_entity_display_name, get_redirect_url
 
@@ -668,6 +669,38 @@ def _backup_download_body(request, job):
         )
         messages.error(request, "This backup's archive file is no longer available.")
         return redirect('backup:backup-history')
+
+    # Review patch: re-verify the archive against the checksum computed at
+    # export time (`backup/services.py`'s whole-archive sha256) before
+    # streaming a single byte. A blank checksum (legacy/partial rows from
+    # before this field existed) skips the check entirely -- streams as
+    # before. `seek(0)` afterwards so the hash read never shifts the actual
+    # stream the client receives.
+    if job.archive_checksum:
+        try:
+            hasher = hashlib.sha256()
+            while chunk := archive_file.read(COPY_CHUNK_SIZE):
+                hasher.update(chunk)
+            archive_file.seek(0)
+        except OSError:
+            archive_file.close()
+            backup_security_logger.warning(
+                "Backup download refused (archive missing from disk): user=%s job=%s",
+                request.user.username, job.id,
+            )
+            messages.error(request, "This backup's archive file is no longer available.")
+            return redirect('backup:backup-history')
+
+        if hasher.hexdigest() != job.archive_checksum:
+            archive_file.close()
+            backup_security_logger.warning(
+                "Backup download refused (archive checksum mismatch): user=%s job=%s",
+                request.user.username, job.id,
+            )
+            messages.error(
+                request, "This backup's archive file appears to be corrupted and cannot be downloaded.",
+            )
+            return redirect('backup:backup-history')
 
     filename = _backup_download_filename(job)
     backup_security_logger.info(

@@ -12,6 +12,7 @@ from datetime import datetime, timedelta, timezone as dt_timezone
 from unittest import mock
 
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.db import OperationalError
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
@@ -556,6 +557,10 @@ class BuildAuditUnitTest(AuditAssertions, ImportTestBase):
 class UnknownUploadLoggingTest(IsolatedBaseDirMixin, TestCase):
     def setUp(self):
         super().setUp()
+        # LocMemCache is process-global, not per-test; clear the batch-5b
+        # per-user+upload throttle so a leftover key from another test
+        # cannot silently suppress a warning this class expects to see.
+        cache.clear()
         self.sa = User.objects.create_user(
             username='sa_au', password='x', position='Administrator', mobile_primary='0770000701',
             user_type=UserType.SUPERADMIN, is_superuser=True, institution=None,
@@ -591,10 +596,16 @@ class UnknownUploadLoggingTest(IsolatedBaseDirMixin, TestCase):
     )
 
     def test_foreign_and_unknown_uploads_are_404_with_one_warning_each(self):
+        """Each (view, pk) combination here is exercised as its own
+        independent event -- `cache.clear()` resets the batch-5b per-user+
+        upload throttle before every request so this test's "one warning per
+        request" invariant is unaffected by that dedup (covered on its own in
+        `UnknownUploadThrottleTest` below)."""
         client = self.client_for(self.sa)
         for url_name, method, view_name in self.VIEWS:
             for pk in (self.foreign.pk, 999999):
                 with self.subTest(view=view_name, pk=pk):
+                    cache.clear()
                     with self.assertLogs(SECURITY_LOGGER, level='WARNING') as logs:
                         response = getattr(client, method)(reverse(f'backup:{url_name}', args=[pk]))
                     self.assertEqual(response.status_code, 404)
@@ -626,3 +637,71 @@ class UnknownUploadLoggingTest(IsolatedBaseDirMixin, TestCase):
                     for line in logs.output
                 ))
                 self.assertFalse(any('unknown or foreign upload' in line for line in logs.output))
+
+
+class UnknownUploadThrottleTest(IsolatedBaseDirMixin, TestCase):
+    """Deferred-work batch 5b: `log_unknown_upload`'s 60s per-user+upload
+    cache dedup. The 404 response itself is unaffected -- only the
+    `security.log` line is throttled -- and the dedup key deliberately
+    ignores `view_name`, so hammering a mix of the six `_own_upload_or_404`
+    call sites with the same bad pk still logs only once per window."""
+    def setUp(self):
+        super().setUp()
+        cache.clear()
+        self.sa = User.objects.create_user(
+            username='sa_th', password='x', position='Administrator', mobile_primary='0770000705',
+            user_type=UserType.SUPERADMIN, is_superuser=True, institution=None,
+        )
+        self.other = User.objects.create_user(
+            username='sa_th2', password='x', position='Administrator', mobile_primary='0770000706',
+            user_type=UserType.SUPERADMIN, is_superuser=True, institution=None,
+        )
+        self.inst = Institution.objects.create(name='Throttle Hosp', slug='throttle-hosp', created_by=self.sa)
+        self.foreign = RestoreUpload.objects.create(
+            uploaded_by=self.other, original_filename='f.zip', status=RestoreUploadStatus.VALIDATED,
+        )
+
+    def client_for(self, user):
+        client = Client()
+        client.force_login(user)
+        session = client.session
+        session['active_institution_id'] = self.inst.id
+        session.save()
+        return client
+
+    def test_second_poll_of_same_unknown_upload_within_window_logs_nothing(self):
+        client = self.client_for(self.sa)
+        url = reverse('backup:restore-status-fragment', args=[self.foreign.pk])
+
+        with self.assertLogs(SECURITY_LOGGER, level='WARNING') as logs:
+            first = client.get(url)
+        self.assertEqual(first.status_code, 404)
+        self.assertTrue(any('unknown or foreign upload' in line for line in logs.output))
+
+        # Still 404 every time -- the throttle is logging-only.
+        second = client.get(url)
+        self.assertEqual(second.status_code, 404)
+        with self.assertNoLogs(SECURITY_LOGGER, level='WARNING'):
+            third = client.get(url)
+        self.assertEqual(third.status_code, 404)
+
+    def test_throttle_key_ignores_view_name(self):
+        """A repeat poll of the same bad pk through a *different* one of the
+        six `_own_upload_or_404`-guarded views within the window still logs
+        nothing -- the dedup key is user+upload only."""
+        client = self.client_for(self.sa)
+        status_url = reverse('backup:restore-status', args=[self.foreign.pk])
+        fragment_url = reverse('backup:restore-status-fragment', args=[self.foreign.pk])
+
+        with self.assertLogs(SECURITY_LOGGER, level='WARNING'):
+            client.get(status_url)
+        with self.assertNoLogs(SECURITY_LOGGER, level='WARNING'):
+            response = client.get(fragment_url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_different_upload_ids_are_not_cross_throttled(self):
+        client = self.client_for(self.sa)
+        with self.assertLogs(SECURITY_LOGGER, level='WARNING'):
+            client.get(reverse('backup:restore-status-fragment', args=[self.foreign.pk]))
+        with self.assertLogs(SECURITY_LOGGER, level='WARNING'):
+            client.get(reverse('backup:restore-status-fragment', args=[999999]))

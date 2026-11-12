@@ -11,6 +11,7 @@ non-admin and no-institution-context redirects, both `security.log` lines
 (`assertLogs`), the rate limit, and that two downloads of the same archive
 are each served independently without touching the file on disk.
 """
+import hashlib
 import shutil
 from unittest import mock
 
@@ -215,6 +216,34 @@ class BackupDownloadHappyPathTest(BackupDownloadViewTestBase):
         # Never modified or moved by a download.
         self.assertEqual(get_archive_path(job).read_bytes(), payload)
 
+    def test_blank_archive_checksum_skips_verification_and_streams_as_before(self):
+        """Deferred-work batch 5b: a job created before `archive_checksum`
+        existed (legacy/partial rows) has a blank checksum -- the integrity
+        check is skipped entirely and the archive streams exactly as it did
+        before this check was added."""
+        payload = b'legacy-archive-no-checksum'
+        job = self._make_job_with_archive(content=payload, archive_checksum='')
+        client = self._admin_client()
+        response = self._get_and_close(client, self._download_url(job))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.download_content, payload)
+
+    def test_matching_archive_checksum_streams_the_full_correct_bytes(self):
+        """Deferred-work batch 5b: the normal, real-world case -- a
+        `completed` job whose `archive_checksum` matches the file on disk.
+        This is the success side of the new integrity check: it must hash
+        the open file and then `seek(0)` back to the start before streaming,
+        so the download still gets the full, correct bytes rather than
+        starting mid-file or empty (a regression this case alone can catch)."""
+        payload = b'original-bytes-at-export-time-matching-checksum'
+        job = self._make_job_with_archive(
+            content=payload, archive_checksum=hashlib.sha256(payload).hexdigest(),
+        )
+        client = self._admin_client()
+        response = self._get_and_close(client, self._download_url(job))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.download_content, payload)
+
 
 class BackupDownloadRefusalTest(BackupDownloadViewTestBase):
     def test_pending_running_failed_statuses_are_404(self):
@@ -318,6 +347,65 @@ class BackupDownloadRefusalTest(BackupDownloadViewTestBase):
             response = client.get(self._download_url(job))
         self.assertRedirects(response, reverse('backup:backup-history'), fetch_redirect_response=False)
         self.assertTrue(any(str(job.id) in line for line in logs.output))
+
+        response = client.get(response['Location'])
+        self.assertContains(response, 'no longer available')
+
+    def test_checksum_mismatch_refuses_download_no_bytes_streamed(self):
+        """Deferred-work batch 5b: a corrupted archive on disk (bytes no
+        longer match the `archive_checksum` recorded at export time) must be
+        refused -- no `FileResponse` ever gets built, the admin is redirected
+        to history with a corruption message, and the mismatch is logged."""
+        payload = b'original-bytes-at-export-time'
+        job = self._make_job_with_archive(
+            content=payload, archive_checksum=hashlib.sha256(payload).hexdigest(),
+        )
+        # Corrupt the archive on disk after the checksum was recorded --
+        # a same-length bit-flip, so a coincidental size difference can't be
+        # mistaken for the checksum comparison actually catching this.
+        corrupted = bytearray(payload)
+        corrupted[0] ^= 0xFF
+        get_archive_path(job).write_bytes(bytes(corrupted))
+        client = self._admin_client()
+        with self.assertLogs(SECURITY_LOGGER, level='WARNING') as logs:
+            response = client.get(self._download_url(job))
+        self.assertFalse(response.streaming)
+        self.assertRedirects(response, reverse('backup:backup-history'), fetch_redirect_response=False)
+        self.assertTrue(any(str(job.id) in line for line in logs.output))
+
+        response = client.get(response['Location'])
+        self.assertContains(response, 'corrupted')
+
+    def test_oserror_during_hash_closes_handle_and_refuses_as_missing(self):
+        """A read failure mid-hash (e.g. the archive becomes unreadable
+        after the initial open()/fstat() already succeeded) must close the
+        handle and refuse the same way as the earlier missing-archive case
+        -- per the frozen I/O matrix -- never raise, never stream."""
+        payload = b'bytes-that-will-fail-to-fully-read'
+        job = self._make_job_with_archive(
+            content=payload, archive_checksum=hashlib.sha256(payload).hexdigest(),
+        )
+        client = self._admin_client()
+
+        opened_files = []
+        real_open = open
+
+        def spy_open(*args, **kwargs):
+            handle = real_open(*args, **kwargs)
+            handle.read = mock.Mock(side_effect=OSError('disk gone mid-hash'))
+            opened_files.append(handle)
+            return handle
+
+        with mock.patch('backup.views.open', side_effect=spy_open, create=True), \
+                self.assertLogs(SECURITY_LOGGER, level='WARNING') as logs:
+            response = client.get(self._download_url(job))
+
+        self.assertRedirects(response, reverse('backup:backup-history'), fetch_redirect_response=False)
+        self.assertTrue(any('missing from disk' in line for line in logs.output))
+        self.assertTrue(
+            opened_files[0].closed,
+            "the archive file handle must be closed, not leaked, on a mid-hash read failure",
+        )
 
         response = client.get(response['Location'])
         self.assertContains(response, 'no longer available')

@@ -24,6 +24,7 @@ import logging
 from datetime import datetime, timezone
 
 from django.apps import apps
+from django.core.cache import cache
 
 from backup import restore_validation
 from backup.models import RestoreUpload
@@ -229,7 +230,19 @@ def log_unknown_upload(request, view_name, pk):
     """A super admin named an upload that is not theirs or does not exist: the
     view still answers 404; this leaves the audit line. `exists` says whether
     any upload has that id, so a typo can be told from reaching another
-    admin's upload (the response is the same 404 either way)."""
+    admin's upload (the response is the same 404 either way).
+
+    Throttled to one `security.log` line per 60s window per user+upload
+    (ignoring `view_name` deliberately -- see Design Notes): a repeated HTMX
+    poll of a bad upload id must not flood the log. The 404 response itself
+    is unaffected -- this only guards the logging."""
+    cache_key = f"restore-unknown-upload-log:{getattr(request.user, 'pk', None)}:{pk}"
+    try:
+        throttled = not cache.add(cache_key, True, timeout=60)
+    except Exception:
+        throttled = False
+    if throttled:
+        return
     try:
         exists = RestoreUpload.objects.filter(pk=pk).exists()
     except Exception:

@@ -2,8 +2,8 @@
 title: 'Deferred-Work Batch 5b: Backup Download Integrity, Log Throttle & Doc Fix'
 type: 'bugfix'
 created: '2026-11-12'
-status: 'ready-for-dev'
-baseline_commit: 'e56306a92733ef122f967a934ad96b172ba6b820'
+status: 'done'
+baseline_commit: '086838cbfe1814a557a8edec8bb238534820c7b4'
 review_loop_iteration: 0
 context: []
 ---
@@ -47,11 +47,12 @@ context: []
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `backup/views.py` -- add checksum verification to `_backup_download_body`.
-- [ ] `backup/restore_audit.py` -- add the cache-based dedup to `log_unknown_upload`.
-- [ ] `CLAUDE.md` -- correct the rate-limiting count.
-- [ ] Add the two new download-integrity test cases and the dedup test case.
-- [ ] `deferred-work.md` -- annotate the three entries (two full, one partial-closing) as resolved.
+- [x] `backup/views.py` -- add checksum verification to `_backup_download_body`.
+- [x] `backup/restore_audit.py` -- add the cache-based dedup to `log_unknown_upload`.
+- [x] `CLAUDE.md` -- correct the rate-limiting count.
+- [x] Add the two new download-integrity test cases and the dedup test case.
+- [x] `deferred-work.md` -- annotate the three entries (two full, one partial-closing) as resolved.
+- [x] Review hardening (blind-hunter + edge-case-hunter + verification-gap, all independently confirmed): guard `log_unknown_upload`'s `cache.add()` against a cache-backend exception (was previously unguarded, unlike the DB-existence check beside it); reword CLAUDE.md's rate-limiting bullet (the old phrasing's trailing "(10/min create/edit, 5/min delete)" no longer described all 100 lines) and bump its "Last Updated" date; add a CLAUDE.md bullet naming the new download-integrity control; add the missing success-path test (`test_matching_archive_checksum_streams_the_full_correct_bytes` -- the one case that would catch a `seek(0)` regression and that no existing test reached); add `test_oserror_during_hash_closes_handle_and_refuses_as_missing`; strengthen the mismatch test to a same-length bit-flip; add `cache.clear()` to `UnknownUploadLoggingTest.setUp` against cross-test throttle-key leakage (LocMemCache is process-global).
 
 **Acceptance Criteria:**
 - Given a `completed` `BackupJob` whose archive on disk no longer matches `archive_checksum`, when an admin requests `backup:backup-download`, then no file bytes are streamed and the admin is redirected to the history page with an error message.
@@ -68,3 +69,35 @@ The throttle key intentionally ignores `view_name`: a user hammering any mix of 
 
 **Commands:**
 - `venv/Scripts/python.exe manage.py test backup` (with `SECURE_SSL_REDIRECT=False` for the run) -- expected: all pass, including the three new cases.
+
+## Suggested Review Order
+
+**Download integrity check**
+
+- The checksum re-verification itself: hash, `seek(0)`, compare, refuse on mismatch or read failure.
+  [`views.py:679`](../../backup/views.py#L679)
+
+- The success path a regression here would silently break (no existing test reached it).
+  [`test_download_views.py:231`](../../backup/tests/test_download_views.py#L231)
+
+- Corrupted archive refused -- strengthened to a same-length bit-flip so only the hash comparison can catch it.
+  [`test_download_views.py:354`](../../backup/tests/test_download_views.py#L354)
+
+- Mid-hash read failure reuses the existing missing-archive refusal path, per the frozen I/O matrix.
+  [`test_download_views.py:379`](../../backup/tests/test_download_views.py#L379)
+
+**Log throttle**
+
+- The dedup guard itself, now exception-safe after review (a cache-backend failure must not turn a 404 into a 500).
+  [`restore_audit.py:239`](../../backup/restore_audit.py#L239)
+
+- Second poll within the window logs nothing; the 404 itself is unaffected.
+  [`test_restore_audit.py:672`](../../backup/tests/test_restore_audit.py#L672)
+
+- `cache.clear()` added here against cross-test leakage, since LocMemCache is process-global.
+  [`test_restore_audit.py:558`](../../backup/tests/test_restore_audit.py#L558)
+
+**Documentation**
+
+- Corrected count, reworded to not misdescribe every rate, plus the new integrity-check bullet.
+  [`CLAUDE.md:140`](../../CLAUDE.md#L140)

@@ -2,7 +2,7 @@
 
 Guidance for Claude Code (claude.ai/code) working in this repository.
 
-**Last Updated:** 2026-09-12
+**Last Updated:** 2026-11-12
 
 ## Planning & Proposals
 
@@ -137,9 +137,10 @@ patient.apgar_5          # NOT apgar_5_min
 
 ### Security Features
 
-- **Rate Limiting**: 24 CRUD operations protected (10/min create/edit, 5/min delete)
+- **Rate Limiting**: 100 `@ratelimit` decorator lines across 8 apps (patients, backup, reports, users, video, referral, problemlist, institution); typical CRUD rates are 10/min create/edit, 5/min delete, with higher limits on read-only/polling endpoints
 - **Input Sanitization**: `sanitize_text_input()` removes XSS, preserves medical notation
 - **File Validation**: MIME type checking via python-magic, size limits enforced
+- **Backup Integrity**: `backup:backup-download` re-verifies the archive's SHA-256 against `BackupJob.archive_checksum` before streaming, refusing a corrupted archive rather than serving it
 - **HTTP Methods**: `@require_GET`, `@require_http_methods(["GET", "POST"])`
 - **Session**: 1 hour timeout, browser-close expiry
 - **Excel/Formula Injection**: any Excel export must call `escape_excel_row()` (or `escape_excel_formula()` per cell) from `ndas/custom_codes/custom_methods.py` on user-controlled free text before `ws.append(row)` — openpyxl/Excel treats a leading `=`, `+`, `-`, `@`, tab, or CR as a live formula
