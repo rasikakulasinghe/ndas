@@ -9,6 +9,9 @@ Provides consistent permission checks, business rule validation, and redirect lo
 
 from typing import Dict, Any, Optional
 from django.contrib.auth import get_user_model
+from django.template.defaultfilters import filesizeformat
+
+from ndas.custom_codes.choice import BackupJobStatus
 
 User = get_user_model()
 
@@ -259,6 +262,12 @@ def get_entity_warning_items(entity: Any) -> list:
                 "This is a pre-restore snapshot -- it cannot be deleted while it is still "
                 "backing an active restore"
             )
+            # Only a completed snapshot has a usable archive to roll back to.
+            if entity.status == BackupJobStatus.COMPLETED:
+                warnings.append(
+                    "Deleting this snapshot permanently removes the ability to roll back to the "
+                    "pre-restore state"
+                )
 
     # Default warning if no specific warnings
     if not warnings:
@@ -341,6 +350,15 @@ def get_entity_detail_items(entity: Any) -> Dict[str, str]:
             # fallback for this exact state instead of silently omitting
             # the line.
             details['Scope'] = '—'
+        # `archive_size_bytes` is a plain attribute `backup_history` sets on
+        # each row from the archive on disk (no model field) -- mirrors the
+        # history page's own Size column. Absent attribute (caller never
+        # measured it) means no Size line, not "unavailable".
+        if hasattr(entity, 'archive_size_bytes'):
+            if entity.archive_size_bytes is not None:
+                details['Size'] = filesizeformat(entity.archive_size_bytes)
+            elif entity.status == BackupJobStatus.COMPLETED:
+                details['Size'] = 'unavailable'
         if entity.created_at:
             details['Created'] = entity.created_at.strftime('%Y-%m-%d %H:%M')
 

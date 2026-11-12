@@ -222,3 +222,84 @@ class RunBackupCommandTest(TestCase):
         self.job.refresh_from_db()
         self.assertEqual(self.job.status, BackupJobStatus.COMPLETED)
         self.assertEqual(Notification.objects.count(), 0)
+
+    # --- Deferred-work batch 4: guarded failure paths ---
+
+    def test_export_failure_whose_failed_save_also_fails_is_logged_not_raised(self):
+        original_save = BackupJob.save
+
+        def flaky_save(instance, *args, **kwargs):
+            if instance.status == BackupJobStatus.FAILED:
+                raise RuntimeError('db gone')
+            return original_save(instance, *args, **kwargs)
+
+        with mock.patch(
+            'backup.management.commands.run_backup.create_export', side_effect=RuntimeError('boom'),
+        ), mock.patch.object(BackupJob, 'save', flaky_save), \
+                self.assertLogs('backup.management.commands.run_backup', level='ERROR') as logs:
+            call_command('run_backup', str(self.job.id))  # must not raise
+
+        self.assertTrue(any('also failed to record the failure' in line for line in logs.output))
+        self.assertEqual(Notification.objects.count(), 0)
+        self.job.refresh_from_db()
+        self.assertEqual(self.job.status, BackupJobStatus.RUNNING)
+
+    def test_export_failure_whose_zip_cleanup_fails_is_still_recorded_and_notified(self):
+        archive_path = mock.Mock()
+        archive_path.unlink.side_effect = PermissionError('file in use')
+        with mock.patch(
+            'backup.management.commands.run_backup.create_export', side_effect=RuntimeError('boom'),
+        ), mock.patch(
+            'backup.management.commands.run_backup.get_archive_path', return_value=archive_path,
+        ), self.assertLogs('backup.management.commands.run_backup', level='ERROR') as logs:
+            call_command('run_backup', str(self.job.id))  # must not raise
+
+        self.assertTrue(any('failed to remove the partial archive' in line for line in logs.output))
+        self.job.refresh_from_db()
+        self.assertEqual(self.job.status, BackupJobStatus.FAILED)
+        self.assertEqual(self.job.progress_pct, 0)
+        self.assertIn('boom', self.job.error_message)
+        notif = Notification.objects.get()
+        self.assertEqual(notif.notification_type, NotificationType.BACKUP_FAILED)
+
+    def test_interrupt_during_export_cleans_up_records_failure_and_reraises(self):
+        for exc_type in (KeyboardInterrupt, SystemExit):
+            with self.subTest(exc_type=exc_type.__name__):
+                BackupJob.objects.filter(pk=self.job.pk).update(
+                    status=BackupJobStatus.PENDING, progress_pct=0, error_message='',
+                )
+                archive_dir = get_archive_dir(self.job)
+                archive_dir.mkdir(parents=True, exist_ok=True)
+                zip_path = get_archive_path(self.job)
+                zip_path.write_bytes(b'partial-zip-bytes')
+
+                def interrupted(job, progress_callback=None):
+                    progress_callback(63)
+                    raise exc_type()
+
+                with mock.patch(
+                    'backup.management.commands.run_backup.create_export', side_effect=interrupted,
+                ), self.assertRaises(exc_type):
+                    call_command('run_backup', str(self.job.id))
+
+                self.job.refresh_from_db()
+                self.assertEqual(self.job.status, BackupJobStatus.FAILED)
+                self.assertEqual(self.job.progress_pct, 0)
+                self.assertIn(exc_type.__name__, self.job.error_message)
+                self.assertFalse(zip_path.exists(), "the partial .zip should be removed on interrupt")
+                self.assertEqual(Notification.objects.count(), 0)
+
+    def test_interrupt_whose_failed_save_also_fails_still_reraises(self):
+        original_save = BackupJob.save
+
+        def flaky_save(instance, *args, **kwargs):
+            if instance.status == BackupJobStatus.FAILED:
+                raise RuntimeError('db gone')
+            return original_save(instance, *args, **kwargs)
+
+        with mock.patch(
+            'backup.management.commands.run_backup.create_export', side_effect=KeyboardInterrupt(),
+        ), mock.patch.object(BackupJob, 'save', flaky_save), \
+                self.assertLogs('backup.management.commands.run_backup', level='ERROR'), \
+                self.assertRaises(KeyboardInterrupt):
+            call_command('run_backup', str(self.job.id))

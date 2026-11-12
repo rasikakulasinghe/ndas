@@ -27,6 +27,20 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('job_id', type=int, help='Primary key of the BackupJob to run.')
 
+    def _record_failure(self, job, message):
+        """Save the terminal failed state. Returns False (after logging) if the
+        save itself raises, so the caller skips the notification. In that
+        case the row stays `running` until `sweep_stale_jobs` marks it failed."""
+        try:
+            job.status = BackupJobStatus.FAILED
+            job.progress_pct = 0
+            job.error_message = message
+            job.save(update_fields=['status', 'progress_pct', 'error_message', 'updated_at'])
+        except Exception:
+            logger.exception("BackupJob %s: also failed to record the failure.", job.id)
+            return False
+        return True
+
     def handle(self, *args, **options):
         job_id = options['job_id']
 
@@ -70,15 +84,28 @@ class Command(BaseCommand):
             # Remove only the partial .zip, never the whole archive_dir --
             # that directory also holds this very process's run_backup.log
             # (still open via redirected stdout/stderr), which Windows
-            # cannot delete while the handle is open.
-            get_archive_path(job).unlink(missing_ok=True)
-            job.status = BackupJobStatus.FAILED
-            job.progress_pct = 0
-            job.error_message = f"Backup export failed: {e}"
-            job.save(update_fields=['status', 'progress_pct', 'error_message', 'updated_at'])
-            notify_job_finished(job)
+            # cannot delete while the handle is open. A cleanup failure (e.g.
+            # a Windows PermissionError) must not stop the failure being recorded.
+            try:
+                get_archive_path(job).unlink(missing_ok=True)
+            except OSError:
+                logger.exception("BackupJob %s: failed to remove the partial archive.", job.id)
+            if self._record_failure(job, f"Backup export failed: {e}"):
+                notify_job_finished(job)
             self.stdout.write(self.style.ERROR(f"BackupJob {job.id}: failed - {e}"))
             return
+        except (KeyboardInterrupt, SystemExit) as e:
+            # Not an Exception subclass, so the branch above never sees it. Clean
+            # up and record the failure best-effort, then let it propagate so the
+            # process still exits as asked. No notification: the process is
+            # being torn down.
+            logger.error("BackupJob %s: interrupted during export (%s).", job.id, type(e).__name__)
+            try:
+                get_archive_path(job).unlink(missing_ok=True)
+            except Exception:
+                logger.exception("BackupJob %s: failed to remove the partial archive.", job.id)
+            self._record_failure(job, f"Backup export interrupted ({type(e).__name__}).")
+            raise
 
         # Terminal success state written as one save (status + progress_pct together).
         # A non-empty skipped_media list still completes the job (human-approved

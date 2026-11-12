@@ -23,7 +23,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db import IntegrityError, transaction
+from django.db import DatabaseError, IntegrityError, transaction
 from django.db.models import Prefetch, Q
 from django.http import FileResponse, Http404, HttpResponse, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -50,19 +50,18 @@ logger = logging.getLogger(__name__)
 # Story 2.1: denials and archive rejections log under `django.security` so
 # they reach security.log. Despite the generic name, this one is
 # restore-scoped (django.security.restore) -- every restore_* view below
-# and backup_delete still use it; only backup_download's lines moved off it
-# (see download_security_logger below). backup_delete's identical mismatch
-# is tracked in deferred-work.md, deliberately left as-is here: this entry
-# named only "backup-download log lines".
+# uses it; backup_download's and backup_delete's lines log under
+# backup_security_logger instead (see below).
 security_logger = restore_validation.security_logger
-# Story 3.2 (deferred-work ledger triage): downloads are not a restore
-# action, so they get their own child logger rather than reusing
+# Story 3.2 (deferred-work ledger triage), extended to backup_delete in
+# deferred-work batch 4: downloads and deletes are not restore actions,
+# so they get their own child logger rather than reusing
 # `security_logger` (django.security.restore) -- this one has no handlers
 # of its own and propagates to the `django.security` parent logger's
 # `security_file`/`console` handlers exactly as `security_logger` does, so
 # `logs/security.log` is unaffected; only the recorded logger name changes,
 # separating the two features' lines when grepping by name.
-download_security_logger = logging.getLogger('django.security.backup')
+backup_security_logger = logging.getLogger('django.security.backup')
 
 
 def _get_admin_institution(request):
@@ -580,13 +579,15 @@ def _log_backup_download_refused(request, pk):
     independently of whether the job exists -- that failure is logged as
     `exists=unknown` rather than silently folded into `exists=False`, so an
     operator reading the log later can tell "no such job" from "couldn't
-    check"."""
+    check". Only `DatabaseError` is caught: the primary lookup already decided
+    404, so a transient DB failure here must not turn it into a 500, while a
+    programming error surfaces instead of being hidden as `exists=unknown`."""
     try:
         exists = BackupJob.objects.filter(pk=pk).exists()
-    except Exception:
+    except DatabaseError:
         logger.exception("Backup download refusal: could not check whether job=%s exists.", pk)
         exists = 'unknown'
-    download_security_logger.warning(
+    backup_security_logger.warning(
         "Backup download refused (unknown, not completed, or out of scope): user=%s job=%s exists=%s",
         getattr(request.user, 'username', '?'), pk, exists,
     )
@@ -613,7 +614,7 @@ def backup_download(request, pk):
     """
     user_type = getattr(request.user, 'user_type', None)
     if user_type not in (UserType.ADMIN, UserType.SUPERADMIN):
-        download_security_logger.warning(
+        backup_security_logger.warning(
             "Backup download denied (not an admin): user=%s user_type=%s job=%s",
             request.user.username, user_type, pk,
         )
@@ -622,7 +623,7 @@ def backup_download(request, pk):
 
     institution = _get_admin_institution(request)
     if institution is None:
-        download_security_logger.warning(
+        backup_security_logger.warning(
             "Backup download denied (no institution context): user=%s job=%s",
             request.user.username, pk,
         )
@@ -661,7 +662,7 @@ def _backup_download_body(request, job):
     except OSError:
         if archive_file is not None:
             archive_file.close()
-        download_security_logger.warning(
+        backup_security_logger.warning(
             "Backup download refused (archive missing from disk): user=%s job=%s",
             request.user.username, job.id,
         )
@@ -669,7 +670,7 @@ def _backup_download_body(request, job):
         return redirect('backup:backup-history')
 
     filename = _backup_download_filename(job)
-    download_security_logger.info(
+    backup_security_logger.info(
         "Backup download: user=%s job=%s size=%s filename=%s",
         request.user.username, job.id, archive_size, filename,
     )
@@ -717,13 +718,13 @@ def _log_backup_delete_refused(request, pk):
     """Mirrors `_log_backup_download_refused`: an unknown pk and an
     out-of-scope one both produce the same plain 404 response (AD-7: no
     hint which); the distinction is recorded server-side only, in
-    security.log."""
+    security.log. Catches only `DatabaseError`, like that helper."""
     try:
         exists = BackupJob.objects.filter(pk=pk).exists()
-    except Exception:
+    except DatabaseError:
         logger.exception("Backup delete refusal: could not check whether job=%s exists.", pk)
         exists = 'unknown'
-    security_logger.warning(
+    backup_security_logger.warning(
         "Backup delete refused (unknown or out of scope): user=%s job=%s exists=%s",
         getattr(request.user, 'username', '?'), pk, exists,
     )
@@ -764,7 +765,7 @@ def backup_delete(request, pk):
     """
     user_type = getattr(request.user, 'user_type', None)
     if user_type not in (UserType.ADMIN, UserType.SUPERADMIN):
-        security_logger.warning(
+        backup_security_logger.warning(
             "Backup delete denied (not an admin): user=%s user_type=%s job=%s",
             request.user.username, user_type, pk,
         )
@@ -776,7 +777,7 @@ def backup_delete(request, pk):
 
     institution = _get_admin_institution(request)
     if institution is None:
-        security_logger.warning(
+        backup_security_logger.warning(
             "Backup delete denied (no institution context): user=%s job=%s",
             request.user.username, pk,
         )
@@ -822,7 +823,7 @@ def backup_delete(request, pk):
         }, status=400)
 
     if not request.user.check_password(password):
-        security_logger.warning(
+        backup_security_logger.warning(
             "Backup delete refused (invalid password): user=%s job=%s", request.user.username, pk,
         )
         return JsonResponse({
@@ -832,7 +833,7 @@ def backup_delete(request, pk):
         }, status=401)
 
     if job.status not in (BackupJobStatus.COMPLETED, BackupJobStatus.FAILED):
-        security_logger.warning(
+        backup_security_logger.warning(
             "Backup delete refused (status=%s): user=%s job=%s", job.status, request.user.username, pk,
         )
         return JsonResponse({
@@ -846,7 +847,7 @@ def backup_delete(request, pk):
     # `restore`-type job -- even completed/failed -- is refused the same
     # way regardless of who is asking (protects Story 2.6's audit trail).
     if job.job_type not in (BackupJobType.BACKUP, BackupJobType.PRE_RESTORE_SNAPSHOT):
-        security_logger.warning(
+        backup_security_logger.warning(
             "Backup delete refused (restore-type job): user=%s job=%s", request.user.username, pk,
         )
         return JsonResponse({
@@ -860,7 +861,7 @@ def backup_delete(request, pk):
     # `_deletable_jobs_for` deliberately does not enforce this (see its own
     # docstring), so it must be enforced explicitly here.
     if job.job_type == BackupJobType.PRE_RESTORE_SNAPSHOT and not is_superadmin:
-        security_logger.warning(
+        backup_security_logger.warning(
             "Backup delete denied (snapshot, not a superadmin): user=%s user_type=%s job=%s",
             request.user.username, user_type, pk,
         )
@@ -883,7 +884,7 @@ def backup_delete(request, pk):
             if job.job_type == BackupJobType.PRE_RESTORE_SNAPSHOT and job.restores_using_snapshot.filter(
                 status__in=(BackupJobStatus.PENDING, BackupJobStatus.RUNNING)
             ).exists():
-                security_logger.warning(
+                backup_security_logger.warning(
                     "Backup delete refused (snapshot in use): user=%s job=%s", request.user.username, job_id,
                 )
                 return JsonResponse({
@@ -902,7 +903,7 @@ def backup_delete(request, pk):
             job.delete()
     except OSError:
         logger.exception("Backup delete: failed to remove archive directory for job=%s", job_id)
-        security_logger.error(
+        backup_security_logger.error(
             "Backup delete refused (archive removal failed): user=%s job=%s", request.user.username, job_id,
         )
         return JsonResponse({
@@ -911,7 +912,7 @@ def backup_delete(request, pk):
             "message": "Could not remove the backup archive from disk. Please try again or contact support.",
         }, status=500)
 
-    security_logger.info(
+    backup_security_logger.info(
         "Backup delete: user=%s job=%s job_type=%s", request.user.username, job_id, job.job_type,
     )
     return JsonResponse({

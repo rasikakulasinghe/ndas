@@ -433,3 +433,38 @@ class ValidateRestoreUploadCommandTest(IsolatedBaseDirMixin, TestCase):
         self.assertIsNone(upload.match_summary)
         self.assertIn('no integer primary key', upload.error_message)
         self.assertFalse(get_upload_path(upload).exists())
+
+
+class RunRestoreFailResetsProgressTest(TestCase):
+    """Deferred-work batch 4: `run_restore._fail` resets `progress_pct` to 0
+    in the same terminal save, mirroring `run_backup`'s failed branch, so a
+    failed job never renders a part-filled bar."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='cmd_rr_sa', password='x', position='Administrator', mobile_primary='0770000511',
+        )
+        self.inst = Institution.objects.create(name='Cmd RR Hosp', slug='cmd-rr-hosp', created_by=self.user)
+        self.job = BackupJob.objects.create(
+            job_type=BackupJobType.RESTORE, status=BackupJobStatus.PENDING,
+            scope=self.inst, triggered_by=self.user, trigger_institution=self.inst,
+        )
+
+    def test_failure_at_63_percent_ends_failed_with_progress_zero(self):
+        def explode(job, progress_callback=None):
+            progress_callback(63)
+            BackupJob.objects.filter(pk=job.pk).update(progress_pct=63)
+            raise RuntimeError('kaboom')
+
+        with mock.patch('backup.management.commands.run_restore.restore_apply.execute_restore',
+                        side_effect=explode), \
+                mock.patch('backup.management.commands.run_restore.restore_audit.record_and_log',
+                           return_value=None), \
+                mock.patch('backup.management.commands.run_restore.notify_job_finished'), \
+                self.assertLogs('backup.management.commands.run_restore', level='ERROR'):
+            call_command('run_restore', str(self.job.id))
+
+        self.job.refresh_from_db()
+        self.assertEqual(self.job.status, BackupJobStatus.FAILED)
+        self.assertEqual(self.job.progress_pct, 0)
+        self.assertIn('kaboom', self.job.error_message)

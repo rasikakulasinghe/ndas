@@ -66,6 +66,10 @@
                 {% else %}
                   <span class="badge badge-secondary">{{ job.get_status_display }}</span>
                 {% endif %}
+                {% if job.error_message %}{% if job.status == 'failed' or job.status == 'completed' %}
+                  <div class="small job-error-message {% if job.status == 'failed' %}text-danger{% else %}text-dark{% endif %}"
+                       title="{{ job.error_message }}">{{ job.error_message|truncatechars:300 }}</div>
+                {% endif %}{% endif %}
               </td>
               <td>
                 {% if job.status == 'pending' or job.status == 'running' %}

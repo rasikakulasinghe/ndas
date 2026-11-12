@@ -446,16 +446,19 @@ class RestoreSidebarTest(RestoreViewTestBase):
     def test_superadmin_with_active_institution_sees_backup_and_restore(self):
         response = self._home(self.client_for(self.superadmin))
         self.assertContains(response, f'href="{reverse("backup:backup-create")}"')
+        self.assertContains(response, f'href="{reverse("backup:backup-history")}"')
         self.assertContains(response, f'href="{reverse("backup:restore-upload")}"')
 
     def test_institution_admin_sees_backup_but_not_restore(self):
         response = self._home(self.client_for(self.admin))
         self.assertContains(response, f'href="{reverse("backup:backup-create")}"')
+        self.assertContains(response, f'href="{reverse("backup:backup-history")}"')
         self.assertNotContains(response, f'href="{reverse("backup:restore-upload")}"')
 
     def test_clinician_sees_neither(self):
         response = self._home(self.client_for(self.user))
         self.assertNotContains(response, f'href="{reverse("backup:backup-create")}"')
+        self.assertNotContains(response, f'href="{reverse("backup:backup-history")}"')
         self.assertNotContains(response, f'href="{reverse("backup:restore-upload")}"')
 
     def test_superadmin_without_active_institution_sees_neither(self):
@@ -463,6 +466,7 @@ class RestoreSidebarTest(RestoreViewTestBase):
         response = client.get(reverse('institution:institution-selector'))
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, f'href="{reverse("backup:backup-create")}"')
+        self.assertNotContains(response, f'href="{reverse("backup:backup-history")}"')
         self.assertNotContains(response, f'href="{reverse("backup:restore-upload")}"')
 
 

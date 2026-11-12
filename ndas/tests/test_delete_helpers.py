@@ -12,7 +12,13 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
-from ndas.custom_codes.delete_helpers import has_delete_permission
+from django.template.defaultfilters import filesizeformat
+
+from backup.models import BackupJob
+from ndas.custom_codes.choice import BackupJobScopeType, BackupJobStatus, BackupJobType
+from ndas.custom_codes.delete_helpers import (
+    get_entity_detail_items, get_entity_warning_items, has_delete_permission,
+)
 from patients.models import Bookmark, Patient
 
 User = get_user_model()
@@ -97,3 +103,55 @@ class HasDeletePermissionBookmarkTest(TestCase):
     def test_owner_can_delete_even_when_added_by_someone_else(self):
         """The true owner can always delete, regardless of who added_by is."""
         self.assertTrue(has_delete_permission(self.owner_staff, self.bookmark_added_by_other))
+
+
+class BackupJobDeleteModalItemsTest(TestCase):
+    """Deferred-work batch 4: the BackupJob delete modal shows the archive
+    size (as the history page sets it on each row) and, for a snapshot, the
+    rollback-loss warning. Unsaved, system-scoped instances -- no DB needed."""
+
+    def _job(self, **overrides):
+        fields = dict(
+            job_type=BackupJobType.BACKUP,
+            status=BackupJobStatus.COMPLETED,
+            scope_type=BackupJobScopeType.SYSTEM,
+        )
+        fields.update(overrides)
+        return BackupJob(**fields)
+
+    def test_size_detail_formatted_from_archive_size_bytes(self):
+        job = self._job()
+        job.archive_size_bytes = 2048
+        self.assertEqual(get_entity_detail_items(job)['Size'], filesizeformat(2048))
+
+    def test_size_unavailable_for_completed_job_without_archive(self):
+        job = self._job()
+        job.archive_size_bytes = None
+        self.assertEqual(get_entity_detail_items(job)['Size'], 'unavailable')
+
+    def test_size_omitted_for_failed_job(self):
+        job = self._job(status=BackupJobStatus.FAILED)
+        job.archive_size_bytes = None
+        self.assertNotIn('Size', get_entity_detail_items(job))
+
+    def test_size_omitted_when_attribute_never_set(self):
+        """A caller that never measured the archive gets no Size line --
+        absent is not the same as 'archive missing'."""
+        self.assertNotIn('Size', get_entity_detail_items(self._job()))
+
+    def test_failed_snapshot_has_no_rollback_warning(self):
+        warnings = get_entity_warning_items(
+            self._job(job_type=BackupJobType.PRE_RESTORE_SNAPSHOT, status=BackupJobStatus.FAILED)
+        )
+        self.assertFalse(any('roll back' in w for w in warnings))
+
+    def test_snapshot_gets_rollback_warning(self):
+        warnings = get_entity_warning_items(self._job(job_type=BackupJobType.PRE_RESTORE_SNAPSHOT))
+        self.assertIn(
+            "Deleting this snapshot permanently removes the ability to roll back to the pre-restore state",
+            warnings,
+        )
+
+    def test_plain_backup_has_no_rollback_warning(self):
+        warnings = get_entity_warning_items(self._job())
+        self.assertFalse(any('roll back' in w for w in warnings))

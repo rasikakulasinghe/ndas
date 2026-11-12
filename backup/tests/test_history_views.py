@@ -17,8 +17,10 @@ from datetime import datetime, time, timedelta
 from unittest import mock
 
 from django.contrib.auth import get_user_model
+from django.db import connection
 from django.template.defaultfilters import filesizeformat
 from django.test import Client, TestCase, override_settings
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 
@@ -286,6 +288,32 @@ class BackupHistoryColumnsTest(BackupHistoryViewTestBase):
                 response = client.get(self.url)
                 self.assertNotContains(response, reverse('backup:backup-download', args=[job.pk]))
 
+    def test_failed_job_shows_error_message_under_status(self):
+        """Deferred-work batch 4: a failed job's reason is visible on the
+        history page, styled like status.html's message cell."""
+        self._make_job(status=BackupJobStatus.FAILED, error_message='Backup export failed: Disk full')
+        client = self._admin_client()
+        response = client.get(self.url)
+        self.assertContains(response, 'Backup export failed: Disk full')
+        self.assertContains(response, 'small job-error-message text-danger')
+
+    def test_completed_with_warnings_shows_warning_text(self):
+        self._make_job(
+            status=BackupJobStatus.COMPLETED,
+            error_message='Completed with 1 media file(s) skipped: videos/a.mp4',
+        )
+        client = self._admin_client()
+        response = client.get(self.url)
+        self.assertContains(response, 'Completed with warnings')
+        self.assertContains(response, 'Completed with 1 media file(s) skipped: videos/a.mp4')
+        self.assertContains(response, 'small job-error-message text-dark')
+
+    def test_clean_completed_job_renders_no_message_block(self):
+        self._make_job(status=BackupJobStatus.COMPLETED, error_message='')
+        client = self._admin_client()
+        response = client.get(self.url)
+        self.assertNotContains(response, 'job-error-message')
+
     def test_deleted_triggered_by_shows_system(self):
         self._make_job(triggered_by=None)
         client = self._admin_client()
@@ -381,3 +409,57 @@ class BackupHistoryPaginationTest(BackupHistoryViewTestBase):
                             f"dropped with no '...' marker (viewing page {current_page})."
                         )
                     prev = n
+
+
+class BackupHistoryQueryCountTest(BackupHistoryViewTestBase):
+    """Deferred-work batch 4: N+1 guard -- the history page (including each
+    row's delete modal) issues the same number of queries for 2 jobs as for
+    10, across single/multi/system scopes and mixed `triggered_by` users."""
+
+    def setUp(self):
+        super().setUp()
+        self.admin_a2 = User.objects.create_user(
+            username='admin_hist_a2', password='Testpass1!', position='Administrator',
+            mobile_primary='0770000053', user_type=UserType.ADMIN, institution=self.inst_a,
+        )
+
+    def _make_jobs(self, count, include_snapshots=False):
+        BackupJob.objects.all().delete()
+        users = (self.admin_a, self.admin_a2, self.superadmin)
+        statuses = (BackupJobStatus.COMPLETED, BackupJobStatus.FAILED)
+        for i in range(count):
+            kind = i % 3
+            overrides = dict(
+                triggered_by=users[i % len(users)],
+                status=statuses[i % len(statuses)],
+                error_message='Backup export failed: boom' if i % 2 else '',
+            )
+            if include_snapshots and i % 4 == 3:
+                overrides['job_type'] = BackupJobType.PRE_RESTORE_SNAPSHOT
+            if kind == 0:
+                self._make_job(scope_type=BackupJobScopeType.SINGLE, scope=self.inst_a, **overrides)
+            elif kind == 1:
+                job = self._make_job(scope_type=BackupJobScopeType.MULTI, scope=None, **overrides)
+                job.scopes.set([self.inst_a, self.inst_b])
+            else:
+                self._make_job(scope_type=BackupJobScopeType.SYSTEM, scope=None, **overrides)
+
+    def _query_count(self, client, count, include_snapshots=False):
+        self._make_jobs(count, include_snapshots=include_snapshots)
+        client.get(self.url)  # warm-up: session/content-type caches
+        with CaptureQueriesContext(connection) as ctx:
+            response = client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['page_obj']), count)
+        return len(ctx.captured_queries)
+
+    def test_institutional_admin_query_count_independent_of_row_count(self):
+        client = self._admin_client()
+        self.assertEqual(self._query_count(client, 2), self._query_count(client, 10))
+
+    def test_superadmin_query_count_independent_of_row_count(self):
+        client = self._superadmin_client(self.inst_a)
+        self.assertEqual(
+            self._query_count(client, 2, include_snapshots=True),
+            self._query_count(client, 10, include_snapshots=True),
+        )

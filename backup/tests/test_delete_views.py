@@ -14,9 +14,11 @@ log outcomes, and the rate limit.
 """
 import json
 import shutil
+import time
 from unittest import mock
 
 from django.contrib.auth import get_user_model
+from django.db import DatabaseError
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
@@ -40,7 +42,7 @@ STATIC_OVERRIDE = override_settings(
     STORAGES=TEST_STORAGES,
 )
 
-SECURITY_LOGGER = 'django.security.restore'
+SECURITY_LOGGER = 'django.security.backup'
 
 
 @STATIC_OVERRIDE
@@ -383,6 +385,52 @@ class BackupDeleteRefusalTest(BackupDeleteViewTestBase):
         self.assertEqual(response.status_code, 404)
         self.assertTrue(any('exists=False' in line for line in logs.output))
 
+    def test_existence_check_database_error_logs_exists_unknown_still_404(self):
+        """Deferred-work batch 4: a `DatabaseError` in the follow-up audit
+        `exists()` is logged as `exists=unknown`; the client still gets 404."""
+        client = self._admin_client()
+        real_filter = BackupJob.objects.filter
+
+        def flaky_filter(*args, **kwargs):
+            if kwargs == {'pk': 999999}:
+                raise DatabaseError('db exploded')
+            return real_filter(*args, **kwargs)
+
+        with mock.patch('backup.views.BackupJob.objects.filter', side_effect=flaky_filter), \
+                self.assertLogs(SECURITY_LOGGER, level='WARNING') as logs:
+            response = self._delete(client, 999999)
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(any('exists=unknown' in line for line in logs.output))
+
+    def test_existence_check_non_database_error_is_not_swallowed(self):
+        """Delete-path counterpart of the download test: a non-DB error in
+        the audit `exists()` is not folded into `exists=unknown` -- it reaches
+        `handle_view_errors`, which redirects to the history page."""
+        client = self._admin_client()
+        real_filter = BackupJob.objects.filter
+
+        def broken_filter(*args, **kwargs):
+            if kwargs == {'pk': 999999}:
+                raise TypeError('programming error')
+            return real_filter(*args, **kwargs)
+
+        with mock.patch('backup.views.BackupJob.objects.filter', side_effect=broken_filter), \
+                self.assertNoLogs(SECURITY_LOGGER, level='WARNING'):
+            response = self._delete(client, 999999)
+        self.assertRedirects(response, reverse('backup:backup-history'), fetch_redirect_response=False)
+
+    def test_delete_lines_log_under_backup_logger_not_restore(self):
+        """Deferred-work batch 4: a refused and a successful delete both log
+        under `django.security.backup`, never `django.security.restore`."""
+        job = self._make_job_with_archive()
+        client = self._admin_client()
+        with self.assertNoLogs('django.security.restore', level='INFO'), \
+                self.assertLogs(SECURITY_LOGGER, level='INFO') as logs:
+            self._delete(client, job, password='WrongPass!')
+            self._delete(client, job)
+        self.assertTrue(all(r.name == 'django.security.backup' for r in logs.records))
+        self.assertEqual(len(logs.records), 2)
+
     def test_double_delete_race_second_request_sees_404(self):
         job = self._make_job_with_archive()
         client = self._admin_client()
@@ -436,12 +484,18 @@ class BackupDeleteRateLimitTest(BackupDeleteViewTestBase):
         subclass); `handle_view_errors`'s own `except PermissionDenied`
         branch (not this view's code) turns that into a redirect to 'home'
         -- the same accepted behavior `patient_delete` already relies on
-        (Code Map patch note), not a JSON refusal."""
+        (Code Map patch note), not a JSON refusal.
+
+        `_get_window` is pinned to one fixed future timestamp so all six
+        requests share a single rate-limit window -- otherwise a run that
+        straddles a window boundary resets the counter and flakes."""
         client = self._admin_client()
         jobs = [self._make_job_with_archive() for _ in range(6)]
-        for i, job in enumerate(jobs[:5]):
-            response = self._delete(client, job)
-            self.assertEqual(response.status_code, 200, f"request {i + 1}")
-        response = self._delete(client, jobs[5])
+        fixed_window = int(time.time()) + 3600
+        with mock.patch('django_ratelimit.core._get_window', return_value=fixed_window):
+            for i, job in enumerate(jobs[:5]):
+                response = self._delete(client, job)
+                self.assertEqual(response.status_code, 200, f"request {i + 1}")
+            response = self._delete(client, jobs[5])
         self.assertRedirects(response, reverse('home'), fetch_redirect_response=False)
         self.assertTrue(BackupJob.objects.filter(pk=jobs[5].pk).exists())

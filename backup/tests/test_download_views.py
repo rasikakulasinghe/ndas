@@ -15,6 +15,7 @@ import shutil
 from unittest import mock
 
 from django.contrib.auth import get_user_model
+from django.db import DatabaseError
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
@@ -284,7 +285,7 @@ class BackupDownloadRefusalTest(BackupDownloadViewTestBase):
 
         def flaky_filter(*args, **kwargs):
             if kwargs == {'pk': 999999}:
-                raise Exception('db exploded')
+                raise DatabaseError('db exploded')
             return real_filter(*args, **kwargs)
 
         with mock.patch('backup.views.BackupJob.objects.filter', side_effect=flaky_filter), \
@@ -293,6 +294,22 @@ class BackupDownloadRefusalTest(BackupDownloadViewTestBase):
         self.assertEqual(response.status_code, 404)
         self.assertTrue(any('exists=unknown' in line for line in logs.output))
         self.assertFalse(any('exists=False' in line for line in logs.output))
+
+    def test_existence_check_non_database_error_is_not_swallowed(self):
+        """Deferred-work batch 4: only `DatabaseError` is folded into
+        `exists=unknown` -- a programming error in the audit check surfaces
+        instead of being hidden."""
+        client = self._admin_client()
+        real_filter = BackupJob.objects.filter
+
+        def broken_filter(*args, **kwargs):
+            if kwargs == {'pk': 999999}:
+                raise TypeError('programming error')
+            return real_filter(*args, **kwargs)
+
+        with mock.patch('backup.views.BackupJob.objects.filter', side_effect=broken_filter), \
+                self.assertRaises(TypeError):
+            client.get(self._download_url(999999))
 
     def test_missing_archive_on_disk_is_friendly_refusal_not_exception(self):
         job = self._make_job()  # completed, but no archive file ever written

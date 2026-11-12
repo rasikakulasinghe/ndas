@@ -62,8 +62,9 @@ class Command(BaseCommand):
             if job.pre_restore_snapshot_id else ""
         )
         job.status = BackupJobStatus.FAILED
+        job.progress_pct = 0
         job.error_message = f"Restore failed: {message}{snapshot_note}"
-        update_fields = ['status', 'error_message', 'updated_at']
+        update_fields = ['status', 'progress_pct', 'error_message', 'updated_at']
         audit = restore_audit.record_and_log(
             job, outcome=restore_audit.OUTCOME_FAILED,
             error=f"Restore failed: {audit_message or message}{snapshot_note}",
