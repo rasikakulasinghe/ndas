@@ -38,7 +38,7 @@ STATIC_OVERRIDE = override_settings(
     STORAGES=TEST_STORAGES,
 )
 
-SECURITY_LOGGER = 'django.security.restore'
+SECURITY_LOGGER = 'django.security.backup'
 
 
 @STATIC_OVERRIDE

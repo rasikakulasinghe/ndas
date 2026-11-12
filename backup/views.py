@@ -48,8 +48,21 @@ from ndas.custom_codes.delete_helpers import get_entity_display_name, get_redire
 
 logger = logging.getLogger(__name__)
 # Story 2.1: denials and archive rejections log under `django.security` so
-# they reach security.log.
+# they reach security.log. Despite the generic name, this one is
+# restore-scoped (django.security.restore) -- every restore_* view below
+# and backup_delete still use it; only backup_download's lines moved off it
+# (see download_security_logger below). backup_delete's identical mismatch
+# is tracked in deferred-work.md, deliberately left as-is here: this entry
+# named only "backup-download log lines".
 security_logger = restore_validation.security_logger
+# Story 3.2 (deferred-work ledger triage): downloads are not a restore
+# action, so they get their own child logger rather than reusing
+# `security_logger` (django.security.restore) -- this one has no handlers
+# of its own and propagates to the `django.security` parent logger's
+# `security_file`/`console` handlers exactly as `security_logger` does, so
+# `logs/security.log` is unaffected; only the recorded logger name changes,
+# separating the two features' lines when grepping by name.
+download_security_logger = logging.getLogger('django.security.backup')
 
 
 def _get_admin_institution(request):
@@ -573,7 +586,7 @@ def _log_backup_download_refused(request, pk):
     except Exception:
         logger.exception("Backup download refusal: could not check whether job=%s exists.", pk)
         exists = 'unknown'
-    security_logger.warning(
+    download_security_logger.warning(
         "Backup download refused (unknown, not completed, or out of scope): user=%s job=%s exists=%s",
         getattr(request.user, 'username', '?'), pk, exists,
     )
@@ -600,7 +613,7 @@ def backup_download(request, pk):
     """
     user_type = getattr(request.user, 'user_type', None)
     if user_type not in (UserType.ADMIN, UserType.SUPERADMIN):
-        security_logger.warning(
+        download_security_logger.warning(
             "Backup download denied (not an admin): user=%s user_type=%s job=%s",
             request.user.username, user_type, pk,
         )
@@ -609,7 +622,7 @@ def backup_download(request, pk):
 
     institution = _get_admin_institution(request)
     if institution is None:
-        security_logger.warning(
+        download_security_logger.warning(
             "Backup download denied (no institution context): user=%s job=%s",
             request.user.username, pk,
         )
@@ -648,7 +661,7 @@ def _backup_download_body(request, job):
     except OSError:
         if archive_file is not None:
             archive_file.close()
-        security_logger.warning(
+        download_security_logger.warning(
             "Backup download refused (archive missing from disk): user=%s job=%s",
             request.user.username, job.id,
         )
@@ -656,7 +669,7 @@ def _backup_download_body(request, job):
         return redirect('backup:backup-history')
 
     filename = _backup_download_filename(job)
-    security_logger.info(
+    download_security_logger.info(
         "Backup download: user=%s job=%s size=%s filename=%s",
         request.user.username, job.id, archive_size, filename,
     )

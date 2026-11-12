@@ -233,6 +233,10 @@ ADMIN_INDEX_TITLE = "Welcome to NDAs"
 # verbose DEBUG-level detail to logs/django.log for troubleshooting.
 LOG_LEVEL = config('LOG_LEVEL', default='DEBUG' if DEBUG else 'INFO').upper()
 
+# Shared by every django.security.* logger below so they can't silently
+# drift apart if only one is edited later.
+_SECURITY_LOG_HANDLERS = ['security_file', 'console'] if DEBUG else ['security_file']
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -244,11 +248,6 @@ LOGGING = {
         'simple': {
             'format': '{levelname} {message}',
             'style': '{',
-        },
-    },
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse',
         },
     },
     'handlers': {
@@ -267,7 +266,6 @@ LOGGING = {
             'maxBytes': 1024*1024*15,  # 15MB
             'backupCount': 10,
             'formatter': 'verbose',
-            'filters': ['require_debug_false'],
         },
         'console': {
             'level': LOG_LEVEL,
@@ -281,13 +279,19 @@ LOGGING = {
             'level': LOG_LEVEL,
             'propagate': True,
         },
+        # django.security.restore / django.security.backup (see backup/views.py,
+        # backup/restore_validation.py) are deliberately left unconfigured here:
+        # with no handlers of their own, they propagate to this parent logger's
+        # handlers unchanged. Do NOT add an explicit entry for either with its
+        # own 'handlers' list -- that would attach security_file twice and
+        # double-write every line.
         'django.security': {
-            'handlers': ['security_file'],
+            'handlers': _SECURITY_LOG_HANDLERS,
             'level': 'INFO',
             'propagate': False,
         },
         'users.middleware': {
-            'handlers': ['security_file'],
+            'handlers': _SECURITY_LOG_HANDLERS,
             'level': 'INFO',
             'propagate': False,
         },
