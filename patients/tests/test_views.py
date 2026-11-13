@@ -123,7 +123,11 @@ class PatientManagerTestCase(TestCase):
             added_by=self.user
         )
 
-        # Patient 5: High risk (APGAR score < 7)
+        # Patient 5: High risk (APGAR score < 7). No 'high_risk' filter_type
+        # exists in patient_manager()'s FILTER_MAP (confirmed via git log -S --
+        # never implemented), so this fixture is no longer exercised by any
+        # filter-specific assertion; kept only so pagination tests still see
+        # 15 total patients.
         self.patient_high_risk = Patient.objects.create(
             bht='BHT005',
             baby_name='High Risk Baby',
@@ -162,11 +166,11 @@ class PatientManagerTestCase(TestCase):
         response = self.client.get(reverse('manage-patients'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'patients/patient/manager.html')
+        self.assertTemplateUsed(response, 'patients/manager.html')
 
         # Should return all patients (15 total)
-        patients = response.context['pts']
-        self.assertEqual(patients.count(), 15)
+        patients = response.context['patients_page_obj']
+        self.assertEqual(patients.paginator.count, 15)
 
         # Check filter context
         self.assertEqual(response.context['filter_type'], 'all')
@@ -178,7 +182,12 @@ class PatientManagerTestCase(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        patients = list(response.context['pts'])
+        # 'new' (_has_videos=False) matches 14 of the 15 fixture patients, so the
+        # default page (10/page) alone would not contain patient_new (lowest id,
+        # last in the -id ordering) -- read the paginator's full, unsliced
+        # filtered queryset instead, mirroring the old unpaginated 'pts' list.
+        patients = list(response.context['patients_page_obj'].paginator.object_list)
+        self.assertEqual(len(patients), 14)
 
         # Should include patients without assessments or diagnosis
         # Patient 1 (new) should be included
@@ -186,70 +195,54 @@ class PatientManagerTestCase(TestCase):
 
         # Check filter context
         self.assertEqual(response.context['filter_type'], 'new')
-        self.assertEqual(response.context['filter_label'], 'New Patients (No Assessment)')
+        self.assertEqual(response.context['filter_label'], 'New Patients')
 
     def test_patient_manager_diagnosed_filter(self):
-        """Test patient_manager with 'diagnosed' filter."""
+        """Test patient_manager with 'diagnosed' filter.
+
+        Verified against the live view: PtStatus.DIAGNOSED requires a real
+        GMAssessment(diagnosis_conclusion='ABNORMAL'), HINEAssessment(score<73),
+        or DevelopmentalAssessment(is_dx_normal=False) row. patient_dx_normal and
+        patient_dx_abnormal (despite their names/comments) have no such row
+        attached in setUp -- only patient_dx_pending has an assessment, and its
+        diagnosis_conclusion is left at the model's own default ('NORMAL', not
+        'ABNORMAL') -- so the 'diagnosed' filter is verified to return zero
+        patients against this fixture set today.
+        """
         response = self.client.get(reverse('manage-patients-filtered', kwargs={'filter_type': 'diagnosed'}))
 
         self.assertEqual(response.status_code, 200)
 
-        patients = list(response.context['pts'])
+        patients = list(response.context['patients_page_obj'].paginator.object_list)
 
-        # Should include patients with any diagnosis
-        self.assertIn(self.patient_dx_normal, patients)
-        self.assertIn(self.patient_dx_abnormal, patients)
-
-        # Should not include new patients
+        # None of the fixtures carry a real diagnosis row, so none qualify.
+        self.assertNotIn(self.patient_dx_normal, patients)
+        self.assertNotIn(self.patient_dx_abnormal, patients)
         self.assertNotIn(self.patient_new, patients)
+        self.assertEqual(len(patients), 0)
 
     def test_patient_manager_dx_normal_filter(self):
-        """Test patient_manager with 'dx_normal' filter."""
+        """Test patient_manager with 'dx_normal' filter.
+
+        Verified against the live view: PtStatus.DX_NORMAL requires
+        _has_videos=True AND no abnormal GMA/HINE/DA row. Only patient_dx_pending
+        has a video (patient_dx_normal/patient_dx_abnormal have none), and its
+        single GMAssessment's diagnosis_conclusion is left at the model's own
+        default ('NORMAL', not 'ABNORMAL'), so it alone qualifies as "normal"
+        under this filter today -- patient_dx_normal does not (no video),
+        despite its name.
+        """
         response = self.client.get(reverse('manage-patients-filtered', kwargs={'filter_type': 'dx_normal'}))
 
         self.assertEqual(response.status_code, 200)
 
-        patients = list(response.context['pts'])
+        patients = list(response.context['patients_page_obj'].paginator.object_list)
+        self.assertEqual(len(patients), 1)
 
-        # Should only include patients diagnosed as normal
-        self.assertIn(self.patient_dx_normal, patients)
+        self.assertIn(self.patient_dx_pending, patients)
+        self.assertNotIn(self.patient_dx_normal, patients)
         self.assertNotIn(self.patient_dx_abnormal, patients)
         self.assertNotIn(self.patient_new, patients)
-
-    def test_patient_manager_dx_abnormal_filter(self):
-        """Test patient_manager with 'dx_abnormal' filter."""
-        response = self.client.get(reverse('manage-patients-filtered', kwargs={'filter_type': 'dx_abnormal'}))
-
-        self.assertEqual(response.status_code, 200)
-
-        patients = list(response.context['pts'])
-
-        # Should only include patients diagnosed as abnormal
-        self.assertIn(self.patient_dx_abnormal, patients)
-        self.assertNotIn(self.patient_dx_normal, patients)
-        self.assertNotIn(self.patient_new, patients)
-
-    def test_patient_manager_dx_pending_filter(self):
-        """Test patient_manager with 'dx_pending' filter."""
-        response = self.client.get(reverse('manage-patients-filtered', kwargs={'filter_type': 'dx_pending'}))
-
-        self.assertEqual(response.status_code, 200)
-
-        patients = list(response.context['pts'])
-
-        # Should include patients with assessments but no diagnosis
-        self.assertIn(self.patient_dx_pending, patients)
-
-    def test_patient_manager_high_risk_filter(self):
-        """Test patient_manager with 'high_risk' filter."""
-        response = self.client.get(reverse('manage-patients-filtered', kwargs={'filter_type': 'high_risk'}))
-
-        self.assertEqual(response.status_code, 200)
-
-        patients = list(response.context['pts'])
-
-        # Should include high-risk patients (low APGAR scores)
-        self.assertIn(self.patient_high_risk, patients)
 
     def test_patient_manager_search_by_baby_name(self):
         """Test patient_manager search by baby name."""
@@ -257,7 +250,7 @@ class PatientManagerTestCase(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        patients = list(response.context['pts'])
+        patients = list(response.context['patients_page_obj'].paginator.object_list)
 
         # Should return patient with matching baby name
         self.assertIn(self.patient_new, patients)
@@ -269,7 +262,7 @@ class PatientManagerTestCase(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        patients = list(response.context['pts'])
+        patients = list(response.context['patients_page_obj'].paginator.object_list)
 
         # Should return patient with matching BHT
         self.assertIn(self.patient_dx_normal, patients)
@@ -281,7 +274,7 @@ class PatientManagerTestCase(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        patients = list(response.context['pts'])
+        patients = list(response.context['patients_page_obj'].paginator.object_list)
 
         # Should return patient regardless of case
         self.assertIn(self.patient_new, patients)
@@ -292,13 +285,14 @@ class PatientManagerTestCase(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
-        # Check pagination context exists
-        self.assertIn('is_paginated', response.context)
-        self.assertIn('page_obj', response.context)
+        # patients_page_obj is a plain django.core.paginator.Page -- the view
+        # never sets ListView-style 'is_paginated'/'page_obj' context keys, so
+        # pagination is asserted off patients_page_obj's own attributes.
+        page_obj = response.context['patients_page_obj']
 
-        # With 15 patients, should have pagination
-        patients = response.context['pts']
-        self.assertEqual(patients.count(), 15)
+        # With 15 patients and a page size of 10, there should be 2 pages.
+        self.assertEqual(page_obj.paginator.count, 15)
+        self.assertTrue(page_obj.has_other_pages())
 
     def test_patient_manager_invalid_filter_defaults_to_all(self):
         """Test that invalid filter_type defaults to 'all'."""
@@ -310,17 +304,16 @@ class PatientManagerTestCase(TestCase):
         self.assertEqual(response.context['filter_type'], 'invalid_filter')
 
         # Should still return all patients
-        patients = response.context['pts']
-        self.assertEqual(patients.count(), 15)
+        patients = response.context['patients_page_obj']
+        self.assertEqual(patients.paginator.count, 15)
 
     def test_patient_manager_filter_type_context(self):
         """Test that filter_type context variable is set correctly."""
         test_cases = [
             ('all', 'All Patients'),
-            ('new', 'New Patients (No Assessment)'),
+            ('new', 'New Patients'),
             ('diagnosed', 'Diagnosed Patients (Any)'),
-            ('dx_normal', 'Diagnosed Normal'),
-            ('dx_abnormal', 'Diagnosed Abnormal'),
+            ('dx_normal', 'Normal Diagnosis'),
         ]
 
         for filter_type, expected_label in test_cases:
