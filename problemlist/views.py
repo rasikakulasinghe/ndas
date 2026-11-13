@@ -37,6 +37,7 @@ def problem_manager(request, pid):
     Returns:
         Rendered template with patient problems
     """
+    # institution=None -> unfiltered across all institutions (Phase 1 safe, deliberate)
     patient = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), pk=pid)
 
     # Active problems first, then resolved (core design principle)
@@ -73,6 +74,7 @@ def problem_add(request, pid):
     Returns:
         Rendered add form or redirect to manager on success
     """
+    # institution=None -> unfiltered across all institutions (Phase 1 safe, deliberate)
     patient = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), pk=pid)
 
     if request.method == "POST":
@@ -473,6 +475,7 @@ def problem_analysis(request):
 
     # Start with all problems (institution-scoped)
     _inst = getattr(request, 'institution', None)
+    # institution=None -> unfiltered across all institutions (Phase 1 safe, deliberate)
     _patients_qs = Patient.objects.for_institution(_inst)
     problems = Problem.objects.select_related('patient', 'added_by').filter(patient__in=_patients_qs)
 
@@ -496,6 +499,7 @@ def problem_analysis(request):
     problems = problems.order_by('-date_identified')
 
     # Get all patients for Select2 dropdown
+    # institution=None -> unfiltered across all institutions (Phase 1 safe, deliberate)
     patients = Patient.objects.for_institution(getattr(request, 'institution', None)).values('pk', 'baby_name', 'bht', 'mother_name')
 
     count = getCountZeroIfNone(problems)
@@ -546,6 +550,7 @@ def problem_analysis_export(request):
 
     # Start with all problems (institution-scoped)
     _inst = getattr(request, 'institution', None)
+    # institution=None -> unfiltered across all institutions (Phase 1 safe, deliberate)
     _patients_qs = Patient.objects.for_institution(_inst)
     problems = Problem.objects.select_related('patient', 'added_by').filter(patient__in=_patients_qs)
 

@@ -1731,6 +1731,8 @@ def bookmark_manager_user(request, username):
 @require_http_methods(["GET", "POST"])
 def bookmark_edit(request, pk):
     try:
+        # Bookmarks are owner-scoped, not institution-scoped (see the ownership check below) --
+        # no institution_scope() guard needed here, unlike bookmark_view/bookmark_delete.
         selected_bm = Bookmark.objects.select_related('owner', 'added_by', 'last_edit_by').get(id=pk)
     except Bookmark.DoesNotExist:
         messages.error(request, "Bookmark not found.")

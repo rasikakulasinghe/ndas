@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 @login_required(login_url="user-login")
 def video_add(request, patient_id):
     """Enhanced video upload with proper form handling and progress tracking"""
+    # institution=None -> unfiltered across all institutions (Phase 1 safe, deliberate)
     patient = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), id=patient_id)
 
     if request.method == "POST":
@@ -251,6 +252,7 @@ def video_manager(request):
 
     # Base queryset with optimized related data loading, scoped to institution
     _inst = getattr(request, 'institution', None)
+    # institution=None -> unfiltered across all institutions (Phase 1 safe, deliberate)
     _patients_qs = Patient.objects.for_institution(_inst)
     queryset = (
         Video.objects.filter(patient__in=_patients_qs)
@@ -372,6 +374,7 @@ def video_manager_new_only(request):
 
     used_video_ids = GMAssessment.objects.values_list('video_file_id', flat=True)
     _inst = getattr(request, 'institution', None)
+    # institution=None -> unfiltered across all institutions (Phase 1 safe, deliberate)
     _patients_qs = Patient.objects.for_institution(_inst)
     queryset = (
         Video.objects.filter(patient__in=_patients_qs)
@@ -412,10 +415,12 @@ def video_manager_new_only(request):
 def video_manager_by_patient(request, patient_id):
     """Video manager filtered by specific patient"""
     # Get patient object or 404
+    # institution=None -> unfiltered across all institutions (Phase 1 safe, deliberate)
     patient = get_object_or_404(Patient.objects.for_institution(getattr(request, 'institution', None)), id=patient_id)
 
     # Base queryset for specific patient
     _inst = getattr(request, 'institution', None)
+    # institution=None -> unfiltered across all institutions (Phase 1 safe, deliberate)
     _patients_qs = Patient.objects.for_institution(_inst)
     queryset = (
         Video.objects.select_related("patient", "added_by", "last_edit_by")

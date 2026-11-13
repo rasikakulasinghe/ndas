@@ -16,6 +16,17 @@ from ndas.custom_codes.error_handlers import handle_view_errors
 logger = logging.getLogger(__name__)
 
 
+def resolve_institution(request):
+    """
+    Resolve the acting institution for a referral view.
+
+    Prefers `request.institution` (set by InstitutionContextMiddleware); falls
+    back to the user's own profile institution when the request has none.
+    Returns None when neither is set.
+    """
+    return getattr(request, 'institution', None) or getattr(request.user, 'institution', None)
+
+
 def _is_thread_participant(user, sent, received, institution):
     """
     Is `user` allowed to view/reply to this referral thread at `institution`?
@@ -57,7 +68,7 @@ def referral_initiate(request, patient_id):
     from referral.utils import build_patient_snapshot
     from django.db import transaction as db_transaction
 
-    institution = getattr(request, 'institution', None) or getattr(request.user, 'institution', None)
+    institution = resolve_institution(request)
 
     patient = get_object_or_404(
         Patient.objects.for_institution_or_none(institution),
@@ -153,6 +164,10 @@ def get_institution_clinicians(request):
     except (TypeError, ValueError):
         return HttpResponse('<option value="">— Select institution first —</option>')
 
+    # Deliberately not resolve_institution(): unlike the other views in this
+    # file, this lookup never falls back to request.user.institution -- only
+    # the middleware-set request.institution is used for the self-referral
+    # exclusion below.
     institution = getattr(request, 'institution', None)
 
     # Exclude own institution for safety (AC #5)
@@ -183,7 +198,7 @@ def referral_inbox(request):
     """
     from referral.models import ReferralSent, ReferralReceived
 
-    institution = getattr(request, 'institution', None) or getattr(request.user, 'institution', None)
+    institution = resolve_institution(request)
 
     sent_referrals = (
         ReferralSent.objects
@@ -243,7 +258,7 @@ def _thread_panel_response(request, referral_uuid):
     from referral.models import ReferralSent, ReferralReceived, ReferralMessage
     from referral.forms import ReferralReplyForm
 
-    institution = getattr(request, 'institution', None) or getattr(request.user, 'institution', None)
+    institution = resolve_institution(request)
 
     sent = ReferralSent.objects.filter(
         referral_uuid=referral_uuid,
@@ -329,7 +344,7 @@ def referral_reply(request, referral_uuid):
     from referral.forms import ReferralReplyForm
     from ndas.custom_codes.choice import ReferralStatus
 
-    institution = getattr(request, 'institution', None) or getattr(request.user, 'institution', None)
+    institution = resolve_institution(request)
 
     sent = ReferralSent.objects.filter(
         referral_uuid=referral_uuid,
@@ -404,7 +419,7 @@ def referral_close(request, referral_uuid):
     from ndas.custom_codes.choice import ReferralStatus, UserType
     from django.db import transaction as db_transaction
 
-    institution = getattr(request, 'institution', None) or getattr(request.user, 'institution', None)
+    institution = resolve_institution(request)
 
     # Only the sender institution can close
     sent = ReferralSent.objects.filter(
@@ -478,7 +493,7 @@ def patient_referrals_tab(request, patient_id):
     from patients.models import Patient
     from referral.models import ReferralSent, ReferralReceived
 
-    institution = getattr(request, 'institution', None) or getattr(request.user, 'institution', None)
+    institution = resolve_institution(request)
 
     patient = get_object_or_404(
         Patient.objects.for_institution_or_none(institution),

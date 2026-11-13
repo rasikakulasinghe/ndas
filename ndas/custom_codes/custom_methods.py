@@ -43,6 +43,7 @@ def institution_scope(request, field='patient__institution'):
 
 def get_gma_diagnosis_data(institution=None):
     from patients.models import GMAssessment, Patient
+    # institution=None -> unfiltered across all institutions (Phase 1 safe, deliberate)
     _pts = Patient.objects.for_institution(institution)
     # Use annotate to get a count of patients for each diagnosis title
     data = GMAssessment.objects.filter(patient__in=_pts).values('diagnosis__abr').annotate(patient_count=Count('patient'))
@@ -58,6 +59,7 @@ def get_gma_diagnosis_data(institution=None):
 
 def get_all_diagnosis_data(institution=None):
     from patients.models import GMAssessment, HINEAssessment, DevelopmentalAssessment, Patient
+    # institution=None -> unfiltered across all institutions (Phase 1 safe, deliberate)
     _pts = Patient.objects.for_institution(institution)
     dx_gma_data = getCountZeroIfNone(GMAssessment.objects.filter(patient__in=_pts, diagnosis_conclusion='ABNORMAL'))
     dx_hine_data = getCountZeroIfNone(HINEAssessment.objects.filter(patient__in=_pts, score__lt=73))
@@ -78,6 +80,7 @@ def get_userStats(institution=None):
     def _counts(qs, field='added_by_id'):
         return {row[field]: row['count'] for row in qs.values(field).annotate(count=Count('id'))}
 
+    # institution=None -> unfiltered across all institutions (Phase 1 safe, deliberate)
     _pts = Patient.objects.for_institution(institution)
     pt_counts         = _counts(_pts)
     video_counts      = _counts(Video.objects.filter(patient__in=_pts))
@@ -122,6 +125,7 @@ def get_admissions_data_barchart(institution=None):
     five_months_ago = today - timedelta(days=30*5)
 
     admissions = (
+        # institution=None -> unfiltered across all institutions (Phase 1 safe, deliberate)
         Patient.objects.for_institution(institution)
         .filter(dob_tob__gte=five_months_ago)
         .annotate(month=TruncMonth('dob_tob'))

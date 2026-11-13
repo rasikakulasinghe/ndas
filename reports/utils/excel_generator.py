@@ -779,6 +779,7 @@ class ExcelReportGenerator:
 
         # Add sheets based on parameters (optimized queries)
         if parameters.get('patients', False):
+            # institution=None -> unfiltered across all institutions (Phase 1 safe, deliberate)
             queryset = Patient.objects.for_institution(institution).select_related('added_by', 'last_edit_by')
             if start_datetime:
                 queryset = queryset.filter(created_at__gte=start_datetime)

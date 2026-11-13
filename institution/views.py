@@ -678,6 +678,7 @@ def institution_admin_dashboard(request):
 
     # ── Quadrant 1: Patient stats ─────────────────────────────────────────
     from patients.models import Patient
+    # `institution` is never None here -- the redirect above already handled that case.
     patient_qs = Patient.objects.for_institution(institution)
     total_patients = patient_qs.count()
 
@@ -716,6 +717,7 @@ def institution_admin_dashboard(request):
 
     # ── Quadrant 4: Team activity ─────────────────────────────────────────
     total_users = User.objects.filter(institution=institution, is_active=True).count()
+    # `institution` is never None here -- the redirect above already handled that case.
     recent_registrations = Patient.objects.for_institution(institution).order_by('-created_at')[:5]
 
     context = {
