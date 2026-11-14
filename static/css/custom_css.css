@@ -104,6 +104,31 @@ html, body {
     }
 }
 
+/* Page header card redesign (shared across all content_header blocks) */
+.page-header-card {
+    border-top-width: 4px !important; /* Bootstrap's .border-top utility sets border-top with !important, so this must match to actually win */
+    border-radius: .25rem;
+}
+
+.page-header-right {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.page-header-right .breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+.page-header-right .badge {
+    font-size: .8rem;
+    white-space: normal;
+    word-break: break-word;
+}
+
 /* AdminLTE 4 sidebar state handling */
 .sidebar-mini:not(.sidebar-mini-expand-feature) .main-sidebar {
     min-height: 100vh !important;
