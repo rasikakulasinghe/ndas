@@ -110,9 +110,15 @@ html, body {
     border-radius: .25rem;
 }
 
+.page-header-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+}
+
 .page-header-right {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-end;
     flex-wrap: wrap;
     gap: .5rem;
 }

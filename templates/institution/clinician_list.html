@@ -1,20 +1,16 @@
 {% extends 'src/base.html' %}
 {% load static %}
+{% load page_header_tags %}
 {% block title %}Clinicians — {{ institution.name }}{% endblock %}
 
 {% block content_header %}
-<div class="card page-header-card border-top border-secondary shadow-sm mb-0">
-  <div class="card-body d-flex justify-content-between align-items-center flex-wrap py-2">
-    <h1 class="h4 m-0"><i class="fas fa-shield-alt mr-2"></i>Clinicians</h1>
-    <div class="page-header-right">
-      <span class="badge badge-pill badge-light border">{{ institution.name }}</span>
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{% url 'institution:institution-admin-dashboard' %}">Admin</a></li>
-        <li class="breadcrumb-item active">Clinicians</li>
-      </ol>
-    </div>
-  </div>
-</div>
+{% page_header accent="secondary" title="Clinicians" %}
+  <span class="badge badge-pill badge-light border">{{ institution.name }}</span>
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'institution:institution-admin-dashboard' %}">Admin</a></li>
+    <li class="breadcrumb-item active">Clinicians</li>
+  </ol>
+{% endpage_header %}
 {% endblock content_header %}
 
 {% block main_content %}
