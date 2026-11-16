@@ -50,6 +50,23 @@ class UserSecurityBase(TestCase):
             is_staff=True, institution=self.inst_a, mobile_primary='0700000004',
         )
 
+        # CustomUser.save() now syncs user_type=SUPERADMIN for every
+        # is_superuser=True row (QA fix H1), so InstitutionContextMiddleware's
+        # SUPERADMIN branch funnels self.superuser's requests through the
+        # session['active_institution_id'] gate (institution/middleware.py).
+        # Auto-establish that context on login so the many existing
+        # force_login(self.superuser) call sites below don't each need it.
+        real_force_login = self.client.force_login
+
+        def _force_login(user, *args, **kwargs):
+            real_force_login(user, *args, **kwargs)
+            if user == self.superuser:
+                session = self.client.session
+                session['active_institution_id'] = self.inst_a.pk
+                session.save()
+
+        self.client.force_login = _force_login
+
 
 @STATIC_OVERRIDE
 class UserViewByUsernameSecurityTest(UserSecurityBase):

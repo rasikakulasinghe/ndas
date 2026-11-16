@@ -294,10 +294,10 @@
                                 <div class="card-header">
                                     <h5 class="card-title">Demographics & Clinical</h5>
                                     <div class="card-tools">
-                                        <button type="button" class="btn btn-tool btn-sm" onclick="togglePatientFields(true)">
+                                        <button type="button" class="btn btn-tool btn-sm" id="togglePatientFieldsAllBtn">
                                             <i class="fas fa-check-square"></i> All
                                         </button>
-                                        <button type="button" class="btn btn-tool btn-sm" onclick="togglePatientFields(false)">
+                                        <button type="button" class="btn btn-tool btn-sm" id="togglePatientFieldsNoneBtn">
                                             <i class="fas fa-square"></i> None
                                         </button>
                                     </div>
@@ -315,72 +315,72 @@
                                             <div class="col-md-6">
                                                 <small class="text-muted"><strong>Identifiers</strong></small>
                                                 <div class="form-check form-check-sm">
-                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="id" checked>
-                                                    <label class="form-check-label"><small>Patient ID</small></label>
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="id" id="patient_field_id" checked>
+                                                    <label class="form-check-label" for="patient_field_id"><small>Patient ID</small></label>
                                                 </div>
                                                 <div class="form-check form-check-sm">
-                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="baby_name" checked>
-                                                    <label class="form-check-label"><small>Baby Name</small></label>
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="baby_name" id="patient_field_baby_name" checked>
+                                                    <label class="form-check-label" for="patient_field_baby_name"><small>Baby Name</small></label>
                                                 </div>
                                                 <div class="form-check form-check-sm">
-                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="mother_name" checked>
-                                                    <label class="form-check-label"><small>Mother Name</small></label>
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="mother_name" id="patient_field_mother_name" checked>
+                                                    <label class="form-check-label" for="patient_field_mother_name"><small>Mother Name</small></label>
                                                 </div>
                                                 <div class="form-check form-check-sm">
-                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="bht" checked>
-                                                    <label class="form-check-label"><small>BHT Number</small></label>
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="bht" id="patient_field_bht" checked>
+                                                    <label class="form-check-label" for="patient_field_bht"><small>BHT Number</small></label>
                                                 </div>
                                                 <div class="form-check form-check-sm">
-                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="nnc_no" checked>
-                                                    <label class="form-check-label"><small>NNC Number</small></label>
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="nnc_no" id="patient_field_nnc_no" checked>
+                                                    <label class="form-check-label" for="patient_field_nnc_no"><small>NNC Number</small></label>
                                                 </div>
                                                 <div class="form-check form-check-sm">
-                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="ptc_no" checked>
-                                                    <label class="form-check-label"><small>PTC Number</small></label>
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="ptc_no" id="patient_field_ptc_no" checked>
+                                                    <label class="form-check-label" for="patient_field_ptc_no"><small>PTC Number</small></label>
                                                 </div>
                                                 <div class="form-check form-check-sm">
-                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="pc_no" checked>
-                                                    <label class="form-check-label"><small>PC Number</small></label>
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="pc_no" id="patient_field_pc_no" checked>
+                                                    <label class="form-check-label" for="patient_field_pc_no"><small>PC Number</small></label>
                                                 </div>
                                                 <div class="form-check form-check-sm">
-                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="pin" checked>
-                                                    <label class="form-check-label"><small>PIN</small></label>
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="pin" id="patient_field_pin" checked>
+                                                    <label class="form-check-label" for="patient_field_pin"><small>PIN</small></label>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <small class="text-muted"><strong>Birth Data</strong></small>
                                                 <div class="form-check form-check-sm">
-                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="sex" checked>
-                                                    <label class="form-check-label"><small>Sex</small></label>
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="sex" id="patient_field_sex" checked>
+                                                    <label class="form-check-label" for="patient_field_sex"><small>Sex</small></label>
                                                 </div>
                                                 <div class="form-check form-check-sm">
-                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="dob_tob" checked>
-                                                    <label class="form-check-label"><small>Date/Time of Birth</small></label>
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="dob_tob" id="patient_field_dob_tob" checked>
+                                                    <label class="form-check-label" for="patient_field_dob_tob"><small>Date/Time of Birth</small></label>
                                                 </div>
                                                 <div class="form-check form-check-sm">
-                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="pog_wks" checked>
-                                                    <label class="form-check-label"><small>POG (Weeks)</small></label>
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="pog_wks" id="patient_field_pog_wks" checked>
+                                                    <label class="form-check-label" for="patient_field_pog_wks"><small>POG (Weeks)</small></label>
                                                 </div>
                                                 <div class="form-check form-check-sm">
-                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="pog_days" checked>
-                                                    <label class="form-check-label"><small>POG (Days)</small></label>
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="pog_days" id="patient_field_pog_days" checked>
+                                                    <label class="form-check-label" for="patient_field_pog_days"><small>POG (Days)</small></label>
                                                 </div>
                                                 <div class="form-check form-check-sm">
-                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="mo_delivery" checked>
-                                                    <label class="form-check-label"><small>Mode of Delivery</small></label>
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="mo_delivery" id="patient_field_mo_delivery" checked>
+                                                    <label class="form-check-label" for="patient_field_mo_delivery"><small>Mode of Delivery</small></label>
                                                 </div>
                                                 <small class="text-muted mt-2"><strong>APGAR Scores</strong></small>
                                                 <div class="form-check form-check-sm">
-                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="apgar_1" checked>
-                                                    <label class="form-check-label"><small>APGAR 1 min</small></label>
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="apgar_1" id="patient_field_apgar_1" checked>
+                                                    <label class="form-check-label" for="patient_field_apgar_1"><small>APGAR 1 min</small></label>
                                                 </div>
                                                 <div class="form-check form-check-sm">
-                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="apgar_5" checked>
-                                                    <label class="form-check-label"><small>APGAR 5 min</small></label>
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="apgar_5" id="patient_field_apgar_5" checked>
+                                                    <label class="form-check-label" for="patient_field_apgar_5"><small>APGAR 5 min</small></label>
                                                 </div>
                                                 <div class="form-check form-check-sm">
-                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="apgar_10" checked>
-                                                    <label class="form-check-label"><small>APGAR 10 min</small></label>
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="apgar_10" id="patient_field_apgar_10" checked>
+                                                    <label class="form-check-label" for="patient_field_apgar_10"><small>APGAR 10 min</small></label>
                                                 </div>
                                             </div>
                                         </div>
@@ -388,24 +388,24 @@
                                             <div class="col-md-6">
                                                 <small class="text-muted"><strong>Clinical Data</strong></small>
                                                 <div class="form-check form-check-sm">
-                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="resuscitated" checked>
-                                                    <label class="form-check-label"><small>Resuscitated</small></label>
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="resuscitated" id="patient_field_resuscitated" checked>
+                                                    <label class="form-check-label" for="patient_field_resuscitated"><small>Resuscitated</small></label>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <small class="text-muted"><strong>Metadata</strong></small>
                                                 <div class="form-check form-check-sm">
-                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="created_at" checked>
-                                                    <label class="form-check-label"><small>Created At</small></label>
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="created_at" id="patient_field_created_at" checked>
+                                                    <label class="form-check-label" for="patient_field_created_at"><small>Created At</small></label>
                                                 </div>
                                                 <div class="form-check form-check-sm">
-                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="updated_at" checked>
-                                                    <label class="form-check-label"><small>Updated At</small></label>
+                                                    <input class="form-check-input patient-field" type="checkbox" name="patient_fields" value="updated_at" id="patient_field_updated_at" checked>
+                                                    <label class="form-check-label" for="patient_field_updated_at"><small>Updated At</small></label>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="toggleFieldSelection()">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="toggleFieldSelectionBtn">
                                         <i class="fas fa-cog"></i> <span id="toggle_text">Show Field Selection</span>
                                     </button>
                                 </div>
@@ -416,10 +416,10 @@
                                 <div class="card-header">
                                     <h5 class="card-title">Assessment Records</h5>
                                     <div class="card-tools">
-                                        <button type="button" class="btn btn-tool btn-sm" onclick="toggleAssessmentFields(true)">
+                                        <button type="button" class="btn btn-tool btn-sm" id="toggleAssessmentFieldsAllBtn">
                                             <i class="fas fa-check-square"></i> All
                                         </button>
-                                        <button type="button" class="btn btn-tool btn-sm" onclick="toggleAssessmentFields(false)">
+                                        <button type="button" class="btn btn-tool btn-sm" id="toggleAssessmentFieldsNoneBtn">
                                             <i class="fas fa-square"></i> None
                                         </button>
                                     </div>
@@ -525,6 +525,21 @@ function toggleAssessmentFields(checked) {
 document.addEventListener('DOMContentLoaded', function() {
     const patientsCheckbox = document.getElementById('patients');
     const fieldSelection = document.getElementById('patient_field_selection');
+
+    // CSP-safe bindings for the toggle buttons (no inline onclick handlers)
+    document.getElementById('togglePatientFieldsAllBtn').addEventListener('click', function() {
+        togglePatientFields(true);
+    });
+    document.getElementById('togglePatientFieldsNoneBtn').addEventListener('click', function() {
+        togglePatientFields(false);
+    });
+    document.getElementById('toggleFieldSelectionBtn').addEventListener('click', toggleFieldSelection);
+    document.getElementById('toggleAssessmentFieldsAllBtn').addEventListener('click', function() {
+        toggleAssessmentFields(true);
+    });
+    document.getElementById('toggleAssessmentFieldsNoneBtn').addEventListener('click', function() {
+        toggleAssessmentFields(false);
+    });
 
     patientsCheckbox.addEventListener('change', function() {
         if (!this.checked && fieldSelection.style.display === 'block') {

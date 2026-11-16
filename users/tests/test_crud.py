@@ -48,6 +48,31 @@ class UserTestBase(TestCase):
             email='regular@test.com',
         )
 
+        # CustomUser.save() now syncs user_type=SUPERADMIN for every
+        # is_superuser=True row (QA fix H1), so InstitutionContextMiddleware's
+        # SUPERADMIN branch funnels self.superuser's requests through the
+        # session['active_institution_id'] gate (institution/middleware.py)
+        # whenever MULTI_INSTITUTION_ENABLED is on — same as the
+        # `_superadmin_client()` pattern already used in backup/tests.
+        # Auto-establish that context on login so the many existing
+        # force_login(self.superuser) call sites below don't each need it.
+        real_force_login = self.client.force_login
+
+        def _force_login(user, *args, **kwargs):
+            real_force_login(user, *args, **kwargs)
+            if user == self.superuser:
+                from django.conf import settings as dj_settings
+                from institution.models import Institution
+                institution, _ = Institution.objects.get_or_create(
+                    slug=dj_settings.DEFAULT_INSTITUTION_SLUG,
+                    defaults={'name': 'Default Institution'},
+                )
+                session = self.client.session
+                session['active_institution_id'] = institution.pk
+                session.save()
+
+        self.client.force_login = _force_login
+
 
 # ---------------------------------------------------------------------------
 # 1. User Detail View

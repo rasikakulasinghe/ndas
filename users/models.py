@@ -139,6 +139,25 @@ class CustomUser(AbstractUser, TimeStampedModel):
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.position})"
 
+    def save(self, *args, **kwargs):
+        """
+        Keep user_type in sync with is_superuser.
+
+        A Django superuser (e.g. created via `createsuperuser`, which has no
+        notion of `user_type`) must always be treated as SUPERADMIN by every
+        `user_type`-based permission check in the app (backup, institution,
+        sidebar). Rather than patching each call site, enforce the invariant
+        once here at the model layer.
+        """
+        if self.is_superuser and self.user_type != UserType.SUPERADMIN:
+            self.user_type = UserType.SUPERADMIN
+            update_fields = kwargs.get('update_fields')
+            if update_fields is not None:
+                update_fields = set(update_fields)
+                update_fields.add('user_type')
+                kwargs['update_fields'] = update_fields
+        super().save(*args, **kwargs)
+
     @property
     def full_name(self):
         """Return the user's full name."""

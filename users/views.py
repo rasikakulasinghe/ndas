@@ -562,27 +562,47 @@ from datetime import datetime, timedelta
 
 @admin_required
 def admin_dashboard(request):
-    """Admin dashboard with user statistics and quick actions."""
+    """Admin dashboard with user statistics and quick actions.
+
+    Stats are institution-scoped for non-superusers, mirroring the
+    `request.institution` pattern already used by `admin_user_list` and
+    `admin_activity_logs` in this module.
+    """
     from django.utils import timezone
-    
+
+    if request.user.is_superuser:
+        user_qs = CustomUser.objects.all()
+        activity_qs = UserActivityLog.objects.select_related('user')
+    else:
+        _inst = getattr(request, 'institution', None)
+        if _inst is not None:
+            user_qs = CustomUser.objects.filter(institution=_inst)
+            activity_qs = UserActivityLog.objects.select_related('user').filter(
+                user__institution=_inst
+            )
+        else:
+            # Non-superuser with no institution assigned — return nothing rather than leak data
+            user_qs = CustomUser.objects.none()
+            activity_qs = UserActivityLog.objects.none()
+
     # Get user statistics
-    total_users = CustomUser.objects.count()
-    active_users = CustomUser.objects.filter(is_active=True).count()
-    staff_users = CustomUser.objects.filter(is_staff=True).count()
-    
+    total_users = user_qs.count()
+    active_users = user_qs.filter(is_active=True).count()
+    staff_users = user_qs.filter(is_staff=True).count()
+
     # Get recent logins (last 24 hours)
     yesterday = timezone.now() - timedelta(days=1)
-    recent_logins = UserActivityLog.objects.filter(
+    recent_logins = activity_qs.filter(
         login_status=UserActivityLog.LOGIN_SUCCESS,
         login_timestamp__gte=yesterday
     ).count()
-    
+
     # Get recent activities (last 10)
-    recent_activities = UserActivityLog.objects.select_related('user').order_by('-login_timestamp')[:10]
-    
+    recent_activities = activity_qs.order_by('-login_timestamp')[:10]
+
     # Get recently added users (last 5) - optimized to only fetch needed fields
-    recent_users = CustomUser.objects.only('id', 'username', 'position', 'is_active', 'date_joined').order_by('-date_joined')[:5]
-    
+    recent_users = user_qs.only('id', 'username', 'position', 'is_active', 'date_joined').order_by('-date_joined')[:5]
+
     context = {
         'total_users': total_users,
         'active_users': active_users,

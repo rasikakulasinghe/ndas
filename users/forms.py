@@ -4,6 +4,8 @@ from ndas.custom_codes.choice import POSSITION, SUBSCRIPTION_TYPE_CHOICES, SUBSC
 from users.models import CustomUser, Subscription
 from institution.models import Institution
 from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm, PasswordChangeForm
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from datetime import date, timedelta
 from ndas.custom_codes.sanitization import (
     sanitize_html,
@@ -415,7 +417,7 @@ class AdminUserCreationForm(forms.ModelForm):
     password1 = forms.CharField(
         label='Password',
         widget=forms.PasswordInput(attrs={'class': 'form-control'}),
-        help_text="Password must be at least 8 characters long."
+        help_text="Password must be at least 12 characters long and not too common or similar to your account information."
     )
     password2 = forms.CharField(
         label='Password confirmation',
@@ -463,8 +465,11 @@ class AdminUserCreationForm(forms.ModelForm):
     
     def clean_password1(self):
         password1 = self.cleaned_data.get("password1")
-        if password1 and len(password1) < 8:
-            raise forms.ValidationError("Password must be at least 8 characters long")
+        if password1:
+            try:
+                validate_password(password1)
+            except ValidationError as e:
+                raise forms.ValidationError(e.messages)
         return password1
     
     def save(self, commit=True):
