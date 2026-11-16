@@ -2,13 +2,13 @@
 
 IDE-specific guidance for GitHub Copilot. For full project documentation, see `CLAUDE.md`.
 
-**Last Updated:** 2025-12-25
+**Last Updated:** 2026-11-16
 
 ## Project Context
 
-**NDAS** - Django 4.2.16 medical system | AdminLTE 3.2 | Bootstrap 4.6
+**NDAS** - Django 5.2 (LTS) medical system | AdminLTE 3.2 | Bootstrap 4.6
 
-**Apps:** `patients/` (root), `users/`, `video/`, `reports/`, `problemlist/`
+**Apps:** `patients/` (root), `users/`, `video/`, `reports/`, `problemlist/`, `backup/`, `institution/` (Phase 2), `referral/` (Phase 2)
 
 ## Code Generation Rules
 

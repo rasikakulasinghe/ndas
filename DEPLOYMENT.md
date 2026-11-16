@@ -5,6 +5,7 @@ Complete deployment guide for the Neurodevelopmental Assessment System (NDAS).
 ## Table of Contents
 
 - [Prerequisites](#prerequisites)
+- [Local Development](#local-development)
 - [Deployment Options](#deployment-options)
 - [Option 1: cPanel/Shared Hosting (SQLite)](#option-1-cpanelshared-hosting-sqlite)
 - [Option 2: VPS with PostgreSQL](#option-2-vps-with-postgresql)
@@ -40,6 +41,94 @@ Complete deployment guide for the Neurodevelopmental Assessment System (NDAS).
 ### Required Packages
 
 See `requirements.txt` for all Python dependencies.
+
+---
+
+## Local Development
+
+### Quick Start
+
+```bash
+# 1. Activate the virtual environment
+venv\Scripts\activate          # Windows
+# source venv/bin/activate     # macOS/Linux
+
+# 2. Point .env at the development profile (copies env files/.env.development.example -> .env)
+python scripts\switch_env.py development
+
+# 3. Install dependencies, migrate, run
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver 127.0.0.1:8000
+```
+
+Open http://127.0.0.1:8000/ -- it should 302-redirect to `/users/login/` (200). If you see a Django
+error page instead, or the browser can't connect at all, see the dedicated troubleshooting section below.
+
+### Development `.env` Profile
+
+`env files/.env.development.example` sets, among others:
+
+- `DEBUG=True`
+- `ALLOWED_HOSTS=127.0.0.1,localhost`
+- `SECURE_SSL_REDIRECT=False`, `SESSION_COOKIE_SECURE=False`, `CSRF_COOKIE_SECURE=False` (no HTTPS locally)
+- `RATELIMIT_ENABLE=False`
+- SQLite (no `DB_ENGINE` set -- `ndas/settings.py` defaults to `db.sqlite3` in `BASE_DIR`)
+- `EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend`
+
+### Troubleshooting: dev server won't load in the browser
+
+**Port already in use.** A previous `runserver` that was never stopped keeps the port bound:
+
+```powershell
+netstat -ano | findstr :8000          # find the PID bound to 8000
+Get-Process -Id <pid>                 # confirm it's an old python.exe manage.py runserver
+Stop-Process -Id <pid> -Force         # free the port, then re-run step 3 above
+```
+
+**Browser shows a Django `DisallowedHost` page (or a bare 400), or redirects to
+`https://127.0.0.1:8000/` and then fails to connect.** This is not a code bug -- it means a real OS
+environment variable is overriding `.env`. Every setting in `ndas/settings.py` is read via
+`decouple.config(...)`, and **python-decouple always checks real OS environment variables before
+falling back to the `.env` file** -- silently, with no warning if they disagree. If `ALLOWED_HOSTS`,
+`SECURE_SSL_REDIRECT`, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, or `SECRET_KEY` is exported in
+the shell you launched `runserver` from, its value wins over whatever `.env` says -- even a correct,
+freshly-switched development `.env`.
+
+This typically happens after copying/pasting values from one of the `env files/.env.production.*.example`
+templates into a terminal (e.g. while preparing a demo/live deployment) -- those exports outlive the
+work they were made for and silently poison every `manage.py` command run from that same terminal
+afterward, including ones started much later in the session.
+
+Diagnose:
+
+```powershell
+# PowerShell
+Get-ChildItem Env: | Where-Object { $_.Name -match 'ALLOWED_HOSTS|SECURE_|SECRET_KEY|SESSION_COOKIE|CSRF_COOKIE|^DEBUG$' }
+```
+
+```bash
+# Git Bash / WSL
+env | grep -iE 'allowed_hosts|secure_|secret_key|session_cookie|csrf_cookie|^debug='
+```
+
+If any of these print production-looking values (a real domain in `ALLOWED_HOSTS`, `True` for the
+`SECURE_*`/`*_COOKIE_SECURE` flags, a non-dev `SECRET_KEY`), that is the problem. Fix by clearing them
+in the current session:
+
+```powershell
+Remove-Item Env:ALLOWED_HOSTS, Env:SECURE_SSL_REDIRECT, Env:SESSION_COOKIE_SECURE, Env:CSRF_COOKIE_SECURE, Env:SECURE_HSTS_INCLUDE_SUBDOMAINS, Env:SECURE_HSTS_PRELOAD, Env:SECURE_PROXY_SSL_HEADER, Env:SECRET_KEY -ErrorAction SilentlyContinue
+```
+
+or, more reliably, close the terminal and open a brand new one before running `manage.py runserver`
+again -- exported variables don't survive a fresh shell unless a startup script (PowerShell profile,
+`.bashrc`, a VS Code `terminal.integrated.env.*` setting, etc.) re-sets them, which is worth checking
+if the problem keeps recurring in every new terminal.
+
+A server process already holds whatever environment it was started with for its entire lifetime --
+fixing the environment in your *current* terminal does nothing for an old `runserver` still running
+from a contaminated one. Always free the port (see above) and start a fresh process after fixing the
+environment.
 
 ---
 

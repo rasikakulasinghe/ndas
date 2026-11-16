@@ -5,11 +5,11 @@ Workflow guidance for AI agents. For project patterns and architecture, see `CLA
 **Last Updated:** 2025-12-25
 
 <!-- bmad:context -->
-<!-- Verified 2026-11-11 against 7ad2d0b. Managed by bmad-project-context; edits inside this block are replaced on refresh. Keep anything you want preserved outside the markers. -->
+<!-- Verified 2026-11-16 against 1204427. Managed by bmad-project-context; edits inside this block are replaced on refresh. Keep anything you want preserved outside the markers. -->
 
 ## NDAS
 
-Django medical system for patient records, video-based neurodevelopmental assessments, and evaluation workflows. Solo-maintained, single `main` branch, no CI. Architecture and patterns: `CLAUDE.md`. Generated reference docs (data models, API contracts, source tree, dev guide): `docs/index.md`.
+Django medical system for patient records, video-based neurodevelopmental assessments, and evaluation workflows. Solo-maintained, single `main` branch, no CI. Architecture and patterns: `CLAUDE.md`.
 
 ## Policy
 
@@ -23,6 +23,7 @@ Django medical system for patient records, video-based neurodevelopmental assess
 - System-wide architecture invariants (AD-1..AD-15): `_bmad-output/planning-artifacts/architecture/architecture-NDAS-2026-10-01/ARCHITECTURE-SPINE.md`
 - Security test suites `video/tests/test_security.py`, `users/tests/test_security.py`, `reports/tests/test_security.py` cover ownership/isolation/rate-limit checks — run them when touching views or permissions in those apps.
 - Live production QA findings (confirmed CRUD/security/CSP/perf defects, with code references): `docs/QA_LIVE_TEST_REPORT_2026-10-23.md` — read before touching media serving, bookmarks, CSP nonces, or assessment add/edit views.
+- Cross-session triage queue (deferred fixes, open review findings): `_bmad-output/implementation-artifacts/deferred-work.md` — prune closed entries in place; don't delete the file itself (see Known pitfalls).
 
 ## Running and verifying
 
@@ -43,11 +44,12 @@ Django medical system for patient records, video-based neurodevelopmental assess
 - Inline `<script>` tags need `nonce="{{ request.csp_nonce }}"` in DEBUG too, not just production — `unsafe-inline`/`unsafe-eval` are removed from `CSP_SCRIPT_SRC` in both; a script without a nonce silently fails everywhere.
 - `institution_scope()` (`ndas/custom_codes/custom_methods.py`) raises `PermissionDenied` when a non-superuser has `institution_id` set but `request.institution` is `None` — that signals a middleware misconfiguration; never swallow it.
 - Staff may only edit/delete videos they personally uploaded (`video.added_by == request.user`); a bare `is_staff` bypass was a real security defect here once — gate unrestricted access on `is_superuser`, not `is_staff`.
-- `InstitutionScopedManager.for_institution(None)` returns ALL records — intentional Phase 1-compatibility fallback, not a bug. Don't "fix" it.
+- `InstitutionScopedManager.for_institution(None)` returns ALL records — intentional Phase 1-compatibility fallback, not a bug. Don't "fix" it; call sites that must treat `None` as "nothing" use `for_institution_or_none(institution)` instead (`institution/managers.py`).
 - Any new report-download endpoint must verify the `report_owner_{file_id}_{session_key}` cache key set by `report_builder` before serving the file — a UUID/file_id alone is not access control.
 - Any view that changes a user's own password must call `update_session_auth_hash(request, user)` right after `form.save()` — Django invalidates the session's auth hash on password change, so skipping this silently logs the user out on their very next request (`userChangePassword` shipped without it once).
 - Superuser bypass checks use `request.user.is_superuser` everywhere except `institution/middleware.py`'s context resolution, which keys off `user_type == UserType.SUPERADMIN` instead — nothing enforces these two stay in sync on an account, so don't assume one implies the other.
 - `requirements.txt` carries Celery's own dependency chain (`amqp`, `billiard`, `kombu`, `vine`) with no `celery` package and no task-queue code anywhere — don't assume a background task queue exists here.
 - No `psycopg`/`psycopg2` or `redis`/`django-redis` driver is pinned in `requirements.txt`, despite `settings.py` having full Postgres and Redis branches — pin the driver explicitly before a VPS or Redis-enabled deploy; it isn't already covered.
+- `_bmad-output/implementation-artifacts/deferred-work.md` was deleted once as collateral damage in an unrelated spec-cleanup commit (`df95663`) and had to be restored from git history (`97d0f5b`) — it's the live cross-session triage queue, not a disposable scratch file.
 
 <!-- /bmad:context -->

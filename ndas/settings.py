@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import sys
 from django.contrib.messages import constants as messages
 from decouple import config, Csv
 
@@ -233,9 +234,28 @@ ADMIN_INDEX_TITLE = "Welcome to NDAs"
 # verbose DEBUG-level detail to logs/django.log for troubleshooting.
 LOG_LEVEL = config('LOG_LEVEL', default='DEBUG' if DEBUG else 'INFO').upper()
 
+# `runserver`'s autoreloader (StatReloader) re-execs manage.py in a child process
+# (env RUN_MAIN='true') and keeps the original process alive as a file-watcher that
+# just waits on the child. That watcher process runs this settings module too, so
+# without this guard it would open its own handles on logs/django.log and
+# logs/security.log at the same time as the child's. Windows can't rename a file
+# another process still has open, so the first RotatingFileHandler rollover in
+# either process raises PermissionError: [WinError 32] during os.rename. The
+# watcher never logs anything of its own, so just keep it off the file handlers;
+# the respawned child (RUN_MAIN=true), `--noreload`, and every non-runserver /
+# production process get them as normal.
+_IS_RUNSERVER_RELOADER_WATCHER = (
+    len(sys.argv) > 1
+    and sys.argv[1] == 'runserver'
+    and os.environ.get('RUN_MAIN') != 'true'
+    and '--noreload' not in sys.argv
+)
+
 # Shared by every django.security.* logger below so they can't silently
 # drift apart if only one is edited later.
-_SECURITY_LOG_HANDLERS = ['security_file', 'console'] if DEBUG else ['security_file']
+_SECURITY_LOG_HANDLERS = ['console'] if _IS_RUNSERVER_RELOADER_WATCHER else (
+    ['security_file', 'console'] if DEBUG else ['security_file']
+)
 
 LOGGING = {
     'version': 1,
@@ -251,22 +271,24 @@ LOGGING = {
         },
     },
     'handlers': {
-        'file': {
-            'level': LOG_LEVEL,
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'django.log',
-            'maxBytes': 1024*1024*15,  # 15MB
-            'backupCount': 10,
-            'formatter': 'verbose',
-        },
-        'security_file': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'security.log',
-            'maxBytes': 1024*1024*15,  # 15MB
-            'backupCount': 10,
-            'formatter': 'verbose',
-        },
+        **({} if _IS_RUNSERVER_RELOADER_WATCHER else {
+            'file': {
+                'level': LOG_LEVEL,
+                'class': 'logging.handlers.RotatingFileHandler',
+                'filename': BASE_DIR / 'logs' / 'django.log',
+                'maxBytes': 1024*1024*15,  # 15MB
+                'backupCount': 10,
+                'formatter': 'verbose',
+            },
+            'security_file': {
+                'level': 'INFO',
+                'class': 'logging.handlers.RotatingFileHandler',
+                'filename': BASE_DIR / 'logs' / 'security.log',
+                'maxBytes': 1024*1024*15,  # 15MB
+                'backupCount': 10,
+                'formatter': 'verbose',
+            },
+        }),
         'console': {
             'level': LOG_LEVEL,
             'class': 'logging.StreamHandler',
@@ -275,7 +297,9 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers': ['file', 'console'] if DEBUG else ['file'],
+            'handlers': ['console'] if _IS_RUNSERVER_RELOADER_WATCHER else (
+                ['file', 'console'] if DEBUG else ['file']
+            ),
             'level': LOG_LEVEL,
             'propagate': True,
         },
@@ -288,6 +312,20 @@ LOGGING = {
         'django.security': {
             'handlers': _SECURITY_LOG_HANDLERS,
             'level': 'INFO',
+            'propagate': False,
+        },
+        # Independent of LOG_LEVEL: at DEBUG, autoreload's StatReloader logs one
+        # line per watched file ("File ... first seen with mtime") on every
+        # startup/reload. It watches every directory holding an imported module
+        # -- which includes the whole venv/site-packages and the stdlib -- so at
+        # DEBUG this floods the console with tens of thousands of lines and makes
+        # `runserver` appear to hang for minutes before it ever prints "Starting
+        # development server".
+        'django.utils.autoreload': {
+            'handlers': ['console'] if _IS_RUNSERVER_RELOADER_WATCHER else (
+                ['file', 'console'] if DEBUG else ['file']
+            ),
+            'level': 'WARNING',
             'propagate': False,
         },
         'users.middleware': {
